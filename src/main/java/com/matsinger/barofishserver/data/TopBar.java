@@ -2,6 +2,8 @@ package com.matsinger.barofishserver.data;
 
 import jakarta.persistence.*;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 @Entity
@@ -14,6 +16,9 @@ public class TopBar {
     @Basic
     @Column(name = "name", nullable = false, length = 20)
     private String name;
+
+    @OneToMany(mappedBy = "topBar", cascade = CascadeType.ALL)
+    private List<TopBarProductMap> curationProductMaps = new ArrayList<>();
 
     public int getId() {
         return id;

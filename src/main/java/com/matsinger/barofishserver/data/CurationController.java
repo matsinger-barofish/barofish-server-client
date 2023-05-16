@@ -1,6 +1,5 @@
 package com.matsinger.barofishserver.data;
 
-import com.matsinger.barofishserver.product.Option;
 import com.matsinger.barofishserver.product.Product;
 import com.matsinger.barofishserver.product.ProductService;
 import com.matsinger.barofishserver.utils.Common;
@@ -95,14 +94,14 @@ public class CurationController {
 
     @Description("큐레이션 목록 상품 추가")
     @PostMapping("/{id}/add-product")
-    public ResponseEntity<CustomResponse> addProductToCuration(@PathVariable("id") Long id,
-                                                               @RequestBody ArrayList<Long> productIds) {
+    public ResponseEntity<CustomResponse> addProductToCuration(@PathVariable("id") Integer id,
+                                                               @RequestBody ArrayList<Integer> productIds) {
         CustomResponse res = new CustomResponse();
         try {
             Optional<Curation> curation = curationService.findById(id);
             if (curation == null) throw new Error("큐레이션 정보를 찾을 수 없습니다.");
-            for (Long productId : productIds) {
-                Optional<Product> product = productService.findById(productId);
+            for (Integer productId : productIds) {
+                Product product = productService.selectProduct(productId);
                 if (product == null) throw new Error("상품 정보를 찾을 수 없습니다.");
             }
             curationService.addProduct(id,productIds);
@@ -116,7 +115,7 @@ public class CurationController {
 
     //DELETE
     @DeleteMapping("/delete/{id}")
-    public ResponseEntity<CustomResponse> deleteCuration(@PathVariable("id") Long id) {
+    public ResponseEntity<CustomResponse> deleteCuration(@PathVariable("id") Integer id) {
         CustomResponse res = new CustomResponse();
         try {
             Optional<Curation> curation = curationService.findById(id);

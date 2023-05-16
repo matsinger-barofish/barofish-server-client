@@ -12,11 +12,13 @@ public class Banner {
     @Column(name = "id", nullable = false)
     private int id;
     @Basic
+    @Enumerated(EnumType.STRING)
     @Column(name = "state", nullable = false)
-    private Object state;
+    private BannerState state;
     @Basic
+    @Enumerated(EnumType.STRING)
     @Column(name = "type", nullable = false)
-    private Object type;
+    private BannerType type;
     @Basic
     @Column(name = "image", nullable = false, length = -1)
     private String image;
@@ -38,19 +40,19 @@ public class Banner {
         this.id = id;
     }
 
-    public Object getState() {
+    public BannerState getState() {
         return state;
     }
 
-    public void setState(Object state) {
+    public void setState(BannerState state) {
         this.state = state;
     }
 
-    public Object getType() {
+    public BannerType getType() {
         return type;
     }
 
-    public void setType(Object type) {
+    public void setType(BannerType type) {
         this.type = type;
     }
 
@@ -62,12 +64,12 @@ public class Banner {
         this.image = image;
     }
 
-    public Integer getQurationId() {
+    public Integer getCurationId() {
         return curationId;
     }
 
-    public void setQurationId(Integer qurationId) {
-        this.curationId = qurationId;
+    public void setCurationId(Integer curationId) {
+        this.curationId = curationId;
     }
 
     public Integer getNoticeId() {

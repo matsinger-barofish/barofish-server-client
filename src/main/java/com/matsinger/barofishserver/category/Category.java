@@ -1,5 +1,6 @@
 package com.matsinger.barofishserver.category;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -10,8 +11,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-
-import com.fasterxml.jackson.annotation.JsonIgnore;
 
 @Entity
 @NoArgsConstructor
@@ -33,10 +32,9 @@ public class Category {
     @Basic
     @Column(name = "name", nullable = false, length = 20)
     private String name;
-
     @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "category_id", referencedColumnName = "id", insertable = false, updatable = false)
+    @JoinColumn(name = "category_id",  referencedColumnName = "id", insertable = false, updatable = false)
     private Category parentCategory;
 
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "parentCategory")
@@ -51,10 +49,8 @@ public class Category {
     }
 
     public Integer getCategoryId() {
-        if (this.parentCategory != null)
-            return this.parentCategory.id;
-        else
-            return null;
+        if (this.parentCategory != null) return this.parentCategory.id;
+        else return null;
     }
 
     public void setCategoryId(Integer categoryId) {
@@ -79,13 +75,11 @@ public class Category {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o)
-            return true;
-        if (o == null || getClass() != o.getClass())
-            return false;
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
         Category that = (Category) o;
         return id == that.id &&
-        // Objects.equals(categoryId, that.categoryId) &&
+//                Objects.equals(categoryId, that.categoryId) &&
                 Objects.equals(image, that.image) && Objects.equals(name, that.name);
     }
 

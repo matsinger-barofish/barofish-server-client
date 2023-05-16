@@ -40,11 +40,11 @@ public class CurationService {
         return curationRepository.save(curation);
     }
 
-    public Optional<Curation> findById(Long id){
+    public Optional<Curation> findById(Integer id){
         return curationRepository.findById(id);
     }
 
-    public Boolean delete(Long id) {
+    public Boolean delete(Integer id) {
         try {
             curationRepository.deleteById(id);
             return true;
@@ -53,9 +53,9 @@ public class CurationService {
         }
     }
 
-    public List<CurationProductMap> addProduct(Long curationId, List<Long> productIds){
+    public List<CurationProductMap> addProduct(Integer curationId, List<Integer> productIds){
         ArrayList<CurationProductMap> curationProductMapArrayList = new ArrayList<CurationProductMap>();
-        for(Long id : productIds){
+        for(Integer id : productIds){
             CurationProductMap data = new CurationProductMap();
             Curation curation = curationRepository.findById(curationId).orElseThrow();
             Product product = productRepository.findById(id).orElseThrow();

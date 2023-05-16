@@ -1,9 +1,9 @@
 package com.matsinger.barofishserver.data;
 
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface CurationRepository extends JpaRepository<Curation, Integer> {
+public interface TopBarRepository extends JpaRepository<TopBar, Integer> {
+
 }

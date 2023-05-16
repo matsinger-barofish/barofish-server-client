@@ -41,20 +41,21 @@ public class CategoryController {
     }
 
     @PostMapping("/add")
-    public ResponseEntity<CustomResponse> addCategory(@RequestPart(value = "data") Category category,
-            @RequestPart(value = "image", required = false) MultipartFile file) {
+    public ResponseEntity<CustomResponse> addCategory(@RequestPart(value = "categoryId", required = false) Integer categoryId,
+                                                      @RequestPart(value = "name") String name,
+                                                      @RequestPart(value = "image", required = false) MultipartFile file) {
         CustomResponse res = new CustomResponse();
         try {
-            String name = util.validateString(category.getName(), 20L, "카테고리 이름");
+            Category category = new Category();
+            name = util.validateString(name, 20L, "카테고리명");
             category.setName(name);
             String imageUrl = null;
-            if (category.getCategoryId() == null) {
-                if (file == null)
-                    throw new Error("상위 카테고리의 경우 이미지는 필수입니다.");
+            if (categoryId == null) {
+                if (file == null) throw new Error("상위 카테고리의 경우 이미지는 필수입니다.");
                 imageUrl = s3.upload(file, new ArrayList<>(Arrays.asList("category")));
                 category.setImage(imageUrl);
             } else {
-                Category parentCategory = categoryService.findById(Long.valueOf(category.getCategoryId()));
+                Category parentCategory = categoryService.findById(category.getCategoryId());
                 category.setParentCategory(parentCategory);
             }
             categoryService.add(category);
@@ -69,15 +70,40 @@ public class CategoryController {
         }
     }
 
+    @PostMapping("/update/{id}")
+    public ResponseEntity<CustomResponse> updateCategory(@PathVariable("id") Integer id,
+                                                         @RequestPart(value = "name", required = false) String name,
+                                                         @RequestPart(value = "image", required = false) MultipartFile image) {
+        CustomResponse res = new CustomResponse();
+        try {
+            Category category = categoryService.findById(id);
+            String imageUrl = null;
+            if (name != null) {
+                name = util.validateString(name, 20L, "카테고리명");
+                category.setName(name);
+            }
+            if (image != null) {
+                imageUrl = s3.upload(image, new ArrayList<>(Arrays.asList("category")));
+                category.setImage(imageUrl);
+            }
+            categoryService.update(Long.valueOf(id), category);
+            res.setData(Optional.of(category));
+            return ResponseEntity.ok(res);
+        } catch (Exception e) {
+            res.setIsSuccess(false);
+            res.setErrorMsg(e.getMessage());
+            return ResponseEntity.ok(res);
+        }
+    }
+
     @DeleteMapping("/{id}")
-    public ResponseEntity<CustomResponse> deleteCategory(@PathVariable("id") Long id) {
+    public ResponseEntity<CustomResponse> deleteCategory(@PathVariable("id") Integer id) {
         CustomResponse res = new CustomResponse();
         try {
             Category category = categoryService.findById(id);
             if (category.getCategoryId() == null) {
                 List<Category> categories = categoryService.findAll(id);
-                if (categories.size() != 0)
-                    throw new Error("하위 카테고리가 존재합니다.");
+                if (categories.size() != 0) throw new Error("하위 카테고리가 존재합니다.");
                 // 품목들이 존재하는 경우 처리 기획 필요
             }
             categoryService.delete(id);
