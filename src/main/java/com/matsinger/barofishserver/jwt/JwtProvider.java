@@ -1,14 +1,12 @@
 package com.matsinger.barofishserver.jwt;
 
 import io.jsonwebtoken.*;
-import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.stereotype.Component;
 
-import java.security.SignatureException;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -16,7 +14,7 @@ import java.util.function.Function;
 
 @Component
 @Configuration
-public class JwtTokenProvider {
+public class JwtProvider {
     private final Logger log = LoggerFactory.getLogger(this.getClass());
     @Value("${spring.jwt.secret}")
     private String secret;
@@ -25,12 +23,16 @@ public class JwtTokenProvider {
     public static final long JWT_TOKEN_VALIDITY = 1000 * 60 * 60;
 
     // token으로 사용자 id 조회
-    public String getUsernameFromToken(String token) {
-        return getClaimFromToken(token, Claims::getId);
+    public Integer getIdFromToken(String token) {
+        return Integer.valueOf(getClaimFromToken(token, Claims::getId));
     }
 
-    public String getTypeFromToken(String token) {
-        return getClaimFromToken(token, Claims::getIssuer);
+    public TokenAuthType getTypeFromToken(String token) {
+        String issuer = getClaimFromToken(token, Claims::getIssuer);
+        if (issuer.equals("USER")) return TokenAuthType.USER;
+        else if (issuer.equals("ADMIN")) return TokenAuthType.ADMIN;
+        else if (issuer.equals("PARTNER")) return TokenAuthType.PARTNER;
+        else return TokenAuthType.ALLOW;
     }
 
     // token으로 사용자 속성정보 조회
@@ -39,18 +41,17 @@ public class JwtTokenProvider {
         return claimsResolver.apply(claims);
     }
 
+
     // 모든 token에 대한 사용자 속성정보 조회
     private Claims getAllClaimsFromToken(String token) {
         return Jwts.parser().setSigningKey(secret).parseClaimsJws(token).getBody();
     }
 
     // 토근 만료 여부 체크
-	/*
-	private Boolean isTokenExpired(String token) {
-		final Date expiration = getExpirationDateFromToken(token);
-		return expiration.before(new Date());
-	}
-	*/
+    private Boolean isTokenExpired(String token) {
+        final Date expiration = getExpirationDateFromToken(token);
+        return expiration.before(new Date());
+    }
 
     // 토큰 만료일자 조회
     public Date getExpirationDateFromToken(String token) {
@@ -58,13 +59,16 @@ public class JwtTokenProvider {
     }
 
     // id를 입력받아 accessToken 생성
-    public String generateAccessToken(String id, String issuer) {
+    public String generateAccessToken(String id, TokenAuthType issuer) {
         return generateAccessToken(id, issuer, new HashMap<>());
     }
 
     // id, 속성정보를 이용해 accessToken 생성
-    public String generateAccessToken(String id, String issuer, Map<String, Object> claims) {
-        return doGenerateAccessToken(id, issuer, claims);
+    public String generateAccessToken(String id, TokenAuthType issuer, Map<String, Object> claims) {
+        String
+                issuerString =
+                issuer.equals(TokenAuthType.USER) ? "USER" : issuer.equals(TokenAuthType.PARTNER) ? "PARTNER" : "ADMIN";
+        return doGenerateAccessToken(id, issuerString, claims);
     }
 
     // JWT accessToken 생성
@@ -125,40 +129,6 @@ public class JwtTokenProvider {
         tokens.put("accessToken", accessToken);
         tokens.put("refreshToken", refreshToken);
         return tokens;
-    }
-
-    // JWT refreshToken 만료체크 후 재발급
-    public Boolean reGenerateRefreshToken(String id) throws Exception {
-        log.info("[reGenerateRefreshToken] refreshToken 재발급 요청");
-        // DB에서 정보 조회
-        // ...
-
-
-        // refreshToken 정보가 존재하지 않는 경우
-//        if(rDTO == null) {
-//            log.info("[reGenerateRefreshToken] refreshToken 정보가 존재하지 않습니다.");
-//            return false;
-//        }
-
-        // refreshToken 만료 여부 체크
-        try {
-//            String refreshToken = rDTO.getRefreshToken().substring(7);
-//            Jwts.parser().setSigningKey(secret).parseClaimsJws(refreshToken);
-            log.info("[reGenerateRefreshToken] refreshToken이 만료되지 않았습니다.");
-            return true;
-        }
-        // refreshToken이 만료된 경우 재발급
-        catch (ExpiredJwtException e) {
-//            rDTO.setRefreshToken("Bearer " + generateRefreshToken(id));
-            // ... DB에서 refreshToken 정보 수정
-            log.info("[reGenerateRefreshToken] refreshToken 재발급 완료 : {}", "Bearer " + generateRefreshToken(id));
-            return true;
-        }
-        // 그 외 예외처리
-        catch (Exception e) {
-            log.error("[reGenerateRefreshToken] refreshToken 재발급 중 문제 발생 : {}", e.getMessage());
-            return false;
-        }
     }
 
     // 토근 검증

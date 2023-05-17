@@ -1,5 +1,8 @@
 package com.matsinger.barofishserver.data;
 
+import com.matsinger.barofishserver.jwt.JwtService;
+import com.matsinger.barofishserver.jwt.TokenAuthType;
+import com.matsinger.barofishserver.jwt.TokenInfo;
 import com.matsinger.barofishserver.product.Product;
 import com.matsinger.barofishserver.product.ProductService;
 import com.matsinger.barofishserver.utils.Common;
@@ -10,6 +13,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 @RestController
 @RequiredArgsConstructor
@@ -20,37 +24,38 @@ public class TopBarController {
     private final ProductService productService;
     private final Common utils;
 
+    private final JwtService jwt;
+
     @GetMapping("")
-    public ResponseEntity<CustomResponse> selectTopBarList() {
-        CustomResponse res = new CustomResponse();
+    public ResponseEntity<CustomResponse<List<TopBar>>> selectTopBarList() {
+        CustomResponse<List<TopBar>> res = new CustomResponse();
         try {
             List<TopBar> topBarList = topBarService.selectTopBarList();
             res.setData(Optional.ofNullable(topBarList));
             return ResponseEntity.ok(res);
         } catch (Exception e) {
-            res.setIsSuccess(false);
-            res.setErrorMsg(e.getMessage());
-            return ResponseEntity.ok(res);
+            return res.defaultError(e);
         }
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<CustomResponse> selectTopBar(@PathVariable("id") Integer id) {
-        CustomResponse res = new CustomResponse();
+    public ResponseEntity<CustomResponse<TopBar>> selectTopBar(@PathVariable("id") Integer id) {
+        CustomResponse<TopBar> res = new CustomResponse();
         try {
             TopBar topBar = topBarService.selectTopBar(id);
             res.setData(Optional.ofNullable(topBar));
             return ResponseEntity.ok(res);
         } catch (Exception e) {
-            res.setIsSuccess(false);
-            res.setErrorMsg(e.getMessage());
-            return ResponseEntity.ok(res);
+            return res.defaultError(e);
         }
     }
 
     @PostMapping("/add")
-    public ResponseEntity<CustomResponse> addTopBar(@RequestPart(value = "name") String name) {
-        CustomResponse res = new CustomResponse();
+    public ResponseEntity<CustomResponse<TopBar>> addTopBar(@RequestHeader(value = "Authorization") Optional<String> auth,
+                                                            @RequestPart(value = "name") String name) {
+        CustomResponse<TopBar> res = new CustomResponse();
+        Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
+        if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
         try {
             name = utils.validateString(name, 20L, "이름");
             TopBar topBar = new TopBar();
@@ -59,16 +64,17 @@ public class TopBarController {
             res.setData(Optional.ofNullable(result));
             return ResponseEntity.ok(res);
         } catch (Exception e) {
-            res.setIsSuccess(false);
-            res.setErrorMsg(e.getMessage());
-            return ResponseEntity.ok(res);
+            return res.defaultError(e);
         }
     }
 
     @PostMapping("/update/{id}")
-    public ResponseEntity<CustomResponse> updateTopBar(@PathVariable("id") Integer id,
-                                                       @RequestPart(value = "name") String name) {
-        CustomResponse res = new CustomResponse();
+    public ResponseEntity<CustomResponse<TopBar>> updateTopBar(@RequestHeader(value = "Authorization") Optional<String> auth,
+                                                               @PathVariable("id") Integer id,
+                                                               @RequestPart(value = "name") String name) {
+        CustomResponse<TopBar> res = new CustomResponse();
+        Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
+        if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
         try {
             TopBar topbar = topBarService.selectTopBar(id);
             name = utils.validateString(name, 20L, "이름");
@@ -77,16 +83,17 @@ public class TopBarController {
             res.setData(Optional.ofNullable(result));
             return ResponseEntity.ok(res);
         } catch (Exception e) {
-            res.setIsSuccess(false);
-            res.setErrorMsg(e.getMessage());
-            return ResponseEntity.ok(res);
+            return res.defaultError(e);
         }
     }
 
     @PostMapping("/add-product")
-    public ResponseEntity<CustomResponse> addProductToTopBar(@RequestPart(value = "topBarId") Integer topBarId,
-                                                             @RequestPart(value = "productId") Integer productId) {
-        CustomResponse res = new CustomResponse();
+    public ResponseEntity<CustomResponse<TopBarProductMap>> addProductToTopBar(@RequestHeader(value = "Authorization") Optional<String> auth,
+                                                                               @RequestPart(value = "topBarId") Integer topBarId,
+                                                                               @RequestPart(value = "productId") Integer productId) {
+        CustomResponse<TopBarProductMap> res = new CustomResponse();
+        Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
+        if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
         try {
             TopBar topBar = topBarService.selectTopBar(topBarId);
             Product product = productService.selectProduct(productId);
@@ -97,23 +104,22 @@ public class TopBarController {
             res.setData(Optional.ofNullable(result));
             return ResponseEntity.ok(res);
         } catch (Exception e) {
-            res.setIsSuccess(false);
-            res.setErrorMsg(e.getMessage());
-            return ResponseEntity.ok(res);
+            return res.defaultError(e);
         }
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<CustomResponse> deleteTopBar(@PathVariable("id") Integer id) {
+    public ResponseEntity<CustomResponse> deleteTopBar(@RequestHeader(value = "Authorization") Optional<String> auth,
+                                                       @PathVariable("id") Integer id) {
         CustomResponse res = new CustomResponse();
+        Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
+        if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
         try {
             TopBar topBar = topBarService.selectTopBar(id);
             topBarService.delete(id);
             return ResponseEntity.ok(res);
         } catch (Exception e) {
-            res.setIsSuccess(false);
-            res.setErrorMsg(e.getMessage());
-            return ResponseEntity.ok(res);
+            return res.defaultError(e);
         }
     }
 }

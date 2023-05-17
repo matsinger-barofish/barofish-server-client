@@ -1,6 +1,9 @@
 package com.matsinger.barofishserver.category;
 
 import com.matsinger.barofishserver.data.Curation;
+import com.matsinger.barofishserver.jwt.JwtService;
+import com.matsinger.barofishserver.jwt.TokenAuthType;
+import com.matsinger.barofishserver.jwt.TokenInfo;
 import com.matsinger.barofishserver.utils.Common;
 import com.matsinger.barofishserver.utils.CustomResponse;
 import com.matsinger.barofishserver.utils.S3.S3Uploader;
@@ -10,10 +13,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 @RestController
 @RequiredArgsConstructor
@@ -25,10 +25,11 @@ public class CategoryController {
     private final Common util;
 
     private final S3Uploader s3;
+    private final JwtService jwt;
 
     @GetMapping("/")
-    public ResponseEntity<CustomResponse> selectCategories() {
-        CustomResponse res = new CustomResponse();
+    public ResponseEntity<CustomResponse<List<Category>>> selectCategories() {
+        CustomResponse<List<Category>> res = new CustomResponse<>();
         try {
             List<Category> categories = categoryService.findAll(null);
             res.setData(Optional.ofNullable(categories));
@@ -41,17 +42,20 @@ public class CategoryController {
     }
 
     @PostMapping("/add")
-    public ResponseEntity<CustomResponse> addCategory(@RequestPart(value = "categoryId", required = false) Integer categoryId,
-                                                      @RequestPart(value = "name") String name,
-                                                      @RequestPart(value = "image", required = false) MultipartFile file) {
-        CustomResponse res = new CustomResponse();
+    public ResponseEntity<CustomResponse<Category>> addCategory(@RequestHeader(value = "Authorization") Optional<String> auth,
+                                                                @RequestPart(value = "categoryId", required = false) Integer categoryId,
+                                                                @RequestPart(value = "name") String name,
+                                                                @RequestPart(value = "image", required = false) MultipartFile file) {
+        CustomResponse<Category> res = new CustomResponse();
+        Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth);
+        if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
         try {
             Category category = new Category();
             name = util.validateString(name, 20L, "카테고리명");
             category.setName(name);
             String imageUrl = null;
             if (categoryId == null) {
-                if (file == null) throw new Error("상위 카테고리의 경우 이미지는 필수입니다.");
+                if (file == null) return res.throwError("상위 카테고리의 경우 이미지는 필수입니다.", "INPUT_CHECK_NEEDED");
                 imageUrl = s3.upload(file, new ArrayList<>(Arrays.asList("category")));
                 category.setImage(imageUrl);
             } else {
@@ -61,20 +65,19 @@ public class CategoryController {
             categoryService.add(category);
             res.setData(Optional.of(category));
             return ResponseEntity.ok(res);
-        } catch (Error error) {
-            res.setIsSuccess(false);
-            res.setErrorMsg(error.getMessage());
-            return ResponseEntity.ok(res);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+        } catch (Exception e) {
+            return res.defaultError(e);
         }
     }
 
     @PostMapping("/update/{id}")
-    public ResponseEntity<CustomResponse> updateCategory(@PathVariable("id") Integer id,
-                                                         @RequestPart(value = "name", required = false) String name,
-                                                         @RequestPart(value = "image", required = false) MultipartFile image) {
-        CustomResponse res = new CustomResponse();
+    public ResponseEntity<CustomResponse<Category>> updateCategory(@RequestHeader(value = "Authorization") Optional<String> auth,
+                                                                   @PathVariable("id") Integer id,
+                                                                   @RequestPart(value = "name", required = false) String name,
+                                                                   @RequestPart(value = "image", required = false) MultipartFile image) {
+        CustomResponse<Category> res = new CustomResponse();
+        Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
+        if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
         try {
             Category category = categoryService.findById(id);
             String imageUrl = null;
@@ -90,15 +93,16 @@ public class CategoryController {
             res.setData(Optional.of(category));
             return ResponseEntity.ok(res);
         } catch (Exception e) {
-            res.setIsSuccess(false);
-            res.setErrorMsg(e.getMessage());
-            return ResponseEntity.ok(res);
+            return res.defaultError(e);
         }
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<CustomResponse> deleteCategory(@PathVariable("id") Integer id) {
-        CustomResponse res = new CustomResponse();
+    public ResponseEntity<CustomResponse<Category>> deleteCategory(@RequestHeader(value = "Authorization") Optional<String> auth,
+                                                                   @PathVariable("id") Integer id) {
+        CustomResponse<Category> res = new CustomResponse();
+        Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
+        if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
         try {
             Category category = categoryService.findById(id);
             if (category.getCategoryId() == null) {
@@ -109,9 +113,7 @@ public class CategoryController {
             categoryService.delete(id);
             return ResponseEntity.ok(res);
         } catch (Exception e) {
-            res.setIsSuccess(false);
-            res.setErrorMsg(e.getMessage());
-            return ResponseEntity.ok(res);
+            return res.defaultError(e);
         }
     }
 }

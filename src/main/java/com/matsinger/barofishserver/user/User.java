@@ -14,7 +14,8 @@ public class User {
     private int id;
     @Basic
     @Column(name = "state", nullable = false)
-    private Object state;
+    @Enumerated(EnumType.STRING)
+    private UserState state;
     @Basic
     @Column(name = "join_at", nullable = false)
     private Timestamp joinAt;
@@ -27,11 +28,11 @@ public class User {
         this.id = id;
     }
 
-    public Object getState() {
+    public UserState getState() {
         return state;
     }
 
-    public void setState(Object state) {
+    public void setState(UserState state) {
         this.state = state;
     }
 

@@ -1,4 +1,4 @@
-package com.matsinger.barofishserver.store;
+package com.matsinger.barofishserver.admin;
 
 import jakarta.persistence.*;
 
@@ -6,16 +6,11 @@ import java.sql.Timestamp;
 import java.util.Objects;
 
 @Entity
-@Table(name = "store", schema = "barofish_dev", catalog = "")
-public class Store {
+public class Admin {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Id
     @Column(name = "id", nullable = false)
     private int id;
-    @Basic
-    @Column(name = "state", nullable = false)
-    @Enumerated(EnumType.STRING)
-    private StoreState state;
     @Basic
     @Column(name = "login_id", nullable = false, length = 50)
     private String loginId;
@@ -23,8 +18,12 @@ public class Store {
     @Column(name = "password", nullable = false, length = 60)
     private String password;
     @Basic
-    @Column(name = "join_at", nullable = false)
-    private Timestamp joinAt;
+    @Column(name = "state", nullable = false)
+    @Enumerated(EnumType.STRING)
+    private AdminState state;
+    @Basic
+    @Column(name = "created_at", nullable = false)
+    private Timestamp createdAt;
 
     public int getId() {
         return id;
@@ -32,14 +31,6 @@ public class Store {
 
     public void setId(int id) {
         this.id = id;
-    }
-
-    public StoreState getState() {
-        return state;
-    }
-
-    public void setState(StoreState state) {
-        this.state = state;
     }
 
     public String getLoginId() {
@@ -58,28 +49,36 @@ public class Store {
         this.password = password;
     }
 
-    public Timestamp getJoinAt() {
-        return joinAt;
+    public AdminState getState() {
+        return state;
     }
 
-    public void setJoinAt(Timestamp joinAt) {
-        this.joinAt = joinAt;
+    public void setState(AdminState state) {
+        this.state = state;
+    }
+
+    public Timestamp getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(Timestamp createdAt) {
+        this.createdAt = createdAt;
     }
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        Store that = (Store) o;
-        return id == that.id &&
-                Objects.equals(state, that.state) &&
-                Objects.equals(loginId, that.loginId) &&
-                Objects.equals(password, that.password) &&
-                Objects.equals(joinAt, that.joinAt);
+        Admin admin = (Admin) o;
+        return id == admin.id &&
+                Objects.equals(loginId, admin.loginId) &&
+                Objects.equals(password, admin.password) &&
+                Objects.equals(state, admin.state) &&
+                Objects.equals(createdAt, admin.createdAt);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, state, loginId, password, joinAt);
+        return Objects.hash(id, loginId, password, state, createdAt);
     }
 }
