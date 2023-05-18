@@ -1,6 +1,8 @@
-package com.matsinger.barofishserver.order;
+package com.matsinger.barofishserver.order.controller;
 
 import com.matsinger.barofishserver.order.dto.request.OrderRequestDto;
+import com.matsinger.barofishserver.order.exception.OrderBusinessException;
+import com.matsinger.barofishserver.order.service.OrderCommandService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -9,15 +11,15 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 @RestController
 public class OrderController {
-
-    private final OrderQueryService orderQueryService;
     private final OrderCommandService orderCommandService;
 
     // 주문하기
     @PostMapping("/v1/payment")
-    public String order(@RequestBody OrderRequestDto request) {
+    public boolean order(@RequestBody OrderRequestDto request) {
         try {
-
+            return orderCommandService.createOrder(request);
+        } catch (Exception e) {
+            throw new OrderBusinessException(e.getMessage());
         }
     }
 

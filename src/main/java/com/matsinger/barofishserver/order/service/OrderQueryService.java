@@ -1,2 +1,6 @@
-package com.matsinger.barofishserver.order.service;public class OrderQueryService {
+package com.matsinger.barofishserver.order.service;
+
+import com.matsinger.barofishserver.order.dto.request.OrderRequestDto;
+
+public class OrderQueryService {
 }

@@ -1,8 +1,9 @@
-package com.example.demo.domain.repository;
+package com.matsinger.barofishserver.order.repository;
 
-import com.example.demo.domain.entity.Order;
-import com.example.demo.order.exception.OrderBusinessException;
-import com.example.demo.order.exception.OrderErrorMessage;
+
+import com.matsinger.barofishserver.order.Order;
+import com.matsinger.barofishserver.order.exception.OrderBusinessException;
+import com.matsinger.barofishserver.order.exception.OrderErrorMessage;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.NoResultException;
 import jakarta.persistence.TypedQuery;
@@ -24,7 +25,7 @@ public class OrderRepositoryCustomImpl implements OrderRepositoryCustom {
 
     @Transactional
     public Optional<Order> createSequenceAndSave(Order order) {
-        String orderId = generateOrderNumber(order.getOrderDateTime());
+        String orderId = generateOrderNumber(order.getOrderedAt());
         order.setId(orderId);
         em.persist(order);
         return Optional.ofNullable(order);

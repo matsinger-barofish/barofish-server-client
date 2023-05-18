@@ -1,6 +1,6 @@
-package com.example.demo.domain.repository;
+package com.matsinger.barofishserver.order.repository;
 
-import com.example.demo.domain.entity.Order;
+import com.matsinger.barofishserver.order.Order;
 
 import java.time.LocalDateTime;
 import java.util.Optional;

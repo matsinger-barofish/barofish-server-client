@@ -1,9 +1,15 @@
 package com.matsinger.barofishserver.order;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.NoArgsConstructor;
 
 import java.util.Objects;
 
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 @Entity
 @Table(name = "order_product_option", schema = "barofish_dev", catalog = "")
 public class OrderProductOption {

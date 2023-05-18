@@ -1,29 +1,44 @@
 package com.matsinger.barofishserver.order;
 
+import com.matsinger.barofishserver.user.User;
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.NoArgsConstructor;
 
 import java.sql.Timestamp;
+import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Objects;
 
 @Entity
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 @Table(name = "order", schema = "barofish_dev", catalog = "")
 public class Order {
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Id
     @Column(name = "id", nullable = false, length = 20)
     private String id;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
+
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "order")
+    @Column(name = "order_product_infos", nullable = false)
+    private List<OrderProductInfo> orderProductInfos;
+
     @Basic
-    @Column(name = "user_id", nullable = false)
-    private int userId;
-    @Basic
-    @Column(name = "state", nullable = false)
+    @Column(name = "state", nullable = false, length = 20)
     private Object state;
+
     @Basic
-    @Column(name = "total_price", nullable = false, length = 45)
-    private String totalPrice;
+    @Column(name = "total_price", nullable = false)
+    private int totalPrice;
+
     @Basic
-    @Column(name = "ordered_at", nullable = false)
-    private Timestamp orderedAt;
+    @Column(name = "ordered_at", nullable = false, columnDefinition = "TIMESTAMP")
+    private LocalDateTime orderedAt;
 
     public String getId() {
         return id;
@@ -34,11 +49,7 @@ public class Order {
     }
 
     public int getUserId() {
-        return userId;
-    }
-
-    public void setUserId(int userId) {
-        this.userId = userId;
+        return user.getId();
     }
 
     public Object getState() {
@@ -49,19 +60,19 @@ public class Order {
         this.state = state;
     }
 
-    public String getTotalPrice() {
+    public int getTotalPrice() {
         return totalPrice;
     }
 
-    public void setTotalPrice(String totalPrice) {
+    public void setTotalPrice(int totalPrice) {
         this.totalPrice = totalPrice;
     }
 
-    public Timestamp getOrderedAt() {
+    public LocalDateTime getOrderedAt() {
         return orderedAt;
     }
 
-    public void setOrderedAt(Timestamp orderedAt) {
+    public void setOrderedAt(LocalDateTime orderedAt) {
         this.orderedAt = orderedAt;
     }
 
@@ -70,7 +81,7 @@ public class Order {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Order that = (Order) o;
-        return userId == that.userId &&
+        return user.getId() == that.user.getId() &&
                 Objects.equals(id, that.id) &&
                 Objects.equals(state, that.state) &&
                 Objects.equals(totalPrice, that.totalPrice) &&
@@ -79,6 +90,10 @@ public class Order {
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, userId, state, totalPrice, orderedAt);
+        return Objects.hash(id, user.getId(), state, totalPrice, orderedAt);
+    }
+
+    public List<OrderProductInfo> getOrderProductInfo() {
+        return orderProductInfos;
     }
 }
