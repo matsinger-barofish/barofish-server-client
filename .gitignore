@@ -37,3 +37,8 @@ out/
 
 ### VS Code ###
 .vscode/
+
+
+## custom Settings ##
+*.properties
+*.yml
