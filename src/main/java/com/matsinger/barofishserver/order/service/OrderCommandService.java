@@ -4,6 +4,8 @@ import com.matsinger.barofishserver.order.Order;
 import com.matsinger.barofishserver.order.OrderProductInfo;
 import com.matsinger.barofishserver.order.OrderProductOption;
 import com.matsinger.barofishserver.order.OrderState;
+import com.matsinger.barofishserver.order.dto.OrderProductInfoDto;
+import com.matsinger.barofishserver.order.dto.OrderProductOptionDto;
 import com.matsinger.barofishserver.order.dto.request.OrderRequestDto;
 import com.matsinger.barofishserver.order.exception.OrderErrorMessage;
 import com.matsinger.barofishserver.order.repository.OrderProductInfoRepository;
@@ -16,10 +18,13 @@ import com.matsinger.barofishserver.user.UserRepository;
 import com.matsinger.barofishserver.userauth.UserAuthRepository;
 import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
 
 @Service
 @Transactional
@@ -34,26 +39,30 @@ public class OrderCommandService {
     private final OrderRepository orderRepository;
     private final EntityManager em;
 
-    public boolean createOrderSheet(OrderRequestDto request) {
+    public String createOrderSheet(OrderRequestDto request) {
+        Order order = null;
 
-        for (OrderRequestDto.OrderProductInfoDto productInfoDto : request.getProducts()) {
+        for (OrderProductInfoDto productInfoDto : request.getProducts()) {
             Product findProduct = productRepository.findById(productInfoDto.getProductId())
                     .orElseThrow(() -> new IllegalArgumentException(OrderErrorMessage.PRODUCT_NOT_FOUND_EXCEPTION));
 
             OrderProductInfo orderProductInfo = createOrderProductInfo(productInfoDto, findProduct);
-            Order order = createAndSaveOrder(request);
+            order = createAndSaveOrder(request);
             orderProductInfo.setOrder(order);
 
             OrderProductInfo savedOrderProductInfo = orderProductInfoRepository.save(orderProductInfo);
             saveOrderProductOption(productInfoDto, savedOrderProductInfo);
             orderProductInfoRepository.save(orderProductInfo);
         }
+        if (order == null) {
+            throw new IllegalArgumentException("주문서가 생성되지 않았습니다.");
+        }
 
-        return true;
+        return order.getId();
     }
 
-    private void saveOrderProductOption(OrderRequestDto.OrderProductInfoDto productInfoDto, OrderProductInfo orderProductInfo) {
-        for (OrderRequestDto.OrderProductOptionDto optionDto : productInfoDto.getOptions()) {
+    private void saveOrderProductOption(OrderProductInfoDto productInfoDto, OrderProductInfo orderProductInfo) {
+        for (OrderProductOptionDto optionDto : productInfoDto.getOptions()) {
             OrderProductOption orderProductOption = OrderProductOption.builder()
                     .orderProductInfo(orderProductInfo)
                     .name(optionDto.getOptionName())
@@ -63,7 +72,7 @@ public class OrderCommandService {
         }
     }
 
-    private OrderProductInfo createOrderProductInfo(OrderRequestDto.OrderProductInfoDto productInfoDto, Product findProduct) {
+    private OrderProductInfo createOrderProductInfo(OrderProductInfoDto productInfoDto, Product findProduct) {
         OrderProductInfo orderProductInfo = OrderProductInfo.builder()
                 .product(findProduct)
                 .price(productInfoDto.getOriginPrice())
@@ -80,7 +89,7 @@ public class OrderCommandService {
 
         Order order = Order.builder()
                 .user(findUser)
-                .state(OrderState.NONE)
+                .state(OrderState.WAIT_DEPOSIT)
                 .totalPrice(request.getTotalPrice())
                 .orderedAt(LocalDateTime.now()).build();
         orderRepository.createSequenceAndSave(order);

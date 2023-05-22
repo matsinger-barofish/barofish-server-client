@@ -1,9 +1,13 @@
 package com.matsinger.barofishserver.order;
 
+import com.matsinger.barofishserver.order.dto.OrderProductInfoDto;
+import com.matsinger.barofishserver.order.dto.OrderProductOptionDto;
+import com.matsinger.barofishserver.order.dto.response.OrderResponseDto;
 import com.matsinger.barofishserver.product.Product;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.aspectj.weaver.ast.Or;
 
@@ -15,6 +19,7 @@ import java.util.Objects;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@Getter
 @Entity
 @Table(name = "order_product_info", schema = "barofish_dev", catalog = "")
 public class OrderProductInfo {
@@ -119,5 +124,15 @@ public class OrderProductInfo {
     @Override
     public int hashCode() {
         return Objects.hash(id, order.getId(), product.getId(), price, amount, deliveryFee);
+    }
+
+    public OrderProductInfoDto toDto(List<OrderProductOptionDto> options) {
+        return OrderProductInfoDto.builder()
+                .productId(this.id)
+                .originPrice(this.price)
+                .discountRate(this.discountRate)
+                .amount(this.amount)
+                .options(options)
+                .deliveryFee(this.deliveryFee).build();
     }
 }

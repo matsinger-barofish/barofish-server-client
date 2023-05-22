@@ -17,6 +17,7 @@ import lombok.NoArgsConstructor;
 public class UserAuth {
 
     @Id
+    @Enumerated(EnumType.STRING)
     @Column(name = "login_type", nullable = false, length = 20)
     private LoginType loginType;
 

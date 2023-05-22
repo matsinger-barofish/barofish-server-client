@@ -31,6 +31,7 @@ public class Order {
     private List<OrderProductInfo> orderProductInfos = new ArrayList<>();
 
     @Basic
+    @Enumerated(EnumType.STRING)
     @Column(name = "state", nullable = false, length = 20)
     private OrderState state;
 

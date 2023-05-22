@@ -1,12 +1,15 @@
 package com.matsinger.barofishserver.order;
 
+import com.matsinger.barofishserver.order.dto.OrderProductOptionDto;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.util.Objects;
 
+@Getter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
@@ -70,5 +73,12 @@ public class OrderProductOption {
     @Override
     public int hashCode() {
         return Objects.hash(id, orderProductInfo.getProductId(), name, price);
+    }
+
+    public OrderProductOptionDto toDto() {
+        return OrderProductOptionDto.builder()
+                .optionId(this.id)
+                .optionName(this.name)
+                .optionPrice(this.price).build();
     }
 }

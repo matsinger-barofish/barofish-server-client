@@ -32,6 +32,7 @@ public class Product {
     @Column(name = "category_id", nullable = false)
     private int categoryId;
     @Basic
+    @Enumerated(EnumType.STRING)
     @Column(name = "state", nullable = false)
     private ProductState state;
     @Basic
