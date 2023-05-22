@@ -14,7 +14,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @Transactional(readOnly = true)
@@ -29,9 +28,18 @@ public class OrderQueryService {
                     throw new IllegalStateException(OrderErrorMessage.ORDER_NOT_FOUND_EXCEPTION);
                 });
 
+        List<OrderProductInfoDto> products = createDtos(findOrder);
+
+        return OrderResponseDto.builder()
+                .userId(findOrder.getId())
+                .totalPrice(findOrder.getTotalPrice())
+                .products(products).build();
+    }
+
+    private List<OrderProductInfoDto> createDtos(Order findOrder) {
         List<OrderProductInfoDto> products = new ArrayList<>();
 
-        for (OrderProductInfo productInfo: findOrder.getOrderProductInfo()) {
+        for (OrderProductInfo productInfo : findOrder.getOrderProductInfo()) {
             List<OrderProductOptionDto> options = new ArrayList<>();
 
             for (OrderProductOption productOption : productInfo.getOrderProductOption()) {
@@ -39,9 +47,6 @@ public class OrderQueryService {
             }
             products.add(productInfo.toDto(options));
         }
-        return OrderResponseDto.builder()
-                .userId(findOrder.getId())
-                .totalPrice(findOrder.getTotalPrice())
-                .products(products).build();
+        return products;
     }
 }

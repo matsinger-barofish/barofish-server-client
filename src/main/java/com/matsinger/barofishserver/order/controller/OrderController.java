@@ -34,14 +34,18 @@ public class OrderController {
     // 주문내역 단건조회
     @GetMapping("/v1/order/{id}")
     public ResponseEntity<Object> getOrder(@PathVariable("id") String orderId) {
-        OrderResponseDto response = orderQueryService.getOrder(orderId);
-        return new ResponseEntity<>(response, HttpStatus.OK);
+        try {
+            OrderResponseDto response = orderQueryService.getOrder(orderId);
+            return new ResponseEntity<>(response, HttpStatus.OK);
+        } catch (Exception e) {
+            throw new OrderBusinessException(e.getMessage(), e);
+        }
     }
-    // 주문내역 전체조회
-
-    // 주문취소
 
     // 주문내역 삭제
-    // 1. 사용자가 현재 주문서를 이탈하면 주문서 삭제
-    // 2. 매일 결제 테이블이 매핑되지 않은 주문서 삭제하는 스케쥴러 구현
+    // 매일 결제 테이블이 매핑되지 않은 주문서 삭제하는 스케쥴러 구현
+
+
+    // 주문내역 삭제
+    // 사용자가 현재 주문서를 이탈하면 주문서 삭제
 }
