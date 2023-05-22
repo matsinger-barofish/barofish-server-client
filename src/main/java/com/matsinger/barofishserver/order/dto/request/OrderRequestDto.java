@@ -4,6 +4,7 @@ import com.matsinger.barofishserver.order.OrderProductOption;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import java.util.List;
 
@@ -12,22 +13,28 @@ import java.util.List;
 @AllArgsConstructor
 public class OrderRequestDto {
 
-    private int userId;
+    private String userId;
     private int totalPrice;
 
     private List<OrderProductInfoDto> products;
 
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
     @Getter
     public static class OrderProductInfoDto {
 
         private int productId;
         private int originPrice;
-        private int discountRate;
+        private double discountRate;
         private int amount;
         private int deliveryFee;
         private List<OrderProductOptionDto> options;
     }
 
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
     @Getter
     public static class OrderProductOptionDto {
 

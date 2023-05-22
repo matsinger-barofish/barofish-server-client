@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
@@ -15,7 +16,7 @@ import java.util.Objects;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "order", schema = "barofish_dev", catalog = "")
+@Table(name = "orders", schema = "barofish_dev", catalog = "")
 public class Order {
     @Id
     @Column(name = "id", nullable = false, length = 20)
@@ -24,13 +25,14 @@ public class Order {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
+    @Builder.Default
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "order")
     @Column(name = "order_product_infos", nullable = false)
-    private List<OrderProductInfo> orderProductInfos;
+    private List<OrderProductInfo> orderProductInfos = new ArrayList<>();
 
     @Basic
     @Column(name = "state", nullable = false, length = 20)
-    private Object state;
+    private OrderState state;
 
     @Basic
     @Column(name = "total_price", nullable = false)
@@ -52,11 +54,11 @@ public class Order {
         return user.getId();
     }
 
-    public Object getState() {
+    public OrderState getState() {
         return state;
     }
 
-    public void setState(Object state) {
+    public void setState(OrderState state) {
         this.state = state;
     }
 

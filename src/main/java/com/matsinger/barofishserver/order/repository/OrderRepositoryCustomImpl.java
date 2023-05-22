@@ -31,8 +31,7 @@ public class OrderRepositoryCustomImpl implements OrderRepositoryCustom {
         return Optional.ofNullable(order);
     }
 
-    @Override
-    public String generateOrderNumber(LocalDateTime orderDateTime) {
+    private String generateOrderNumber(LocalDateTime orderDateTime) {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyMMddHHmmss");
         String formattedDateTime = orderDateTime.format(formatter);
         // Order 테이블의 최대 시퀀스 값을 조회하여 현재 시퀀스 값을 결정
@@ -42,14 +41,14 @@ public class OrderRepositoryCustomImpl implements OrderRepositoryCustom {
         return formattedDateTime + "-" + formattedSequence;
     }
 
-    @Override
-    public int calculateCurrentSequence(LocalDateTime orderDateTime) {
+    private int calculateCurrentSequence(LocalDateTime orderDateTime) {
         // Order 테이블에서 해당 일자와 동일한 주문의 수를 조회
         String formattedDateTime = orderDateTime.format(DateTimeFormatter.ofPattern("yyMMddHHmm"));
-//        String query = "SELECT COUNT(o) FROM Order o WHERE FUNCTION('DATE_FORMAT', o.orderDateTime, '%y%m%d%H%i%s') = :formattedDateTime";
+
         String query = "SELECT COUNT(o) FROM Order o WHERE " +
-                "FUNCTION('DATE_FORMAT', o.orderDateTime, '%y%m%d%H%i') = " +
+                "FUNCTION('DATE_FORMAT', o.orderedAt, '%y%m%d%H%i') = " +
                 "FUNCTION('DATE_FORMAT', :formattedDateTime, '%y%m%d%H%i')";
+
         int currentSequence = getSequence(formattedDateTime, query);
 
         if (currentSequence > 9999) {
