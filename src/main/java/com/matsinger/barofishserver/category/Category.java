@@ -2,10 +2,7 @@ package com.matsinger.barofishserver.category;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -15,6 +12,7 @@ import java.util.Optional;
 @Entity
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 @Getter
 @Setter
 @Table(name = "category", schema = "barofish_dev", catalog = "")
@@ -37,6 +35,7 @@ public class Category {
     @JoinColumn(name = "category_id",  referencedColumnName = "id", insertable = false, updatable = false)
     private Category parentCategory;
 
+    @Builder.Default
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "parentCategory")
     private List<Category> categoryList = new ArrayList<>();
 

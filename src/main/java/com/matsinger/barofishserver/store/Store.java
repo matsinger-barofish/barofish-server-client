@@ -1,10 +1,16 @@
 package com.matsinger.barofishserver.store;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.NoArgsConstructor;
 
 import java.sql.Timestamp;
 import java.util.Objects;
 
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 @Entity
 @Table(name = "store", schema = "barofish_dev", catalog = "")
 public class Store {

@@ -1,5 +1,6 @@
 package com.matsinger.barofishserver.product;
 
+import com.matsinger.barofishserver.store.Store;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -20,15 +21,19 @@ public class Product {
     @Id
     @Column(name = "id", nullable = false)
     private int id;
+
     @Basic
-    @Column(name = "store_id", nullable = false)
-    private int storeId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "store_id", nullable = false)
+//    @Column(name = "store_id", nullable = false)
+    private Store store;
+
     @Basic
     @Column(name = "category_id", nullable = false)
     private int categoryId;
     @Basic
     @Column(name = "state", nullable = false)
-    private Object state;
+    private ProductState state;
     @Basic
     @Column(name = "images", nullable = false, length = -1)
     private String images;
@@ -59,13 +64,13 @@ public class Product {
         this.id = id;
     }
 
-    public int getStoreId() {
-        return storeId;
-    }
-
-    public void setStoreId(int storeId) {
-        this.storeId = storeId;
-    }
+//    public int getStoreId() {
+//        return storeId;
+//    }
+//
+//    public void setStoreId(int storeId) {
+//        this.storeId = storeId;
+//    }
 
     public int getCategoryId() {
         return categoryId;
@@ -79,7 +84,7 @@ public class Product {
         return state;
     }
 
-    public void setState(Object state) {
+    public void setState(ProductState state) {
         this.state = state;
     }
 
@@ -145,7 +150,7 @@ public class Product {
         if (o == null || getClass() != o.getClass()) return false;
         Product that = (Product) o;
         return id == that.id &&
-                storeId == that.storeId &&
+//                storeId == that.storeId &&
                 categoryId == that.categoryId &&
                 originPrice == that.originPrice &&
                 discountRate == that.discountRate &&
@@ -160,7 +165,7 @@ public class Product {
     @Override
     public int hashCode() {
         return Objects.hash(id,
-                storeId,
+//                storeId,
                 categoryId,
                 state,
                 images,

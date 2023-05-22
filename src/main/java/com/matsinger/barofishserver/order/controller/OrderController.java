@@ -17,9 +17,9 @@ public class OrderController {
     @PostMapping("/v1/payment")
     public boolean order(@RequestBody OrderRequestDto request) {
         try {
-            return orderCommandService.createOrder(request);
+            return orderCommandService.createOrderSheet(request);
         } catch (Exception e) {
-            throw new OrderBusinessException(e.getMessage());
+            throw new OrderBusinessException(e.getMessage(), e);
         }
     }
 

@@ -1,10 +1,22 @@
 package com.matsinger.barofishserver.user;
 
+import com.matsinger.barofishserver.userauth.UserAuth;
+import com.matsinger.barofishserver.userauth.UserAuthId;
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 
 import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
+@Getter
+@Builder
+@RequiredArgsConstructor
+@AllArgsConstructor
 @Entity
 @Table(name = "user", schema = "barofish_dev", catalog = "")
 public class User {
@@ -12,6 +24,12 @@ public class User {
     @Id
     @Column(name = "id", nullable = false)
     private int id;
+
+    @Builder.Default
+    @OneToMany(mappedBy = "user")
+    @Column(name = "user_id", nullable = false)
+    private List<UserAuth> userAuths = new ArrayList<>();
+
     @Basic
     @Column(name = "state", nullable = false)
     @Enumerated(EnumType.STRING)

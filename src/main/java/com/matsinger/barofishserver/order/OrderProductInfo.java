@@ -7,9 +7,11 @@ import lombok.Builder;
 import lombok.NoArgsConstructor;
 import org.aspectj.weaver.ast.Or;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+// TODO: 파트너마다 묶음배송이 되기 때문에 개별적인 상품에 배송 관련 state가 있어야 함.
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
@@ -37,9 +39,10 @@ public class OrderProductInfo {
     @JoinColumn(name = "product_id", nullable = false)
     private Product product;
 
-    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @Column(name = "order_product_option", nullable = false)
-    private List<OrderProductOption> orderProductOption;
+    @Builder.Default
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "orderProductInfo")
+    @Column(name = "order_product_option_id", nullable = false)
+    private List<OrderProductOption> orderProductOption = new ArrayList<>();
 
     public void setOrderProductOption(OrderProductOption option) {
         orderProductOption.add(option);
@@ -50,7 +53,7 @@ public class OrderProductInfo {
     private int price;
 
     @Column(name = "discount_rate", nullable = false)
-    private int discountRate;
+    private double discountRate;
 
     @Basic
     @Column(name = "amount", nullable = false)
