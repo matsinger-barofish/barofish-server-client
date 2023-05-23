@@ -31,6 +31,10 @@ public class OrderProductOption {
     @Column(name = "price", nullable = false)
     private int price;
 
+    @Basic
+    @Column(name = "amount", nullable = false)
+    private int amount;
+
     public int getId() {
         return id;
     }
@@ -79,6 +83,7 @@ public class OrderProductOption {
         return OrderProductOptionDto.builder()
                 .optionId(this.id)
                 .optionName(this.name)
+                .amount(this.amount)
                 .optionPrice(this.price).build();
     }
 }

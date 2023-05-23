@@ -32,7 +32,8 @@ public class Category {
     private String name;
     @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "category_id",  referencedColumnName = "id", insertable = false, updatable = false)
+//    @JoinColumn(name = "category_id",  referencedColumnName = "id", insertable = false, updatable = false)
+    @JoinColumn(name = "parent_category_id", referencedColumnName = "id")
     private Category parentCategory;
 
     @Builder.Default

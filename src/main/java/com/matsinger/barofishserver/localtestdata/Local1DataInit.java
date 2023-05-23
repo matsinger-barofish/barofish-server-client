@@ -37,7 +37,6 @@ import java.util.List;
 @RequiredArgsConstructor
 public class Local1DataInit {
 
-    private final TestUserService testUserService;
     private final TestOrderService testOrderService;
     private final TestProductService testProductService;
     private final TestCategoryService testCategoryService;
@@ -49,7 +48,6 @@ public class Local1DataInit {
         testCategoryService.createTestCategory();
         testStoreService.createTestStore();
         testProductService.createProduct();
-        testUserService.createUser();
         testOrderService.createTestOrders();
     }
 }

@@ -14,4 +14,5 @@ public class OrderProductOptionDto {
     private int optionId;
     private String optionName;
     private int optionPrice;
+    private int amount;
 }

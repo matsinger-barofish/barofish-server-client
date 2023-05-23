@@ -44,6 +44,11 @@ public class OrderProductInfo {
     @JoinColumn(name = "product_id", nullable = false)
     private Product product;
 
+    @Basic
+    @Enumerated(EnumType.STRING)
+    @Column(name = "state", nullable = false, length = 20)
+    private OrderState state;
+
     @Builder.Default
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "orderProductInfo")
     @Column(name = "order_product_option_id", nullable = false)
@@ -132,6 +137,7 @@ public class OrderProductInfo {
                 .originPrice(this.price)
                 .discountRate(this.discountRate)
                 .amount(this.amount)
+                .state(this.state)
                 .options(options)
                 .deliveryFee(this.deliveryFee).build();
     }

@@ -1,5 +1,6 @@
 package com.matsinger.barofishserver.product;
 
+import com.matsinger.barofishserver.category.Category;
 import com.matsinger.barofishserver.store.Store;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -29,8 +30,9 @@ public class Product {
     private Store store;
 
     @Basic
-    @Column(name = "category_id", nullable = false)
-    private int categoryId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "category_id", nullable = false)
+    private Category category;
     @Basic
     @Enumerated(EnumType.STRING)
     @Column(name = "state", nullable = false)
@@ -74,12 +76,12 @@ public class Product {
 //    }
 
     public int getCategoryId() {
-        return categoryId;
+        return category.getId();
     }
 
-    public void setCategoryId(int categoryId) {
-        this.categoryId = categoryId;
-    }
+//    public void setCategoryId(int categoryId) {
+//        this.categoryId = categoryId;
+//    }
 
     public Object getState() {
         return state;
@@ -152,7 +154,7 @@ public class Product {
         Product that = (Product) o;
         return id == that.id &&
 //                storeId == that.storeId &&
-                categoryId == that.categoryId &&
+//                categoryId == that.categoryId &&
                 originPrice == that.originPrice &&
                 discountRate == that.discountRate &&
                 Objects.equals(state, that.state) &&
@@ -167,7 +169,7 @@ public class Product {
     public int hashCode() {
         return Objects.hash(id,
 //                storeId,
-                categoryId,
+//                categoryId,
                 state,
                 images,
                 title,

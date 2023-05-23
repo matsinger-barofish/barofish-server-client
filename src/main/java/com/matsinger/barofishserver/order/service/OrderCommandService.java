@@ -18,13 +18,10 @@ import com.matsinger.barofishserver.user.UserRepository;
 import com.matsinger.barofishserver.userauth.UserAuthRepository;
 import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.HashMap;
 
 @Service
 @Transactional
@@ -66,6 +63,7 @@ public class OrderCommandService {
             OrderProductOption orderProductOption = OrderProductOption.builder()
                     .orderProductInfo(orderProductInfo)
                     .name(optionDto.getOptionName())
+                    .amount(optionDto.getAmount())
                     .price(optionDto.getOptionPrice()).build();
             orderProductInfo.setOrderProductOption(orderProductOption);
             orderProductOptionRepository.save(orderProductOption);
@@ -73,17 +71,17 @@ public class OrderCommandService {
     }
 
     private OrderProductInfo createOrderProductInfo(OrderProductInfoDto productInfoDto, Product findProduct) {
-        OrderProductInfo orderProductInfo = OrderProductInfo.builder()
+        return OrderProductInfo.builder()
                 .product(findProduct)
                 .price(productInfoDto.getOriginPrice())
                 .discountRate(productInfoDto.getDiscountRate())
                 .amount(productInfoDto.getAmount())
+                .state(OrderState.WAIT_DEPOSIT)
                 .deliveryFee(productInfoDto.getDeliveryFee()).build();
-        return orderProductInfo;
     }
 
     private Order createAndSaveOrder(OrderRequestDto request) {
-        User findUser = userAuthRepository.findByLoginId(request.getUserId())
+        User findUser = userAuthRepository.findByLoginId(request.getLoginId())
                 .orElseThrow(() -> new IllegalArgumentException(OrderErrorMessage.USER_NOT_FOUND_EXCEPTION))
                 .getUser();
 

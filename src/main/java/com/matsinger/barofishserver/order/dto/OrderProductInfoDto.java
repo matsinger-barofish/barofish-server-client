@@ -1,5 +1,6 @@
 package com.matsinger.barofishserver.order.dto;
 
+import com.matsinger.barofishserver.order.OrderState;
 import com.matsinger.barofishserver.order.dto.request.OrderRequestDto;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -19,5 +20,6 @@ public class OrderProductInfoDto {
     private double discountRate;
     private int amount;
     private int deliveryFee;
+    private OrderState state;
     private List<OrderProductOptionDto> options;
 }

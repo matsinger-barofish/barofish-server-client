@@ -13,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Slf4j
@@ -24,7 +25,11 @@ public class TestUserService {
     private final UserRepository userRepository;
     private final UserAuthRepository userAuthRepository;
 
-    public void createUser() {
+    /**
+     * return: List<UserAuth> -> 추후에 수정 가능성 있음.
+     */
+    public List<UserAuth> createUser() {
+        List<UserAuth> userAuths = new ArrayList<>();
         for (int i = 1; i < 3; i++) {
             User createdUser = User.builder()
                     .state(UserState.ACTIVE)
@@ -37,7 +42,10 @@ public class TestUserService {
 
             createdUserAuth.setUser(createdUser);
             userRepository.save(createdUser);
-            userAuthRepository.save(createdUserAuth);
+            UserAuth savedAuth = userAuthRepository.save(createdUserAuth);
+
+            userAuths.add(savedAuth);
         }
+        return userAuths;
     }
 }

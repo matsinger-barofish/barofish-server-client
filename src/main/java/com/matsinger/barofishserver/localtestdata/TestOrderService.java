@@ -1,9 +1,13 @@
 package com.matsinger.barofishserver.localtestdata;
 
+import com.matsinger.barofishserver.order.OrderState;
 import com.matsinger.barofishserver.order.dto.OrderProductInfoDto;
 import com.matsinger.barofishserver.order.dto.OrderProductOptionDto;
 import com.matsinger.barofishserver.order.dto.request.OrderRequestDto;
 import com.matsinger.barofishserver.order.service.OrderCommandService;
+import com.matsinger.barofishserver.product.Product;
+import com.matsinger.barofishserver.product.ProductRepository;
+import com.matsinger.barofishserver.userauth.UserAuth;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -16,17 +20,23 @@ public class TestOrderService {
 
     private final OrderCommandService orderCommandService;
     private final TestUserService testUserService;
+    private final ProductRepository productRepository;
 
     public void createTestOrders() {
 
-        List<OrderProductInfoDto> products = createProductInfoDtos();
+        List<UserAuth> userAuths = testUserService.createUser();
 
-        OrderRequestDto orderRequest = OrderRequestDto.builder()
-                .loginId("test1")
-                .totalPrice(100000)
-                .products(products).build();
+        for (UserAuth userAuth : userAuths) {
 
-        orderCommandService.createOrderSheet(orderRequest);
+            List<OrderProductInfoDto> products = createProductInfoDtos();
+
+            OrderRequestDto orderRequest = OrderRequestDto.builder()
+                    .loginId(userAuth.getLoginId())
+                    .totalPrice(100000)
+                    .products(products).build();
+
+            orderCommandService.createOrderSheet(orderRequest);
+        }
     }
 
     private List<OrderProductInfoDto> createProductInfoDtos() {
@@ -37,11 +47,14 @@ public class TestOrderService {
 
             createOptionDtos(options);
 
+            Product findProduct = productRepository.findByTitle("testProduct" + i).get();
+
             OrderProductInfoDto productInfoDto = OrderProductInfoDto.builder()
-                    .productId(i)
+                    .productId(findProduct.getId())
                     .originPrice(5000 * i)
                     .discountRate(i * 0.1)
                     .amount(10 * i)
+                    .state(OrderState.WAIT_DEPOSIT)
                     .deliveryFee(1000 * i)
                     .options(options).build();
             products.add(productInfoDto);
@@ -54,6 +67,7 @@ public class TestOrderService {
             OrderProductOptionDto optionDto = OrderProductOptionDto.builder()
                     .optionId(j)
                     .optionName("testOption" + j)
+                    .amount(1)
                     .optionPrice(1000 * j).build();
             options.add(optionDto);
         }
