@@ -9,18 +9,18 @@ import java.util.Objects;
 public class UserInfo {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Id
-    @Column(name = "id", nullable = false)
-    private int id;
+    @Column(name = "user_id", nullable = false)
+    private int userId;
     @Basic
     @Column(name = "nickname", nullable = false, length = 50)
     private String nickname;
 
     public int getId() {
-        return id;
+        return userId;
     }
 
     public void setId(int id) {
-        this.id = id;
+        this.userId = id;
     }
 
     public String getNickname() {
@@ -36,11 +36,11 @@ public class UserInfo {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         UserInfo that = (UserInfo) o;
-        return id == that.id && Objects.equals(nickname, that.nickname);
+        return userId == that.userId && Objects.equals(nickname, that.nickname);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, nickname);
+        return Objects.hash(userId, nickname);
     }
 }

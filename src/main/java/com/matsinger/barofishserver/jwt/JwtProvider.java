@@ -83,12 +83,16 @@ public class JwtProvider {
     }
 
     // id를 입력받아 accessToken 생성
-    public String generateRefreshToken(String id) {
-        return doGenerateRefreshToken(id);
+    public String generateRefreshToken(String id, TokenAuthType issuer) {
+
+        String
+                issuerString =
+                issuer.equals(TokenAuthType.USER) ? "USER" : issuer.equals(TokenAuthType.PARTNER) ? "PARTNER" : "ADMIN";
+        return doGenerateRefreshToken(id, issuerString);
     }
 
     // JWT accessToken 생성
-    private String doGenerateRefreshToken(String id) {
+    private String doGenerateRefreshToken(String id, String issuer) {
         String
                 refreshToken =
                 Jwts.builder().setId(id).setExpiration(new Date(System.currentTimeMillis() +

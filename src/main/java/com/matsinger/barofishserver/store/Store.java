@@ -1,12 +1,16 @@
 package com.matsinger.barofishserver.store;
 
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.sql.Timestamp;
 import java.util.Objects;
 
 @Entity
 @Table(name = "store", schema = "barofish_dev", catalog = "")
+@Getter
+@Setter
 public class Store {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Id
@@ -25,6 +29,10 @@ public class Store {
     @Basic
     @Column(name = "join_at", nullable = false)
     private Timestamp joinAt;
+
+    @OneToOne
+    @JoinColumn(name = "id")
+    private StoreInfo storeInfo;
 
     public int getId() {
         return id;

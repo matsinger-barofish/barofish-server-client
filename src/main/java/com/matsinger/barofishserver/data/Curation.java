@@ -2,12 +2,16 @@ package com.matsinger.barofishserver.data;
 
 import jakarta.persistence.*;
 import lombok.Builder;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
 @Entity
+@Getter
+@Setter
 @Table(name = "curation", schema = "barofish_dev", catalog = "")
 public class Curation {
     @GeneratedValue(strategy = GenerationType.IDENTITY)

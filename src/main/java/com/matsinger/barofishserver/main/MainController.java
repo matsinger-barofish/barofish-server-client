@@ -3,6 +3,7 @@ package com.matsinger.barofishserver.main;
 import com.matsinger.barofishserver.banner.Banner;
 import com.matsinger.barofishserver.banner.BannerService;
 import com.matsinger.barofishserver.data.*;
+import com.matsinger.barofishserver.product.ProductService;
 import com.matsinger.barofishserver.utils.CustomResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -22,16 +23,21 @@ public class MainController {
     private final BannerService bannerService;
     private final CurationService curationService;
     private final TipService tipService;
+
+    private final ProductService productService;
     //TODO: 스토어 정보
 
     @GetMapping("")
-    public ResponseEntity<CustomResponse> selectMainItems() {
-        CustomResponse res = new CustomResponse();
+    public ResponseEntity<CustomResponse<Main>> selectMainItems() {
+        CustomResponse<Main> res = new CustomResponse();
         try {
             Main data = new Main();
             List<TopBar> topBars = topBarService.selectTopBarList();
             List<Banner> banners = bannerService.selectBannerList();
             List<Curation> curations = curationService.selectCurations();
+            for (Curation curation: curations){
+//                curation.set
+            }
             List<Tip> tips = tipService.selectTipList();
             data.setTips(tips);
             data.setCurations(curations);

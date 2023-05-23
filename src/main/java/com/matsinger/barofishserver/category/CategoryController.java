@@ -55,7 +55,7 @@ public class CategoryController {
             category.setName(name);
             String imageUrl = null;
             if (categoryId == null) {
-                if (file == null) return res.throwError("상위 카테고리의 경우 이미지는 필수입니다.", "INPUT_CHECK_NEEDED");
+                if (file == null) return res.throwError("상위 카테고리의 경우 이미지는 필수입니다.", "INPUT_CHECK_REQUIRED");
                 imageUrl = s3.upload(file, new ArrayList<>(Arrays.asList("category")));
                 category.setImage(imageUrl);
             } else {
@@ -89,7 +89,7 @@ public class CategoryController {
                 imageUrl = s3.upload(image, new ArrayList<>(Arrays.asList("category")));
                 category.setImage(imageUrl);
             }
-            categoryService.update(Long.valueOf(id), category);
+            categoryService.update(id, category);
             res.setData(Optional.of(category));
             return ResponseEntity.ok(res);
         } catch (Exception e) {

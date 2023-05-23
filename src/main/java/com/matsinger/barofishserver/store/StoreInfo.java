@@ -7,10 +7,10 @@ import java.util.Objects;
 @Entity
 @Table(name = "store_info", schema = "barofish_dev", catalog = "")
 public class StoreInfo {
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+        @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Id
-    @Column(name = "id", nullable = false)
-    private int id;
+    @Column(name = "store_id", nullable = false)
+    private int storeId;
     @Basic
     @Column(name = "backgroud_image", nullable = false, length = -1)
     private String backgroudImage;
@@ -27,12 +27,14 @@ public class StoreInfo {
     @Column(name = "keyword", nullable = false, length = -1)
     private String keyword;
 
+
+
     public int getId() {
-        return id;
+        return storeId;
     }
 
     public void setId(int id) {
-        this.id = id;
+        this.storeId = id;
     }
 
     public String getBackgroudImage() {
@@ -80,16 +82,17 @@ public class StoreInfo {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         StoreInfo that = (StoreInfo) o;
-        return id == that.id &&
+        return
+//                storeId == that.storeId &&
                 Objects.equals(backgroudImage, that.backgroudImage) &&
-                Objects.equals(profileImage, that.profileImage) &&
-                Objects.equals(name, that.name) &&
-                Objects.equals(location, that.location) &&
-                Objects.equals(keyword, that.keyword);
+                        Objects.equals(profileImage, that.profileImage) &&
+                        Objects.equals(name, that.name) &&
+                        Objects.equals(location, that.location) &&
+                        Objects.equals(keyword, that.keyword);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, backgroudImage, profileImage, name, location, keyword);
+        return Objects.hash(backgroudImage, profileImage, name, location, keyword);
     }
 }

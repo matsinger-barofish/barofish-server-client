@@ -55,26 +55,26 @@ public class BannerController {
 
     @PostMapping("/add")
     public ResponseEntity<CustomResponse<Banner>> createBanner(@RequestHeader(value = "Authorization") Optional<String> auth,
-                                                       @RequestPart(value = "type") BannerType type,
-                                                       @RequestPart(value = "image") MultipartFile image,
-                                                       @RequestPart(value = "curationId", required = false) Integer curationId,
-                                                       @RequestPart(value = "noticeId", required = false) Integer noticeId,
-                                                       @RequestPart(value = "categoryId", required = false) Integer categoryId) {
+                                                               @RequestPart(value = "type") BannerType type,
+                                                               @RequestPart(value = "image") MultipartFile image,
+                                                               @RequestPart(value = "curationId", required = false) Integer curationId,
+                                                               @RequestPart(value = "noticeId", required = false) Integer noticeId,
+                                                               @RequestPart(value = "categoryId", required = false) Integer categoryId) {
         CustomResponse<Banner> res = new CustomResponse();
         Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
         if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
         try {
             Banner banner = new Banner();
             if (type == BannerType.CATEGORY) {
-                if (categoryId == null) return res.throwError("카테고리 아이디를 입력해주세요.", "INPUT_CHECK_NEEDED");
+                if (categoryId == null) return res.throwError("카테고리 아이디를 입력해주세요.", "INPUT_CHECK_REQUIRED");
                 categoryService.findById(categoryId);
                 banner.setCategoryId(categoryId);
             } else if (type == BannerType.CURATION) {
-                if (curationId == null) return res.throwError("큐레이션 아이디를 입력해주세요.", "INPUT_CHECK_NEEDED");
+                if (curationId == null) return res.throwError("큐레이션 아이디를 입력해주세요.", "INPUT_CHECK_REQUIRED");
                 curationService.findById(curationId);
                 banner.setCurationId(curationId);
             } else if (type == BannerType.NOTICE) {
-                if (noticeId == null) return res.throwError("배너 아이디를 입력해주세요.", "INPUT_CHECK_NEEDED");
+                if (noticeId == null) return res.throwError("배너 아이디를 입력해주세요.", "INPUT_CHECK_REQUIRED");
                 // TODO: 공지사항 생성 후 검증 유효성 추가 필요
 //                curationService.findById(categoryId);
                 banner.setNoticeId(noticeId);
@@ -94,9 +94,8 @@ public class BannerController {
     }
 
     @PostMapping("/update/{id}")
-    public ResponseEntity<CustomResponse<Banner>> updateBanner(
-            @RequestHeader(value = "Authorization") Optional<String> auth
-    ) {
+    public ResponseEntity<CustomResponse<Banner>> updateBanner(@RequestHeader(value = "Authorization") Optional<String> auth,
+                                                               @PathVariable("id") Integer id) {
         CustomResponse<Banner> res = new CustomResponse();
         Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
         if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");

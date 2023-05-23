@@ -18,19 +18,19 @@ public class CategoryService {
 
 
     public List<Category> findAll(Integer id) {
-        if (id != null) return categoryRepository.findAllByCategoryId(Long.valueOf(id));
+        if (id != null) return categoryRepository.findAllByCategoryId(id);
         return categoryRepository.findAll();
     }
 
     public Category findById(Integer id) {
-        return categoryRepository.findById(Long.valueOf(id)).orElseThrow(() -> new Error("카테고리 정보를 찾을 수 없습니다."));
+        return categoryRepository.findById(id).orElseThrow(() -> new Error("카테고리 정보를 찾을 수 없습니다."));
     }
 
     public Category add(Category category) {
         return categoryRepository.save(category);
     }
 
-    public Category update(Long id, Category data) {
+    public Category update(Integer id, Category data) {
         Category category = categoryRepository.findById(id).get();
         if (data.getName() != null) category.setName(data.getName());
         if (data.getImage() != null) category.setImage(data.getImage());
@@ -40,7 +40,7 @@ public class CategoryService {
 
     public Boolean delete(Integer id) {
         try {
-            categoryRepository.deleteById(Long.valueOf(id));
+            categoryRepository.deleteById(id);
             return true;
         } catch (Exception e) {
             return false;

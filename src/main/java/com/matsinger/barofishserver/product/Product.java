@@ -1,13 +1,17 @@
 package com.matsinger.barofishserver.product;
 
+import com.matsinger.barofishserver.category.Category;
+import com.matsinger.barofishserver.review.Review;
+import com.matsinger.barofishserver.store.Store;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
+import org.hibernate.annotations.ValueGenerationType;
 
 import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 @Entity
 @AllArgsConstructor
@@ -20,15 +24,26 @@ public class Product {
     @Id
     @Column(name = "id", nullable = false)
     private int id;
-    @Basic
-    @Column(name = "store_id", nullable = false)
-    private int storeId;
-    @Basic
-    @Column(name = "category_id", nullable = false)
-    private int categoryId;
+//    @Basic
+//    @Column(name = "store_id", nullable = false)
+//    private int storeId;
+
+    @ManyToOne
+    @JoinColumn(name = "store_id")
+    private Store store;
+
+//    @Basic
+//    @Column(name = "category_id", nullable = false)
+//    private int categoryId;
+
+    @ManyToOne
+    @JoinColumn(name = "category_id")
+    private Category category;
+
     @Basic
     @Column(name = "state", nullable = false)
-    private Object state;
+    @Enumerated(EnumType.STRING)
+    private ProductState state;
     @Basic
     @Column(name = "images", nullable = false, length = -1)
     private String images;
@@ -51,6 +66,20 @@ public class Product {
     @Column(name = "created_at", nullable = false)
     private Timestamp createdAt;
 
+    @OneToMany
+    @JoinColumn(name = "product_id")
+    private List<Option> options = new ArrayList<>();
+
+    @OneToMany
+    @JoinColumn(name = "product_id")
+    private List<Review> reviews = new ArrayList<>();
+
+    @OneToMany
+    private List<Review>
+            imageReviews =
+            reviews.stream().filter(review -> review.getImages().length() != 0).collect(Collectors.toList());
+
+
     public int getId() {
         return id;
     }
@@ -59,27 +88,34 @@ public class Product {
         this.id = id;
     }
 
-    public int getStoreId() {
-        return storeId;
+    public Store getStore() {
+        return store;
+    }
+    public Integer getStoreId(){
+        return store.getId();
     }
 
-    public void setStoreId(int storeId) {
-        this.storeId = storeId;
+    public void setStore(Store store) {
+        this.store = store;
     }
 
-    public int getCategoryId() {
-        return categoryId;
+    public Category getCategory() {
+        return category;
     }
 
-    public void setCategoryId(int categoryId) {
-        this.categoryId = categoryId;
+    public Integer getCategoryId() {
+        return category.getId();
     }
 
-    public Object getState() {
+    public void setCategory(Category category) {
+        this.category = category;
+    }
+
+    public ProductState getState() {
         return state;
     }
 
-    public void setState(Object state) {
+    public void setState(ProductState state) {
         this.state = state;
     }
 
@@ -145,8 +181,8 @@ public class Product {
         if (o == null || getClass() != o.getClass()) return false;
         Product that = (Product) o;
         return id == that.id &&
-                storeId == that.storeId &&
-                categoryId == that.categoryId &&
+//                storeId == that.storeId &&
+//                categoryId == that.categoryId &&
                 originPrice == that.originPrice &&
                 discountRate == that.discountRate &&
                 Objects.equals(state, that.state) &&
@@ -160,15 +196,8 @@ public class Product {
     @Override
     public int hashCode() {
         return Objects.hash(id,
-                storeId,
-                categoryId,
-                state,
-                images,
-                title,
-                originPrice,
-                discountRate,
-                deliveryInfo,
-                descriptionImages,
-                createdAt);
+//                storeId,
+//                categoryId,
+                state, images, title, originPrice, discountRate, deliveryInfo, descriptionImages, createdAt);
     }
 }

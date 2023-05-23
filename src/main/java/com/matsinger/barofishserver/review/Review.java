@@ -1,5 +1,6 @@
 package com.matsinger.barofishserver.review;
 
+import com.matsinger.barofishserver.product.Product;
 import jakarta.persistence.*;
 
 import java.sql.Timestamp;
@@ -12,9 +13,14 @@ public class Review {
     @Id
     @Column(name = "id", nullable = false)
     private int id;
-    @Basic
-    @Column(name = "product_id", nullable = false)
-    private int productId;
+//    @Basic
+//    @Column(name = "product_id", nullable = false)
+//    private int productId;
+
+    @ManyToOne
+    @JoinColumn(name = "product_id")
+    private Product product;
+
     @Basic
     @Column(name = "store_id", nullable = false)
     private int storeId;
@@ -42,12 +48,12 @@ public class Review {
         this.id = id;
     }
 
-    public int getProductId() {
-        return productId;
+    public Product getProduct() {
+        return product;
     }
 
-    public void setProductId(int productId) {
-        this.productId = productId;
+    public void setProductId(Product product) {
+        this.product = product;
     }
 
     public int getStoreId() {
@@ -104,7 +110,7 @@ public class Review {
         if (o == null || getClass() != o.getClass()) return false;
         Review that = (Review) o;
         return id == that.id &&
-                productId == that.productId &&
+//                productId == that.productId &&
                 storeId == that.storeId &&
                 userId == that.userId &&
                 Objects.equals(evaluation, that.evaluation) &&
@@ -115,6 +121,6 @@ public class Review {
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, productId, storeId, userId, evaluation, images, content, createdAt);
+        return Objects.hash(id, storeId, userId, evaluation, images, content, createdAt);
     }
 }
