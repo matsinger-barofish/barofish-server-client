@@ -12,6 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.sql.Timestamp;
 import java.util.*;
 
 @RestController
@@ -62,11 +63,11 @@ public class TipController {
             Tip tip = new Tip();
             title = utils.validateString(title, 100L, "제목");
             description = utils.validateString(description, 200L, "설명");
-            String imageUrl = null;
-            imageUrl = s3.upload(image, new ArrayList<>(Arrays.asList("tip")));
+            String imageUrl = s3.upload(image, new ArrayList<>(Arrays.asList("tip")));
             tip.setTitle(title);
             tip.setDescription(description);
             tip.setImage(imageUrl);
+            tip.setCreatedAt(new Timestamp(System.currentTimeMillis()));
             res.setData(Optional.ofNullable(tipService.add(tip)));
             return ResponseEntity.ok(res);
         } catch (Exception e) {

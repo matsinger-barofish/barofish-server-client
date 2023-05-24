@@ -109,14 +109,16 @@ public class TopBarController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<CustomResponse> deleteTopBar(@RequestHeader(value = "Authorization") Optional<String> auth,
+    public ResponseEntity<CustomResponse<Boolean>> deleteTopBar(@RequestHeader(value = "Authorization") Optional<String> auth,
                                                        @PathVariable("id") Integer id) {
-        CustomResponse res = new CustomResponse();
+        CustomResponse<Boolean> res = new CustomResponse();
         Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
         if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
         try {
             TopBar topBar = topBarService.selectTopBar(id);
-            topBarService.delete(id);
+            Boolean result = topBarService.delete(id);
+            res.setData(Optional.ofNullable(result));
+            res.setIsSuccess(result);
             return ResponseEntity.ok(res);
         } catch (Exception e) {
             return res.defaultError(e);

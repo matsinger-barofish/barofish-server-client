@@ -24,7 +24,7 @@ public class Category {
     @Column(name = "id", nullable = false)
     private int id;
 
-    @Column(name = "category_id", nullable = true)
+    @Column(name = "parent_category_id", nullable = true)
     private Integer categoryId;
     @Basic
     @Column(name = "image", nullable = true, length = -1)
@@ -34,7 +34,7 @@ public class Category {
     private String name;
     @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "category_id",  referencedColumnName = "id", insertable = false, updatable = false)
+    @JoinColumn(name = "parent_category_id",  referencedColumnName = "id", insertable = false, updatable = false)
     private Category parentCategory;
 
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "parentCategory")
@@ -54,7 +54,7 @@ public class Category {
     }
 
     public void setCategoryId(Integer categoryId) {
-        this.parentCategory.id = categoryId;
+        this.categoryId = categoryId;
     }
 
     public String getImage() {

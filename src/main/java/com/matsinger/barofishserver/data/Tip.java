@@ -22,7 +22,7 @@ public class Tip {
     @Column(name = "image", nullable = false, length = -1)
     private String image;
     @Basic
-    @Column(name = "created_at", nullable = false)
+    @Column(name = "created_at", nullable = false, columnDefinition = "TIMESTAMP")
     private Timestamp createdAt;
 
     public int getId() {

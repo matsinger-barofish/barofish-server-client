@@ -1,10 +1,16 @@
 package com.matsinger.barofishserver.search;
 
 import jakarta.persistence.*;
+import lombok.*;
 
 import java.util.Objects;
 
 @Entity
+@Getter
+@Setter
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 @Table(name = "search_keyword", schema = "barofish_dev", catalog = "")
 public class SearchKeyword {
     @GeneratedValue(strategy = GenerationType.IDENTITY)

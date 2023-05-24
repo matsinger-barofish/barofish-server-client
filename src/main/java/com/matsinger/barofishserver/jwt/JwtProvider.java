@@ -20,7 +20,7 @@ public class JwtProvider {
     private String secret;
 
     // 1시간 단위
-    public static final long JWT_TOKEN_VALIDITY = 1000 * 60 * 60;
+    public static final long JWT_TOKEN_VALIDITY = 1000 * 60 * 60 * 24;
 
     // token으로 사용자 id 조회
     public Integer getIdFromToken(String token) {
@@ -76,9 +76,8 @@ public class JwtProvider {
         String
                 accessToken =
                 Jwts.builder().setClaims(claims).setIssuer(issuer).setId(id).setIssuedAt(new Date(System.currentTimeMillis())).setExpiration(
-                            new Date(System.currentTimeMillis() + JWT_TOKEN_VALIDITY * 1))// 1시간
-                    .signWith(SignatureAlgorithm.HS512, secret).compact();
-
+                        new Date(System.currentTimeMillis() +
+                                JWT_TOKEN_VALIDITY * 7)).signWith(SignatureAlgorithm.HS512, secret).compact();
         return accessToken;
     }
 
@@ -149,7 +148,6 @@ public class JwtProvider {
         } catch (IllegalArgumentException e) {
             log.error("JWT claims string is empty: {}", e.getMessage());
         }
-
         return false;
     }
 }

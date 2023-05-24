@@ -7,4 +7,6 @@ import java.util.List;
 
 public interface ProductRepository extends JpaRepository<Product, Integer> {
     public List<Product> findByTitleContainsAndStateEquals(String title,ProductState state);
+
+    public List<Product> findByTitleContaining(String keyword);
 }

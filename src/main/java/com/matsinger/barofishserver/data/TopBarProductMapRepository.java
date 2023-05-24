@@ -7,5 +7,5 @@ import java.util.List;
 public interface TopBarProductMapRepository extends JpaRepository<TopBarProductMap, Integer> {
     List<TopBarProductMap> findAllByTopBar_Id(Integer id);
 
-    Boolean deleteAllByTopBar_Id(Integer id);
+    void deleteAllByTopBar_Id(Integer id);
 }

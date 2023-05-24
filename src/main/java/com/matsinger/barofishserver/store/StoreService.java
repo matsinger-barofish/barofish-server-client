@@ -32,13 +32,19 @@ public class StoreService {
         });
     }
 
-    public List<Store> selectStoreList(Boolean isAdmin){
-        if(isAdmin){
+    public List<Store> selectStoreList(Boolean isAdmin) {
+        if (isAdmin) {
             return storeRepository.findAll();
-        }else{
+        } else {
             return storeRepository.findAllByStateEquals(StoreState.ACTIVE);
         }
     }
+
+    public Store selectStoreByLoginId(String loginId) {
+        Store store = storeRepository.findByLoginId(loginId);
+        return store;
+    }
+
     public List<StoreInfo> selectStoreInfoList() {
         return storeInfoRepository.findAll();
     }

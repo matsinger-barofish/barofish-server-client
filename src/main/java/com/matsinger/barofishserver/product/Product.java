@@ -70,11 +70,10 @@ public class Product {
     @JoinColumn(name = "product_id")
     private List<Option> options = new ArrayList<>();
 
-    @OneToMany
-    @JoinColumn(name = "product_id")
+    @OneToMany(mappedBy = "product")
     private List<Review> reviews = new ArrayList<>();
 
-    @OneToMany
+    @OneToMany(mappedBy = "product")
     private List<Review>
             imageReviews =
             reviews.stream().filter(review -> review.getImages().length() != 0).collect(Collectors.toList());

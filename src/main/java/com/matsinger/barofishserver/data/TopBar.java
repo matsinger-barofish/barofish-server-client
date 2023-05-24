@@ -1,12 +1,16 @@
 package com.matsinger.barofishserver.data;
 
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
 @Entity
+@Getter
+@Setter
 @Table(name = "top_bar", schema = "barofish_dev", catalog = "")
 public class TopBar {
     @GeneratedValue(strategy = GenerationType.IDENTITY)

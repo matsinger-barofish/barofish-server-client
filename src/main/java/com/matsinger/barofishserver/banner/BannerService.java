@@ -14,7 +14,7 @@ public class BannerService {
     @Autowired
     private final BannerRepository bannerRepository;
 
-    public Banner add(Banner banner) {
+    public Banner addBanner(Banner banner) {
         return bannerRepository.save(banner);
     }
 
@@ -23,9 +23,22 @@ public class BannerService {
 
     }
 
+    public Banner updateBanner(Banner banner) {
+        return bannerRepository.save(banner);
+    }
+
     public Banner selectBanner(Integer id) {
         return bannerRepository.findById(id).orElseThrow(() -> {
             throw new Error("배너 정보를 찾을 수 없습니다.");
         });
+    }
+
+    public Boolean deleteBanner(Integer id) {
+        try {
+            bannerRepository.deleteById(id);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
     }
 }

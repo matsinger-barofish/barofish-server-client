@@ -97,4 +97,22 @@ public class S3Uploader {
         }
         return result;
     }
+
+    public List<String> processFileUpdateInput(List<FileUpdateInput> files, ArrayList<String> path) {
+        List<String> result = new ArrayList<>();
+        for (FileUpdateInput file : files) {
+            if (file.getNewFile().isEmpty()) {
+                if (file.getExistingFile() == null) throw new Error("파일을 입력해주세요.");
+                result.add(file.getExistingFile());
+            } else {
+                try {
+                    String fileUrl = upload(file.getNewFile(), path);
+                    result.add(fileUrl);
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        }
+        return result;
+    }
 }

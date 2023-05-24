@@ -71,7 +71,7 @@ public class BannerController {
                 banner.setCategoryId(categoryId);
             } else if (type == BannerType.CURATION) {
                 if (curationId == null) return res.throwError("큐레이션 아이디를 입력해주세요.", "INPUT_CHECK_REQUIRED");
-                curationService.findById(curationId);
+                curationService.selectCuration(curationId);
                 banner.setCurationId(curationId);
             } else if (type == BannerType.NOTICE) {
                 if (noticeId == null) return res.throwError("배너 아이디를 입력해주세요.", "INPUT_CHECK_REQUIRED");
@@ -85,7 +85,7 @@ public class BannerController {
 
             String imageUrl = s3.upload(image, new ArrayList<>(Arrays.asList("banner")));
             banner.setImage(imageUrl);
-            Banner result = bannerService.add(banner);
+            Banner result = bannerService.addBanner(banner);
             res.setData(Optional.ofNullable(result));
             return ResponseEntity.ok(res);
         } catch (Exception e) {
@@ -95,11 +95,65 @@ public class BannerController {
 
     @PostMapping("/update/{id}")
     public ResponseEntity<CustomResponse<Banner>> updateBanner(@RequestHeader(value = "Authorization") Optional<String> auth,
-                                                               @PathVariable("id") Integer id) {
+                                                               @PathVariable("id") Integer id,
+                                                               @RequestPart(value = "type", required = false) BannerType type,
+                                                               @RequestPart(value = "image", required = false) MultipartFile image,
+                                                               @RequestPart(value = "curationId", required = false) Integer curationId,
+                                                               @RequestPart(value = "noticeId", required = false) Integer noticeId,
+                                                               @RequestPart(value = "categoryId", required = false) Integer categoryId) {
         CustomResponse<Banner> res = new CustomResponse();
         Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
         if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
         try {
+            Banner banner = bannerService.selectBanner(id);
+            if (type != null) {
+                if (type.equals(BannerType.NONE)) {
+                    banner.setCurationId(null);
+                    banner.setNoticeId(null);
+                    banner.setCategoryId(null);
+                } else if (type.equals(BannerType.CATEGORY)) {
+                    if (categoryId == null) return res.throwError("카테고리 아이디를 입력해주세요.", "INPUT_CHECK_REQUIRED");
+                    banner.setCategoryId(categoryId);
+                    banner.setNoticeId(null);
+                    banner.setCurationId(null);
+                } else if (type.equals(BannerType.NOTICE)) {
+                    if (noticeId == null) return res.throwError("공지사항 아이디를 입력해주세요.", "INPUT_CHECK_REQUIRED");
+                    banner.setNoticeId(noticeId);
+                    banner.setCurationId(null);
+                    banner.setCategoryId(null);
+                } else if (type.equals(BannerType.CURATION)) {
+                    if (curationId == null) return res.throwError("큐레이션 아이디를 입력해주세요.", "INPUT_CHECK_REQUIRED");
+                    banner.setCurationId(curationId);
+                    banner.setCategoryId(null);
+                    banner.setNoticeId(null);
+                }
+                banner.setType(type);
+            }
+            if (image != null) {
+                String
+                        imageUrl =
+                        s3.upload(image, new ArrayList<>(Arrays.asList("banner", String.valueOf(banner.getId()))));
+                banner.setImage(imageUrl);
+            }
+            Banner result = bannerService.updateBanner(banner);
+            res.setData(Optional.ofNullable(result));
+            return ResponseEntity.ok(res);
+        } catch (Exception e) {
+            return res.defaultError(e);
+        }
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<CustomResponse<Boolean>> deleteBanner(@RequestHeader(value = "Authorization") Optional<String> auth,
+                                                                @PathVariable("id") Integer id) {
+        CustomResponse<Boolean> res = new CustomResponse();
+        Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
+        if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
+        try {
+            bannerService.selectBanner(id);
+            Boolean result = bannerService.deleteBanner(id);
+            res.setData(Optional.ofNullable(result));
+            res.setIsSuccess(result);
             return ResponseEntity.ok(res);
         } catch (Exception e) {
             return res.defaultError(e);

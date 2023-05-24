@@ -47,7 +47,7 @@ public class CategoryController {
                                                                 @RequestPart(value = "name") String name,
                                                                 @RequestPart(value = "image", required = false) MultipartFile file) {
         CustomResponse<Category> res = new CustomResponse();
-        Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth);
+        Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
         if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
         try {
             Category category = new Category();
@@ -59,8 +59,9 @@ public class CategoryController {
                 imageUrl = s3.upload(file, new ArrayList<>(Arrays.asList("category")));
                 category.setImage(imageUrl);
             } else {
-                Category parentCategory = categoryService.findById(category.getCategoryId());
+                Category parentCategory = categoryService.findById(categoryId);
                 category.setParentCategory(parentCategory);
+                category.setCategoryId(categoryId);
             }
             categoryService.add(category);
             res.setData(Optional.of(category));

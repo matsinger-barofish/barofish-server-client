@@ -40,8 +40,10 @@ public class CurationService {
         return curationRepository.save(curation);
     }
 
-    public Optional<Curation> findById(Integer id){
-        return curationRepository.findById(id);
+    public Curation selectCuration(Integer id) {
+        return curationRepository.findById(id).orElseThrow(() -> {
+            throw new Error("큐레이션 정보를 찾을 수 없습니다.");
+        });
     }
 
     public Boolean delete(Integer id) {
@@ -53,9 +55,9 @@ public class CurationService {
         }
     }
 
-    public List<CurationProductMap> addProduct(Integer curationId, List<Integer> productIds){
+    public List<CurationProductMap> addProduct(Integer curationId, List<Integer> productIds) {
         ArrayList<CurationProductMap> curationProductMapArrayList = new ArrayList<CurationProductMap>();
-        for(Integer id : productIds){
+        for (Integer id : productIds) {
             CurationProductMap data = new CurationProductMap();
             Curation curation = curationRepository.findById(curationId).orElseThrow();
             Product product = productRepository.findById(id).orElseThrow();

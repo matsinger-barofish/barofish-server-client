@@ -1,8 +1,8 @@
 package com.matsinger.barofishserver.store;
 
-import com.matsinger.barofishserver.jwt.JwtService;
-import com.matsinger.barofishserver.jwt.TokenAuthType;
-import com.matsinger.barofishserver.jwt.TokenInfo;
+import com.matsinger.barofishserver.admin.Admin;
+import com.matsinger.barofishserver.admin.AdminState;
+import com.matsinger.barofishserver.jwt.*;
 import com.matsinger.barofishserver.utils.Common;
 import com.matsinger.barofishserver.utils.CustomResponse;
 import com.matsinger.barofishserver.utils.S3.S3Uploader;
@@ -20,6 +20,7 @@ import java.util.*;
 public class StoreController {
     private final StoreService storeService;
     private final JwtService jwt;
+    private final JwtProvider jwtProvider;
 
     private final Common utils;
     private final S3Uploader s3;
@@ -43,6 +44,32 @@ public class StoreController {
             return res.defaultError(e);
         }
     }
+
+    @PostMapping("/login")
+    public ResponseEntity<CustomResponse<Jwt>> loginStore(@RequestPart(value = "loginId") String loginId,
+                                                          @RequestPart(value = "password") String password) {
+        CustomResponse<Jwt> res = new CustomResponse<>();
+        try {
+            Store store = storeService.selectStoreByLoginId(loginId);
+            if (store == null) return res.throwError("아이디 및 비밀번호를 확인해주세요.", "INPUT_CHECK_REQUIRED");
+            if (!BCrypt.checkpw(password, store.getPassword()))
+                return res.throwError("아이디 및 비밀번호를 확인해주세요.", "INPUT_CHECK_REQUIRED");
+            if (!store.getState().equals(StoreState.ACTIVE)) {
+                if (store.getState().equals(StoreState.BANNED)) return res.throwError("정지된 계정입니다.", "NOT_ALLOWED");
+                if (store.getState().equals(StoreState.DELETED)) return res.throwError("삭제된 계정입니다.", "NOT_ALLOWED");
+            }
+            String accessToken = jwtProvider.generateAccessToken(String.valueOf(store.getId()), TokenAuthType.ADMIN);
+            String refreshToken = jwtProvider.generateRefreshToken(String.valueOf(store.getId()), TokenAuthType.ADMIN);
+            Jwt token = new Jwt();
+            token.setAccessToken(accessToken);
+            token.setRefreshToken(refreshToken);
+            res.setData(Optional.of(token));
+            return ResponseEntity.ok(res);
+        } catch (Exception e) {
+            return res.defaultError(e);
+        }
+    }
+
 
     @GetMapping("/{id}")
     public ResponseEntity<CustomResponse<StoreInfo>> selectStore(@PathVariable("id") Integer id) {
@@ -102,5 +129,22 @@ public class StoreController {
         }
     }
 
+    @PostMapping("/update/{id}")
+    public ResponseEntity<CustomResponse<StoreInfo>> updateStoreInfo(@RequestHeader("Authorization") Optional<String> auth,
+                                                                     @PathVariable("id") Integer id,
+                                                                     @RequestPart(value = "backgroundImage", required = false) MultipartFile backgroundImage,
+                                                                     @RequestPart(value = "profileImage", required = false) MultipartFile profileImage,
+                                                                     @RequestPart(value = "name", required = false) String name,
+                                                                     @RequestPart(value = "location", required = false) String location,
+                                                                     @RequestPart(value = "keyword", required = false) String keyword) {
+        CustomResponse<StoreInfo> res = new CustomResponse<>();
+        Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
+        if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
+        try {
+            return ResponseEntity.ok(res);
+        } catch (Exception e) {
+            return res.defaultError(e);
+        }
+    }
 
 }

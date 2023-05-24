@@ -71,7 +71,7 @@ public class CurationController {
         CustomResponse<Curation> res = new CustomResponse();
         Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
         if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
-        try {
+                try {
             Curation curation = new Curation();
             shortName = util.validateString(shortName, 20L, "약어");
             curation.setShortName(shortName);
@@ -82,8 +82,39 @@ public class CurationController {
             String image = s3.upload(file, new ArrayList<>(Arrays.asList("curation")));
             curation.setImage(image);
             curation.setType(type);
+            curation.setSortNo(1L);
             Curation data = curationService.add(curation);
             res.setData(Optional.ofNullable(data));
+            return ResponseEntity.ok(res);
+        } catch (Exception e) {
+            return res.defaultError(e);
+        }
+    }
+
+    @PostMapping("/update/{id}")
+    public ResponseEntity<CustomResponse<Curation>> updateCuration(@RequestHeader(value = "Authorization") Optional<String> auth,
+                                                                   @PathVariable("id") Integer id,
+                                                                   @RequestPart(value = "image", required = false) MultipartFile file,
+                                                                   @RequestPart(value = "shortName", required = false) String shortName,
+                                                                   @RequestPart(value = "title", required = false) String title,
+                                                                   @RequestPart(value = "description", required = false) String description,
+                                                                   @RequestPart(value = "type", required = false) CurationType type) {
+        CustomResponse<Curation> res = new CustomResponse<>();
+        try {
+            Curation curation = curationService.selectCuration(id);
+            if (file != null) {
+                if (!s3.validateImageType(file)) return res.throwError("허용되지 않는 확장자입니다.", "INPUT_CHECK_REQUIRED");
+                String imageUrl = s3.upload(file, new ArrayList<>(Arrays.asList("curation")));
+                curation.setImage(imageUrl);
+            }
+            if (shortName != null) {
+                shortName = util.validateString(shortName, 20L, "이름");
+                curation.setShortName(shortName);
+            }
+            if (title != null) {
+                title = util.validateString(title, 100L, "제목");
+                curation.setTitle(title);
+            }
             return ResponseEntity.ok(res);
         } catch (Exception e) {
             return res.defaultError(e);
@@ -99,7 +130,7 @@ public class CurationController {
         Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
         if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
         try {
-            Optional<Curation> curation = curationService.findById(id);
+            Curation curation = curationService.selectCuration(id);
             if (curation == null) throw new Error("큐레이션 정보를 찾을 수 없습니다.");
             for (Integer productId : productIds) {
                 Product product = productService.selectProduct(productId);
@@ -121,7 +152,7 @@ public class CurationController {
         Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
         if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
         try {
-            Optional<Curation> curation = curationService.findById(id);
+            Curation curation = curationService.selectCuration(id);
             if (curation == null) throw new Error("큐레이션 데이터를 찾을 수 없습니다.");
             curationService.delete(id);
             return ResponseEntity.ok(res);
