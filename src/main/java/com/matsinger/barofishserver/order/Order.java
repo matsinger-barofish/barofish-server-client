@@ -1,9 +1,11 @@
 package com.matsinger.barofishserver.order;
 
+import com.matsinger.barofishserver.payment.Payment;
 import com.matsinger.barofishserver.user.User;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.sql.Timestamp;
@@ -13,11 +15,13 @@ import java.util.List;
 import java.util.Objects;
 
 @Entity
+@Getter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "orders", schema = "barofish_dev", catalog = "")
 public class Order {
+    // TODO: 주문 이름 추가하기
     @Id
     @Column(name = "id", nullable = false, length = 20)
     private String id;
@@ -42,6 +46,14 @@ public class Order {
     @Basic
     @Column(name = "ordered_at", nullable = false, columnDefinition = "TIMESTAMP")
     private LocalDateTime orderedAt;
+
+    @OneToOne(mappedBy = "order")
+    @Column(name = "payment_id", nullable = true)
+    private Payment payment;
+
+    public void setPayment(Payment payment) {
+        this.payment = payment;
+    }
 
     public String getId() {
         return id;

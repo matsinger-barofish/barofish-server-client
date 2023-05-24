@@ -1,6 +1,6 @@
 package com.matsinger.barofishserver.payment.service;
 
-import com.matsinger.barofishserver.payment.dto.request.PaymentPriceValidationDto;
+import com.matsinger.barofishserver.payment.dto.request.PortOnePriceValidationDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -32,14 +32,14 @@ public class PaymentQueryService {
         return keys;
     }
 
-    public ResponseEntity<Object> validatePrice(PaymentPriceValidationDto request) {
+    public ResponseEntity<Object> validatePrice(PortOnePriceValidationDto request) {
 
         String requestUrl = baseUrl + "prepare";
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
 
-        HttpEntity<PaymentPriceValidationDto> httpEntity = new HttpEntity<>(request, headers);
+        HttpEntity<PortOnePriceValidationDto> httpEntity = new HttpEntity<>(request, headers);
         RestTemplate restTemplate = new RestTemplate();
         ResponseEntity<Object> response = restTemplate.postForEntity(requestUrl, httpEntity, Object.class);
         return response;
