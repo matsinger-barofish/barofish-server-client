@@ -4,8 +4,10 @@ import com.matsinger.barofishserver.category.Category;
 import com.matsinger.barofishserver.review.Review;
 import com.matsinger.barofishserver.store.Store;
 import jakarta.persistence.*;
-import lombok.*;
-import org.hibernate.annotations.ValueGenerationType;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import java.sql.Timestamp;
 import java.util.ArrayList;
@@ -24,6 +26,7 @@ public class Product {
     @Id
     @Column(name = "id", nullable = false)
     private int id;
+
 //    @Basic
 //    @Column(name = "store_id", nullable = false)
 //    private int storeId;
@@ -40,8 +43,6 @@ public class Product {
     @JoinColumn(name = "category_id")
     private Category category;
 
-    @Basic
-    @Column(name = "state", nullable = false)
     @Enumerated(EnumType.STRING)
     private ProductState state;
     @Basic
@@ -90,24 +91,25 @@ public class Product {
     public Store getStore() {
         return store;
     }
-    public Integer getStoreId(){
-        return store.getId();
-    }
 
     public void setStore(Store store) {
         this.store = store;
+    }
+
+    public Integer getStoreId() {
+        return store.getId();
     }
 
     public Category getCategory() {
         return category;
     }
 
-    public Integer getCategoryId() {
-        return category.getId();
-    }
-
     public void setCategory(Category category) {
         this.category = category;
+    }
+
+    public Integer getCategoryId() {
+        return category.getId();
     }
 
     public ProductState getState() {
@@ -194,9 +196,6 @@ public class Product {
 
     @Override
     public int hashCode() {
-        return Objects.hash(id,
-//                storeId,
-//                categoryId,
-                state, images, title, originPrice, discountRate, deliveryInfo, descriptionImages, createdAt);
+        return Objects.hash(id, state, images, title, originPrice, discountRate, deliveryInfo, descriptionImages, createdAt);
     }
 }
