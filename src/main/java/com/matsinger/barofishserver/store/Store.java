@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.NoArgsConstructor;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.sql.Timestamp;
 import java.util.Objects;
@@ -13,6 +15,8 @@ import java.util.Objects;
 @AllArgsConstructor
 @Entity
 @Table(name = "store", schema = "barofish_dev", catalog = "")
+@Getter
+@Setter
 public class Store {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Id
@@ -31,6 +35,10 @@ public class Store {
     @Basic
     @Column(name = "join_at", nullable = false)
     private Timestamp joinAt;
+
+    @OneToOne
+    @JoinColumn(name = "id")
+    private StoreInfo storeInfo;
 
     public int getId() {
         return id;

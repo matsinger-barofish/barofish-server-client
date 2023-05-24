@@ -1,6 +1,7 @@
 package com.matsinger.barofishserver.product;
 
 import com.matsinger.barofishserver.category.Category;
+import com.matsinger.barofishserver.review.Review;
 import com.matsinger.barofishserver.store.Store;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -9,7 +10,10 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 @Entity
 @AllArgsConstructor
@@ -23,19 +27,23 @@ public class Product {
     @Column(name = "id", nullable = false)
     private int id;
 
-    @Basic
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "store_id", nullable = false)
+//    @Basic
 //    @Column(name = "store_id", nullable = false)
+//    private int storeId;
+
+    @ManyToOne
+    @JoinColumn(name = "store_id")
     private Store store;
 
-    @Basic
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "category_id", nullable = false)
+//    @Basic
+//    @Column(name = "category_id", nullable = false)
+//    private int categoryId;
+
+    @ManyToOne
+    @JoinColumn(name = "category_id")
     private Category category;
-    @Basic
+
     @Enumerated(EnumType.STRING)
-    @Column(name = "state", nullable = false)
     private ProductState state;
     @Basic
     @Column(name = "images", nullable = false, length = -1)
@@ -59,6 +67,20 @@ public class Product {
     @Column(name = "created_at", nullable = false)
     private Timestamp createdAt;
 
+    @OneToMany
+    @JoinColumn(name = "product_id")
+    private List<Option> options = new ArrayList<>();
+
+    @OneToMany
+    @JoinColumn(name = "product_id")
+    private List<Review> reviews = new ArrayList<>();
+
+    @OneToMany
+    private List<Review>
+            imageReviews =
+            reviews.stream().filter(review -> review.getImages().length() != 0).collect(Collectors.toList());
+
+
     public int getId() {
         return id;
     }
@@ -67,23 +89,31 @@ public class Product {
         this.id = id;
     }
 
-//    public int getStoreId() {
-//        return storeId;
-//    }
-//
-//    public void setStoreId(int storeId) {
-//        this.storeId = storeId;
-//    }
+    public Store getStore() {
+        return store;
+    }
 
-    public int getCategoryId() {
+    public void setStore(Store store) {
+        this.store = store;
+    }
+
+    public Integer getStoreId() {
+        return store.getId();
+    }
+
+    public Category getCategory() {
+        return category;
+    }
+
+    public void setCategory(Category category) {
+        this.category = category;
+    }
+
+    public Integer getCategoryId() {
         return category.getId();
     }
 
-//    public void setCategoryId(int categoryId) {
-//        this.categoryId = categoryId;
-//    }
-
-    public Object getState() {
+    public ProductState getState() {
         return state;
     }
 
@@ -167,16 +197,6 @@ public class Product {
 
     @Override
     public int hashCode() {
-        return Objects.hash(id,
-//                storeId,
-//                categoryId,
-                state,
-                images,
-                title,
-                originPrice,
-                discountRate,
-                deliveryInfo,
-                descriptionImages,
-                createdAt);
+        return Objects.hash(id, state, images, title, originPrice, discountRate, deliveryInfo, descriptionImages, createdAt);
     }
 }

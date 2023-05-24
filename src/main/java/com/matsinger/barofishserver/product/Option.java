@@ -11,9 +11,13 @@ public class Option {
     @Id
     @Column(name = "id", nullable = false)
     private int id;
-    @Basic
-    @Column(name = "product_id", nullable = false)
-    private int productId;
+    //    @Basic
+//    @Column(name = "product_id", nullable = false)
+//    private int productId;
+    @ManyToOne
+    @JoinColumn(name = "product_id")
+    private Product product;
+
     @Basic
     @Column(name = "is_needed", nullable = false)
     private byte isNeeded;
@@ -29,12 +33,12 @@ public class Option {
         this.id = id;
     }
 
-    public int getProductId() {
-        return productId;
+    public Product getProductId() {
+        return product;
     }
 
-    public void setProductId(int productId) {
-        this.productId = productId;
+    public void setProductId(Product product) {
+        this.product = product;
     }
 
     public byte getIsNeeded() {
@@ -59,13 +63,12 @@ public class Option {
         if (o == null || getClass() != o.getClass()) return false;
         Option that = (Option) o;
         return id == that.id &&
-                productId == that.productId &&
-                isNeeded == that.isNeeded &&
-                Objects.equals(description, that.description);
+//                productId == that.productId &&
+                isNeeded == that.isNeeded && Objects.equals(description, that.description);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, productId, isNeeded, description);
+        return Objects.hash(id, isNeeded, description);
     }
 }

@@ -7,8 +7,9 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface CategoryRepository extends JpaRepository<Category, Long> {
-    public List<Category> findAllByCategoryId(Long id);
+
+public interface CategoryRepository extends JpaRepository<Category, Integer> {
+    public List<Category> findAllByCategoryId(Integer id);
 
     Optional<Category> findByName(String categoryName);
 }

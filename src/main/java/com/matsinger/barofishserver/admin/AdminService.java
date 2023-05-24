@@ -19,4 +19,8 @@ public class AdminService {
             return null;
         }
     }
+
+    public Admin selectAdminByLoginId(String loginId){
+        return adminRepository.findByLoginId(loginId);
+    }
 }

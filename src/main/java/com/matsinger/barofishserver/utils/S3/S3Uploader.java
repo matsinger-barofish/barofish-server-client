@@ -14,6 +14,8 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 
 @Slf4j
@@ -29,6 +31,8 @@ public class S3Uploader {
 
     // MultipartFile을 전달받아 File로 전환한 후 S3에 업로드
     public String upload(MultipartFile multipartFile, ArrayList<String> dirName) throws IOException {
+        if (multipartFile.getContentType().startsWith("image") && !validateImageType(multipartFile))
+            throw new Error("허용되지 않는 " + "확장자입니다.");
         File
                 uploadFile =
                 convert(multipartFile).orElseThrow(() -> new IllegalArgumentException("MultipartFile -> File 전환 실패"));
@@ -70,4 +74,27 @@ public class S3Uploader {
         return Optional.empty();
     }
 
+    public Boolean validateImageType(MultipartFile file) throws IOException {
+        List<String> allowedImageType = List.of("image/jpeg", "image/png", "image/webp", "image/gif");
+        return allowedImageType.contains(file.getContentType());
+    }
+
+    public String uploadFiles(List<MultipartFile> files, ArrayList<String> path) throws IOException {
+        List<String> fileUrls = new ArrayList<>();
+        for (MultipartFile file : files) {
+            String imageUrl = upload(file, path);
+            fileUrls.add(imageUrl);
+        }
+        String result = fileUrls.toString();
+        return result;
+    }
+
+    public List<String> parseListData(String data) {
+        data = data.substring(1, data.length() - 1);
+        List<String> result = new ArrayList<>();
+        for (String str : List.of(data.split(","))) {
+            result.add(str.trim());
+        }
+        return result;
+    }
 }
