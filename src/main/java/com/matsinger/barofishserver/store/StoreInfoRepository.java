@@ -3,6 +3,9 @@ package com.matsinger.barofishserver.store;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.Optional;
+
 @Repository
 public interface StoreInfoRepository extends JpaRepository<StoreInfo, Integer> {
+    Optional<StoreInfo> findByName(String name);
 }

@@ -40,6 +40,7 @@ public class Local1DataInit {
     private final TestOrderService testOrderService;
     private final TestProductService testProductService;
     private final TestCategoryService testCategoryService;
+//    private final TestStoreInfoService testStoreInfoService;
     private final TestStoreService testStoreService;
 
     @Transactional

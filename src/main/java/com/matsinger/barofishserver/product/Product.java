@@ -1,6 +1,7 @@
 package com.matsinger.barofishserver.product;
 
 import com.matsinger.barofishserver.category.Category;
+import com.matsinger.barofishserver.product.productinfo.*;
 import com.matsinger.barofishserver.review.Review;
 import com.matsinger.barofishserver.store.Store;
 import jakarta.persistence.*;
@@ -69,6 +70,7 @@ public class Product {
 
     @OneToMany
     @JoinColumn(name = "product_id")
+    @Builder.Default
     private List<Option> options = new ArrayList<>();
 
     @OneToMany
@@ -80,6 +82,50 @@ public class Product {
             imageReviews =
             reviews.stream().filter(review -> review.getImages().length() != 0).collect(Collectors.toList());
 
+    @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JoinColumn(name = "type_id")
+    private ProductType productType;
+
+    public void setProductType(ProductType productType) {
+        this.productType = productType;
+        productType.setProduct(this);
+    }
+
+    @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JoinColumn(name = "location_id")
+    private ProductLocation productLocation;
+
+    public void setProductLocation(ProductLocation productLocation) {
+        this.productLocation = productLocation;
+        productLocation.setProduct(this);
+    }
+
+    @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JoinColumn(name = "process_id")
+    private ProductProcess productProcess;
+
+    public void setProductProcess(ProductProcess productProcess) {
+        this.productProcess = productProcess;
+        productProcess.setProduct(this);
+    }
+
+    @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JoinColumn(name = "usage_id")
+    private ProductUsage productUsage;
+
+    public void setProductUsage(ProductUsage productUsage) {
+        this.productUsage = productUsage;
+        productUsage.setProduct(this);
+    }
+
+    @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JoinColumn(name = "storage_id")
+    private ProductStorage productStorage;
+
+    public void setProductStorage(ProductStorage productStorage) {
+        this.productStorage = productStorage;
+        productStorage.setProduct(this);
+    }
 
     public int getId() {
         return id;

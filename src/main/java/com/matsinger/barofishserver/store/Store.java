@@ -36,8 +36,7 @@ public class Store {
     @Column(name = "join_at", nullable = false)
     private Timestamp joinAt;
 
-    @OneToOne
-    @JoinColumn(name = "id")
+    @OneToOne(mappedBy = "store", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private StoreInfo storeInfo;
 
     public int getId() {

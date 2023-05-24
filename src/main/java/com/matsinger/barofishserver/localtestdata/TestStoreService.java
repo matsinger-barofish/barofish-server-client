@@ -1,8 +1,6 @@
 package com.matsinger.barofishserver.localtestdata;
 
-import com.matsinger.barofishserver.store.Store;
-import com.matsinger.barofishserver.store.StoreRepository;
-import com.matsinger.barofishserver.store.StoreState;
+import com.matsinger.barofishserver.store.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -14,18 +12,30 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class TestStoreService {
     private final StoreRepository storeRepository;
+    private final StoreInfoRepository storeInfoRepository;
+
+    private final TestStoreInfoService testStoreInfoService;
 
     public void createTestStore() {
         for (int i = 1; i < 3; i++) {
-            Optional<Store> findStore = storeRepository.findByLoginId("test" + i);
-            if (findStore.isPresent()) continue;
+
+            StoreInfo createdStoreInfo = StoreInfo.builder()
+                    .backgroudImage("test" + i)
+                    .profileImage("test" + i)
+                    .name("testStoreInfo" + i)
+                    .location("test" + i)
+                    .keyword("test" + i).build();
 
             Store createdStore = Store.builder()
                     .state(StoreState.ACTIVE)
                     .loginId("test" + i)
                     .password("test" + i)
                     .joinAt(Timestamp.valueOf(LocalDateTime.now())).build();
+
+            createdStoreInfo.setStore(createdStore);
+
             storeRepository.save(createdStore);
+            storeInfoRepository.save(createdStoreInfo);
         }
     }
 }
