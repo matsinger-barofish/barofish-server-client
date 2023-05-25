@@ -14,6 +14,7 @@ public class OrderRequestDto {
 
     private String loginId;
     private int totalPrice;
+    private String name;
 
     private List<OrderProductInfoDto> products;
 }

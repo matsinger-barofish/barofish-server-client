@@ -40,8 +40,8 @@ public class Local1DataInit {
     private final TestOrderService testOrderService;
     private final TestProductService testProductService;
     private final TestCategoryService testCategoryService;
-//    private final TestStoreInfoService testStoreInfoService;
     private final TestStoreService testStoreService;
+    private final TestPaymentService testPaymentService;
 
     @Transactional
     @PostConstruct
@@ -50,5 +50,6 @@ public class Local1DataInit {
         testStoreService.createTestStore();
         testProductService.createProduct();
         testOrderService.createTestOrders();
+        testPaymentService.createPayment();
     }
 }

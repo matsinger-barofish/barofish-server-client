@@ -33,6 +33,7 @@ public class TestOrderService {
             OrderRequestDto orderRequest = OrderRequestDto.builder()
                     .loginId(userAuth.getLoginId())
                     .totalPrice(100000)
+                    .name("testOrder")
                     .products(products).build();
 
             orderCommandService.createOrderSheet(orderRequest);

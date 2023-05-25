@@ -29,6 +29,9 @@ public class Order {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
+    @Column(name = "name", nullable = false)
+    private String name;
+
     @Builder.Default
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "order")
     @Column(name = "order_product_infos", nullable = false)

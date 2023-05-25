@@ -89,6 +89,7 @@ public class OrderCommandService {
                 .user(findUser)
                 .state(OrderState.WAIT_DEPOSIT)
                 .totalPrice(request.getTotalPrice())
+                .name(request.getName())
                 .orderedAt(LocalDateTime.now()).build();
         orderRepository.createSequenceAndSave(order);
         return order;
