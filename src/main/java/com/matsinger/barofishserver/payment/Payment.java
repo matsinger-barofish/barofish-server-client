@@ -1,6 +1,7 @@
 package com.matsinger.barofishserver.payment;
 
 import com.matsinger.barofishserver.order.Order;
+import com.matsinger.barofishserver.payment.dto.response.PaymentResponseDto;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -20,7 +21,7 @@ public class Payment {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", nullable = false)
-    private String id;
+    private int id;
 
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "order_id", nullable = false)
@@ -94,4 +95,29 @@ public class Payment {
 
     @Column(name = "vbank_date")
     private Timestamp vbankDate; // 가상계좌 입금기한 (UNIX timestamp)
+
+    public PaymentResponseDto toDto() {
+        return PaymentResponseDto.builder()
+                .orderId(order.getId())
+                .impUid(impUid)
+                .merchantUid(merchantUid)
+                .payMethod(payMethod)
+                .paidAmount(paidAmount)
+                .status(status)
+                .name(name)
+                .pgProvider(pgProvider)
+                .embPgProvider(embPgProvider)
+                .pgTid(pgTid)
+                .buyerName(buyerName)
+                .buyerEmail(buyerEmail)
+                .buyerTel(buyerTel)
+                .buyerAddr(buyerAddr)
+                .paidAt(paidAt)
+                .receiptUrl(receiptUrl)
+                .applyNum(applyNum)
+                .vbankNum(vbankNum)
+                .vbankName(vbankName)
+                .vbankHolder(vbankHolder)
+                .vbankDate(vbankDate).build();
+    }
 }

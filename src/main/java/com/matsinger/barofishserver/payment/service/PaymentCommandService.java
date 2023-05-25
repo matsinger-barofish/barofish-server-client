@@ -2,10 +2,10 @@ package com.matsinger.barofishserver.payment.service;
 
 import com.matsinger.barofishserver.order.Order;
 import com.matsinger.barofishserver.order.OrderState;
-import com.matsinger.barofishserver.order.exception.OrderBusinessException;
 import com.matsinger.barofishserver.order.repository.OrderRepository;
 import com.matsinger.barofishserver.payment.Payment;
 import com.matsinger.barofishserver.payment.dto.request.PortOnePaymentRequestDto;
+import com.matsinger.barofishserver.payment.dto.response.PaymentSuccessResponseDto;
 import com.matsinger.barofishserver.payment.exception.PaymentErrorMessage;
 import com.matsinger.barofishserver.payment.repository.PaymentRepository;
 import com.matsinger.barofishserver.product.ProductRepository;
@@ -22,7 +22,7 @@ public class PaymentCommandService {
     private final PaymentRepository paymentRepository;
 
     private final ProductRepository productRepository;
-    public String proceedPayment(PortOnePaymentRequestDto request) {
+    public PaymentSuccessResponseDto proceedPayment(PortOnePaymentRequestDto request) {
 
 
         Order findOrder = orderRepository.findById(request.getMerchant_uid())
@@ -42,13 +42,18 @@ public class PaymentCommandService {
         }
 
         // TODO: 로그 테이블에 로그 남기는 로직 추가
-        createAndSavePayment(request, findOrder);
-        return request.getStatus();
+
+        int paymentId = createAndSavePayment(request, findOrder);
+
+
+        return PaymentSuccessResponseDto.builder()
+                .paymentId(paymentId)
+                .status(request.getStatus()).build();
     }
 
-    private void createAndSavePayment(PortOnePaymentRequestDto request, Order findOrder) {
+    private int createAndSavePayment(PortOnePaymentRequestDto request, Order findOrder) {
         Payment payment = request.toEntity();
         payment.setOrder(findOrder);
-        paymentRepository.save(payment);
+        return paymentRepository.save(payment).getId();
     }
 }

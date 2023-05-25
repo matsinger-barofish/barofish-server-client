@@ -1,6 +1,10 @@
 package com.matsinger.barofishserver.payment.service;
 
+import com.matsinger.barofishserver.payment.Payment;
 import com.matsinger.barofishserver.payment.dto.request.PortOnePriceValidationDto;
+import com.matsinger.barofishserver.payment.dto.response.PaymentResponseDto;
+import com.matsinger.barofishserver.payment.exception.PaymentErrorMessage;
+import com.matsinger.barofishserver.payment.repository.PaymentRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -24,6 +28,8 @@ public class PaymentQueryService {
 
     private final String baseUrl = "https://api.iamport.kr/payments/";
 
+    private final PaymentRepository paymentRepository;
+
     public Map<String, String> getKeys() {
         Map<String, String> keys = new HashMap<>();
         keys.put("identificationCode", identificationCode);
@@ -43,5 +49,13 @@ public class PaymentQueryService {
         RestTemplate restTemplate = new RestTemplate();
         ResponseEntity<Object> response = restTemplate.postForEntity(requestUrl, httpEntity, Object.class);
         return response;
+    }
+
+    public PaymentResponseDto getPaymentInfo(int id) {
+        Payment findPayment = paymentRepository.findById(id)
+                .orElseThrow(() -> {
+                    throw new IllegalArgumentException(PaymentErrorMessage.PAYMENT_NOT_FOUND_EXCEPTION);
+                });
+        return findPayment.toDto();
     }
 }
