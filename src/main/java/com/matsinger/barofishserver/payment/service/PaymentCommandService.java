@@ -24,12 +24,16 @@ public class PaymentCommandService {
     private final ProductRepository productRepository;
     public String proceedPayment(PortOnePaymentRequestDto request) {
 
+
         Order findOrder = orderRepository.findById(request.getMerchant_uid())
                 .orElseThrow(() -> {
                     throw new IllegalArgumentException(PaymentErrorMessage.ORDER_NOT_FOUND_MESSAGE);
                 });
 
-        if (!request.getPay_method().equals("trans") || !request.getPay_method().equals("vbank")) {
+        if (request.getStatus().equals("fail")) {
+            // 결제 실패했을 때
+            findOrder.setState(OrderState.WAIT_DEPOSIT);
+        } else if (!request.getPay_method().equals("trans") && !request.getPay_method().equals("vbank")) {
             // 실시간 계좌이체, 가상계좌가 아닐 때
             findOrder.setState(OrderState.PAYMENT_DONE);
         } else {

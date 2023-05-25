@@ -37,14 +37,14 @@ public class OrderCommandService {
     private final EntityManager em;
 
     public String createOrderSheet(OrderRequestDto request) {
-        Order order = null;
+
+        Order order = createAndSaveOrder(request);
 
         for (OrderProductInfoDto productInfoDto : request.getProducts()) {
             Product findProduct = productRepository.findById(productInfoDto.getProductId())
                     .orElseThrow(() -> new IllegalArgumentException(OrderErrorMessage.PRODUCT_NOT_FOUND_EXCEPTION));
 
             OrderProductInfo orderProductInfo = createOrderProductInfo(productInfoDto, findProduct);
-            order = createAndSaveOrder(request);
             orderProductInfo.setOrder(order);
 
             OrderProductInfo savedOrderProductInfo = orderProductInfoRepository.save(orderProductInfo);

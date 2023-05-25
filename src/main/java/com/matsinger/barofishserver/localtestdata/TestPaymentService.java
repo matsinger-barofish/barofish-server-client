@@ -2,10 +2,7 @@ package com.matsinger.barofishserver.localtestdata;
 
 import com.matsinger.barofishserver.order.Order;
 import com.matsinger.barofishserver.order.repository.OrderRepository;
-import com.matsinger.barofishserver.payment.Payment;
-import com.matsinger.barofishserver.payment.PaymentState;
 import com.matsinger.barofishserver.payment.dto.request.PortOnePaymentRequestDto;
-import com.matsinger.barofishserver.payment.repository.PaymentRepository;
 import com.matsinger.barofishserver.payment.service.PaymentCommandService;
 import com.matsinger.barofishserver.user.User;
 import com.matsinger.barofishserver.userauth.UserAuth;
@@ -14,10 +11,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 
-import java.sql.Timestamp;
-import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.util.List;
 
 @Service
@@ -30,32 +23,148 @@ public class TestPaymentService {
     private final UserAuthRepository userAuthRepository;
 
     public void createPayment() {
+        List<String> scenarios = List.of("카드", "가상계좌", "결제실패", "결제하지 않고 주문서 이탈",
+                "결제 취소 성공(발송 전)", "결제 취소 실패(발송 후)");
 
-        for (int i=1; i<3; i++) {
-            UserAuth findUserAuth = userAuthRepository.findByLoginId("test" + i).get();
+        int seq = 0;
+        for (String suffix : TestUserService.suffixes) {
+            UserAuth findUserAuth = userAuthRepository.findByLoginId("user" + suffix).get();
             User user = findUserAuth.getUser();
             List<Order> findOrders = orderRepository.findByUser(user).get();
 
-            for (int j = 0; j < findOrders.size(); j++) {
-                Order findOrder = findOrders.get(j);
-                PortOnePaymentRequestDto PaymentRequest = PortOnePaymentRequestDto.builder()
-                        .imp_uid("test" + j)
-                        .merchant_uid(findOrder.getId())
-                        .pay_method("card")
-                        .paid_amount(findOrder.getTotalPrice())
-                        .status("paid")
-                        .name("testOrder" + j)
-                        .pg_provider("tosspay")
-                        .pg_tid("1234" + j)
-                        .buyer_name("test" + j)
-                        .buyer_email("test" + j + "@gmail.com")
-                        .buyer_tel("010-1234-123" + j)
-                        .buyer_addr("서울시 강남구 " + j + "번지")
-                        .paid_at(String.valueOf(System.currentTimeMillis() / 1000))
-                        .receipt_url("www.test" + j + ".com").build();
+            PortOnePaymentRequestDto PaymentRequest = new PortOnePaymentRequestDto();
 
+            for (Order findOrder : findOrders) {
+                seq++;
+                PaymentRequest = scenario1(scenarios, seq, findUserAuth, PaymentRequest, findOrder);
+                PaymentRequest = scenario2(scenarios, seq, findUserAuth, PaymentRequest, findOrder);
+                PaymentRequest = scenario3(scenarios, seq, findUserAuth, PaymentRequest, findOrder);
+                PaymentRequest = scenario4(scenarios, seq, findUserAuth, PaymentRequest, findOrder);
+                PaymentRequest = scenario5(scenarios, seq, findUserAuth, PaymentRequest, findOrder);
+                PaymentRequest = scenario6(scenarios, seq, findUserAuth, PaymentRequest, findOrder);
+
+                if (seq == 4) {
+                    continue;
+                }
                 paymentCommandService.proceedPayment(PaymentRequest);
             }
         }
+    }
+
+    private PortOnePaymentRequestDto scenario1(List<String> scenarios, int seq, UserAuth findUserAuth, PortOnePaymentRequestDto PaymentRequest, Order findOrder) {
+        if (findUserAuth.getLoginId().endsWith("A") && findOrder.getName().endsWith("A")) {
+            // 유저A 주문A : 카드
+            PaymentRequest = PortOnePaymentRequestDto.builder()
+                    .imp_uid("test" + seq)
+                    .merchant_uid(findOrder.getId())
+                    .pay_method("card")
+                    .paid_amount(findOrder.getTotalPrice())
+                    .status("paid")
+                    .name(scenarios.get(seq - 1))
+                    .pg_provider("tosspay")
+                    .pg_tid("1234" + seq)
+                    .buyer_name("test" + seq)
+                    .buyer_email("test" + seq + "@gmail.com")
+                    .buyer_tel("010-1234-123" + seq)
+                    .buyer_addr("서울시 강남구 " + seq + "번지")
+                    .paid_at(String.valueOf(System.currentTimeMillis() / 1000))
+                    .receipt_url("www.test" + seq + ".com").build();
+        }
+        return PaymentRequest;
+    }
+
+    private PortOnePaymentRequestDto scenario2(List<String> scenarios, int seq, UserAuth findUserAuth, PortOnePaymentRequestDto PaymentRequest, Order findOrder) {
+        if (findUserAuth.getLoginId().endsWith("A") && findOrder.getName().endsWith("B")) {
+            // 가상계좌
+            PaymentRequest = PortOnePaymentRequestDto.builder()
+                    .imp_uid("test" + seq)
+                    .merchant_uid(findOrder.getId())
+                    .pay_method("vbank")
+                    .paid_amount(findOrder.getTotalPrice())
+                    .status("ready")
+                    .name(scenarios.get(seq - 1))
+                    .pg_provider("tosspay")
+                    .pg_tid("1234" + seq)
+                    .buyer_name("test" + seq)
+                    .buyer_email("test" + seq + "@gmail.com")
+                    .buyer_tel("010-1234-123" + seq)
+                    .buyer_addr("서울시 강남구 " + seq + "번지")
+                    .paid_at(String.valueOf(System.currentTimeMillis() / 1000))
+                    .receipt_url("www.test" + seq + ".com").build();
+        }
+        return PaymentRequest;
+    }
+
+    private PortOnePaymentRequestDto scenario3(List<String> scenarios, int seq, UserAuth findUserAuth, PortOnePaymentRequestDto PaymentRequest, Order findOrder) {
+        if (findUserAuth.getLoginId().endsWith("B") && findOrder.getName().endsWith("A")) {
+            // 결제 실패
+            PaymentRequest = PortOnePaymentRequestDto.builder()
+                    .imp_uid("test" + seq)
+                    .merchant_uid(findOrder.getId())
+                    .pay_method("card")
+                    .paid_amount(findOrder.getTotalPrice())
+                    .status("fail")
+                    .name(scenarios.get(seq - 1))
+                    .pg_provider("tosspay")
+                    .pg_tid("1234" + seq)
+                    .buyer_name("test" + seq)
+                    .buyer_email("test" + seq + "@gmail.com")
+                    .buyer_tel("010-1234-123" + seq)
+                    .buyer_addr("서울시 강남구 " + seq + "번지")
+                    .paid_at(String.valueOf(System.currentTimeMillis() / 1000))
+                    .receipt_url("www.test" + seq + ".com").build();
+        }
+        return PaymentRequest;
+    }
+
+    private PortOnePaymentRequestDto scenario4(List<String> scenarios, int seq, UserAuth findUserAuth, PortOnePaymentRequestDto PaymentRequest, Order findOrder) {
+        if (findUserAuth.getLoginId().endsWith("B") && findOrder.getName().endsWith("B")) {
+            // 결제하지 않고 주문서 이탈
+        }
+        return PaymentRequest;
+    }
+
+    private PortOnePaymentRequestDto scenario5(List<String> scenarios, int seq, UserAuth findUserAuth, PortOnePaymentRequestDto PaymentRequest, Order findOrder) {
+        if (findUserAuth.getLoginId().endsWith("C") && findOrder.getName().endsWith("A")) {
+            // 결제 취소 성공 (발송 전)
+            PaymentRequest = PortOnePaymentRequestDto.builder()
+                    .imp_uid("test" + seq)
+                    .merchant_uid(findOrder.getId())
+                    .pay_method("card")
+                    .paid_amount(findOrder.getTotalPrice())
+                    .status("paid")
+                    .name(scenarios.get(seq - 1))
+                    .pg_provider("tosspay")
+                    .pg_tid("1234" + seq)
+                    .buyer_name("test" + seq)
+                    .buyer_email("test" + seq + "@gmail.com")
+                    .buyer_tel("010-1234-123" + seq)
+                    .buyer_addr("서울시 강남구 " + seq + "번지")
+                    .paid_at(String.valueOf(System.currentTimeMillis() / 1000))
+                    .receipt_url("www.test" + seq + ".com").build();
+        }
+        return PaymentRequest;
+    }
+
+    private PortOnePaymentRequestDto scenario6(List<String> scenarios, int seq, UserAuth findUserAuth, PortOnePaymentRequestDto PaymentRequest, Order findOrder) {
+        if (findUserAuth.getLoginId().endsWith("C") && findOrder.getName().endsWith("B")) {
+            // 결제 취소 실패 (발송 후)
+            PaymentRequest = PortOnePaymentRequestDto.builder()
+                    .imp_uid("test" + seq)
+                    .merchant_uid(findOrder.getId())
+                    .pay_method("card")
+                    .paid_amount(findOrder.getTotalPrice())
+                    .status("paid")
+                    .name(scenarios.get(seq - 1))
+                    .pg_provider("tosspay")
+                    .pg_tid("1234" + seq)
+                    .buyer_name("test" + seq)
+                    .buyer_email("test" + seq + "@gmail.com")
+                    .buyer_tel("010-1234-123" + seq)
+                    .buyer_addr("서울시 강남구 " + seq + "번지")
+                    .paid_at(String.valueOf(System.currentTimeMillis() / 1000))
+                    .receipt_url("www.test" + seq + ".com").build();
+        }
+        return PaymentRequest;
     }
 }

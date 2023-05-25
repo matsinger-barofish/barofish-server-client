@@ -26,17 +26,29 @@ public class TestOrderService {
 
         List<UserAuth> userAuths = testUserService.createUser();
 
-        for (UserAuth userAuth : userAuths) {
+        // 각 유저에 대해서 주문을 2개씩 생성. ex) userA -> orderA, orderB
+        int seq = 0;
+        String suffix;
+        for (int i=0; i<userAuths.size(); i++) {
 
-            List<OrderProductInfoDto> products = createProductInfoDtos();
+            for (int j=0; j<2; j++) {
+                seq++;
+                if (seq % 2 == 0) {
+                    suffix = "B";
+                } else {
+                    suffix = "A";
+                }
 
-            OrderRequestDto orderRequest = OrderRequestDto.builder()
-                    .loginId(userAuth.getLoginId())
-                    .totalPrice(100000)
-                    .name("testOrder")
-                    .products(products).build();
+                List<OrderProductInfoDto> products = createProductInfoDtos();
 
-            orderCommandService.createOrderSheet(orderRequest);
+                OrderRequestDto orderRequest = OrderRequestDto.builder()
+                        .loginId(userAuths.get(i).getLoginId())
+                        .totalPrice(100000)
+                        .name("order" + suffix)
+                        .products(products).build();
+
+                orderCommandService.createOrderSheet(orderRequest);
+            }
         }
     }
 
