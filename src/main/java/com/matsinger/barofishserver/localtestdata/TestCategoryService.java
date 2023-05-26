@@ -27,7 +27,7 @@ public class TestCategoryService {
                         .name("testParentCategory" + i).build();
 
                 Category testCategory = Category.builder()
-                        .categoryId(i)
+                        .parentCategory(parentCategory)
                         .parentCategory(parentCategory)
                         .image("test" + i)
                         .name("testCategory" + i).build();

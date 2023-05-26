@@ -1,7 +1,6 @@
 package com.matsinger.barofishserver.store;
 
-import com.matsinger.barofishserver.admin.Admin;
-import com.matsinger.barofishserver.admin.AdminState;
+import com.matsinger.barofishserver.compare.CompareController;
 import com.matsinger.barofishserver.jwt.*;
 import com.matsinger.barofishserver.utils.Common;
 import com.matsinger.barofishserver.utils.CustomResponse;
@@ -75,7 +74,7 @@ public class StoreController {
     public ResponseEntity<CustomResponse<StoreInfo>> selectStore(@PathVariable("id") Integer id) {
         CustomResponse<StoreInfo> res = new CustomResponse<>();
         try {
-            StoreInfo storeInfo = storeService.selectStore(id);
+            StoreInfo storeInfo = storeService.selectStoreInfo(id);
             res.setData(Optional.ofNullable(storeInfo));
             return ResponseEntity.ok(res);
         } catch (Exception e) {
@@ -141,10 +140,51 @@ public class StoreController {
         Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
         if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
         try {
+            StoreInfo storeInfo = storeService.selectStoreInfo(id);
+            if (backgroundImage != null) {
+                String
+                        imageUrl =
+                        s3.upload(backgroundImage, new ArrayList<>(Arrays.asList("store", String.valueOf(id))));
+                storeInfo.setBackgroudImage(imageUrl);
+            }
+            if (profileImage != null) {
+                String imageUrl = s3.upload(profileImage, new ArrayList<>(Arrays.asList("store", String.valueOf(id))));
+                storeInfo.setProfileImage(imageUrl);
+            }
+            if (name != null) {
+                name = utils.validateString(name, 50L, "이름");
+                storeInfo.setName(name);
+            }
+            if (location != null) {
+                location = utils.validateString(location, 50L, "위치");
+                storeInfo.setLocation(location);
+            }
+            if (keyword != null) {
+                keyword = utils.validateString(keyword, 50L, "위치");
+                storeInfo.setKeyword(keyword);
+            }
+            StoreInfo result = storeService.updateStoreInfo(storeInfo);
+            res.setData(Optional.ofNullable(result));
             return ResponseEntity.ok(res);
         } catch (Exception e) {
             return res.defaultError(e);
         }
     }
+
+
+    @GetMapping("/star")
+    public ResponseEntity<CustomResponse<List<StoreInfo>>> selectScrapedStore(@RequestHeader("Authorization") Optional<String> auth) {
+        CustomResponse<List<StoreInfo>> res = new CustomResponse<>();
+        Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
+        if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
+        try {
+            List<StoreInfo> storeInfos = storeService.selectScrapedStore(tokenInfo.get().getId());
+            res.setData(Optional.ofNullable(storeInfos));
+            return ResponseEntity.ok(res);
+        } catch (Exception e) {
+            return res.defaultError(e);
+        }
+    }
+
 
 }

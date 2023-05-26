@@ -17,7 +17,7 @@ public class TestStoreService {
 
     public void createTestStore() {
         for (int i = 1; i < 3; i++) {
-            Optional<Store> findStore = storeRepository.findByLoginId("test" + i);
+            Optional<Store> findStore = Optional.ofNullable(storeRepository.findByLoginId("test" + i));
             if (findStore.isPresent()) continue;
 
             Store createdStore = Store.builder()

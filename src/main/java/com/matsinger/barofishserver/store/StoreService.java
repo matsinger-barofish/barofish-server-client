@@ -3,8 +3,10 @@ package com.matsinger.barofishserver.store;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -17,6 +19,8 @@ public class StoreService {
 
     private final StoreInfoRepository storeInfoRepository;
 
+    private final StoreScrapRepository storeScrapRepository;
+
     public Optional<Store> selectStoreOptional(Integer id) {
         try {
             return storeRepository.findById(id);
@@ -26,7 +30,13 @@ public class StoreService {
         }
     }
 
-    public StoreInfo selectStore(Integer id) {
+    public Store selectStore(Integer id) {
+        return storeRepository.findById(id).orElseThrow(() -> {
+            throw new Error("상점 정보를 찾을 수 없습니다.");
+        });
+    }
+
+    public StoreInfo selectStoreInfo(Integer id) {
         return storeInfoRepository.findById(id).orElseThrow(() -> {
             throw new Error("상점 정보를 찾을 수 없습니다.");
         });
@@ -75,4 +85,22 @@ public class StoreService {
         return storeInfoRepository.save(data);
     }
 
+    public List<StoreInfo> selectScrapedStore(Integer userId) {
+        List<StoreScrap> storeScraps = storeScrapRepository.findByUserId(userId);
+        List<Integer> storeIds = new ArrayList<>();
+        for (StoreScrap storeScrap : storeScraps) {
+            storeIds.add(storeScrap.getStoreId());
+        }
+        List<StoreInfo> storeInfos = storeInfoRepository.findAllByStoreIdIn(storeIds);
+        return storeInfos;
+    }
+
+    public void deleteScrapedStore(Integer userId, List<Integer> storeIds) {
+        List<StoreScrap> storeScraps = new ArrayList<>();
+        for (Integer storeId : storeIds) {
+            storeScraps.add(StoreScrap.builder().storeId(storeId).userId(userId).build());
+        }
+
+        storeScrapRepository.deleteAll(storeScraps);
+    }
 }

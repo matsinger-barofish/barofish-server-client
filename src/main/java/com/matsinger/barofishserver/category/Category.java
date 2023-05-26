@@ -32,9 +32,8 @@ public class Category {
     private String name;
     @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
-    // @JoinColumn(name = "category_id", referencedColumnName = "id", insertable =
-    // false, updatable = false)
-    @JoinColumn(name = "parent_category_id", referencedColumnName = "id")
+    @JoinColumn(name = "parent_category_id", referencedColumnName = "id", insertable = false, updatable = false)
+//    @JoinColumn(name = "parent_category_id", referencedColumnName = "id")
     private Category parentCategory;
 
     @Builder.Default
@@ -50,14 +49,12 @@ public class Category {
     }
 
     public Integer getCategoryId() {
-        if (this.parentCategory != null)
-            return this.parentCategory.id;
-        else
-            return null;
+        if (this.parentCategory != null) return this.parentCategory.id;
+        else return null;
     }
 
     public void setCategoryId(Integer categoryId) {
-        this.categoryId = categoryId;
+        this.parentCategory.id = categoryId;
     }
 
     public String getImage() {
@@ -78,13 +75,11 @@ public class Category {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o)
-            return true;
-        if (o == null || getClass() != o.getClass())
-            return false;
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
         Category that = (Category) o;
         return id == that.id &&
-        // Objects.equals(categoryId, that.categoryId) &&
+                // Objects.equals(categoryId, that.categoryId) &&
                 Objects.equals(image, that.image) && Objects.equals(name, that.name);
     }
 

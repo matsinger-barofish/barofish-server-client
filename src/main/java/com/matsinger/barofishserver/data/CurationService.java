@@ -40,6 +40,10 @@ public class CurationService {
         return curationRepository.save(curation);
     }
 
+    public Curation update(Curation curation) {
+        return curationRepository.save(curation);
+    }
+
     public Curation selectCuration(Integer id) {
         return curationRepository.findById(id).orElseThrow(() -> {
             throw new Error("큐레이션 정보를 찾을 수 없습니다.");

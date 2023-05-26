@@ -23,7 +23,7 @@ public class TestProductService {
 
     public void createProduct() {
         for (int i = 1; i < 3; i++) {
-            Store findStore = storeRepository.findByLoginId("test" + i).get();
+            Store findStore = storeRepository.findByLoginId("test" + i);
             Category findCategory = categoryRepository.findByName("testCategory" + i).get();
 
             boolean isProductPresent = productRepository.findByTitle("testProduct" + i).isPresent();

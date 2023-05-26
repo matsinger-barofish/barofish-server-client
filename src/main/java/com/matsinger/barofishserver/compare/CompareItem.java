@@ -1,13 +1,20 @@
 package com.matsinger.barofishserver.compare;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import com.matsinger.barofishserver.product.Product;
+import jakarta.persistence.*;
+import lombok.*;
+import org.springframework.stereotype.Service;
 
 import java.io.Serializable;
 import java.util.Objects;
 
+@Entity
+@Getter
+@Setter
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+@IdClass(CompareItemId.class)
 public class CompareItem implements Serializable {
     @Column(name = "compare_set_id", nullable = false)
     @Id
@@ -17,6 +24,13 @@ public class CompareItem implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int productId;
+
+
+//    @ManyToOne(fetch = FetchType.LAZY)
+//    @JoinColumn(name = "product_id")
+//    @Id
+//    @GeneratedValue(strategy = GenerationType.IDENTITY)
+//    private Product product;
 
     public int getCompareSetId() {
         return compareSetId;

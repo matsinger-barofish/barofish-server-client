@@ -46,6 +46,18 @@ public class CurationController {
         }
     }
 
+    @GetMapping("/{id}")
+    public ResponseEntity<CustomResponse<Curation>> selectCuration(@PathVariable("id") Integer id) {
+        CustomResponse<Curation> res = new CustomResponse<>();
+        try {
+            Curation curation = curationService.selectCuration(id);
+            res.setData(Optional.ofNullable(curation));
+            return ResponseEntity.ok(res);
+        } catch (Exception e) {
+            return res.defaultError(e);
+        }
+    }
+
     @Description("큐레이션 상품 목록")
     @GetMapping("/{id}/products")
     public ResponseEntity<CustomResponse<List<Product>>> selectCurationProducts(@PathVariable("id") Long id) {
@@ -71,7 +83,7 @@ public class CurationController {
         CustomResponse<Curation> res = new CustomResponse();
         Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
         if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
-                try {
+        try {
             Curation curation = new Curation();
             shortName = util.validateString(shortName, 20L, "약어");
             curation.setShortName(shortName);
@@ -115,6 +127,14 @@ public class CurationController {
                 title = util.validateString(title, 100L, "제목");
                 curation.setTitle(title);
             }
+            if (description != null) {
+                description = util.validateString(description, 200L, "설명");
+                curation.setDescription(description);
+            }
+            if (type != null) {
+                curation.setType(type);
+            }
+            curationService.update(curation);
             return ResponseEntity.ok(res);
         } catch (Exception e) {
             return res.defaultError(e);

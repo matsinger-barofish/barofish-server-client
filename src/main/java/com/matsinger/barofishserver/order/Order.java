@@ -48,7 +48,7 @@ public class Order {
     private LocalDateTime orderedAt;
 
     @OneToOne(mappedBy = "order")
-    @Column(name = "payment_id", nullable = true)
+//    @Column(name = "payment_id", nullable = true)
     private Payment payment;
 
     public void setPayment(Payment payment) {
