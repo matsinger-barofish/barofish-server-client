@@ -1,27 +1,27 @@
 package com.matsinger.barofishserver.order.service;
 
-import com.matsinger.barofishserver.order.Order;
-import com.matsinger.barofishserver.order.OrderProductInfo;
-import com.matsinger.barofishserver.order.OrderProductOption;
-import com.matsinger.barofishserver.order.OrderState;
-import com.matsinger.barofishserver.order.dto.OrderProductInfoDto;
-import com.matsinger.barofishserver.order.dto.OrderProductOptionDto;
+import com.matsinger.barofishserver.order.*;
+import com.matsinger.barofishserver.order.dto.request.OrderReqProductInfoDto;
+import com.matsinger.barofishserver.order.dto.request.OrderReqProductOptionDto;
 import com.matsinger.barofishserver.order.dto.request.OrderRequestDto;
+import com.matsinger.barofishserver.order.exception.OrderBusinessException;
 import com.matsinger.barofishserver.order.exception.OrderErrorMessage;
 import com.matsinger.barofishserver.order.repository.OrderProductInfoRepository;
 import com.matsinger.barofishserver.order.repository.OrderProductOptionRepository;
 import com.matsinger.barofishserver.order.repository.OrderRepository;
-import com.matsinger.barofishserver.product.Product;
-import com.matsinger.barofishserver.product.ProductRepository;
+import com.matsinger.barofishserver.order.repository.OrderStoreInfoRepository;
+import com.matsinger.barofishserver.product.*;
+import com.matsinger.barofishserver.store.Store;
+import com.matsinger.barofishserver.store.StoreRepository;
 import com.matsinger.barofishserver.user.User;
 import com.matsinger.barofishserver.user.UserRepository;
 import com.matsinger.barofishserver.userauth.UserAuthRepository;
-import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.*;
 
 @Service
 @Transactional
@@ -29,69 +29,134 @@ import java.time.LocalDateTime;
 public class OrderCommandService {
 
     private final UserRepository userRepository;
-    private final UserAuthRepository userAuthRepository;
     private final ProductRepository productRepository;
+    private final OptionRepository optionRepository;
     private final OrderProductInfoRepository orderProductInfoRepository;
     private final OrderProductOptionRepository orderProductOptionRepository;
+    private final OrderStoreInfoRepository orderStoreInfoRepository;
     private final OrderRepository orderRepository;
-    private final EntityManager em;
+    private final StoreRepository storeRepository;
 
-    public String createOrderSheet(OrderRequestDto request) {
+    public String createOrder(OrderRequestDto request) {
+        User findUser = userRepository.findById(request.getUserId())
+                .orElseThrow(() -> new OrderBusinessException(OrderErrorMessage.USER_NOT_FOUND_EXCEPTION));
 
-        Order order = createAndSaveOrder(request);
+        OrderStoresAndPriceDto storesAndPriceDto = createStores(request);
 
-        for (OrderProductInfoDto productInfoDto : request.getProducts()) {
-            Product findProduct = productRepository.findById(productInfoDto.getProductId())
+        Order createdOrder = Order.builder()
+                .user(findUser)
+                .orderStoreInfos(storesAndPriceDto.getStores())
+                .state(OrderState.WAIT_DEPOSIT)
+                .totalPrice(storesAndPriceDto.getStorePriceSum())
+                .orderedAt(LocalDateTime.now()).build();
+
+        Order findOrder = orderRepository.createSequenceAndSave(createdOrder)
+                .orElseThrow(() -> new OrderBusinessException(OrderErrorMessage.ORDER_SAVE_FAIL_EXCEPTION));
+        return findOrder.getId();
+    }
+
+    private OrderStoresAndPriceDto createStores(OrderRequestDto request) {
+        Map<Integer, List<OrderReqProductInfoDto>> storeMap = createStoreMap(request);
+        List<OrderStoreInfo> stores = new ArrayList<>();
+        int storePriceSum = 0;
+
+        for (Map.Entry<Integer, List<OrderReqProductInfoDto>> entry : storeMap.entrySet()) {
+            Store findStore = storeRepository.findById(entry.getKey())
+                    .orElseThrow(() -> new OrderBusinessException(OrderErrorMessage.STORE_NOT_FOUND_EXCEPTION));
+
+            OrderStoreInfo createdStoreInfo = OrderStoreInfo.builder()
+                    .store(findStore).build();
+
+            OrderProductsAndPriceDto productsAndPriceDto = createProducts(entry.getValue(), createdStoreInfo);
+            int productPriceSum = productsAndPriceDto.getProductPriceSum();
+            createdStoreInfo.setPrice(productPriceSum);
+            storePriceSum += productPriceSum;
+
+            orderStoreInfoRepository.save(createdStoreInfo);
+            stores.add(createdStoreInfo);
+        }
+        return new OrderStoresAndPriceDto(storePriceSum, stores);
+    }
+
+    /**
+     * param: request
+     * return: 상점 아이디, 상점 프로덕트 리스트를 가진 맵
+     * 상점을 기준으로 총 가격, 택배비 등을 산정하기 위함
+     */
+    private Map<Integer, List<OrderReqProductInfoDto>> createStoreMap(OrderRequestDto request) {
+        List<OrderReqProductInfoDto> products = request.getProducts();
+
+        Map<Integer, List<OrderReqProductInfoDto>> storeMap = new HashMap<>();
+        for (OrderReqProductInfoDto product : products) {
+
+            List<OrderReqProductInfoDto> existingProducts = storeMap.getOrDefault(product.getStoreId(), new ArrayList<>());
+            existingProducts.add(product);
+            storeMap.put(product.getStoreId(), existingProducts);
+        }
+        return storeMap;
+    }
+
+    private OrderProductsAndPriceDto createProducts(List<OrderReqProductInfoDto> requestProducts, OrderStoreInfo storeInfo) {
+        List<OrderProductInfo> products = new ArrayList<>();
+        int productPriceSum = 0;
+
+        for (OrderReqProductInfoDto requestProduct : requestProducts) {
+            Product findProduct = productRepository.findById(requestProduct.getProductId())
                     .orElseThrow(() -> new IllegalArgumentException(OrderErrorMessage.PRODUCT_NOT_FOUND_EXCEPTION));
 
-            OrderProductInfo orderProductInfo = createOrderProductInfo(productInfoDto, findProduct);
-            orderProductInfo.setOrder(order);
+            // price는 option에서 산정
+            OrderProductInfo createdProduct = OrderProductInfo.builder()
+                    .product(findProduct)
+                    .state(OrderState.WAIT_DEPOSIT)
+                    .discountRate(findProduct.getDiscountRate())
+                    .deliveryFee(findProduct.getDeliveryFee()).build();
 
-            OrderProductInfo savedOrderProductInfo = orderProductInfoRepository.save(orderProductInfo);
-            saveOrderProductOption(productInfoDto, savedOrderProductInfo);
-            orderProductInfoRepository.save(orderProductInfo);
-        }
-        if (order == null) {
-            throw new IllegalArgumentException("주문서가 생성되지 않았습니다.");
-        }
+            OrderProductOptionsAndPriceDto optionsAndPriceDto = createOptions(requestProduct, createdProduct);
+            int productFinalPrice = createdProduct.getPrice() + optionsAndPriceDto.getOptionPriceSum();
 
-        return order.getId();
+            // TODO: 현재는 product의 discountRate 반영 안됨
+            createdProduct.setOrderStoreInfo(storeInfo);
+            createdProduct.setPrice(productFinalPrice);
+            productPriceSum += productFinalPrice;
+
+            orderProductInfoRepository.save(createdProduct);
+            products.add(createdProduct);
+        }
+        return new OrderProductsAndPriceDto(productPriceSum, products);
     }
 
-    private void saveOrderProductOption(OrderProductInfoDto productInfoDto, OrderProductInfo orderProductInfo) {
-        for (OrderProductOptionDto optionDto : productInfoDto.getOptions()) {
-            OrderProductOption orderProductOption = OrderProductOption.builder()
-                    .orderProductInfo(orderProductInfo)
-                    .name(optionDto.getOptionName())
-                    .amount(optionDto.getAmount())
-                    .price(optionDto.getOptionPrice()).build();
-            orderProductInfo.setOrderProductOption(orderProductOption);
-            orderProductOptionRepository.save(orderProductOption);
+    private OrderProductOptionsAndPriceDto createOptions(OrderReqProductInfoDto requestProduct, OrderProductInfo productInfo) {
+        List<OrderProductOption> options = new ArrayList<>();
+        int optionPriceSum = 0;
+
+        for (OrderReqProductOptionDto requestOption : requestProduct.getOptions()) {
+
+            Option findOption = optionRepository.findById(requestOption.getOptionId())
+                    .orElseThrow(() -> new IllegalArgumentException(OrderErrorMessage.OPTION_NOT_FOUND_EXCEPTION));
+
+            // orderProduceOption 가격 산정하기
+            int optionPrice = findOption.getPrice();
+            int optionCount = requestOption.getAmount();
+            double discountRate = findOption.getDiscountRate();
+
+            double discountPrice = (optionPrice * optionCount) * discountRate;
+            int roundedDiscountPrice = (int) Math.round(discountPrice * 10) / 10;
+            int totalPrice = (optionPrice * optionCount) - roundedDiscountPrice;
+            optionPriceSum += totalPrice;
+
+            OrderProductOption createdOption = OrderProductOption.builder()
+                    .name(findOption.getName())
+                    .price(totalPrice)
+                    .amount(optionCount)
+                    .discountRate(findOption.getDiscountRate())
+                    .option(findOption).build();
+
+            createdOption.setOrderProductInfo(productInfo);
+
+            orderProductOptionRepository.save(createdOption);
+
+            options.add(createdOption);
         }
-    }
-
-    private OrderProductInfo createOrderProductInfo(OrderProductInfoDto productInfoDto, Product findProduct) {
-        return OrderProductInfo.builder()
-                .product(findProduct)
-                .price(productInfoDto.getOriginPrice())
-                .discountRate(productInfoDto.getDiscountRate())
-                .amount(productInfoDto.getAmount())
-                .state(OrderState.WAIT_DEPOSIT)
-                .deliveryFee(productInfoDto.getDeliveryFee()).build();
-    }
-
-    private Order createAndSaveOrder(OrderRequestDto request) {
-        User findUser = userAuthRepository.findByLoginId(request.getLoginId())
-                .orElseThrow(() -> new IllegalArgumentException(OrderErrorMessage.USER_NOT_FOUND_EXCEPTION))
-                .getUser();
-
-        Order order = Order.builder()
-                .user(findUser)
-                .state(OrderState.WAIT_DEPOSIT)
-                .totalPrice(request.getTotalPrice())
-                .name(request.getName())
-                .orderedAt(LocalDateTime.now()).build();
-        orderRepository.createSequenceAndSave(order);
-        return order;
+        return new OrderProductOptionsAndPriceDto(optionPriceSum, options);
     }
 }

@@ -37,29 +37,24 @@ public class TestUserService {
 
     private final UserRepository userRepository;
     private final UserAuthRepository userAuthRepository;
-    public static final List<String> suffixes = List.of("A", "B", "C");
+    public static final List<String> suffixes = List.of("A", "B", "C", "D");
 
     /**
      * return: List<UserAuth> -> 추후에 수정 가능성 있음.
      */
-    public List<UserAuth> createUser() {
-        List<UserAuth> userAuths = new ArrayList<>();
-        for (String suffix : suffixes) {
-            User createdUser = User.builder()
-                    .state(UserState.ACTIVE)
-                    .joinAt(Timestamp.valueOf(LocalDateTime.now())).build();
+    public UserAuth createUser(String suffix) {
+        User createdUser = User.builder()
+                .state(UserState.ACTIVE)
+                .joinAt(Timestamp.valueOf(LocalDateTime.now())).build();
 
-            UserAuth createdUserAuth = UserAuth.builder()
-                    .loginType(LoginType.IDPW)
-                    .loginId("user" + suffix)
-                    .password("user" + suffix).build();
+        UserAuth createdUserAuth = UserAuth.builder()
+                .loginType(LoginType.IDPW)
+                .loginId("user" + suffix)
+                .password("user" + suffix).build();
 
-            createdUserAuth.setUser(createdUser);
-            userRepository.save(createdUser);
-            UserAuth savedAuth = userAuthRepository.save(createdUserAuth);
-
-            userAuths.add(savedAuth);
-        }
-        return userAuths;
+        createdUserAuth.setUser(createdUser);
+        userRepository.save(createdUser);
+        UserAuth savedAuth = userAuthRepository.save(createdUserAuth);
+        return savedAuth;
     }
 }

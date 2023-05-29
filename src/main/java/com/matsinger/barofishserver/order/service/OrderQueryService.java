@@ -3,9 +3,13 @@ package com.matsinger.barofishserver.order.service;
 import com.matsinger.barofishserver.order.Order;
 import com.matsinger.barofishserver.order.OrderProductInfo;
 import com.matsinger.barofishserver.order.OrderProductOption;
-import com.matsinger.barofishserver.order.dto.OrderProductInfoDto;
-import com.matsinger.barofishserver.order.dto.OrderProductOptionDto;
+import com.matsinger.barofishserver.order.OrderStoreInfo;
+import com.matsinger.barofishserver.order.dto.request.OrderReqProductInfoDto;
+import com.matsinger.barofishserver.order.dto.response.OrderProductInfoDto;
+import com.matsinger.barofishserver.order.dto.response.OrderProductOptionDto;
 import com.matsinger.barofishserver.order.dto.response.OrderResponseDto;
+import com.matsinger.barofishserver.order.dto.response.OrderStoreInfoDto;
+import com.matsinger.barofishserver.order.exception.OrderBusinessException;
 import com.matsinger.barofishserver.order.exception.OrderErrorMessage;
 import com.matsinger.barofishserver.order.repository.OrderRepository;
 import lombok.RequiredArgsConstructor;
@@ -24,29 +28,38 @@ public class OrderQueryService {
 
     public OrderResponseDto getOrder(String orderId) {
         Order findOrder = orderRepository.findById(orderId)
-                .orElseThrow(() -> {
-                    throw new IllegalStateException(OrderErrorMessage.ORDER_NOT_FOUND_EXCEPTION);
-                });
-
-        List<OrderProductInfoDto> products = createDtos(findOrder);
+                .orElseThrow(() -> new OrderBusinessException(OrderErrorMessage.ORDER_NOT_FOUND_EXCEPTION));
 
         return OrderResponseDto.builder()
-                .userId(findOrder.getId())
-                .totalPrice(findOrder.getTotalPrice())
-                .products(products).build();
+                        .userId(findOrder.getUserId())
+                        .orderId(findOrder.getId())
+                        .totalPrice(findOrder.getTotalPrice())
+                        .stores(createStoreDtos(findOrder)).build();
     }
 
-    private List<OrderProductInfoDto> createDtos(Order findOrder) {
+    private List<OrderStoreInfoDto> createStoreDtos(Order findOrder) {
+        List<OrderStoreInfoDto> stores = new ArrayList<>();
+        for (OrderStoreInfo storeInfo : findOrder.getOrderStoreInfos()) {
+            OrderStoreInfoDto storeInfoDto = storeInfo.toDto(createProductDtos(storeInfo));
+            stores.add(storeInfoDto);
+        }
+        return stores;
+    }
+
+    private List<OrderProductInfoDto> createProductDtos(OrderStoreInfo storeInfo) {
         List<OrderProductInfoDto> products = new ArrayList<>();
-
-        for (OrderProductInfo productInfo : findOrder.getOrderProductInfo()) {
-            List<OrderProductOptionDto> options = new ArrayList<>();
-
-            for (OrderProductOption productOption : productInfo.getOrderProductOption()) {
-                options.add(productOption.toDto());
-            }
+        for (OrderProductInfo productInfo : storeInfo.getOrderProductInfos()) {
+            List<OrderProductOptionDto> options = createOptionDtos(productInfo);
             products.add(productInfo.toDto(options));
         }
         return products;
+    }
+
+    private List<OrderProductOptionDto> createOptionDtos(OrderProductInfo productInfo) {
+        List<OrderProductOptionDto> options = new ArrayList<>();
+        for (OrderProductOption productOption : productInfo.getOrderProductOptions()) {
+            options.add(productOption.toDto());
+        }
+        return options;
     }
 }

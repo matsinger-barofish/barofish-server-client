@@ -7,12 +7,13 @@ import lombok.NoArgsConstructor;
 
 import java.util.List;
 
-@Getter
 @Builder
-@AllArgsConstructor
 @NoArgsConstructor
-public class OrderRequestDto {
+@AllArgsConstructor
+@Getter
+public class OrderReqProductInfoDto {
 
-    private int userId;
-    private List<OrderReqProductInfoDto> products;
+    private int productId;
+    private int storeId;
+    private List<OrderReqProductOptionDto> options;
 }

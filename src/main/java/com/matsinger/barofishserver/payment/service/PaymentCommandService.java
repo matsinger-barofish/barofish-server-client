@@ -23,6 +23,7 @@ public class PaymentCommandService {
 
     private final ProductRepository productRepository;
     public PaymentSuccessResponseDto proceedPayment(PortOnePaymentRequestDto request) {
+        // TODO: 결제 하기 전에 option 수량 검증하는 로직 추가
 
 
         Order findOrder = orderRepository.findById(request.getMerchant_uid())

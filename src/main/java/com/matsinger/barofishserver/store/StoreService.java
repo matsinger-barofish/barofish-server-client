@@ -45,8 +45,8 @@ public class StoreService {
 
     public Boolean checkStoreLoginIdValid(String loginId) {
         try {
-            Store store = storeRepository.findByLoginId(loginId);
-            if (store != null) return false;
+            Optional<Store> store = storeRepository.findByLoginId(loginId);
+            if (store.isPresent()) return false;
             else return true;
         } catch (Error e) {
             return true;

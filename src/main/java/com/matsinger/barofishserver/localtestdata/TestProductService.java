@@ -13,6 +13,8 @@ import org.springframework.stereotype.Component;
 
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Component
 @RequiredArgsConstructor
@@ -28,56 +30,53 @@ public class TestProductService {
     private final ProductTypeRepository productTypeRepository;
     private final ProductUsageRepository productUsageRepository;
 
-    public void createProduct() {
-        for (int i = 1; i < 3; i++) {
-            Store findStore = storeRepository.findByLoginId("test" + i);
+    public static final List<String> suffixes = List.of("A", "B", "C", "D");
 
-            Category findCategory = categoryRepository.findByName("testCategory" + i).get();
+    public Product createProduct(int price, String suffix) {
 
-            boolean isProductPresent = productRepository.findByTitle("testProduct" + i).isPresent();
-            if (!isProductPresent) {
-                Product createdProduct = Product.builder()
-                        .store(findStore)
-                        .category(findCategory)
-                        .state(ProductState.ACTIVE)
-                        .images("image" + i)
-                        .title("testProduct" + i)
-                        .originPrice(1000 * i)
-                        .discountRate(1)
-                        .deliveryInfo("test" + i)
-                        .descriptionImages("test" + i)
-                        .createdAt(Timestamp.valueOf(LocalDateTime.now())).build();
+        Store findStore = storeRepository.findByLoginId("store" + suffix).get();
 
-                ProductType type = ProductType.builder()
-                        .field("testType" + i).build();
-                createdProduct.setProductType(type);
+        Category findCategory = categoryRepository.findByName("testCategory" + suffix).get();
 
-                ProductLocation location = ProductLocation.builder()
-                        .field("testLocation" + i).build();
-                createdProduct.setProductLocation(location);
+        Product createdProduct = Product.builder()
+                .store(findStore)
+                .category(findCategory)
+                .state(ProductState.ACTIVE)
+                .images("image" + suffix)
+                .title("testProduct" + suffix)
+                .originPrice(price)
+                .discountRate(1)
+                .deliveryInfo("test" + suffix)
+                .descriptionImages("test" + suffix)
+                .createdAt(Timestamp.valueOf(LocalDateTime.now())).build();
 
-                ProductProcess process = ProductProcess.builder()
-                        .field("testProcess" + i).build();
-                createdProduct.setProductProcess(process);
+        ProductType type = ProductType.builder()
+                .field("testType" + suffix).build();
+        createdProduct.setProductType(type);
 
-                ProductStorage storage = ProductStorage.builder()
-                        .field("testStorage" + i).build();
-                createdProduct.setProductStorage(storage);
+        ProductLocation location = ProductLocation.builder()
+                .field("testLocation" + suffix).build();
+        createdProduct.setProductLocation(location);
 
-                ProductUsage usage = ProductUsage.builder()
-                        .field("testLocation" + i).build();
-                createdProduct.setProductUsage(usage);
+        ProductProcess process = ProductProcess.builder()
+                .field("testProcess" + suffix).build();
+        createdProduct.setProductProcess(process);
 
-                productRepository.save(createdProduct);
+        ProductStorage storage = ProductStorage.builder()
+                .field("testStorage" + suffix).build();
+        createdProduct.setProductStorage(storage);
 
-                productLocationRepository.save(location);
-                productProcessRepository.save(process);
-                productStorageRepository.save(storage);
-                productTypeRepository.save(type);
-                productUsageRepository.save(usage);
+        ProductUsage usage = ProductUsage.builder()
+                .field("testLocation" + suffix).build();
+        createdProduct.setProductUsage(usage);
 
-            }
+        productRepository.save(createdProduct);
 
-        }
+        productLocationRepository.save(location);
+        productProcessRepository.save(process);
+        productStorageRepository.save(storage);
+        productTypeRepository.save(type);
+        productUsageRepository.save(usage);
+        return createdProduct;
     }
 }

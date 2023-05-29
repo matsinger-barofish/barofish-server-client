@@ -22,12 +22,20 @@ public class TestPaymentService {
     private final OrderRepository orderRepository;
     private final UserAuthRepository userAuthRepository;
 
+    private final List<String> userSuffixes = TestUserService.suffixes;
+    private static final List<String> scenarios = List.of(
+            "카드",
+            "가상계좌",
+            "결제실패",
+            "결제하지 않고 주문서 이탈",
+            "결제 취소 성공(발송 전)",
+            "결제 취소 실패(발송 후)"
+    );
+
     public void createPayment() {
-        List<String> scenarios = List.of("카드", "가상계좌", "결제실패", "결제하지 않고 주문서 이탈",
-                "결제 취소 성공(발송 전)", "결제 취소 실패(발송 후)");
 
         int seq = 0;
-        for (String suffix : TestUserService.suffixes) {
+        for (String suffix : userSuffixes) {
             UserAuth findUserAuth = userAuthRepository.findByLoginId("user" + suffix).get();
             User user = findUserAuth.getUser();
             List<Order> findOrders = orderRepository.findByUser(user).get();

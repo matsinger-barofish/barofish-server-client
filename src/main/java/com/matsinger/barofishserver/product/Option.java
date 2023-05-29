@@ -1,9 +1,18 @@
 package com.matsinger.barofishserver.product;
 
+import com.matsinger.barofishserver.store.Store;
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import java.util.Objects;
 
+@Getter
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 @Entity
 @Table(name = "options", schema = "barofish_dev", catalog = "")
 public class Option {
@@ -18,12 +27,29 @@ public class Option {
     @JoinColumn(name = "product_id")
     private Product product;
 
+    // 연관관계 편의 메서드
+    public void setProduct(Product product) {
+        this.product = product;
+        product.getOptions().add(this);
+    }
+
     @Basic
     @Column(name = "is_needed", nullable = false)
     private byte isNeeded;
     @Basic
     @Column(name = "description", nullable = false, length = 200)
     private String description;
+
+    @OneToOne(mappedBy = "option")
+    private OptionItem optionItem;
+
+    public double getDiscountRate() {
+        return optionItem.getDiscountRate();
+    }
+
+    public void setOptionItem(OptionItem optionItem) {
+        this.optionItem = optionItem;
+    }
 
     public int getId() {
         return id;
@@ -55,6 +81,22 @@ public class Option {
 
     public void setDescription(String description) {
         this.description = description;
+    }
+
+    public int getStoreId() {
+        return product.getStoreId();
+    }
+
+    public Store getStore() {
+        return product.getStore();
+    }
+
+    public int getPrice() {
+        return optionItem.getPrice();
+    }
+
+    public String getName() {
+        return optionItem.getName();
     }
 
     @Override

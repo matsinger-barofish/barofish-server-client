@@ -1,34 +1,15 @@
 package com.matsinger.barofishserver.localtestdata;
 
-import com.matsinger.barofishserver.category.Category;
-import com.matsinger.barofishserver.category.CategoryRepository;
-import com.matsinger.barofishserver.order.dto.OrderProductInfoDto;
-import com.matsinger.barofishserver.order.dto.OrderProductOptionDto;
-import com.matsinger.barofishserver.order.dto.request.OrderRequestDto;
-import com.matsinger.barofishserver.order.service.OrderCommandService;
+import com.matsinger.barofishserver.product.OptionItem;
 import com.matsinger.barofishserver.product.Product;
-import com.matsinger.barofishserver.product.ProductRepository;
-import com.matsinger.barofishserver.product.ProductState;
-import com.matsinger.barofishserver.store.Store;
-import com.matsinger.barofishserver.store.StoreRepository;
-import com.matsinger.barofishserver.store.StoreState;
-import com.matsinger.barofishserver.user.User;
-import com.matsinger.barofishserver.user.UserRepository;
-import com.matsinger.barofishserver.user.UserState;
-import com.matsinger.barofishserver.userauth.LoginType;
 import com.matsinger.barofishserver.userauth.UserAuth;
-import com.matsinger.barofishserver.userauth.UserAuthRepository;
 import jakarta.annotation.PostConstruct;
-import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.sql.Timestamp;
-import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 
 @Slf4j
@@ -37,19 +18,38 @@ import java.util.List;
 @RequiredArgsConstructor
 public class Local1DataInit {
 
+    private final TestUserService testUserService;
     private final TestOrderService testOrderService;
-    private final TestProductService testProductService;
     private final TestCategoryService testCategoryService;
     private final TestStoreService testStoreService;
     private final TestPaymentService testPaymentService;
+    private final TestOptionService testOptionService;
+    private final TestProductService testProductService;
 
+    public static final List<String> suffixes = List.of("A", "B", "C", "D");
     @Transactional
     @PostConstruct
     public void initData() {
+
         testCategoryService.createTestCategory();
         testStoreService.createTestStore();
-        testProductService.createProduct();
-        testOrderService.createTestOrders();
+
+        Product productA = testProductService.createProduct(1000, "A");
+        Product productB = testProductService.createProduct(1000, "B");
+
+        OptionItem optionItemA = testOptionService.createOptions(productA, 2000, 10000, "A");
+        OptionItem optionItemB = testOptionService.createOptions(productA, 3000, 10, "B");
+        OptionItem optionItemC = testOptionService.createOptions(productB, 4000, 10000, "C");
+        OptionItem optionItemD = testOptionService.createOptions(productB, 5000, 10000, "D");
+
+        UserAuth userA = testUserService.createUser("A");
+        UserAuth userB = testUserService.createUser("B");
+        UserAuth userC = testUserService.createUser("C");
+        UserAuth userD = testUserService.createUser("D");
+
+        testOrderService.createTestOrder();
+
+
         testPaymentService.createPayment();
     }
 }

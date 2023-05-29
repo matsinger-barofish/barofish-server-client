@@ -1,15 +1,15 @@
 package com.matsinger.barofishserver.order;
 
-import com.matsinger.barofishserver.order.dto.OrderProductInfoDto;
-import com.matsinger.barofishserver.order.dto.OrderProductOptionDto;
-import com.matsinger.barofishserver.order.dto.response.OrderResponseDto;
+import com.matsinger.barofishserver.order.dto.request.OrderReqProductInfoDto;
+import com.matsinger.barofishserver.order.dto.request.OrderReqProductOptionDto;
+import com.matsinger.barofishserver.order.dto.response.OrderProductInfoDto;
+import com.matsinger.barofishserver.order.dto.response.OrderProductOptionDto;
 import com.matsinger.barofishserver.product.Product;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.aspectj.weaver.ast.Or;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -29,18 +29,17 @@ public class OrderProductInfo {
     @Column(name = "id", nullable = false)
     private int id;
 
-    @Basic
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "order_id", nullable = false)
-    private Order order;
+    @ManyToOne
+    @JoinColumn(name = "order_store_info_id", nullable = false)
+    private OrderStoreInfo orderStoreInfo;
 
-    public void setOrder(Order order) {
-        this.order = order;
-        order.getOrderProductInfo().add(this);
+    public void setOrderStoreInfo(OrderStoreInfo orderStoreInfo) {
+        this.orderStoreInfo = orderStoreInfo;
+        orderStoreInfo.getOrderProductInfos().add(this);
     }
 
     @Basic
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne
     @JoinColumn(name = "product_id", nullable = false)
     private Product product;
 
@@ -50,13 +49,9 @@ public class OrderProductInfo {
     private OrderState state;
 
     @Builder.Default
-    @OneToMany(cascade = CascadeType.ALL, mappedBy = "orderProductInfo")
+    @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL, mappedBy = "orderProductInfo")
     @Column(name = "order_product_option_id", nullable = false)
-    private List<OrderProductOption> orderProductOption = new ArrayList<>();
-
-    public void setOrderProductOption(OrderProductOption option) {
-        orderProductOption.add(option);
-    }
+    private List<OrderProductOption> orderProductOptions = new ArrayList<>();
 
     @Basic
     @Column(name = "price", nullable = false)
@@ -64,10 +59,6 @@ public class OrderProductInfo {
 
     @Column(name = "discount_rate", nullable = false)
     private double discountRate;
-
-    @Basic
-    @Column(name = "amount", nullable = false)
-    private int amount;
 
     @Basic
     @Column(name = "delivery_fee", nullable = false)
@@ -81,10 +72,6 @@ public class OrderProductInfo {
         this.id = id;
     }
 
-    public Order getOrder() {
-        return this.order;
-    }
-
     public int getProductId() {
         return product.getId();
     }
@@ -95,14 +82,6 @@ public class OrderProductInfo {
 
     public void setPrice(int price) {
         this.price = price;
-    }
-
-    public int getAmount() {
-        return amount;
-    }
-
-    public void setAmount(int amount) {
-        this.amount = amount;
     }
 
     public int getDeliveryFee() {
@@ -118,27 +97,21 @@ public class OrderProductInfo {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         OrderProductInfo that = (OrderProductInfo) o;
-        return id == that.id &&
-                product.getId() == that.product.getId() &&
-                price == that.price &&
-                amount == that.amount &&
-                deliveryFee == that.deliveryFee &&
-                Objects.equals(order.getId(), that.order.getId());
+        return getId() == that.getId() && getPrice() == that.getPrice() && Double.compare(that.getDiscountRate(), getDiscountRate()) == 0 && getDeliveryFee() == that.getDeliveryFee() && getOrderStoreInfo().equals(that.getOrderStoreInfo()) && getProduct().equals(that.getProduct()) && getState() == that.getState() && getOrderProductOptions().equals(that.getOrderProductOptions());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, order.getId(), product.getId(), price, amount, deliveryFee);
+        return Objects.hash(getId(), getOrderStoreInfo(), getProduct(), getState(), getOrderProductOptions(), getPrice(), getDiscountRate(), getDeliveryFee());
     }
 
-    public OrderProductInfoDto toDto(List<OrderProductOptionDto> options) {
+    public OrderProductInfoDto toDto(List<OrderProductOptionDto> optionDtos) {
         return OrderProductInfoDto.builder()
-                .productId(this.id)
-                .originPrice(this.price)
-                .discountRate(this.discountRate)
-                .amount(this.amount)
-                .state(this.state)
-                .options(options)
-                .deliveryFee(this.deliveryFee).build();
+                .productId(id)
+                .originPrice(price)
+                .discountRate(discountRate)
+                .deliveryFee(deliveryFee)
+                .state(state)
+                .options(optionDtos).build();
     }
 }

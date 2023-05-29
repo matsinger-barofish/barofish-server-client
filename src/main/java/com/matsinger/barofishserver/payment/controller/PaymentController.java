@@ -42,7 +42,6 @@ public class PaymentController {
     }
 
     // 결제
-    // TODO: 결제 하기 전에 option 수량 검증하는 로직 추가
     @PostMapping("/v1/payment/success")
     public ResponseEntity<Object> proceedPayment(@RequestBody PortOnePaymentRequestDto request) {
         try {

@@ -14,7 +14,6 @@ import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.stream.Collectors;
 
 @Entity
 @AllArgsConstructor
@@ -68,23 +67,28 @@ public class Product {
     @Column(name = "created_at", nullable = false)
     private Timestamp createdAt;
 
-    @OneToMany
-    @JoinColumn(name = "product_id")
     @Builder.Default
+    @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL, mappedBy = "product")
     private List<Option> options = new ArrayList<>();
 
-    @OneToMany
-    @JoinColumn(name = "product_id")
+    @Builder.Default
+    @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL, mappedBy = "product")
     private List<Review> reviews = new ArrayList<>();
 
-    @OneToMany
-    private List<Review>
-            imageReviews =
-            reviews.stream().filter(review -> review.getImages().length() != 0).collect(Collectors.toList());
+    // 주석 풀면 에러 발생
+    // Caused by: java.lang.reflect.InvocationTargetException: null
+    //Caused by: java.lang.NullPointerException: Cannot invoke "java.util.List.stream()" because "this.reviews" is null
+//    @OneToMany
+//    private List<Review>
+//            imageReviews =
+//            reviews.stream().filter(review -> review.getImages().length() != 0).collect(Collectors.toList());
 
     @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JoinColumn(name = "type_id")
     private ProductType productType;
+
+    @Column(name = "deliveryFee", nullable = false)
+    private int deliveryFee;
 
     public void setProductType(ProductType productType) {
         this.productType = productType;

@@ -6,6 +6,7 @@ import org.springframework.stereotype.Component;
 
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 @Component
@@ -16,26 +17,32 @@ public class TestStoreService {
 
     private final TestStoreInfoService testStoreInfoService;
 
+    public static final List<String> suffixes = List.of("A", "B");
+
     public void createTestStore() {
-        for (int i = 1; i < 3; i++) {
 
-            StoreInfo createdStoreInfo = StoreInfo.builder()
-                    .backgroudImage("test" + i)
-                    .profileImage("test" + i)
-                    .name("testStoreInfo" + i)
-                    .location("test" + i)
-                    .keyword("test" + i).build();
+        for (String suffix : suffixes) {
+            boolean isStorePresent = storeRepository.findByLoginId("store" + suffix).isPresent();
 
-            Store createdStore = Store.builder()
-                    .state(StoreState.ACTIVE)
-                    .loginId("test" + i)
-                    .password("test" + i)
-                    .joinAt(Timestamp.valueOf(LocalDateTime.now())).build();
+            if (!isStorePresent) {
+                StoreInfo createdStoreInfo = StoreInfo.builder()
+                        .backgroudImage("storeInfo" + suffix)
+                        .profileImage("storeInfo" + suffix)
+                        .name("storeInfo" + suffix)
+                        .location("storeInfo" + suffix)
+                        .keyword("storeInfo" + suffix).build();
 
-            createdStoreInfo.setStore(createdStore);
+                Store createdStore = Store.builder()
+                        .state(StoreState.ACTIVE)
+                        .loginId("store" + suffix)
+                        .password("store" + suffix)
+                        .joinAt(Timestamp.valueOf(LocalDateTime.now())).build();
 
-            storeRepository.save(createdStore);
-            storeInfoRepository.save(createdStoreInfo);
+                createdStoreInfo.setStore(createdStore);
+
+                storeRepository.save(createdStore);
+                storeInfoRepository.save(createdStoreInfo);
+            }
         }
     }
 }

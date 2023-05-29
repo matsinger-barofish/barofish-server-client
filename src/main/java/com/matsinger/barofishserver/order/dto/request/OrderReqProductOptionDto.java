@@ -5,14 +5,12 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import java.util.List;
-
-@Getter
 @Builder
-@AllArgsConstructor
 @NoArgsConstructor
-public class OrderRequestDto {
+@AllArgsConstructor
+@Getter
+public class OrderReqProductOptionDto {
 
-    private int userId;
-    private List<OrderReqProductInfoDto> products;
+    private int optionId;
+    private int amount;
 }

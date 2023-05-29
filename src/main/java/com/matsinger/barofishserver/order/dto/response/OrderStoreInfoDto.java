@@ -1,5 +1,6 @@
 package com.matsinger.barofishserver.order.dto.response;
 
+import com.matsinger.barofishserver.order.dto.response.OrderProductInfoDto;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -11,11 +12,10 @@ import java.util.List;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class OrderResponseDto {
+public class OrderStoreInfoDto {
 
-    private int userId;
-    private String orderId;
-    private int totalPrice;
-
-    private List<OrderStoreInfoDto> stores;
+    private int storeId;
+    private String storeName;
+    private int price;
+    private List<OrderProductInfoDto> storeProducts;
 }

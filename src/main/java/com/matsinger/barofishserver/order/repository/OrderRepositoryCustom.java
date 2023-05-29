@@ -7,8 +7,4 @@ import java.util.Optional;
 public interface OrderRepositoryCustom {
 
     Optional<Order> createSequenceAndSave(Order order);
-
-//    int calculateCurrentSequence(LocalDateTime orderDateTime);
-
-//    String generateOrderNumber(LocalDateTime orderDateTime);
 }
