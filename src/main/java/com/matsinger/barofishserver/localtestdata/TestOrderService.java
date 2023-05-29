@@ -1,31 +1,30 @@
-package com.matsinger.barofishserver.localtestdata;
-
-import com.matsinger.barofishserver.order.service.OrderCommandService;
-import com.matsinger.barofishserver.product.*;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Component;
-
-import java.util.List;
-
-@Component
-@RequiredArgsConstructor
-public class TestOrderService {
-
-    private final OrderCommandService orderCommandService;
-    private final ProductRepository productRepository;
-    private final OptionItemRepository optionItemRepository;
-
-    private final List<String> productSuffixes = TestProductService.suffixes;
-    private final List<String> optionSuffixes = TestOptionService.optionSuffixes;
-
-    private static final List<String> suffixes = List.of("A", "B", "C", "D");
-
-    public void createTestOrder() {
-
-
-//        orderCommandService.createOrderSheet(orderRequest);
-    }
-
+//package com.matsinger.barofishserver.localtestdata;
+//
+//import com.matsinger.barofishserver.order.service.OrderCommandService;
+//import com.matsinger.barofishserver.product.*;
+//import lombok.RequiredArgsConstructor;
+//import org.springframework.stereotype.Component;
+//
+//import java.util.List;
+//
+//@Component
+//@RequiredArgsConstructor
+//public class TestOrderService {
+//
+//    private final OrderCommandService orderCommandService;
+//    private final ProductRepository productRepository;
+//    private final OptionItemRepository optionItemRepository;
+//
+//    private final List<String> productSuffixes = TestProductService.suffixes;
+//    private final List<String> optionSuffixes = TestOptionService.optionSuffixes;
+//
+//    private static final List<String> suffixes = List.of("A", "B", "C", "D");
+//
+//    public void createTestOrder() {
+//
+//        orderCommandService.createOrder(orderRequest);
+//    }
+//
 //    private List<OrderProductInfoDto> createProductInfoDtos(List<Product> products) {
 //
 //        List<OrderProductInfoDto> dtos = new ArrayList<>();
@@ -63,4 +62,4 @@ public class TestOrderService {
 //        }
 //        return options;
 //    }
-}
+//}

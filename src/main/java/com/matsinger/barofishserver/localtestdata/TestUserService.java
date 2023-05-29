@@ -42,8 +42,9 @@ public class TestUserService {
     /**
      * return: List<UserAuth> -> 추후에 수정 가능성 있음.
      */
-    public UserAuth createUser(String suffix) {
+    public UserAuth createUser(int id, String suffix) {
         User createdUser = User.builder()
+                .id(id)
                 .state(UserState.ACTIVE)
                 .joinAt(Timestamp.valueOf(LocalDateTime.now())).build();
 
@@ -53,8 +54,8 @@ public class TestUserService {
                 .password("user" + suffix).build();
 
         createdUserAuth.setUser(createdUser);
-        userRepository.save(createdUser);
         UserAuth savedAuth = userAuthRepository.save(createdUserAuth);
+//        userRepository.save(createdUser);
         return savedAuth;
     }
 }

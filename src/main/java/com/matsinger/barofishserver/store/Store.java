@@ -39,9 +39,6 @@ public class Store {
     @OneToOne(mappedBy = "store", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private StoreInfo storeInfo;
 
-    @Column(name = "name", nullable = false, length = 20)
-    private String name;
-
     public int getId() {
         return id;
     }
@@ -82,6 +79,10 @@ public class Store {
         this.joinAt = joinAt;
     }
 
+    public String getName() {
+        return storeInfo.getName();
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -97,9 +98,5 @@ public class Store {
     @Override
     public int hashCode() {
         return Objects.hash(id, state, loginId, password, joinAt);
-    }
-
-    public String getName() {
-        return name;
     }
 }

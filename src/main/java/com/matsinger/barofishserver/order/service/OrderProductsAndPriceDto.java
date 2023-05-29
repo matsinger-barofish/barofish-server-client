@@ -1,13 +1,15 @@
 package com.matsinger.barofishserver.order.service;
 
 import com.matsinger.barofishserver.order.OrderProductInfo;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
 
 import java.util.List;
 
 @Getter
-@RequiredArgsConstructor
-public record OrderProductsAndPriceDto(int productPriceSum, List<OrderProductInfo> products) {
+@AllArgsConstructor
+public class OrderProductsAndPriceDto {
 
+    private int getProductPriceSum;
+    private List<OrderProductInfo> products;
 }

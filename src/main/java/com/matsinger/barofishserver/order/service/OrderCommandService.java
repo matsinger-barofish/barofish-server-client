@@ -68,7 +68,7 @@ public class OrderCommandService {
                     .store(findStore).build();
 
             OrderProductsAndPriceDto productsAndPriceDto = createProducts(entry.getValue(), createdStoreInfo);
-            int productPriceSum = productsAndPriceDto.getProductPriceSum();
+            int productPriceSum = productsAndPriceDto.getGetProductPriceSum();
             createdStoreInfo.setPrice(productPriceSum);
             storePriceSum += productPriceSum;
 

@@ -1,13 +1,16 @@
 package com.matsinger.barofishserver.order.service;
 
 import com.matsinger.barofishserver.order.OrderProductOption;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
 
 import java.util.List;
 
-@Getter
-@RequiredArgsConstructor
-public record OrderProductOptionsAndPriceDto(int optionPriceSum, List<OrderProductOption> options) {
 
+@Getter
+@AllArgsConstructor
+public class OrderProductOptionsAndPriceDto {
+
+    private int optionPriceSum;
+    private List<OrderProductOption> options;
 }

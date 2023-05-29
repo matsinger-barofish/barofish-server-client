@@ -18,7 +18,7 @@ public class StoreInfo {
     @Column(name = "id", nullable = false)
     private int id;
 
-    @OneToOne(fetch = FetchType.LAZY)
+    @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @JoinColumn(name = "store_id")
     private Store store;
 

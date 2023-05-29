@@ -19,14 +19,16 @@ public class TestOptionService {
     public static final List<String> optionDescriptions = List.of("재고가 충분한 케이스", "재고가 부족한 케이스");
     public static final List<Integer> optionAmounts = List.of(10000, 10);
 
-    public OptionItem createOptions(Product product, int price, int amount, String suffix) {
+    public OptionItem createOptions(int id, Product product, int price, int amount, String suffix) {
 
         // 시나리오에 따라 Option, OptionItem 생성 후
         Option createdOption = Option.builder()
+                .id(id)
                 .isNeeded((byte) 1)
                 .description("option" + suffix).build();
 
         OptionItem createdOptionItem = OptionItem.builder()
+                .id(id)
                 .name("optionItem" + suffix)
                 .price(price)
                 .amount(amount).build();

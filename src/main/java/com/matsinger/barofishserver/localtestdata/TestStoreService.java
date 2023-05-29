@@ -3,6 +3,7 @@ package com.matsinger.barofishserver.localtestdata;
 import com.matsinger.barofishserver.store.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
@@ -10,6 +11,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Component
+@Transactional
 @RequiredArgsConstructor
 public class TestStoreService {
     private final StoreRepository storeRepository;
@@ -19,30 +21,31 @@ public class TestStoreService {
 
     public static final List<String> suffixes = List.of("A", "B");
 
-    public void createTestStore() {
+    public Store createTestStore(int id, String suffix) {
 
-        for (String suffix : suffixes) {
-            boolean isStorePresent = storeRepository.findByLoginId("store" + suffix).isPresent();
+        boolean isStorePresent = storeRepository.findByLoginId("store" + suffix).isPresent();
 
-            if (!isStorePresent) {
-                StoreInfo createdStoreInfo = StoreInfo.builder()
-                        .backgroudImage("storeInfo" + suffix)
-                        .profileImage("storeInfo" + suffix)
-                        .name("storeInfo" + suffix)
-                        .location("storeInfo" + suffix)
-                        .keyword("storeInfo" + suffix).build();
+        if (!isStorePresent) {
+            StoreInfo createdStoreInfo = StoreInfo.builder()
+                    .id(id)
+                    .backgroudImage("storeInfo" + suffix)
+                    .profileImage("storeInfo" + suffix)
+                    .name("store" + suffix)
+                    .location("storeInfo" + suffix)
+                    .keyword("storeInfo" + suffix).build();
 
-                Store createdStore = Store.builder()
-                        .state(StoreState.ACTIVE)
-                        .loginId("store" + suffix)
-                        .password("store" + suffix)
-                        .joinAt(Timestamp.valueOf(LocalDateTime.now())).build();
+            Store createdStore = Store.builder()
+                    .state(StoreState.ACTIVE)
+                    .loginId("store" + suffix)
+                    .password("store" + suffix)
+                    .joinAt(Timestamp.valueOf(LocalDateTime.now())).build();
 
-                createdStoreInfo.setStore(createdStore);
+            createdStoreInfo.setStore(createdStore);
 
-                storeRepository.save(createdStore);
-                storeInfoRepository.save(createdStoreInfo);
-            }
+//            storeRepository.save(createdStore);
+            storeInfoRepository.save(createdStoreInfo);
+            return createdStore;
         }
+        return null;
     }
 }

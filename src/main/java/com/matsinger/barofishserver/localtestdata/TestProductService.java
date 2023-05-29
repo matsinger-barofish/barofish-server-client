@@ -32,42 +32,42 @@ public class TestProductService {
 
     public static final List<String> suffixes = List.of("A", "B", "C", "D");
 
-    public Product createProduct(int price, String suffix) {
+    public Product createProduct(int id, int price, String productSuffix, String storeSuffix) {
 
-        Store findStore = storeRepository.findByLoginId("store" + suffix).get();
-
-        Category findCategory = categoryRepository.findByName("testCategory" + suffix).get();
+        Store findStore = storeRepository.findByLoginId("store" + storeSuffix).get();
+        Category findCategory = categoryRepository.findByName("testCategory" + "A").get();
 
         Product createdProduct = Product.builder()
+                .id(id)
                 .store(findStore)
                 .category(findCategory)
                 .state(ProductState.ACTIVE)
-                .images("image" + suffix)
-                .title("testProduct" + suffix)
+                .images("image" + productSuffix)
+                .title("product" + productSuffix)
                 .originPrice(price)
                 .discountRate(1)
-                .deliveryInfo("test" + suffix)
-                .descriptionImages("test" + suffix)
+                .deliveryInfo("test" + productSuffix)
+                .descriptionImages("test" + productSuffix)
                 .createdAt(Timestamp.valueOf(LocalDateTime.now())).build();
 
         ProductType type = ProductType.builder()
-                .field("testType" + suffix).build();
+                .field("testType" + productSuffix).build();
         createdProduct.setProductType(type);
 
         ProductLocation location = ProductLocation.builder()
-                .field("testLocation" + suffix).build();
+                .field("testLocation" + productSuffix).build();
         createdProduct.setProductLocation(location);
 
         ProductProcess process = ProductProcess.builder()
-                .field("testProcess" + suffix).build();
+                .field("testProcess" + productSuffix).build();
         createdProduct.setProductProcess(process);
 
         ProductStorage storage = ProductStorage.builder()
-                .field("testStorage" + suffix).build();
+                .field("testStorage" + productSuffix).build();
         createdProduct.setProductStorage(storage);
 
         ProductUsage usage = ProductUsage.builder()
-                .field("testLocation" + suffix).build();
+                .field("testLocation" + productSuffix).build();
         createdProduct.setProductUsage(usage);
 
         productRepository.save(createdProduct);

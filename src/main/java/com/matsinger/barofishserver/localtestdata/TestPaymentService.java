@@ -60,7 +60,7 @@ public class TestPaymentService {
     }
 
     private PortOnePaymentRequestDto scenario1(List<String> scenarios, int seq, UserAuth findUserAuth, PortOnePaymentRequestDto PaymentRequest, Order findOrder) {
-        if (findUserAuth.getLoginId().endsWith("A") && findOrder.getName().endsWith("A")) {
+        if (findUserAuth.getLoginId().endsWith("A")) {
             // 유저A 주문A : 카드
             PaymentRequest = PortOnePaymentRequestDto.builder()
                     .imp_uid("test" + seq)
@@ -82,7 +82,7 @@ public class TestPaymentService {
     }
 
     private PortOnePaymentRequestDto scenario2(List<String> scenarios, int seq, UserAuth findUserAuth, PortOnePaymentRequestDto PaymentRequest, Order findOrder) {
-        if (findUserAuth.getLoginId().endsWith("A") && findOrder.getName().endsWith("B")) {
+        if (findUserAuth.getLoginId().endsWith("A")) {
             // 가상계좌
             PaymentRequest = PortOnePaymentRequestDto.builder()
                     .imp_uid("test" + seq)
@@ -104,7 +104,7 @@ public class TestPaymentService {
     }
 
     private PortOnePaymentRequestDto scenario3(List<String> scenarios, int seq, UserAuth findUserAuth, PortOnePaymentRequestDto PaymentRequest, Order findOrder) {
-        if (findUserAuth.getLoginId().endsWith("B") && findOrder.getName().endsWith("A")) {
+        if (findUserAuth.getLoginId().endsWith("B")) {
             // 결제 실패
             PaymentRequest = PortOnePaymentRequestDto.builder()
                     .imp_uid("test" + seq)
@@ -126,14 +126,14 @@ public class TestPaymentService {
     }
 
     private PortOnePaymentRequestDto scenario4(List<String> scenarios, int seq, UserAuth findUserAuth, PortOnePaymentRequestDto PaymentRequest, Order findOrder) {
-        if (findUserAuth.getLoginId().endsWith("B") && findOrder.getName().endsWith("B")) {
+        if (findUserAuth.getLoginId().endsWith("B")) {
             // 결제하지 않고 주문서 이탈
         }
         return PaymentRequest;
     }
 
     private PortOnePaymentRequestDto scenario5(List<String> scenarios, int seq, UserAuth findUserAuth, PortOnePaymentRequestDto PaymentRequest, Order findOrder) {
-        if (findUserAuth.getLoginId().endsWith("C") && findOrder.getName().endsWith("A")) {
+        if (findUserAuth.getLoginId().endsWith("C")) {
             // 결제 취소 성공 (발송 전)
             PaymentRequest = PortOnePaymentRequestDto.builder()
                     .imp_uid("test" + seq)
@@ -155,7 +155,7 @@ public class TestPaymentService {
     }
 
     private PortOnePaymentRequestDto scenario6(List<String> scenarios, int seq, UserAuth findUserAuth, PortOnePaymentRequestDto PaymentRequest, Order findOrder) {
-        if (findUserAuth.getLoginId().endsWith("C") && findOrder.getName().endsWith("B")) {
+        if (findUserAuth.getLoginId().endsWith("C")) {
             // 결제 취소 실패 (발송 후)
             PaymentRequest = PortOnePaymentRequestDto.builder()
                     .imp_uid("test" + seq)
