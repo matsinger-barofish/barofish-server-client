@@ -36,8 +36,12 @@ public class Store {
     @Column(name = "join_at", nullable = false)
     private Timestamp joinAt;
 
-    @OneToOne(mappedBy = "store", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OneToOne(mappedBy = "store")
     private StoreInfo storeInfo;
+
+    public void setStoreInfo(StoreInfo storeInfo) {
+        this.storeInfo = storeInfo;
+    }
 
     public int getId() {
         return id;

@@ -24,10 +24,9 @@ public class OrderRepositoryCustomImpl implements OrderRepositoryCustom {
     private final EntityManager em;
 
     @Transactional
-    public Optional<Order> createSequenceAndSave(Order order) {
+    public Optional<Order> createSequence(Order order) {
         String orderId = generateOrderNumber(order.getOrderedAt());
         order.setId(orderId);
-        em.persist(order);
         return Optional.ofNullable(order);
     }
 

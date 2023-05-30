@@ -44,11 +44,11 @@ public class Local1DataInit {
         Store storeA = testStoreService.createTestStore(1, "A");
         Store storeB = testStoreService.createTestStore(2, "B");
 
-        Product productA = testProductService.createProduct(1, 1000, "A", "A");
-        Product productB = testProductService.createProduct(2,1000, "B", "A");
+        Product productA = testProductService.createProduct(1, 1000, "A", storeA);
+        Product productB = testProductService.createProduct(2,1000, "B", storeA);
 
         OptionItem optionItemA = testOptionService.createOptions(1, productA, 2000, 10000, "A");
-        OptionItem optionItemB = testOptionService.createOptions(2, productA, 3000, 10, "B");
+        OptionItem optionItemB = testOptionService.createOptions(2, productA, 3000, 10000, "B");
         OptionItem optionItemC = testOptionService.createOptions(3, productB, 4000, 10000, "A");
         OptionItem optionItemD = testOptionService.createOptions(4, productB, 5000, 10000, "B");
 

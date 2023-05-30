@@ -35,6 +35,7 @@ public class TestStoreService {
                     .keyword("storeInfo" + suffix).build();
 
             Store createdStore = Store.builder()
+                    .id(id)
                     .state(StoreState.ACTIVE)
                     .loginId("store" + suffix)
                     .password("store" + suffix)
@@ -42,10 +43,10 @@ public class TestStoreService {
 
             createdStoreInfo.setStore(createdStore);
 
-//            storeRepository.save(createdStore);
+//            Store savedStore = storeRepository.save(createdStore);
             storeInfoRepository.save(createdStoreInfo);
             return createdStore;
         }
-        return null;
+        return storeRepository.findByLoginId("store" + suffix).get();
     }
 }

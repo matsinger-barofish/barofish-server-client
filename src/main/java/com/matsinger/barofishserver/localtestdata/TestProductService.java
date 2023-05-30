@@ -32,9 +32,9 @@ public class TestProductService {
 
     public static final List<String> suffixes = List.of("A", "B", "C", "D");
 
-    public Product createProduct(int id, int price, String productSuffix, String storeSuffix) {
+    public Product createProduct(int id, int price, String productSuffix, Store store) {
 
-        Store findStore = storeRepository.findByLoginId("store" + storeSuffix).get();
+        Store findStore = storeRepository.findById(store.getId()).get();
         Category findCategory = categoryRepository.findByName("testCategory" + "A").get();
 
         Product createdProduct = Product.builder()

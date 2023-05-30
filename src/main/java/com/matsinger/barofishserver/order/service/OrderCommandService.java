@@ -15,7 +15,6 @@ import com.matsinger.barofishserver.store.Store;
 import com.matsinger.barofishserver.store.StoreRepository;
 import com.matsinger.barofishserver.user.User;
 import com.matsinger.barofishserver.user.UserRepository;
-import com.matsinger.barofishserver.userauth.UserAuthRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -41,21 +40,23 @@ public class OrderCommandService {
         User findUser = userRepository.findById(request.getUserId())
                 .orElseThrow(() -> new OrderBusinessException(OrderErrorMessage.USER_NOT_FOUND_EXCEPTION));
 
-        OrderStoresAndPriceDto storesAndPriceDto = createStores(request);
-
         Order createdOrder = Order.builder()
                 .user(findUser)
-                .orderStoreInfos(storesAndPriceDto.getStores())
                 .state(OrderState.WAIT_DEPOSIT)
-                .totalPrice(storesAndPriceDto.getStorePriceSum())
                 .orderedAt(LocalDateTime.now()).build();
 
-        Order findOrder = orderRepository.createSequenceAndSave(createdOrder)
+        OrderStoresAndPriceDto storesAndPriceDto = createStores(request, createdOrder);
+        createdOrder.setTotalPrice(storesAndPriceDto.getStorePriceSum());
+
+        Order findOrder = orderRepository.createSequence(createdOrder)
                 .orElseThrow(() -> new OrderBusinessException(OrderErrorMessage.ORDER_SAVE_FAIL_EXCEPTION));
+
+        orderRepository.save(findOrder);
+
         return findOrder.getId();
     }
 
-    private OrderStoresAndPriceDto createStores(OrderRequestDto request) {
+    private OrderStoresAndPriceDto createStores(OrderRequestDto request, Order order) {
         Map<Integer, List<OrderReqProductInfoDto>> storeMap = createStoreMap(request);
         List<OrderStoreInfo> stores = new ArrayList<>();
         int storePriceSum = 0;
@@ -72,7 +73,8 @@ public class OrderCommandService {
             createdStoreInfo.setPrice(productPriceSum);
             storePriceSum += productPriceSum;
 
-            orderStoreInfoRepository.save(createdStoreInfo);
+            createdStoreInfo.setOrder(order);
+//            orderStoreInfoRepository.save(createdStoreInfo);
             stores.add(createdStoreInfo);
         }
         return new OrderStoresAndPriceDto(storePriceSum, stores);
@@ -119,7 +121,7 @@ public class OrderCommandService {
             createdProduct.setPrice(productFinalPrice);
             productPriceSum += productFinalPrice;
 
-            orderProductInfoRepository.save(createdProduct);
+//            orderProductInfoRepository.save(createdProduct);
             products.add(createdProduct);
         }
         return new OrderProductsAndPriceDto(productPriceSum, products);
@@ -153,7 +155,7 @@ public class OrderCommandService {
 
             createdOption.setOrderProductInfo(productInfo);
 
-            orderProductOptionRepository.save(createdOption);
+//            orderProductOptionRepository.save(createdOption);
 
             options.add(createdOption);
         }

@@ -6,5 +6,5 @@ import java.util.Optional;
 
 public interface OrderRepositoryCustom {
 
-    Optional<Order> createSequenceAndSave(Order order);
+    Optional<Order> createSequence(Order order);
 }
