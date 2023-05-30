@@ -1,5 +1,7 @@
 package com.matsinger.barofishserver.product;
 
+import com.matsinger.barofishserver.order.exception.OrderBusinessException;
+import com.matsinger.barofishserver.order.exception.OrderErrorMessage;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -44,6 +46,15 @@ public class OptionItem {
     @Basic
     @Column(name = "amount", nullable = false)
     private int amount;
+
+    public void reduceAmount(int amount) {
+        int reducedValue = this.amount - amount;
+        if (reducedValue < 0) {
+            String errorMessage = String.format("'%s' 상품의 재고가 부족합니다.", this.name);
+            throw new OrderBusinessException(errorMessage);
+        }
+        this.amount = reducedValue;
+    }
 
     public int getId() {
         return id;

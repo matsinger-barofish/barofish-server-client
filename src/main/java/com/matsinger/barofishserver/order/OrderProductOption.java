@@ -95,7 +95,7 @@ public class OrderProductOption {
 
     public OrderProductOptionDto toDto() {
         return OrderProductOptionDto.builder()
-                .optionId(this.id)
+                .optionId(option.getId())
                 .optionName(this.name)
                 .amount(this.amount)
                 .optionPrice(this.price).build();

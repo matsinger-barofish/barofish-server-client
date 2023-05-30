@@ -10,6 +10,9 @@ import com.matsinger.barofishserver.order.repository.OrderProductInfoRepository;
 import com.matsinger.barofishserver.order.repository.OrderProductOptionRepository;
 import com.matsinger.barofishserver.order.repository.OrderRepository;
 import com.matsinger.barofishserver.order.repository.OrderStoreInfoRepository;
+import com.matsinger.barofishserver.order.service.dto.OrderProductOptionsAndPriceDto;
+import com.matsinger.barofishserver.order.service.dto.OrderProductsAndPriceDto;
+import com.matsinger.barofishserver.order.service.dto.OrderStoresAndPriceDto;
 import com.matsinger.barofishserver.product.*;
 import com.matsinger.barofishserver.store.Store;
 import com.matsinger.barofishserver.store.StoreRepository;
@@ -74,7 +77,6 @@ public class OrderCommandService {
             storePriceSum += productPriceSum;
 
             createdStoreInfo.setOrder(order);
-//            orderStoreInfoRepository.save(createdStoreInfo);
             stores.add(createdStoreInfo);
         }
         return new OrderStoresAndPriceDto(storePriceSum, stores);
@@ -121,7 +123,6 @@ public class OrderCommandService {
             createdProduct.setPrice(productFinalPrice);
             productPriceSum += productFinalPrice;
 
-//            orderProductInfoRepository.save(createdProduct);
             products.add(createdProduct);
         }
         return new OrderProductsAndPriceDto(productPriceSum, products);
@@ -155,9 +156,11 @@ public class OrderCommandService {
 
             createdOption.setOrderProductInfo(productInfo);
 
-//            orderProductOptionRepository.save(createdOption);
 
             options.add(createdOption);
+
+
+            findOption.reduceAmount(optionCount);
         }
         return new OrderProductOptionsAndPriceDto(optionPriceSum, options);
     }

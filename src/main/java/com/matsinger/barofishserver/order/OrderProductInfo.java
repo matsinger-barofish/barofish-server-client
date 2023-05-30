@@ -64,6 +64,10 @@ public class OrderProductInfo {
     @Column(name = "delivery_fee", nullable = false)
     private int deliveryFee;
 
+    public String getTitle() {
+        return product.getTitle();
+    }
+
     public int getId() {
         return id;
     }
@@ -107,7 +111,7 @@ public class OrderProductInfo {
 
     public OrderProductInfoDto toDto(List<OrderProductOptionDto> optionDtos) {
         return OrderProductInfoDto.builder()
-                .productId(id)
+                .productId(getProductId())
                 .originPrice(price)
                 .discountRate(discountRate)
                 .deliveryFee(deliveryFee)

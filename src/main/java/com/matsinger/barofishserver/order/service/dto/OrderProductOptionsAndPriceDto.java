@@ -1,4 +1,4 @@
-package com.matsinger.barofishserver.order.service;
+package com.matsinger.barofishserver.order.service.dto;
 
 import com.matsinger.barofishserver.order.OrderProductOption;
 import lombok.AllArgsConstructor;

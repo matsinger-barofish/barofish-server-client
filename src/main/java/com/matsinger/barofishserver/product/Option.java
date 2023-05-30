@@ -33,6 +33,10 @@ public class Option {
         product.getOptions().add(this);
     }
 
+    public void reduceAmount(int amount) {
+        optionItem.reduceAmount(amount);
+    }
+
     @Basic
     @Column(name = "is_needed", nullable = false)
     private byte isNeeded;
