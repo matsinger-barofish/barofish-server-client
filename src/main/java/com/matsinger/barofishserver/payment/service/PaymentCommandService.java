@@ -23,15 +23,13 @@ public class PaymentCommandService {
 
     private final ProductRepository productRepository;
     public PaymentSuccessResponseDto proceedPayment(PortOnePaymentRequestDto request) {
-        // TODO: 결제 하기 전에 option 수량 검증하는 로직 추가
-
 
         Order findOrder = orderRepository.findById(request.getMerchant_uid())
                 .orElseThrow(() -> {
                     throw new IllegalArgumentException(PaymentErrorMessage.ORDER_NOT_FOUND_MESSAGE);
                 });
 
-        if (request.getStatus().equals("fail")) {
+        if (request.getStatus().equals("failed")) {
             // 결제 실패했을 때
             findOrder.setState(OrderState.WAIT_DEPOSIT);
         } else if (!request.getPay_method().equals("trans") && !request.getPay_method().equals("vbank")) {

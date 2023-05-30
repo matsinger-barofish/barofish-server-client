@@ -49,8 +49,7 @@ public class Order {
     @Column(name = "ordered_at", nullable = false, columnDefinition = "TIMESTAMP")
     private LocalDateTime orderedAt;
 
-    @OneToOne(mappedBy = "order")
-//    @Column(name = "payment_id", nullable = true)
+    @OneToOne(mappedBy = "order", cascade = CascadeType.ALL)
     private Payment payment;
 
     public void setPayment(Payment payment) {
