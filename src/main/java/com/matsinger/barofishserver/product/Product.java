@@ -1,6 +1,7 @@
 package com.matsinger.barofishserver.product;
 
 import com.matsinger.barofishserver.category.Category;
+import com.matsinger.barofishserver.product.productinfo.*;
 import com.matsinger.barofishserver.review.Review;
 import com.matsinger.barofishserver.store.Store;
 import jakarta.persistence.*;
@@ -10,7 +11,6 @@ import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.stream.Collectors;
 
 @Entity
 @AllArgsConstructor
@@ -65,6 +65,7 @@ public class Product {
     @Column(name = "created_at", nullable = false)
     private Timestamp createdAt;
 
+<<<<<<< HEAD
     @Basic
     @Column(name = "type_id", nullable = false)
     private Integer typeId;
@@ -80,7 +81,71 @@ public class Product {
     private List<Review>
             imageReviews =
             reviews.stream().filter(review -> review.getImages().length() != 0).collect(Collectors.toList());
+=======
+    @Builder.Default
+    @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL, mappedBy = "product")
+    private List<Option> options = new ArrayList<>();
 
+    @Builder.Default
+    @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL, mappedBy = "product")
+    private List<Review> reviews = new ArrayList<>();
+
+    // 주석 풀면 에러 발생
+    // Caused by: java.lang.reflect.InvocationTargetException: null
+    //Caused by: java.lang.NullPointerException: Cannot invoke "java.util.List.stream()" because "this.reviews" is null
+//    @OneToMany
+//    private List<Review>
+//            imageReviews =
+//            reviews.stream().filter(review -> review.getImages().length() != 0).collect(Collectors.toList());
+>>>>>>> origin/order
+
+    @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JoinColumn(name = "type_id")
+    private ProductType productType;
+
+    @Column(name = "deliveryFee", nullable = false)
+    private int deliveryFee;
+
+    public void setProductType(ProductType productType) {
+        this.productType = productType;
+        productType.setProduct(this);
+    }
+
+    @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JoinColumn(name = "location_id")
+    private ProductLocation productLocation;
+
+    public void setProductLocation(ProductLocation productLocation) {
+        this.productLocation = productLocation;
+        productLocation.setProduct(this);
+    }
+
+    @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JoinColumn(name = "process_id")
+    private ProductProcess productProcess;
+
+    public void setProductProcess(ProductProcess productProcess) {
+        this.productProcess = productProcess;
+        productProcess.setProduct(this);
+    }
+
+    @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JoinColumn(name = "usage_id")
+    private ProductUsage productUsage;
+
+    public void setProductUsage(ProductUsage productUsage) {
+        this.productUsage = productUsage;
+        productUsage.setProduct(this);
+    }
+
+    @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JoinColumn(name = "storage_id")
+    private ProductStorage productStorage;
+
+    public void setProductStorage(ProductStorage productStorage) {
+        this.productStorage = productStorage;
+        productStorage.setProduct(this);
+    }
 
     public int getId() {
         return id;

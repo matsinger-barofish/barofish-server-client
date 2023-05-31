@@ -36,9 +36,12 @@ public class Store {
     @Column(name = "join_at", nullable = false)
     private Timestamp joinAt;
 
-    @OneToOne
-    @JoinColumn(name = "id")
+    @OneToOne(mappedBy = "store")
     private StoreInfo storeInfo;
+
+    public void setStoreInfo(StoreInfo storeInfo) {
+        this.storeInfo = storeInfo;
+    }
 
     public int getId() {
         return id;
@@ -78,6 +81,10 @@ public class Store {
 
     public void setJoinAt(Timestamp joinAt) {
         this.joinAt = joinAt;
+    }
+
+    public String getName() {
+        return storeInfo.getName();
     }
 
     @Override

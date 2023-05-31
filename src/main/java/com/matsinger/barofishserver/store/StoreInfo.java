@@ -1,16 +1,32 @@
 package com.matsinger.barofishserver.store;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.NoArgsConstructor;
 
 import java.util.Objects;
 
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 @Entity
 @Table(name = "store_info", schema = "barofish_dev", catalog = "")
 public class StoreInfo {
-        @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Id
-    @Column(name = "store_id", nullable = false)
-    private int storeId;
+    @Column(name = "id", nullable = false)
+    private int id;
+
+    @OneToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "store_id")
+    private Store store;
+
+    public void setStore(Store store) {
+        this.store = store;
+        store.setStoreInfo(this);
+    }
+
     @Basic
     @Column(name = "backgroud_image", nullable = false, length = -1)
     private String backgroudImage;
@@ -27,15 +43,6 @@ public class StoreInfo {
     @Column(name = "keyword", nullable = false, length = -1)
     private String keyword;
 
-
-
-    public int getId() {
-        return storeId;
-    }
-
-    public void setId(int id) {
-        this.storeId = id;
-    }
 
     public String getBackgroudImage() {
         return backgroudImage;
@@ -96,3 +103,4 @@ public class StoreInfo {
         return Objects.hash(backgroudImage, profileImage, name, location, keyword);
     }
 }
+

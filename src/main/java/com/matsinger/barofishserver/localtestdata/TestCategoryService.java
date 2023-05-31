@@ -16,26 +16,24 @@ public class TestCategoryService {
 
     private final CategoryRepository categoryRepository;
 
-    public void createTestCategory() {
+    public Category createTestCategory(int categoryId, String suffix) {
 
-        for (int i = 1; i < 3; i++) {
+        boolean isParentCategoryPresent = categoryRepository.findByName("testParentCategory" + suffix).isPresent();
+        if (!isParentCategoryPresent) {
+            Category parentCategory = Category.builder()
+                    .image("testParentCategory" + suffix)
+                    .name("testParentCategory" + suffix).build();
 
-            boolean isParentCategoryPresent = categoryRepository.findByName("testParentCategory" + i).isPresent();
-            if (!isParentCategoryPresent) {
-                Category parentCategory = Category.builder()
-                        .image("testParentCategory" + i)
-                        .name("testParentCategory" + i).build();
+            Category testCategory = Category.builder()
+                    .categoryId(categoryId)
+                    .parentCategory(parentCategory)
+                    .image("test" + suffix)
+                    .name("testCategory" + suffix).build();
 
-                Category testCategory = Category.builder()
-                        .parentCategory(parentCategory)
-                        .parentCategory(parentCategory)
-                        .image("test" + i)
-                        .name("testCategory" + i).build();
-
-                categoryRepository.save(parentCategory);
-                categoryRepository.save(testCategory);
-
-            }
+            categoryRepository.save(parentCategory);
+            categoryRepository.save(testCategory);
+            return testCategory;
         }
+        return null;
     }
 }

@@ -1,11 +1,14 @@
 package com.matsinger.barofishserver.payment;
 
 import com.matsinger.barofishserver.order.Order;
+import com.matsinger.barofishserver.payment.dto.response.PaymentResponseDto;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+
+import java.sql.Timestamp;
 
 @Getter
 @Builder
@@ -17,7 +20,8 @@ public class Payment {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private String id;
+    @Column(name = "id", nullable = false)
+    private int id;
 
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "order_id", nullable = false)
@@ -47,32 +51,32 @@ public class Payment {
     @Column(name = "name", nullable = false)
     private String name; // 주문 이름
 
-    @Column(name = "pg_provider", nullable = false)
+    @Column(name = "pg_provider", nullable = false, length = 10)
     private String pgProvider;  // pg사 구분코드
 
     @Column(name = "emb_pg_provider", nullable = true)
     private String embPgProvider; // 간편결제 구분코드
 
-    @Column(name = "pg_id", nullable = false)
+    @Column(name = "pg_tid", nullable = false)
     private String pgTid; // PG사에서 거래당 고유하게 부여하는 거래번호
 
-    @Column(name = "buyer_name", nullable = false)
+    @Column(name = "buyer_name", nullable = false, length = 20)
     private String buyerName; // 주문자명
 
-    @Column(name = "buyer_email", nullable = false)
+    @Column(name = "buyer_email", nullable = false, length = 30)
     private String buyerEmail;
 
-    @Column(name = "buyer_tel", nullable = false)
+    @Column(name = "buyer_tel", nullable = false, length = 20)
     private String buyerTel;
 
     @Column(name = "buyer_address", nullable = false)
     private String buyerAddr; // 주문자 우편번호
 
-    @Column(name = "custom_data", nullable = false)
-    private String customData; // 가맹점 임의 지정 데이터
+//    @Column(name = "custom_data", nullable = false)
+//    private String customData; // 가맹점 임의 지정 데이터
 
     @Column(name = "paid_at", nullable = false)
-    private String paidAt; // 결제 승인 시각 (UNIX timestamp)
+    private Timestamp paidAt; // 결제 승인 시각 (UNIX timestamp)
 
     @Column(name = "receipt_url", nullable = false)
     private String receiptUrl; // 거래 매출전표 url
@@ -90,5 +94,30 @@ public class Payment {
     private String vbankHolder; // 가상계좌 예금주
 
     @Column(name = "vbank_date")
-    private String vbankDate; // 가상계좌 입금기한 (UNIX timestamp)
+    private Timestamp vbankDate; // 가상계좌 입금기한 (UNIX timestamp)
+
+    public PaymentResponseDto toDto() {
+        return PaymentResponseDto.builder()
+                .orderId(order.getId())
+                .impUid(impUid)
+                .merchantUid(merchantUid)
+                .payMethod(payMethod)
+                .paidAmount(paidAmount)
+                .status(status)
+                .name(name)
+                .pgProvider(pgProvider)
+                .embPgProvider(embPgProvider)
+                .pgTid(pgTid)
+                .buyerName(buyerName)
+                .buyerEmail(buyerEmail)
+                .buyerTel(buyerTel)
+                .buyerAddr(buyerAddr)
+                .paidAt(paidAt)
+                .receiptUrl(receiptUrl)
+                .applyNum(applyNum)
+                .vbankNum(vbankNum)
+                .vbankName(vbankName)
+                .vbankHolder(vbankHolder)
+                .vbankDate(vbankDate).build();
+    }
 }

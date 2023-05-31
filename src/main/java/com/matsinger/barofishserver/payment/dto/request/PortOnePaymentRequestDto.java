@@ -7,6 +7,11 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.sql.Timestamp;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+
 /**
  * 참고: https://developers.portone.io/docs/ko/sdk/javascript-sdk/payrt
  */
@@ -16,7 +21,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class PortOnePaymentRequestDto {
 
-//    private boolean success; // 토스페이먼츠 신모듈은 제공 안함
+    //    private boolean success; // 토스페이먼츠 신모듈은 제공 안함
     private String error_code; // 결제 실패 코드
     private String error_msg; // 결제 실패 메시지
     private String imp_uid; // 포트원 고유 결제 번호
@@ -48,6 +53,7 @@ public class PortOnePaymentRequestDto {
 
     public Payment toEntity() {
         PaymentState paymentState = PaymentState.toPaymentState(status);
+
         return Payment.builder()
                 .impUid(getImp_uid())
                 .merchantUid(getMerchant_uid())
@@ -62,13 +68,23 @@ public class PortOnePaymentRequestDto {
                 .buyerEmail(buyer_email)
                 .buyerTel(buyer_tel)
                 .buyerAddr(buyer_addr)
-                .customData(custom_data)
-                .paidAt(paid_at)
+                .paidAt(convertUnixTimestampToKoreanDateTime(paid_at))
                 .receiptUrl(receipt_url)
                 .applyNum(apply_num)
                 .vbankNum(vbank_num)
                 .vbankName(vbank_name)
                 .vbankHolder(vbank_holder)
-                .vbankDate(vbank_date).build();
+                .vbankDate(convertUnixTimestampToKoreanDateTime(vbank_date)).build();
+    }
+
+    private Timestamp convertUnixTimestampToKoreanDateTime(String unixTimestamp) {
+        if (unixTimestamp == null) {
+            return null;
+        }
+        Long convertedUnixTimestamp = Long.valueOf(unixTimestamp);
+        Instant instant = Instant.ofEpochSecond(convertedUnixTimestamp);
+        ZoneId koreanZoneId = ZoneId.of("Asia/Seoul");
+        LocalDateTime koreanLocalDateTime = LocalDateTime.ofInstant(instant, koreanZoneId);
+        return Timestamp.valueOf(koreanLocalDateTime);
     }
 }

@@ -23,7 +23,7 @@ public class OrderController {
     public ResponseEntity<Object> order(@RequestBody OrderRequestDto request) {
         try {
             HashMap<String, String> response = new HashMap<>();
-            String orderId = orderCommandService.createOrderSheet(request);
+            String orderId = orderCommandService.createOrder(request);
             response.put("orderId", orderId);
             return new ResponseEntity<>(response, HttpStatus.OK);
         } catch (Exception e) {

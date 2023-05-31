@@ -1,6 +1,10 @@
 package com.matsinger.barofishserver.payment.service;
 
+import com.matsinger.barofishserver.payment.Payment;
 import com.matsinger.barofishserver.payment.dto.request.PortOnePriceValidationDto;
+import com.matsinger.barofishserver.payment.dto.response.PaymentResponseDto;
+import com.matsinger.barofishserver.payment.exception.PaymentErrorMessage;
+import com.matsinger.barofishserver.payment.repository.PaymentRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -18,19 +22,8 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class PaymentQueryService {
 
-    private final String identificationCode = "imp38983932";
-    private final String impKey = "8069640719378424";
-    private final String impSecret = "9163909ecb98ff8fc1e0ced24d3ed59583f740d446bd8be477ed1e3110032b54f610f664c2a1e81e";
-
     private final String baseUrl = "https://api.iamport.kr/payments/";
-
-    public Map<String, String> getKeys() {
-        Map<String, String> keys = new HashMap<>();
-        keys.put("identificationCode", identificationCode);
-        keys.put("impKey", impKey);
-        keys.put("impSecret", impSecret);
-        return keys;
-    }
+    private final PaymentRepository paymentRepository;
 
     public ResponseEntity<Object> validatePrice(PortOnePriceValidationDto request) {
 
@@ -43,5 +36,13 @@ public class PaymentQueryService {
         RestTemplate restTemplate = new RestTemplate();
         ResponseEntity<Object> response = restTemplate.postForEntity(requestUrl, httpEntity, Object.class);
         return response;
+    }
+
+    public PaymentResponseDto getPaymentInfo(int id) {
+        Payment findPayment = paymentRepository.findById(id)
+                .orElseThrow(() -> {
+                    throw new IllegalArgumentException(PaymentErrorMessage.PAYMENT_NOT_FOUND_EXCEPTION);
+                });
+        return findPayment.toDto();
     }
 }

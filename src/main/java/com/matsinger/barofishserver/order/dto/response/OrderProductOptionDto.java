@@ -1,4 +1,4 @@
-package com.matsinger.barofishserver.order.dto;
+package com.matsinger.barofishserver.order.dto.response;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

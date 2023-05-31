@@ -1,6 +1,8 @@
 package com.matsinger.barofishserver.order;
 
-import com.matsinger.barofishserver.order.dto.OrderProductOptionDto;
+import com.matsinger.barofishserver.order.dto.request.OrderReqProductOptionDto;
+import com.matsinger.barofishserver.order.dto.response.OrderProductOptionDto;
+import com.matsinger.barofishserver.product.Option;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -21,9 +23,13 @@ public class OrderProductOption {
     @Column(name = "id", nullable = false)
     private int id;
     @Basic
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne
     @JoinColumn(name = "order_product_id", nullable = false)
     private OrderProductInfo orderProductInfo;
+    public void setOrderProductInfo(OrderProductInfo orderProductInfo) {
+        this.orderProductInfo = orderProductInfo;
+        orderProductInfo.getOrderProductOptions().add(this);
+    }
     @Basic
     @Column(name = "name", nullable = false, length = 100)
     private String name;
@@ -31,9 +37,17 @@ public class OrderProductOption {
     @Column(name = "price", nullable = false)
     private int price;
 
+    @Column(name = "discount_rate", nullable = false)
+    private double discountRate;
+
     @Basic
     @Column(name = "amount", nullable = false)
     private int amount;
+
+    @Basic
+    @ManyToOne
+    @JoinColumn(name = "option_id", nullable = false)
+    private Option option;
 
     public int getId() {
         return id;
@@ -81,7 +95,7 @@ public class OrderProductOption {
 
     public OrderProductOptionDto toDto() {
         return OrderProductOptionDto.builder()
-                .optionId(this.id)
+                .optionId(option.getId())
                 .optionName(this.name)
                 .amount(this.amount)
                 .optionPrice(this.price).build();

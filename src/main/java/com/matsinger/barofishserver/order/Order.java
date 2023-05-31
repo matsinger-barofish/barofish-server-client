@@ -21,18 +21,20 @@ import java.util.Objects;
 @AllArgsConstructor
 @Table(name = "orders", schema = "barofish_dev", catalog = "")
 public class Order {
-    // TODO: 주문 이름 추가하기
     @Id
     @Column(name = "id", nullable = false, length = 20)
     private String id;
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
+    /**
+     * DB 구조 변경. Store 기준으로 OrderProductInfo를 한번 더 감싸줌
+     */
     @Builder.Default
-    @OneToMany(cascade = CascadeType.ALL, mappedBy = "order")
-    @Column(name = "order_product_infos", nullable = false)
-    private List<OrderProductInfo> orderProductInfos = new ArrayList<>();
+    @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL, mappedBy = "order")
+    @Column(name = "order_store_infos", nullable = false)
+    private List<OrderStoreInfo> orderStoreInfos = new ArrayList<>();
 
     @Basic
     @Enumerated(EnumType.STRING)
@@ -47,8 +49,12 @@ public class Order {
     @Column(name = "ordered_at", nullable = false, columnDefinition = "TIMESTAMP")
     private LocalDateTime orderedAt;
 
+<<<<<<< HEAD
     @OneToOne(mappedBy = "order")
 //    @Column(name = "payment_id", nullable = true)
+=======
+    @OneToOne(mappedBy = "order", cascade = CascadeType.ALL)
+>>>>>>> origin/order
     private Payment payment;
 
     public void setPayment(Payment payment) {
@@ -106,9 +112,5 @@ public class Order {
     @Override
     public int hashCode() {
         return Objects.hash(id, user.getId(), state, totalPrice, orderedAt);
-    }
-
-    public List<OrderProductInfo> getOrderProductInfo() {
-        return orderProductInfos;
     }
 }

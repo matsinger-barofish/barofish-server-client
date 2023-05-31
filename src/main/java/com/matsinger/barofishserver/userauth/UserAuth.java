@@ -25,7 +25,7 @@ public class UserAuth {
     @Column(name = "login_id", nullable = false, length = 150)
     private String loginId;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @JoinColumn(name = "user_id", nullable = true)
     private User user;
 
@@ -37,4 +37,8 @@ public class UserAuth {
 
     @Column(name = "password", nullable = false, length = 60)
     private String password;
+
+    public int getUserId() {
+        return user.getId();
+    }
 }
