@@ -1,5 +1,6 @@
 package com.matsinger.barofishserver.search;
 
+import lombok.*;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -17,7 +18,18 @@ public interface SearchKeywordRepository extends JpaRepository<SearchKeyword, In
     SearchKeyword findByKeywordEquals(String keyword);
 
     @Query(value = "insert into search_keyword (keyword, amount, prev_rank) values (:keyword, :amount, :prevRank)", nativeQuery = true)
-    void save(@Param("keyword") String keyword,
-                       @Param("amount") Integer amount,
-                       @Param("prevRank") Integer prevRank);
+    void save(@Param("keyword") String keyword, @Param("amount") Integer amount, @Param("prevRank") Integer prevRank);
+
+    @Query(value = "update search_keyword set prev_rank = NULL", nativeQuery = true)
+    void resetRank();
+
+    public interface KeywordRank {
+        Integer getRank();
+
+        String getKeyword();
+    }
+
+    @Query(value = "select RANK() over (ORDER BY amount DESC) as 'rank', sk.keyword from search_keyword sk", nativeQuery =
+            true)
+    List<KeywordRank> selectRank();
 }

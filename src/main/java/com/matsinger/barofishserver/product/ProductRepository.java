@@ -11,4 +11,6 @@ public interface ProductRepository extends JpaRepository<Product, Integer> {
     public List<Product> findByTitleContaining(String keyword);
 
     Optional<Product> findByTitle(String title);
+
+    List<Product> findALlByStateNot(ProductState state);
 }

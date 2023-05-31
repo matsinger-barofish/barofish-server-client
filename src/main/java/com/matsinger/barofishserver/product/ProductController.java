@@ -10,6 +10,7 @@ import com.matsinger.barofishserver.store.StoreService;
 import com.matsinger.barofishserver.utils.Common;
 import com.matsinger.barofishserver.utils.CustomResponse;
 import com.matsinger.barofishserver.utils.S3.S3Uploader;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -31,10 +32,20 @@ public class ProductController {
 
     private final S3Uploader s3;
 
-    @PostMapping("/test")
-    public Boolean test(@RequestPart(value = "images", required = false) List<MultipartFile> images) {
-        return true;
+    @GetMapping("/")
+    public ResponseEntity<CustomResponse<List<Product>>> selectProductList(@RequestHeader(value = "Authorization") Optional<String> auth) {
+        CustomResponse<List<Product>> res = new CustomResponse<>();
+        Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
+        if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
+        try {
+            List<Product> products = productService.selectProductByAdmin();
+            res.setData(Optional.ofNullable(products));
+            return ResponseEntity.ok(res);
+        } catch (Exception e) {
+            return res.defaultError(e);
+        }
     }
+
 
     @PostMapping("/add")
     public ResponseEntity<CustomResponse<Product>> addProduct(@RequestHeader(value = "Authorization") Optional<String> auth,

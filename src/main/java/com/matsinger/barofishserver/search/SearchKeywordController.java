@@ -3,12 +3,10 @@ package com.matsinger.barofishserver.search;
 import com.matsinger.barofishserver.product.Product;
 import com.matsinger.barofishserver.product.ProductService;
 import com.matsinger.barofishserver.utils.CustomResponse;
+import com.matsinger.barofishserver.utils.S3.S3Uploader;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Optional;
@@ -20,6 +18,20 @@ public class SearchKeywordController {
     private final SearchKeywordService searchKeywordService;
 
     private final ProductService productService;
+
+    private final S3Uploader s3;
+
+    @PostMapping("test")
+    public ResponseEntity<CustomResponse<Boolean>> selectKeywordRanks(@RequestPart(value = "content") String content) {
+        CustomResponse<Boolean> res = new CustomResponse<>();
+        try {
+//            List<SearchKeywordRepository.KeywordRank> keywordRanks = searchKeywordService.selectKeywordRank();
+            s3.uploadEditorStringToS3(content);
+            return ResponseEntity.ok(res);
+        } catch (Exception e) {
+            return res.defaultError(e);
+        }
+    }
 
     @GetMapping("/rank")
     public ResponseEntity<CustomResponse<List<SearchKeyword>>> selectTopSearchKeywords() {

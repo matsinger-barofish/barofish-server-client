@@ -4,10 +4,7 @@ import com.matsinger.barofishserver.category.Category;
 import com.matsinger.barofishserver.review.Review;
 import com.matsinger.barofishserver.store.Store;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.sql.Timestamp;
 import java.util.ArrayList;
@@ -19,6 +16,7 @@ import java.util.stream.Collectors;
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
+@Setter
 @Builder
 @Table(name = "product", schema = "barofish_dev", catalog = "")
 public class Product {
@@ -66,6 +64,10 @@ public class Product {
     @Basic
     @Column(name = "created_at", nullable = false)
     private Timestamp createdAt;
+
+    @Basic
+    @Column(name = "type_id", nullable = false)
+    private Integer typeId;
 
     @OneToMany
     @JoinColumn(name = "product_id")

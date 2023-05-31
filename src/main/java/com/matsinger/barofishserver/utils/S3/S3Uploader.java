@@ -13,10 +13,14 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.Buffer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import java.util.regex.MatchResult;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Slf4j
 @RequiredArgsConstructor    // final 멤버변수가 있으면 생성자 항목에 포함시킴
@@ -40,7 +44,7 @@ public class S3Uploader {
     }
 
     private String upload(File uploadFile, ArrayList<String> dirName) {
-        String fileName = String.join("/", dirName) + "/" + uploadFile.getName();
+        String fileName = String.join("/", dirName) + "/" + buildFileName(uploadFile.getName());
         String uploadImageUrl = putS3(uploadFile, fileName);
 
         removeNewFile(uploadFile);  // 로컬에 생성된 File 삭제 (MultipartFile -> File 전환 하며 로컬에 파일 생성됨)
@@ -114,5 +118,32 @@ public class S3Uploader {
             }
         }
         return result;
+    }
+
+    private static final String FILE_EXTENSION_SEPARATOR = ".";
+    private static final String TIME_SEPARATOR = "_";
+
+    public static String buildFileName(String originalFileName) {
+        int fileExtensionIndex = originalFileName.lastIndexOf(FILE_EXTENSION_SEPARATOR);
+        String fileExtension = originalFileName.substring(fileExtensionIndex);
+        String fileName = originalFileName.substring(0, fileExtensionIndex);
+        String now = String.valueOf(System.currentTimeMillis());
+
+        return fileName + TIME_SEPARATOR + now + fileExtension;
+    }
+
+    public String uploadEditorStringToS3(String content) {
+        Pattern imgPattern = Pattern.compile("<img src=\"data:(image/.*?);base64,(.*?)\">");
+        Matcher matcher = imgPattern.matcher(content);
+        List<String> imgUrls = new ArrayList<>();
+        while (matcher.find()) {
+            String base64String = matcher.group();
+            String[]
+                    splitedString =
+                    base64String.replaceAll("<img src=\"data:(image/.*?);base64,(.*?)\">", "$1*$*~$2").split("\\*$*~");
+            String mimetype = splitedString[0];
+//            Buffer buffer = new Buffer(splitedString[1])
+        }
+        return "";
     }
 }

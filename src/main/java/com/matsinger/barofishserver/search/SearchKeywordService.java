@@ -25,4 +25,16 @@ public class SearchKeywordService {
     public List<SearchKeyword> selectTopSearchKeywords() {
         return searchKeywordRepository.findTop10ByOrderByAmountDesc();
     }
+
+    public List<SearchKeywordRepository.KeywordRank> selectKeywordRank() {
+        return searchKeywordRepository.selectRank();
+    }
+
+    public void resetRank() {
+        List<SearchKeywordRepository.KeywordRank> ranks = searchKeywordRepository.selectRank();
+        searchKeywordRepository.deleteAll();
+        for (SearchKeywordRepository.KeywordRank rank : ranks) {
+            searchKeywordRepository.save(rank.getKeyword(), 0, rank.getRank());
+        }
+    }
 }
