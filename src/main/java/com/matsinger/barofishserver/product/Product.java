@@ -25,17 +25,17 @@ public class Product {
     @Column(name = "id", nullable = false)
     private int id;
 
-//    @Basic
-//    @Column(name = "store_id", nullable = false)
-//    private int storeId;
+    // @Basic
+    // @Column(name = "store_id", nullable = false)
+    // private int storeId;
 
     @ManyToOne
     @JoinColumn(name = "store_id")
     private Store store;
 
-//    @Basic
-//    @Column(name = "category_id", nullable = false)
-//    private int categoryId;
+    // @Basic
+    // @Column(name = "category_id", nullable = false)
+    // private int categoryId;
 
     @ManyToOne
     @JoinColumn(name = "category_id")
@@ -65,23 +65,6 @@ public class Product {
     @Column(name = "created_at", nullable = false)
     private Timestamp createdAt;
 
-<<<<<<< HEAD
-    @Basic
-    @Column(name = "type_id", nullable = false)
-    private Integer typeId;
-
-    @OneToMany
-    @JoinColumn(name = "product_id")
-    private List<Option> options = new ArrayList<>();
-
-    @OneToMany(mappedBy = "product")
-    private List<Review> reviews = new ArrayList<>();
-
-    @OneToMany(mappedBy = "product")
-    private List<Review>
-            imageReviews =
-            reviews.stream().filter(review -> review.getImages().length() != 0).collect(Collectors.toList());
-=======
     @Builder.Default
     @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL, mappedBy = "product")
     private List<Option> options = new ArrayList<>();
@@ -92,12 +75,13 @@ public class Product {
 
     // 주석 풀면 에러 발생
     // Caused by: java.lang.reflect.InvocationTargetException: null
-    //Caused by: java.lang.NullPointerException: Cannot invoke "java.util.List.stream()" because "this.reviews" is null
-//    @OneToMany
-//    private List<Review>
-//            imageReviews =
-//            reviews.stream().filter(review -> review.getImages().length() != 0).collect(Collectors.toList());
->>>>>>> origin/order
+    // Caused by: java.lang.NullPointerException: Cannot invoke
+    // "java.util.List.stream()" because "this.reviews" is null
+    // @OneToMany
+    // private List<Review>
+    // imageReviews =
+    // reviews.stream().filter(review -> review.getImages().length() !=
+    // 0).collect(Collectors.toList());
 
     @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JoinColumn(name = "type_id")
@@ -245,12 +229,14 @@ public class Product {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o)
+            return true;
+        if (o == null || getClass() != o.getClass())
+            return false;
         Product that = (Product) o;
         return id == that.id &&
-//                storeId == that.storeId &&
-//                categoryId == that.categoryId &&
+        // storeId == that.storeId &&
+        // categoryId == that.categoryId &&
                 originPrice == that.originPrice &&
                 discountRate == that.discountRate &&
                 Objects.equals(state, that.state) &&
@@ -263,6 +249,7 @@ public class Product {
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, state, images, title, originPrice, discountRate, deliveryInfo, descriptionImages, createdAt);
+        return Objects.hash(id, state, images, title, originPrice, discountRate, deliveryInfo, descriptionImages,
+                createdAt);
     }
 }

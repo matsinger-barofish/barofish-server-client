@@ -49,12 +49,7 @@ public class Order {
     @Column(name = "ordered_at", nullable = false, columnDefinition = "TIMESTAMP")
     private LocalDateTime orderedAt;
 
-<<<<<<< HEAD
-    @OneToOne(mappedBy = "order")
-//    @Column(name = "payment_id", nullable = true)
-=======
     @OneToOne(mappedBy = "order", cascade = CascadeType.ALL)
->>>>>>> origin/order
     private Payment payment;
 
     public void setPayment(Payment payment) {
@@ -99,8 +94,10 @@ public class Order {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o)
+            return true;
+        if (o == null || getClass() != o.getClass())
+            return false;
         Order that = (Order) o;
         return user.getId() == that.user.getId() &&
                 Objects.equals(id, that.id) &&
