@@ -51,7 +51,9 @@ public class StoreService {
     }
 
     public Store selectStoreByLoginId(String loginId) {
-        Store store = storeRepository.findByLoginId(loginId);
+        Store store = storeRepository.findByLoginId(loginId).orElseThrow(() -> {
+            throw new Error("스토어 정보를 찾을 수 없습니다.");
+        });
         return store;
     }
 

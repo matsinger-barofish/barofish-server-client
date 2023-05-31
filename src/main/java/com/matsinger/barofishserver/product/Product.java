@@ -87,7 +87,7 @@ public class Product {
     @JoinColumn(name = "type_id")
     private ProductType productType;
 
-    @Column(name = "deliveryFee", nullable = false)
+    @Column(name = "delivery_fee", nullable = false)
     private int deliveryFee;
 
     public void setProductType(ProductType productType) {
