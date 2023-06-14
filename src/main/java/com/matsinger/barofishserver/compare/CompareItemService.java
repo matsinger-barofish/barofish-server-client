@@ -1,10 +1,14 @@
 package com.matsinger.barofishserver.compare;
 
-import com.matsinger.barofishserver.product.Product;
+import com.matsinger.barofishserver.compare.obejct.*;
+import com.matsinger.barofishserver.product.object.Product;
 import com.matsinger.barofishserver.product.ProductService;
+import com.matsinger.barofishserver.product.object.ProductListDto;
+import jakarta.persistence.Tuple;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.sql.Timestamp;
 import java.util.ArrayList;
@@ -19,6 +23,46 @@ public class CompareItemService {
 
     private final SaveProductRepository saveProductRepository;
     private final ProductService productService;
+
+
+    public List<CompareObject.CompareSetDto> selectPopularCompareSetList(Integer userId) {
+        List<Tuple> data = compareSetRepository.selectPopularCompareSetIdList();
+        List<CompareObject.CompareSetDto> result = new ArrayList<>();
+        for (Tuple t : data) {
+            Integer setId = Integer.parseInt(t.get("setId").toString());
+            List<Product> products = selectCompareItems(setId);
+            List<ProductListDto> productDtos = new ArrayList<>();
+            for (Product p : products) {
+                ProductListDto dto = p.convert2ListDto();
+                dto.setIsLike(checkSaveProduct(userId, p.getId()));
+                productDtos.add(dto);
+
+            }
+            result.add(CompareObject.CompareSetDto.builder().products(productDtos).build());
+        }
+        return result;
+    }
+
+    public List<CompareObject.RecommendCompareProduct> selectRecommendCompareSetList(Integer userId) {
+        List<Tuple> productIdsData = compareSetRepository.selectMostComparedProudct();
+        List<CompareObject.RecommendCompareProduct> result = new ArrayList<>();
+        for (Tuple t : productIdsData) {
+            Integer productId = Integer.parseInt(t.get("productId").toString());
+            List<Tuple> recommendProductIdsData = compareSetRepository.selectRecommendCompareSet(productId);
+            ProductListDto mainProduct = productService.selectProduct(productId).convert2ListDto();
+            mainProduct.setIsLike(checkSaveProduct(userId, productId));
+            List<ProductListDto> recommendProductList = new ArrayList<>();
+            for (Tuple t2 : recommendProductIdsData) {
+                Integer pId = Integer.parseInt(t2.get("pId").toString());
+                ProductListDto dto = productService.selectProduct(pId).convert2ListDto();
+                dto.setIsLike(checkSaveProduct(userId, pId));
+                recommendProductList.add(dto);
+            }
+            result.add(CompareObject.RecommendCompareProduct.builder().mainProduct(mainProduct).recommendProducts(
+                    recommendProductList).build());
+        }
+        return result;
+    }
 
     public List<CompareSet> selectCompareSetList(Integer userId) {
         return compareSetRepository.findAllByUserId(userId);
@@ -72,15 +116,17 @@ public class CompareItemService {
             compareItemRepository.save(compareItem);
             products.add(product);
         }
-        compareSet.setProducts(products);
+//        compareSet.setProducts(products);
         return compareSet;
     }
 
+    @Transactional
     public void deleteCompareSet(Integer id) {
         CompareSet compareSet = compareSetRepository.findById(id).orElseThrow(() -> {
             throw new Error("이미 제거된 비교하기 조합입니다.");
         });
         compareItemRepository.deleteByCompareSetId(compareSet.getId());
+        compareSetRepository.deleteById(id);
     }
 
     public Boolean addSaveProduct(Integer userId, Integer productId) {
@@ -89,7 +135,12 @@ public class CompareItemService {
         return true;
     }
 
+    @Transactional
     public void deleteSaveProduct(List<SaveProduct> saveProducts) {
         saveProductRepository.deleteAll(saveProducts);
+    }
+
+    public Boolean checkSaveProduct(Integer userId, Integer productId) {
+        return saveProductRepository.existsById(new SaveProductId(userId, productId));
     }
 }

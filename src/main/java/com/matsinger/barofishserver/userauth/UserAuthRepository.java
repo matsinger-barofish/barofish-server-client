@@ -9,4 +9,6 @@ public interface UserAuthRepository extends JpaRepository<UserAuth, UserAuthId> 
     Optional<UserAuth> findByLoginTypeAndLoginId(LoginType loginType, String userId);
 
     Optional<UserAuth> findByLoginId(String loginId);
+
+    UserAuth findFirstByUserId(Integer userId);
 }

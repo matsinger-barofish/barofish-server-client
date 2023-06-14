@@ -1,13 +1,14 @@
 package com.matsinger.barofishserver.category;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.*;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
 
 @Entity
 @NoArgsConstructor
@@ -30,10 +31,9 @@ public class Category {
     @Basic
     @Column(name = "name", nullable = false, length = 20)
     private String name;
-    @JsonIgnore
+    @JsonBackReference
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "parent_category_id", referencedColumnName = "id", insertable = false, updatable = false)
-//    @JoinColumn(name = "parent_category_id", referencedColumnName = "id")
     private Category parentCategory;
 
     @Builder.Default
@@ -49,12 +49,11 @@ public class Category {
     }
 
     public Integer getCategoryId() {
-        if (this.parentCategory != null) return this.parentCategory.id;
-        else return null;
+        return categoryId;
     }
 
     public void setCategoryId(Integer categoryId) {
-        this.parentCategory.id = categoryId;
+        this.categoryId = categoryId;
     }
 
     public String getImage() {
@@ -86,5 +85,19 @@ public class Category {
     @Override
     public int hashCode() {
         return Objects.hash(id, image, name);
+    }
+
+    public CategoryDto convert2Dto() {
+        List<CategoryDto> categories = new ArrayList<>();
+        String parentName = null;
+        if (this.categoryId == null) {
+            for (Category category : this.categoryList) {
+                categories.add(category.convert2Dto());
+            }
+        } else {
+            parentName = this.parentCategory.getName();
+        }
+        return CategoryDto.builder().id(this.id).parentId(this.categoryId).name(this.name).image(this.image).ParentCategoryName(
+                parentName).categories(categories).build();
     }
 }

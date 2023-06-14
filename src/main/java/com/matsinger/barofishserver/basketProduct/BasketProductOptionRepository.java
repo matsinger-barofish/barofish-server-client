@@ -1,0 +1,15 @@
+package com.matsinger.barofishserver.basketProduct;
+
+import com.matsinger.barofishserver.basketProduct.obejct.BasketProductOption;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+
+public interface BasketProductOptionRepository extends JpaRepository<BasketProductOption, Integer> {
+    List<BasketProductOption> findAllByOrderProductId(Integer orderProductId);
+
+    @Transactional
+    void deleteAllByOrderProductIdIn(List<Integer> ids);
+}

@@ -1,6 +1,8 @@
 package com.matsinger.barofishserver.search;
 
+import com.matsinger.barofishserver.product.object.Product;
 import lombok.*;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -29,7 +31,17 @@ public interface SearchKeywordRepository extends JpaRepository<SearchKeyword, In
         String getKeyword();
     }
 
-    @Query(value = "select RANK() over (ORDER BY amount DESC) as 'rank', sk.keyword from search_keyword sk", nativeQuery =
-            true)
+    @Query(value = "select RANK() over (ORDER BY amount DESC) as 'rank', sk.keyword from search_keyword sk", nativeQuery = true)
     List<KeywordRank> selectRank();
+
+
+    public interface SearchProduct {
+        Integer getId();
+
+        String getTitle();
+    }
+
+    @Query(value = "select id, title from product where instr(title, :keyword) > 0 and state = \'ACTIVE\'", nativeQuery = true)
+    List<SearchProduct> selectProductTitle(String keyword);
+
 }

@@ -95,7 +95,7 @@ public class JwtProvider {
         String
                 refreshToken =
                 Jwts.builder().setId(id).setExpiration(new Date(System.currentTimeMillis() +
-                            JWT_TOKEN_VALIDITY * 5)) // 5시간
+                            JWT_TOKEN_VALIDITY * 31))
                     .setIssuedAt(new Date(System.currentTimeMillis())).signWith(SignatureAlgorithm.HS512,
                             secret).compact();
 
@@ -119,13 +119,13 @@ public class JwtProvider {
         String
                 accessToken =
                 Jwts.builder().setClaims(claims).setId(id).setIssuedAt(new Date(System.currentTimeMillis())).setExpiration(
-                            new Date(System.currentTimeMillis() + JWT_TOKEN_VALIDITY * 1))// 1시간
+                            new Date(System.currentTimeMillis() + JWT_TOKEN_VALIDITY * 7))// 1시간
                     .signWith(SignatureAlgorithm.HS512, secret).compact();
 
         String
                 refreshToken =
                 Jwts.builder().setId(id).setExpiration(new Date(System.currentTimeMillis() +
-                            JWT_TOKEN_VALIDITY * 5)) // 5시간
+                            JWT_TOKEN_VALIDITY * 31)) // 5시간
                     .setIssuedAt(new Date(System.currentTimeMillis())).signWith(SignatureAlgorithm.HS512,
                             secret).compact();
 

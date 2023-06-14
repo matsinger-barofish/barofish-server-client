@@ -1,5 +1,6 @@
 package com.matsinger.barofishserver.user;
 
+import com.matsinger.barofishserver.user.object.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

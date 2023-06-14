@@ -1,7 +1,7 @@
 package com.matsinger.barofishserver.banner;
 
 import com.matsinger.barofishserver.category.CategoryService;
-import com.matsinger.barofishserver.data.CurationService;
+import com.matsinger.barofishserver.data.curation.CurationService;
 import com.matsinger.barofishserver.jwt.JwtService;
 import com.matsinger.barofishserver.jwt.TokenAuthType;
 import com.matsinger.barofishserver.jwt.TokenInfo;
@@ -29,12 +29,39 @@ public class BannerController {
 
     private final JwtService jwt;
 
+
     @GetMapping("/")
     public ResponseEntity<CustomResponse<List<Banner>>> selectBannerList() {
         CustomResponse<List<Banner>> res = new CustomResponse();
         try {
             List<Banner> banners = bannerService.selectBannerList();
             res.setData(Optional.ofNullable(banners));
+            return ResponseEntity.ok(res);
+        } catch (Exception e) {
+            return res.defaultError(e);
+        }
+    }
+
+    @GetMapping("/management")
+    public ResponseEntity<CustomResponse<List<Banner>>> selectBannerListByAdmin(@RequestHeader(value = "Authorization") Optional<String> auth) {
+        CustomResponse<List<Banner>> res = new CustomResponse();
+        Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
+        if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
+        try {
+            List<Banner> banners = bannerService.selectBannerListByAdmin();
+            res.setData(Optional.ofNullable(banners));
+            return ResponseEntity.ok(res);
+        } catch (Exception e) {
+            return res.defaultError(e);
+        }
+    }
+
+    @GetMapping("/pcweb")
+    public ResponseEntity<CustomResponse<Banner>> selectPcWebBanner() {
+        CustomResponse<Banner> res = new CustomResponse();
+        try {
+            Banner banner = bannerService.selectPcWebBanner();
+            res.setData(Optional.ofNullable(banner));
             return ResponseEntity.ok(res);
         } catch (Exception e) {
             return res.defaultError(e);

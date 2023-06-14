@@ -12,12 +12,10 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.Buffer;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.regex.MatchResult;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -46,13 +44,12 @@ public class S3Uploader {
     private String upload(File uploadFile, ArrayList<String> dirName) {
         String fileName = String.join("/", dirName) + "/" + buildFileName(uploadFile.getName());
         String uploadImageUrl = putS3(uploadFile, fileName);
-
         removeNewFile(uploadFile);  // 로컬에 생성된 File 삭제 (MultipartFile -> File 전환 하며 로컬에 파일 생성됨)
-
         return uploadImageUrl;      // 업로드된 파일의 S3 URL 주소 반환
     }
 
     private String putS3(File uploadFile, String fileName) {
+        System.out.println(fileName + uploadFile);
         amazonS3Client.putObject(new PutObjectRequest(bucket, fileName, uploadFile).withCannedAcl(
                 CannedAccessControlList.PublicRead)    // PublicRead 권한으로 업로드 됨
         );
@@ -83,14 +80,13 @@ public class S3Uploader {
         return allowedImageType.contains(file.getContentType());
     }
 
-    public String uploadFiles(List<MultipartFile> files, ArrayList<String> path) throws IOException {
+    public List<String> uploadFiles(List<MultipartFile> files, ArrayList<String> path) throws IOException {
         List<String> fileUrls = new ArrayList<>();
         for (MultipartFile file : files) {
             String imageUrl = upload(file, path);
             fileUrls.add(imageUrl);
         }
-        String result = fileUrls.toString();
-        return result;
+        return fileUrls;
     }
 
     public List<String> parseListData(String data) {
@@ -105,10 +101,10 @@ public class S3Uploader {
     public List<String> processFileUpdateInput(List<FileUpdateInput> files, ArrayList<String> path) {
         List<String> result = new ArrayList<>();
         for (FileUpdateInput file : files) {
-            if (file.getNewFile().isEmpty()) {
+            if (file.getExistingFile() != null) {
                 if (file.getExistingFile() == null) throw new Error("파일을 입력해주세요.");
                 result.add(file.getExistingFile());
-            } else {
+            } else if (file.getNewFile() != null) {
                 try {
                     String fileUrl = upload(file.getNewFile(), path);
                     result.add(fileUrl);
@@ -132,18 +128,52 @@ public class S3Uploader {
         return fileName + TIME_SEPARATOR + now + fileExtension;
     }
 
-    public String uploadEditorStringToS3(String content) {
+    public String htmlString2File(String content, ArrayList<String> path) {
+        try {
+            File tmpFile = File.createTempFile("tmp", ".html");
+            FileWriter writer = new FileWriter(tmpFile);
+            writer.write(content);
+            writer.close();
+            String imgUrl = upload(tmpFile, path);
+            return imgUrl;
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public String uploadEditorStringToS3(String content, ArrayList<String> path) {
         Pattern imgPattern = Pattern.compile("<img src=\"data:(image/.*?);base64,(.*?)\">");
         Matcher matcher = imgPattern.matcher(content);
         List<String> imgUrls = new ArrayList<>();
         while (matcher.find()) {
             String base64String = matcher.group();
-            String[]
-                    splitedString =
-                    base64String.replaceAll("<img src=\"data:(image/.*?);base64,(.*?)\">", "$1*$*~$2").split("\\*$*~");
+            String[] splitedString = base64String.replaceAll("<img src=\"data:(image/.*?);base64,(.*?)\"(.*?)>",//(.*?)
+                    "$1&--&$2").split("&--&");
             String mimetype = splitedString[0];
-//            Buffer buffer = new Buffer(splitedString[1])
+            File file = convertBase64ToFile(splitedString[1]);
+            String imgUrl = upload(file, path);
+            content =
+                    content.replace(base64String,
+                            base64String.replaceAll("(<img src=)(\"data:image/.*?;base64,)(.*?)\"(.*?)>",
+                                    "$1\"" + imgUrl + "\"$4"));
         }
-        return "";
+        String res = htmlString2File(content, path);
+        return res;
+    }
+
+
+    public File convertBase64ToFile(String base64) {
+        try {
+            byte[] bytes = Base64.getDecoder().decode(base64);
+            File tmpFile = File.createTempFile("tmp", ".jpg");
+            FileOutputStream fos = new FileOutputStream(tmpFile);
+            fos.write(bytes);
+            fos.close();
+            return tmpFile;
+        } catch (IOException e) {
+            System.out.println(e);
+            return null;
+        }
+
     }
 }

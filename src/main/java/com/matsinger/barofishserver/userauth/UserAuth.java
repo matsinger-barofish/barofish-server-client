@@ -1,13 +1,10 @@
 package com.matsinger.barofishserver.userauth;
 
-import com.matsinger.barofishserver.user.User;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 @Getter
+@Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
@@ -25,20 +22,21 @@ public class UserAuth {
     @Column(name = "login_id", nullable = false, length = 150)
     private String loginId;
 
-    @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-    @JoinColumn(name = "user_id", nullable = true)
-    private User user;
+    @Basic
+    @Column(name = "user_id", nullable = false)
+    private Integer userId;
+
+//    @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+//    @JoinColumn(name = "user_id", nullable = true)
+//    private User user;
 
     // 연관관계 편의 메서드
-    public void setUser(User user) {
-        this.user = user;
-        user.getUserAuths().add(this);
-    }
+//    public void setUser(User user) {
+//        this.user = user;
+//        user.getUserAuths().add(this);
+//    }
 
     @Column(name = "password", nullable = false, length = 60)
     private String password;
 
-    public int getUserId() {
-        return user.getId();
-    }
 }

@@ -3,12 +3,12 @@ package com.matsinger.barofishserver.jwt;
 import com.matsinger.barofishserver.admin.Admin;
 import com.matsinger.barofishserver.admin.AdminService;
 import com.matsinger.barofishserver.admin.AdminState;
-import com.matsinger.barofishserver.store.Store;
+import com.matsinger.barofishserver.store.object.Store;
 import com.matsinger.barofishserver.store.StoreService;
-import com.matsinger.barofishserver.store.StoreState;
-import com.matsinger.barofishserver.user.User;
+import com.matsinger.barofishserver.store.object.StoreState;
+import com.matsinger.barofishserver.user.object.User;
 import com.matsinger.barofishserver.user.UserService;
-import com.matsinger.barofishserver.user.UserState;
+import com.matsinger.barofishserver.user.object.UserState;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -33,15 +33,26 @@ public class JwtService {
             if (!authorizationString.get().startsWith("Bearer")) return null;
         }
 
-        String token = authorizationString.get().substring(7);
+        String token = authorizationString.isPresent() ? authorizationString.get().substring(7) : null;
 
         if (allowAuth.contains(TokenAuthType.ALLOW)) {
+            if (authorizationString == null || authorizationString.isEmpty()) {
+                info.setId(null);
+                info.setType(TokenAuthType.ALLOW);
+                return Optional.of(info);
+            }
             info.setId(Integer.valueOf(jwtProvider.getIdFromToken(token)));
             info.setType(jwtProvider.getTypeFromToken(token));
             return Optional.of(info);
         } else {
-            TokenAuthType auth = jwtProvider.getTypeFromToken(token);
-            Integer id = jwtProvider.getIdFromToken(token);
+            TokenAuthType auth = TokenAuthType.ALLOW;
+            Integer id = null;
+            try {
+                auth = jwtProvider.getTypeFromToken(token);
+                id = jwtProvider.getIdFromToken(token);
+            } catch (Exception e) {
+                return null;
+            }
             if (id == null || !allowAuth.contains(auth)) return null;
             if (auth.equals(TokenAuthType.USER)) {
                 //TODO: 사용자의 상태에 따른 유효성 검증

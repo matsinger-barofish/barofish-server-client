@@ -1,12 +1,20 @@
 package com.matsinger.barofishserver.review;
 
-import com.matsinger.barofishserver.product.Product;
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.matsinger.barofishserver.product.object.Product;
+import com.matsinger.barofishserver.store.object.Store;
 import jakarta.persistence.*;
+import lombok.*;
 
 import java.sql.Timestamp;
 import java.util.Objects;
 
 @Entity
+@AllArgsConstructor
+@NoArgsConstructor
+@Getter
+@Setter
+@Builder
 @Table(name = "review", schema = "barofish_dev", catalog = "")
 public class Review {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -18,18 +26,27 @@ public class Review {
 //    private int productId;
 
     @ManyToOne
+    @JsonBackReference
     @JoinColumn(name = "product_id")
     private Product product;
 
-    @Basic
-    @Column(name = "store_id", nullable = false)
-    private int storeId;
+    @ManyToOne
+    @JsonBackReference
+    @JoinColumn(name = "store_id")
+    private Store store;
+
     @Basic
     @Column(name = "user_id", nullable = false)
     private int userId;
+
+
+    @Basic
+    @Column(name = "order_id")
+    private String orderId;
     @Basic
     @Column(name = "evaluation", nullable = false)
-    private Object evaluation;
+    @Enumerated(EnumType.STRING)
+    private ReviewEvaluation evaluation;
     @Basic
     @Column(name = "images", nullable = false, length = -1)
     private String images;
@@ -48,35 +65,35 @@ public class Review {
         this.id = id;
     }
 
-    public Product getProduct() {
-        return product;
-    }
+//    public Product getProduct() {
+//        return product;
+//    }
+//
+//    public void setProductId(Product product) {
+//        this.product = product;
+//    }
 
-    public void setProductId(Product product) {
-        this.product = product;
-    }
+//    public int getStoreId() {
+//        return storeId;
+//    }
+//
+//    public void setStoreId(int storeId) {
+//        this.storeId = storeId;
+//    }
 
-    public int getStoreId() {
-        return storeId;
-    }
+//    public int getUserId() {
+//        return userId;
+//    }
+//
+//    public void setUserId(int userId) {
+//        this.userId = userId;
+//    }
 
-    public void setStoreId(int storeId) {
-        this.storeId = storeId;
-    }
-
-    public int getUserId() {
-        return userId;
-    }
-
-    public void setUserId(int userId) {
-        this.userId = userId;
-    }
-
-    public Object getEvaluation() {
+    public ReviewEvaluation getEvaluation() {
         return evaluation;
     }
 
-    public void setEvaluation(Object evaluation) {
+    public void setEvaluation(ReviewEvaluation evaluation) {
         this.evaluation = evaluation;
     }
 
@@ -104,6 +121,12 @@ public class Review {
         this.createdAt = createdAt;
     }
 
+    public ReviewDto convert2Dto() {
+        return ReviewDto.builder().store(this.store.getStoreInfo().convert2Dto()).evaluation(
+                this.evaluation).images(images.substring(1,
+                images.length() - 1).split(",")).content(this.content).createdAt(this.createdAt).build();
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -111,8 +134,8 @@ public class Review {
         Review that = (Review) o;
         return id == that.id &&
 //                productId == that.productId &&
-                storeId == that.storeId &&
-                userId == that.userId &&
+//                storeId == that.storeId &&
+//                userId == that.userId &&
                 Objects.equals(evaluation, that.evaluation) &&
                 Objects.equals(images, that.images) &&
                 Objects.equals(content, that.content) &&
@@ -121,6 +144,6 @@ public class Review {
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, storeId, userId, evaluation, images, content, createdAt);
+        return Objects.hash(id, evaluation, images, content, createdAt);
     }
 }

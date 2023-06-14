@@ -1,9 +1,10 @@
 package com.matsinger.barofishserver.store;
 
 
+import com.matsinger.barofishserver.store.object.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.repository.query.Param;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -21,6 +22,13 @@ public class StoreService {
 
     private final StoreScrapRepository storeScrapRepository;
 
+    public StoreDto convert2Dto(Store store){
+        StoreInfo storeInfo = selectStoreInfo(store.getId());
+        return StoreDto.builder().id(store.getId()).state(store.getState()).loginId(store.getLoginId()).joinAt(store.getJoinAt()).backgroundImage(
+                storeInfo.getBackgroudImage()).profileImage(storeInfo.getProfileImage()).name(storeInfo.getName()).location(
+                storeInfo.getLocation()).visitNote(storeInfo.getVisitNote()).keyword(storeInfo.getKeyword().split(",")).build();
+    }
+
     public Optional<Store> selectStoreOptional(Integer id) {
         try {
             return storeRepository.findById(id);
@@ -28,6 +36,42 @@ public class StoreService {
             System.out.println(e);
             return null;
         }
+    }
+
+    public List<SimpleStore> selectRecommendStore(StoreRecommendType type, Integer page, Integer take, String keyword) {
+        List<StoreInfo> infos = new ArrayList<>();
+        switch (type) {
+            case RECENT:
+                infos =
+                        storeInfoRepository.selectRecommendStoreWithJoinAt(Pageable.ofSize(take).withPage(page),
+                                keyword);
+                break;
+            case BOOKMARK:
+                infos =
+                        storeInfoRepository.selectRecommendStoreWithScrap(Pageable.ofSize(take).withPage(page),
+                                keyword);
+                break;
+            case ORDER:
+                infos =
+                        storeInfoRepository.selectRecommendStoreWithOrder(Pageable.ofSize(take).withPage(page),
+                                keyword);
+                break;
+            case REVIEW:
+                infos =
+                        storeInfoRepository.selectRecommendStoreWithReview(Pageable.ofSize(take).withPage(page),
+                                keyword);
+                break;
+        }
+        List<SimpleStore> stores = new ArrayList<>();
+        for (StoreInfo info : infos) {
+            stores.add(info.convert2Dto());
+        }
+        return stores;
+    }
+
+    public Boolean updateStores(List<Store> stores) {
+        storeRepository.saveAll(stores);
+        return true;
     }
 
     public Store selectStore(Integer id) {
@@ -104,5 +148,17 @@ public class StoreService {
         }
 
         storeScrapRepository.deleteAll(storeScraps);
+    }
+
+    public void likeStore(Integer storeId, Integer userId) {
+        storeScrapRepository.save(StoreScrap.builder().storeId(storeId).userId(userId).build());
+    }
+
+    public void unlikeStore(Integer storeId, Integer userId) {
+        storeScrapRepository.deleteById(StoreScrapId.builder().storeId(storeId).userId(userId).build());
+    }
+
+    public Boolean checkLikeStore(Integer storeId, Integer userId) {
+        return storeScrapRepository.existsByStoreIdAndUserId(storeId, userId);
     }
 }

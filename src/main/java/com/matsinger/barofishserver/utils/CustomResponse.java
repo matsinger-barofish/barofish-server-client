@@ -23,6 +23,7 @@ public class CustomResponse<T> {
 
     public ResponseEntity<CustomResponse<T>> defaultError(Exception e) {
         this.setIsSuccess(false);
+        System.out.println(e);
         this.setErrorMsg(e.getMessage());
         this.setCode("INTERNAL_SERVER_ERROR");
         this.setData(null);

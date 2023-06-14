@@ -16,6 +16,7 @@ configurations {
 
 repositories {
     mavenCentral()
+    maven {url 'https://jitpack.io'}
 }
 
 dependencies {
@@ -39,6 +40,11 @@ dependencies {
 
     implementation "org.springframework.security:spring-security-crypto:6.0.2"
 
+    implementation "com.github.iamport:iamport-rest-client-java:0.2.21"
+    implementation 'com.google.firebase:firebase-admin:9.1.1'
+    implementation group: 'com.squareup.okhttp3', name: 'okhttp', version: '4.10.0'
+
+    implementation 'org.json:json:20230227'
 }
 
 tasks.named('test') {

@@ -5,7 +5,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @RequiredArgsConstructor
@@ -16,6 +15,10 @@ public class CategoryService {
     @Autowired
     private final CategoryRepository categoryRepository;
 
+
+    public List<Category> findParentCategories(){
+        return categoryRepository.findAllByCategoryIdIsNull();
+    }
 
     public List<Category> findAll(Integer id) {
         if (id != null) return categoryRepository.findAllByCategoryId(id);

@@ -1,6 +1,5 @@
 package com.matsinger.barofishserver.category;
 
-import com.matsinger.barofishserver.data.Curation;
 import com.matsinger.barofishserver.jwt.JwtService;
 import com.matsinger.barofishserver.jwt.TokenAuthType;
 import com.matsinger.barofishserver.jwt.TokenInfo;
@@ -12,7 +11,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
 import java.util.*;
 
 @RestController
@@ -60,7 +58,7 @@ public class CategoryController {
                 category.setImage(imageUrl);
             } else {
                 Category parentCategory = categoryService.findById(categoryId);
-                category.setParentCategory(parentCategory);
+                category.setCategoryId(parentCategory.getId());
                 category.setCategoryId(categoryId);
             }
             categoryService.add(category);

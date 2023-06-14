@@ -1,16 +1,13 @@
 package com.matsinger.barofishserver.product.productinfo;
 
-import com.matsinger.barofishserver.product.Product;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 @Getter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@Setter
 @Entity
 @Table(name = "product_type")
 public class ProductType {
@@ -21,10 +18,10 @@ public class ProductType {
 
     private String field;
 
-    @OneToOne(mappedBy = "productType")
-    private Product product;
-
-    public void setProduct(Product product) {
-        this.product = product;
-    }
+//    @OneToOne(mappedBy = "productType")
+//    private Product product;
+//
+//    public void setProduct(Product product) {
+//        this.product = product;
+//    }
 }

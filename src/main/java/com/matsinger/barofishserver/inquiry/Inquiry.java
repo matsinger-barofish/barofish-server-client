@@ -1,11 +1,18 @@
 package com.matsinger.barofishserver.inquiry;
 
+import com.matsinger.barofishserver.product.object.Product;
 import jakarta.persistence.*;
+import lombok.*;
 
 import java.sql.Timestamp;
 import java.util.Objects;
 
 @Entity
+@AllArgsConstructor
+@NoArgsConstructor
+@Getter
+@Setter
+@Builder
 @Table(name = "inquiry", schema = "barofish_dev", catalog = "")
 public class Inquiry {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -14,19 +21,18 @@ public class Inquiry {
     private int id;
     @Basic
     @Column(name = "type", nullable = false)
-    private Object type;
+    @Enumerated(EnumType.STRING)
+    private InquiryType type;
     @Basic
     @Column(name = "is_secret", nullable = false)
-    private byte isSecret;
+    private Boolean isSecret;
     @Basic
     @Column(name = "product_id", nullable = false)
     private int productId;
     @Basic
     @Column(name = "user_id", nullable = false)
     private int userId;
-    @Basic
-    @Column(name = "title", nullable = false, length = 200)
-    private String title;
+
     @Basic
     @Column(name = "content", nullable = false, length = -1)
     private String content;
@@ -34,35 +40,42 @@ public class Inquiry {
     @Column(name = "created_at", nullable = false)
     private Timestamp createdAt;
     @Basic
-    @Column(name = "answeted_at", nullable = true)
-    private Timestamp answetedAt;
+    @Column(name = "answer", nullable = true)
+    private String answer;
+    @Basic
+    @Column(name = "answered_at", nullable = true)
+    private Timestamp answeredAt;
+
+    @ManyToOne
+    @JoinColumn(name = "product_id",insertable = false,updatable = false)
+    private Product product;
 
     public int getId() {
-            return id;
-        }
+        return id;
+    }
 
-        public void setId(int id) {
-            this.id = id;
-        }
+    public void setId(int id) {
+        this.id = id;
+    }
 
-        public Object getType() {
-            return type;
-        }
+    public InquiryType getType() {
+        return type;
+    }
 
-        public void setType(Object type) {
-            this.type = type;
-        }
+    public void setType(InquiryType type) {
+        this.type = type;
+    }
 
-        public byte getIsSecret() {
-            return isSecret;
-        }
+    public Boolean getIsSecret() {
+        return isSecret;
+    }
 
-        public void setIsSecret(byte isSecret) {
-            this.isSecret = isSecret;
-        }
+    public void setIsSecret(Boolean isSecret) {
+        this.isSecret = isSecret;
+    }
 
-        public int getProductId() {
-            return productId;
+    public int getProductId() {
+        return productId;
     }
 
     public void setProductId(int productId) {
@@ -77,13 +90,6 @@ public class Inquiry {
         this.userId = userId;
     }
 
-    public String getTitle() {
-        return title;
-    }
-
-    public void setTitle(String title) {
-        this.title = title;
-    }
 
     public String getContent() {
         return content;
@@ -102,13 +108,25 @@ public class Inquiry {
     }
 
     public Timestamp getAnswetedAt() {
-        return answetedAt;
+        return answeredAt;
     }
 
     public void setAnswetedAt(Timestamp answetedAt) {
-        this.answetedAt = answetedAt;
+        this.answeredAt = answetedAt;
     }
 
+    public InquiryDto convert2Dto(){
+        return InquiryDto.builder()
+                .id(this.getId())
+                .type(this.getType())
+                .isSecret(this.getIsSecret())
+                .productId(this.getProductId())
+                .content(this.getContent())
+                .createdAt(this.getCreatedAt())
+                .answeredAt(this.getAnsweredAt())
+                .answer(this.getAnswer())
+                         .build();
+    }
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -119,14 +137,13 @@ public class Inquiry {
                 productId == that.productId &&
                 userId == that.userId &&
                 Objects.equals(type, that.type) &&
-                Objects.equals(title, that.title) &&
                 Objects.equals(content, that.content) &&
                 Objects.equals(createdAt, that.createdAt) &&
-                Objects.equals(answetedAt, that.answetedAt);
+                Objects.equals(answeredAt, that.answeredAt);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, type, isSecret, productId, userId, title, content, createdAt, answetedAt);
+        return Objects.hash(id, type, isSecret, productId, userId, content, createdAt, answeredAt);
     }
 }
