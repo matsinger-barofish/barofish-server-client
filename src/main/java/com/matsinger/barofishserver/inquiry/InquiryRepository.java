@@ -1,13 +1,16 @@
 package com.matsinger.barofishserver.inquiry;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
 import java.util.List;
 
-public interface InquiryRepository extends JpaRepository<Inquiry, Integer> {
+public interface InquiryRepository extends JpaRepository<Inquiry, Integer>, JpaSpecificationExecutor<Inquiry> {
     List<Inquiry> findAllByProductId(Integer productId);
 
-    List<Inquiry> findAllByProduct_StoreId(Integer storeId);
+    Page<Inquiry> findAllByProduct_StoreId(Integer storeId, Pageable pageable);
 
     void deleteAllByUserId(Integer userId);
 }

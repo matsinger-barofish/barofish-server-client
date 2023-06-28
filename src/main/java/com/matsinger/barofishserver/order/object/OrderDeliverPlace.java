@@ -16,6 +16,10 @@ public class OrderDeliverPlace {
     @Id
     @Column(name = "order_id", nullable = false, length = 20)
     private String orderId;
+
+    @OneToOne
+    @JoinColumn(name = "order_id", updatable = false, insertable = false)
+    Orders order;
     @Basic
     @Column(name = "name", nullable = false, length = 50)
     private String name;
@@ -37,6 +41,12 @@ public class OrderDeliverPlace {
     @Basic
     @Column(name = "deliver_message", nullable = false, length = 100)
     private String deliverMessage;
+
+    public OrderDeliverPlaceDto convert2Dto() {
+        return OrderDeliverPlaceDto.builder().orderId(this.orderId).name(this.name).receiverName(this.receiverName).tel(
+                this.tel).postalCode(this.postalCode).address(this.address).addressDetail(this.addressDetail).deliverMessage(
+                this.deliverMessage).build();
+    }
 
     public String getOrderId() {
         return orderId;

@@ -11,6 +11,7 @@ import com.matsinger.barofishserver.product.object.ProductListDto;
 import com.matsinger.barofishserver.utils.Common;
 import com.matsinger.barofishserver.utils.CustomResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -53,59 +54,92 @@ public class TopBarController {
         }
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<CustomResponse<List<ProductListDto>>> selectTopBar(@PathVariable("id") Integer id,
-                                                                             @RequestParam(value = "page", defaultValue = "1", required = false) Integer page,
-                                                                             @RequestParam(value = "take", defaultValue = "10", required = false) Integer take,
-                                                                             @RequestParam(value = "categoryIds", required = false) String categoryIds,
-                                                                             @RequestParam(value = "typeIds", required = false) String typeIds,
-                                                                             @RequestParam(value = "locationIds", required = false) String locationIds,
-                                                                             @RequestParam(value = "processIds", required = false) String processIds,
-                                                                             @RequestParam(value = "usageIds", required = false) String usageIds,
-                                                                             @RequestParam(value = "storageIds", required = false) String storageIds) {
-        CustomResponse<List<ProductListDto>> res = new CustomResponse();
+    @GetMapping("/{id}/count")
+    public ResponseEntity<CustomResponse<Long>> selectTopBarCount(@PathVariable("id") Integer id,
+                                                                  @RequestParam(value = "page", defaultValue = "1", required = false) Integer page,
+                                                                  @RequestParam(value = "take", defaultValue = "10", required = false) Integer take,
+                                                                  @RequestParam(value = "categoryIds", required = false) String categoryIds,
+                                                                  @RequestParam(value = "filterFieldIds", required = false) String filterFieldIds,
+                                                                  @RequestParam(value = "typeIds", required = false) String typeIds,
+                                                                  @RequestParam(value = "locationIds", required = false) String locationIds,
+                                                                  @RequestParam(value = "processIds", required = false) String processIds,
+                                                                  @RequestParam(value = "usageIds", required = false) String usageIds,
+                                                                  @RequestParam(value = "storageIds", required = false) String storageIds) {
+        CustomResponse<Long> res = new CustomResponse();
         try {
-            List<Product> products = new ArrayList<>();
+            Page<Product> products;
             switch (id) {
                 case 1:
                     products =
                             productService.selectNewerProductList(page - 1,
                                     take,
                                     utils.str2IntList(categoryIds),
-                                    utils.str2IntList(typeIds),
-                                    utils.str2IntList(locationIds),
-                                    utils.str2IntList(processIds),
-                                    utils.str2IntList(usageIds),
-                                    utils.str2IntList(storageIds));
+                                    utils.str2IntList(filterFieldIds));
                     break;
                 case 2:
                     products =
                             productService.selectPopularProductList(page - 1,
                                     take,
                                     utils.str2IntList(categoryIds),
-                                    utils.str2IntList(typeIds),
-                                    utils.str2IntList(locationIds),
-                                    utils.str2IntList(processIds),
-                                    utils.str2IntList(usageIds),
-                                    utils.str2IntList(storageIds));
+                                    utils.str2IntList(filterFieldIds));
                     break;
-                case 3:
+                default:
                     products =
                             productService.selectDiscountProductList(page - 1,
                                     take,
                                     utils.str2IntList(categoryIds),
-                                    utils.str2IntList(typeIds),
-                                    utils.str2IntList(locationIds),
-                                    utils.str2IntList(processIds),
-                                    utils.str2IntList(usageIds),
-                                    utils.str2IntList(storageIds));
+                                    utils.str2IntList(filterFieldIds));
                     break;
             }
-            List<ProductListDto> productDtos = new ArrayList<>();
-            for (Product product : products) {
-                productDtos.add(product.convert2ListDto());
+
+
+            res.setData(Optional.of(products.getTotalElements()));
+            return ResponseEntity.ok(res);
+        } catch (Exception e) {
+            return res.defaultError(e);
+        }
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<CustomResponse<Page<ProductListDto>>> selectTopBar(@PathVariable("id") Integer id,
+                                                                             @RequestParam(value = "page", defaultValue = "1", required = false) Integer page,
+                                                                             @RequestParam(value = "take", defaultValue = "10", required = false) Integer take,
+                                                                             @RequestParam(value = "filterFieldIds", required = false) String filterFieldIds,
+                                                                             @RequestParam(value = "categoryIds", required = false) String categoryIds,
+                                                                             @RequestParam(value = "typeIds", required = false) String typeIds,
+                                                                             @RequestParam(value = "locationIds", required = false) String locationIds,
+                                                                             @RequestParam(value = "processIds", required = false) String processIds,
+                                                                             @RequestParam(value = "usageIds", required = false) String usageIds,
+                                                                             @RequestParam(value = "storageIds", required = false) String storageIds) {
+        CustomResponse<Page<ProductListDto>> res = new CustomResponse();
+        try {
+            Page<Product> products;
+            switch (id) {
+                case 1:
+                    products =
+                            productService.selectNewerProductList(page - 1,
+                                    take,
+                                    utils.str2IntList(categoryIds),
+                                    utils.str2IntList(filterFieldIds));
+                    break;
+                case 2:
+                    products =
+                            productService.selectPopularProductList(page - 1,
+                                    take,
+                                    utils.str2IntList(categoryIds),
+                                    utils.str2IntList(filterFieldIds));
+                    break;
+                default:
+                    products =
+                            productService.selectDiscountProductList(page - 1,
+                                    take,
+                                    utils.str2IntList(categoryIds),
+                                    utils.str2IntList(filterFieldIds));
+                    break;
             }
-            res.setData(Optional.of(productDtos));
+
+
+            res.setData(Optional.of(products.map(v -> productService.convert2ListDto(v))));
             return ResponseEntity.ok(res);
         } catch (Exception e) {
             return res.defaultError(e);

@@ -16,6 +16,10 @@ public interface BannerRepository extends JpaRepository<Banner, Integer> {
 
     public Banner findFirstByTypeAndState(BannerType type, BannerState state);
 
+    public List<Banner> findAllByTypeAndState(BannerType type, BannerState state);
+
+    public List<Banner> findAllByIdIn(List<Integer> ids);
+
     @Query("select b from Banner b")
     List<Banner> findWithPagination(Pageable pageable);
 }

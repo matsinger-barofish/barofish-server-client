@@ -2,6 +2,7 @@ package com.matsinger.barofishserver.order.object;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.checkerframework.checker.units.qual.C;
 
 import java.sql.Timestamp;
 import java.util.ArrayList;
@@ -28,6 +29,11 @@ public class Orders {
     private OrderState state;
 
     @Basic
+    @Column(name = "payment_way", nullable = false)
+    @Enumerated(EnumType.STRING)
+    private OrderPaymentWay paymentWay;
+
+    @Basic
     @Column(name = "orderer_name")
     private String ordererName;
 
@@ -42,12 +48,27 @@ public class Orders {
     private Timestamp orderedAt;
 
     @Basic
-    @Column(name = "imp_uid",nullable = true)
+    @Column(name = "imp_uid", nullable = true)
     private String impUid;
+
+    @Basic
+    @Column(name = "coupon_id", nullable = true)
+    private Integer couponId;
+
+    @Basic
+    @Column(name = "coupon_discount", nullable = true)
+    private Integer couponDiscount;
+
+    @Basic
+    @Column(name = "use_point", nullable = true)
+    private Integer usePoint;
+
 
     @Builder.Default
     @OneToMany(mappedBy = "order")
     List<OrderProductInfo> productInfos = new ArrayList<>();
+    @OneToOne(mappedBy = "order")
+    OrderDeliverPlace deliverPlace;
 
 
     public String getId() {

@@ -2,6 +2,10 @@ package com.matsinger.barofishserver.notice;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -12,8 +16,16 @@ import java.util.List;
 public class NoticeService {
     private final NoticeRepository noticeRepository;
 
+    Page<Notice> selectNoticeListByAdmin(PageRequest pageRequest) {
+        return noticeRepository.findAll(pageRequest);
+    }
+
     List<Notice> selectNoticeList(NoticeType type) {
-        return noticeRepository.findAllByType(type);
+        return noticeRepository.findAllByType(type, Sort.by(Sort.Direction.DESC,"createdAt"));
+    }
+
+    Page<Notice> selectNoticeList(Specification<Notice> spec, PageRequest pageRequest) {
+        return noticeRepository.findAll(spec, pageRequest);
     }
 
     Notice selectNotice(Integer noticeId) {

@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -29,7 +30,7 @@ public class DeliverPlaceService {
         });
     }
 
-    DeliverPlace selectDefaultDeliverPlace(Integer userId) {
+    Optional<DeliverPlace> selectDefaultDeliverPlace(Integer userId) {
         return deliverPlaceRepository.findByUserIdAndIsDefault(userId, true);
     }
 

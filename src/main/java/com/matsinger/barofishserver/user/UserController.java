@@ -3,29 +3,39 @@ package com.matsinger.barofishserver.user;
 
 import com.matsinger.barofishserver.admin.AdminState;
 import com.matsinger.barofishserver.basketProduct.BasketService;
+import com.matsinger.barofishserver.grade.Grade;
 import com.matsinger.barofishserver.inquiry.InquiryService;
 import com.matsinger.barofishserver.jwt.*;
+import com.matsinger.barofishserver.notification.NotificationService;
+import com.matsinger.barofishserver.payment.PaymentService;
 import com.matsinger.barofishserver.review.ReviewService;
 import com.matsinger.barofishserver.user.object.*;
 import com.matsinger.barofishserver.userauth.LoginType;
 import com.matsinger.barofishserver.userauth.UserAuth;
+import com.matsinger.barofishserver.utils.AES256;
 import com.matsinger.barofishserver.utils.Common;
 import com.matsinger.barofishserver.utils.CustomResponse;
 import com.matsinger.barofishserver.utils.RegexConstructor;
 import com.matsinger.barofishserver.utils.S3.S3Uploader;
+import com.matsinger.barofishserver.utils.fcm.FcmToken;
+import com.matsinger.barofishserver.utils.fcm.FcmTokenRepository;
+import com.matsinger.barofishserver.utils.sms.SmsService;
 import com.matsinger.barofishserver.verification.Verification;
 import com.matsinger.barofishserver.verification.VerificationService;
+import jakarta.persistence.criteria.Predicate;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
-import org.springframework.data.domain.Page;
+import org.springframework.data.domain.*;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCrypt;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.sql.Timestamp;
 import java.util.*;
 import java.util.regex.Pattern;
 
@@ -34,8 +44,6 @@ import java.util.regex.Pattern;
 @RequestMapping("/api/v1/user")
 public class UserController {
     private final UserService userService;
-
-
     private final S3Uploader s3;
 
     private final Common util;
@@ -45,21 +53,49 @@ public class UserController {
     private final BasketService basketService;
     private final ReviewService reviewService;
     private final InquiryService inquiryService;
+    private final NotificationService notificationService;
+    private final FcmTokenRepository fcmTokenRepository;
+    private final PaymentMethodService paymentMethodService;
+    private final PaymentService paymentService;
     private final JwtService jwt;
-
-
-    @Getter
-    @NoArgsConstructor
-    private static class TestClass {
-        String data;
-    }
+    private final AES256 aes256;
+    private final SmsService smsService;
 
     @GetMapping("/test")
-    public ResponseEntity<CustomResponse<Boolean>> test(@RequestBody TestClass data) {
-        CustomResponse<Boolean> res = new CustomResponse<>();
+    public ResponseEntity<CustomResponse<Page<UserInfoDto>>> test(@RequestParam(value = "page", required = false, defaultValue = "0") Integer page,
+                                                                  @RequestParam(value = "take", required = false, defaultValue = "10") Integer take,
+                                                                  @RequestParam(value = "orderby", defaultValue = "joinAt") UserOrderByAdmin orderBy,
+                                                                  @RequestParam(value = "orderType", defaultValue = "DESC") Sort.Direction sort,
+                                                                  @RequestParam(value = "name", required = false) String name,
+                                                                  @RequestParam(value = "nickname", required = false) String nickname,
+                                                                  @RequestParam(value = "email", required = false) String email,
+                                                                  @RequestParam(value = "phone", required = false) String phone,
+                                                                  @RequestParam(value = "state", required = false) String state,
+                                                                  @RequestParam(value = "loginType", required = false) String loginType,
+                                                                  @RequestParam(value = "joinAtS", required = false) Timestamp joinAtS,
+                                                                  @RequestParam(value = "joinAtE", required = false) Timestamp joinAtE) {
+        CustomResponse<Page<UserInfoDto>> res = new CustomResponse<>();
         try {
-            s3.uploadEditorStringToS3(data.data, new ArrayList<>(Arrays.asList("tmp")));
-            res.setData(Optional.of(true));
+            Specification<UserInfo> spec = (root, query, builder) -> {
+                List<Predicate> predicates = new ArrayList<>();
+                if (name != null) predicates.add(builder.like(root.get("name"), "%" + name + "%"));
+                if (nickname != null) predicates.add(builder.like(root.get("nickname"), "%" + nickname + "%"));
+                if (email != null) predicates.add(builder.like(root.get("email"), "%" + email + "%"));
+                if (phone != null) predicates.add(builder.like(root.get("phone"), "%" + phone + "%"));
+                if (state != null)
+                    predicates.add(builder.and(root.get("user").get("state").in(Arrays.stream(state.split(",")).map(v -> UserState.valueOf(
+                            v)).toList())));
+                if (loginType != null)
+                    predicates.add(builder.and(root.get("user").get("userAuth").get("loginType").in(Arrays.stream(
+                            loginType.split(",")).map(v -> LoginType.valueOf(v)).toList())));
+                if (joinAtS != null) predicates.add(builder.greaterThan(root.get("user").get("joinAt"), joinAtS));
+                if (joinAtE != null) predicates.add(builder.lessThan(root.get("user").get("joinAt"), joinAtE));
+                return builder.and(predicates.toArray(new Predicate[0]));
+            };
+
+            PageRequest pageRequest = PageRequest.of(page, take, Sort.by(sort, orderBy.label));
+            Page<UserInfoDto> users = userService.selectUserInfoList(pageRequest, spec);
+            res.setData(Optional.ofNullable(users));
             return ResponseEntity.ok(res);
         } catch (Exception e) {
             return res.defaultError(e);
@@ -72,6 +108,11 @@ public class UserController {
     private static class SnsJoinReq {
         LoginType loginType;
         String loginId;
+        String profileImage;
+        String email;
+        String name;
+        String nickname;
+        String phone;
     }
 
     @PostMapping(value = "/join-sns")
@@ -80,18 +121,31 @@ public class UserController {
         try {
             if (data.getLoginType() == null) return res.throwError("로그인 타입을 입력해주세요.", "INPUT_CHECK_REQUIRED");
             if (data.getLoginId() == null) return res.throwError("로그인 아이디를 입력해주세요.", "INPUT_CHECK_REQUIRED");
-            System.out.println(data.getLoginId() + data.getLoginType());
             Optional<UserAuth> userAuth = userService.checkUserAuthExist(data.getLoginType(), data.getLoginId());
             if (userAuth.isPresent()) {
-
+                User user = userService.selectUser(userAuth.get().getUserId());
+                if (user.getState().equals(UserState.BANNED)) return res.throwError("정지된 사용자입니다.", "NOT_ALLOWED");
+                if (user.getState().equals(UserState.DELETED)) return res.throwError("삭제된 사용자입니다.", "NOT_ALLOWED");
             } else {
                 User user = User.builder().joinAt(util.now()).state(UserState.ACTIVE).build();
                 user = userService.createUser(user);
                 Grade grade = userService.selectGrade(1);
+                String profileImage = "";
+                if (!Pattern.matches(re.phone, data.phone))
+                    return res.throwError("휴대본 번호 형식을 확인해주세요.", "INPUT_CHECK_REQUIRED");
+                String phone = data.phone.replaceAll(re.getPhone(), "0$1$2$3");
+                if (userService.checkExistWithPhone(phone)) return res.throwError("회원가입된 이력이 있습니다.", "NOT_ALLOWED");
+                if (data.profileImage != null) {
+                    profileImage =
+                            s3.upload(s3.extractBase64FromImageUrl(data.profileImage),
+                                    new ArrayList<>(Arrays.asList("user", String.valueOf(user.getId()))));
+                }
                 UserInfo
                         userInfo =
-                        UserInfo.builder().userId(user.getId()).nickname("").email("").profileImage("").name("").grade(
-                                grade).phone("").point(0).isAgreeMarketing(false).build();
+                        UserInfo.builder().userId(user.getId()).nickname(data.nickname !=
+                                null ? data.nickname : "").email(data.email != null ? data.email : "").profileImage(
+                                profileImage).name(data.name != null ? data.name : "").grade(grade).phone(data.phone !=
+                                null ? data.phone : null).point(0).isAgreeMarketing(false).build();
                 userService.addUserInfo(userInfo);
                 UserAuth
                         newUserAuth =
@@ -125,6 +179,7 @@ public class UserController {
         String password;
         String phone;
         Integer verificationId;
+        String impUid;
         String postalCode;
         String address;
         String addressDetail;
@@ -133,14 +188,15 @@ public class UserController {
 
     @PostMapping(value = "/join", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
     public ResponseEntity<CustomResponse<Boolean>> joinUser(@RequestPart(value = "data") UserJoinReq data,
-                                                            @RequestPart(value = "profileImage") MultipartFile profileImage) {
+                                                            @RequestPart(value = "profileImage", required = false) MultipartFile profileImage) {
         CustomResponse<Boolean> res = new CustomResponse<>();
         try {
-            if (!s3.validateImageType(profileImage))
+            if (profileImage != null && !profileImage.isEmpty() && !s3.validateImageType(profileImage))
                 return res.throwError("지원하지 않는 이미지 확장자입니다.", "INPUT_CHECK_REQUIRED");
             String email = util.validateString(data.getEmail(), 300L, "이메일");
             if (!Pattern.matches(re.email, email)) return res.throwError("이메일 형식을 확인해주세요.", "INPUT_CHECK_REQUIRED");
             String nickname = util.validateString(data.getNickname(), 50L, "닉네임");
+            if (userService.checkExistWithNickname(nickname)) return res.throwError("중복된 닉네임입니다.", "NOT_ALLOWED");
             String name = util.validateString(data.getName(), 20L, "이름");
             if (data.postalCode == null) return res.throwError("우편 번호를 입력해주세요.", "INPUT_CHECK_REQUIRED");
             if (!Pattern.matches(re.password, data.password))
@@ -149,15 +205,26 @@ public class UserController {
             if (!Pattern.matches(re.phone, data.phone))
                 return res.throwError("휴대본 번호 형식을 확인해주세요.", "INPUT_CHECK_REQUIRED");
             String phone = data.phone.replaceAll(re.getPhone(), "0$1$2$3");
-            Verification verification = verificationService.selectVerificationById(data.getVerificationId());
-            if (verification.getExpiredAt() != null) return res.throwError("인증을 먼저 진행해주세요.", "NOT_ALLOWED");
+            if (userService.checkExistWithPhone(phone)) return res.throwError("회원가입된 이력이 있습니다.", "NOT_ALLOWED");
+            Verification verification = null;
+            if (data.verificationId == null && data.impUid == null)
+                return res.throwError("인증을 먼저 진행해주세요.", "NOT_ALLOWED");
+            else if (data.verificationId != null) {
+                verification = verificationService.selectVerificationById(data.getVerificationId());
+                if (verification.getExpiredAt() != null) return res.throwError("인증을 먼저 진행해주세요.", "NOT_ALLOWED");
+            } else if (data.impUid != null) {
+                verification = verificationService.selectVerificationByImpUid(data.impUid);
+                if (verification.getExpiredAt() != null) return res.throwError("인증을 먼저 진행해주세요.", "NOT_ALLOWED");
+            }
             String address = util.validateString(data.getAddress(), 100L, "주소");
             String addressDetail = util.validateString(data.getAddressDetail(), 100L, "상세 주소");
             Boolean isAgreeMarketing = data.getIsAgreeMarketing() == null ? false : data.getIsAgreeMarketing();
             User user = User.builder().state(UserState.ACTIVE).joinAt(util.now()).build();
             String
                     imageUrl =
-                    s3.upload(profileImage, new ArrayList<>(Arrays.asList("user", String.valueOf(user.getId()))));
+                    profileImage != null && !profileImage.isEmpty() ? s3.upload(profileImage,
+                            new ArrayList<>(Arrays.asList("user", String.valueOf(user.getId())))) : String.join("/",
+                            Arrays.asList(s3.getS3Url(), "default_profile.png"));
 
             User userResult = userService.createUser(user);
             UserAuth
@@ -175,6 +242,7 @@ public class UserController {
                             address).addressDetail(addressDetail).deliverMessage("").postalCode(data.postalCode).isDefault(
                             true).build();
             userService.addUser(user, userAuth, userInfo, deliverPlace);
+            if (verification != null) verificationService.deleteVerification(verification.getId());
             res.setData(Optional.of(true));
             return ResponseEntity.ok(res);
         } catch (Exception e) {
@@ -193,21 +261,29 @@ public class UserController {
         Integer verificationId;
         String address;
         String addressDetail;
+        Boolean isAgreeMarketing;
     }
 
     @PostMapping("/mypage/update")
-    public ResponseEntity<CustomResponse<UserDto>> updateUser(@RequestHeader("Authorization") Optional<String> auth,
-                                                              @RequestPart(value = "data") UserUpdateReq data,
-                                                              @RequestPart(value = "profileImage", required = false) MultipartFile profileImage) {
-        CustomResponse<UserDto> res = new CustomResponse<>();
+    public ResponseEntity<CustomResponse<UserInfoDto>> updateUser(@RequestHeader("Authorization") Optional<String> auth,
+                                                                  @RequestPart(value = "data") UserUpdateReq data,
+                                                                  @RequestPart(value = "profileImage", required = false) MultipartFile profileImage) {
+        CustomResponse<UserInfoDto> res = new CustomResponse<>();
         Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth);
         if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
         try {
             Integer userId = tokenInfo.get().getId();
             UserInfo userInfo = userService.selectUserInfo(userId);
             if (profileImage != null) {
-                String imageUrl = s3.upload(profileImage, new ArrayList<>(Arrays.asList("user", userInfo.toString())));
+                String
+                        imageUrl =
+                        s3.upload(profileImage,
+                                new ArrayList<>(Arrays.asList("user", String.valueOf(userInfo.getUserId()))));
                 userInfo.setProfileImage(imageUrl);
+                userService.updateUserInfo(userInfo);
+            }
+            if (data.isAgreeMarketing != null) {
+                userInfo.setIsAgreeMarketing(data.isAgreeMarketing);
                 userService.updateUserInfo(userInfo);
             }
             if (data.name != null) {
@@ -225,6 +301,8 @@ public class UserController {
                 UserAuth userAuth = userService.selectUserAuth(userId);
                 if (!userAuth.getLoginType().equals(LoginType.IDPW))
                     return res.throwError("소셜 로그인 유저입니다.", "NOT_ALLOWED");
+                if (!BCrypt.checkpw(data.getOldPassword(), userAuth.getPassword()))
+                    return res.throwError("이전 비밀번호와 일치하지 않습니다.", "NOT_ALLOWED");
                 if (!Pattern.matches(re.password, data.getNewPassword()))
                     return res.throwError("비밀번호 형식을 확인해주세요.", "INPUT_CHECK_REQUIRED");
                 String password = BCrypt.hashpw(data.getNewPassword(), BCrypt.gensalt());
@@ -283,8 +361,8 @@ public class UserController {
     }
 
     @GetMapping("/mypage")
-    public ResponseEntity<CustomResponse<UserDto>> selectUserSelfInfo(@RequestHeader(value = "Authorization") Optional<String> auth) {
-        CustomResponse<UserDto> res = new CustomResponse<>();
+    public ResponseEntity<CustomResponse<UserInfoDto>> selectUserSelfInfo(@RequestHeader(value = "Authorization") Optional<String> auth) {
+        CustomResponse<UserInfoDto> res = new CustomResponse<>();
         Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth);
 
         if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
@@ -292,12 +370,14 @@ public class UserController {
             Integer userId = tokenInfo.get().getId();
             UserInfo userInfo = userService.selectUserInfo(userId);
             List<DeliverPlace> deliverPlaces = userService.selectUserDeliverPlaceList(userId);
-            UserDto
-                    userDto =
-                    UserDto.builder().userId(userId).profileImage(userInfo.getProfileImage()).email(userInfo.getEmail()).name(
-                            userInfo.getName()).nickname(userInfo.getNickname()).phone(userInfo.getPhone()).isAgreeMarketing(
-                            userInfo.getIsAgreeMarketing()).deliverPlaces(deliverPlaces).build();
-            res.setData(Optional.ofNullable(userDto));
+            UserInfoDto
+                    userInfoDto =
+                    UserInfoDto.builder().userId(userId).profileImage(userInfo.getProfileImage()).grade(userInfo.getGrade()).email(
+                            userInfo.getEmail()).name(userInfo.getName()).nickname(userInfo.getNickname()).phone(
+                            userInfo.getPhone()).isAgreeMarketing(userInfo.getIsAgreeMarketing()).reviewCount(
+                            reviewService.countAllReviewByUserId(userId)).notificationCount(notificationService.countAllNotificationByUserId(
+                            userId)).deliverPlaces(deliverPlaces).point(userInfo.getPoint()).build();
+            res.setData(Optional.ofNullable(userInfoDto));
             return ResponseEntity.ok(res);
         } catch (Exception e) {
             return res.defaultError(e);
@@ -305,21 +385,21 @@ public class UserController {
     }
 
     @GetMapping("/management/{id}")
-    public ResponseEntity<CustomResponse<UserDto>> selectUserList(@RequestHeader("Authorization") Optional<String> auth,
-                                                                  @PathVariable("id") Integer id) {
-        CustomResponse<UserDto> res = new CustomResponse<>();
+    public ResponseEntity<CustomResponse<UserInfoDto>> selectUserList(@RequestHeader("Authorization") Optional<String> auth,
+                                                                      @PathVariable("id") Integer id) {
+        CustomResponse<UserInfoDto> res = new CustomResponse<>();
         Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
         if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
         try {
             UserInfo user = userService.selectUserInfo(id);
-            UserDto userDto = user.convert2Dto();
-            userDto.setUser(userService.selectUser(user.getUserId()));
+            UserInfoDto userInfoDto = user.convert2Dto();
+            userInfoDto.setUser(userService.selectUser(user.getUserId()).convert2Dto());
             UserAuth userAuth = userService.selectUserAuth(user.getUserId());
             userAuth.setPassword(null);
-            userDto.setAuth(userAuth);
+            userInfoDto.setAuth(userAuth.convert2Dto());
             List<DeliverPlace> deliverPlaces = userService.selectUserDeliverPlaceList(user.getUserId());
-            userDto.setDeliverPlaces(deliverPlaces);
-            res.setData(Optional.of(userDto));
+            userInfoDto.setDeliverPlaces(deliverPlaces);
+            res.setData(Optional.of(userInfoDto));
             return ResponseEntity.ok(res);
         } catch (Exception e) {
             return res.defaultError(e);
@@ -327,14 +407,42 @@ public class UserController {
     }
 
     @GetMapping("/management")
-    public ResponseEntity<CustomResponse<Page<UserDto>>> selectUserList(@RequestHeader("Authorization") Optional<String> auth,
-                                                                        @RequestParam(value = "page", required = false, defaultValue = "0") Integer page,
-                                                                        @RequestParam(value = "take", required = false, defaultValue = "10") Integer take) {
-        CustomResponse<Page<UserDto>> res = new CustomResponse<>();
+    public ResponseEntity<CustomResponse<Page<UserInfoDto>>> selectUserList(@RequestHeader("Authorization") Optional<String> auth,
+                                                                            @RequestParam(value = "page", required = false, defaultValue = "0") Integer page,
+                                                                            @RequestParam(value = "take", required = false, defaultValue = "10") Integer take,
+                                                                            @RequestParam(value = "orderby", defaultValue = "joinAt") UserOrderByAdmin orderBy,
+                                                                            @RequestParam(value = "orderType", defaultValue = "DESC") Sort.Direction sort,
+                                                                            @RequestParam(value = "name", required = false) String name,
+                                                                            @RequestParam(value = "nickname", required = false) String nickname,
+                                                                            @RequestParam(value = "email", required = false) String email,
+                                                                            @RequestParam(value = "phone", required = false) String phone,
+                                                                            @RequestParam(value = "state", required = false) String state,
+                                                                            @RequestParam(value = "loginType", required = false) String loginType,
+                                                                            @RequestParam(value = "joinAtS", required = false) Timestamp joinAtS,
+                                                                            @RequestParam(value = "joinAtE", required = false) Timestamp joinAtE) {
+        CustomResponse<Page<UserInfoDto>> res = new CustomResponse<>();
         Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
         if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
         try {
-            Page<UserDto> users = userService.selectUserInfoList(page, take);
+            Specification<UserInfo> spec = (root, query, builder) -> {
+                List<Predicate> predicates = new ArrayList<>();
+                if (name != null) predicates.add(builder.like(root.get("name"), "%" + name + "%"));
+                if (nickname != null) predicates.add(builder.like(root.get("nickname"), "%" + nickname + "%"));
+                if (email != null) predicates.add(builder.like(root.get("email"), "%" + email + "%"));
+                if (phone != null) predicates.add(builder.like(root.get("phone"), "%" + phone + "%"));
+                if (state != null)
+                    predicates.add(builder.and(root.get("user").get("state").in(Arrays.stream(state.split(",")).map(v -> UserState.valueOf(
+                            v)).toList())));
+//                if (loginType != null)
+//                    predicates.add(builder.and(root.get("user").get("userAuth").get("loginType").in(Arrays.stream(
+//                            loginType.split(",")).map(v -> LoginType.valueOf(v)).toList())));
+                if (joinAtS != null) predicates.add(builder.greaterThan(root.get("user").get("joinAt"), joinAtS));
+                if (joinAtE != null) predicates.add(builder.lessThan(root.get("user").get("joinAt"), joinAtE));
+                return builder.and(predicates.toArray(new Predicate[0]));
+            };
+
+            PageRequest pageRequest = PageRequest.of(page, take, Sort.by(sort, orderBy.label));
+            Page<UserInfoDto> users = userService.selectUserInfoList(pageRequest, spec);
             res.setData(Optional.ofNullable(users));
             return ResponseEntity.ok(res);
         } catch (Exception e) {
@@ -401,6 +509,198 @@ public class UserController {
             return ResponseEntity.ok(res);
         } catch (Exception e) {
             return res.defaultError(e);
+        }
+    }
+
+    @Getter
+    @NoArgsConstructor
+    private static class UpdateFcmReq {
+        String fcmToken;
+        Boolean set;
+    }
+
+    @PostMapping("/fcm-token")
+    public ResponseEntity<CustomResponse<Boolean>> updateFcm(@RequestHeader(value = "Authorization") Optional<String> auth,
+                                                             @RequestBody UpdateFcmReq data) {
+        CustomResponse<Boolean> res = new CustomResponse<>();
+        Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth);
+        if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
+        try {
+            Integer userId = tokenInfo.get().getId();
+            if (data.fcmToken == null) return res.throwError("토큰을 입력해주세요.", "INPUT_CHECK_REQUIRED");
+            Optional<FcmToken> token = fcmTokenRepository.findById(data.fcmToken);
+            if (data.set == true) {
+                if (token.isPresent()) {
+                    token.get().setToken(data.fcmToken);
+                    fcmTokenRepository.save(token.get());
+                } else {
+                    fcmTokenRepository.save(FcmToken.builder().token(data.fcmToken).userId(userId).build());
+                }
+            } else {
+                if (token.isPresent()) {
+                    fcmTokenRepository.deleteById(data.fcmToken);
+                }
+            }
+            res.setData(Optional.of(true));
+            return ResponseEntity.ok(res);
+        } catch (Exception e) {
+            return res.defaultError(e);
+        }
+    }
+
+    @Getter
+    @NoArgsConstructor
+    private static class ResetPasswordReq {
+        String phone;
+        Integer verificationId;
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<CustomResponse<Boolean>> resetPassword(@RequestPart(value = "data") ResetPasswordReq data) {
+        CustomResponse<Boolean> res = new CustomResponse<>();
+        try {
+            if (data.getVerificationId() == null) return res.throwError("인증 먼저 진행해주세요.", "INPUT_CHECK_REQUIRED");
+            if (!Pattern.matches(re.phone, data.phone))
+                return res.throwError("휴대폰 번호 형식을 확인해주세요.", "INPUT_CHECK_REQUIRED");
+            String phone = data.phone.replaceAll(re.getPhone(), "0$1$2$3");
+            Verification verification = verificationService.selectVerificationById(data.getVerificationId());
+            if (verification.getExpiredAt() != null) return res.throwError("인증을 먼저 진행해주세요.", "NOT_ALLOWED");
+            UserInfo userInfo = userService.selectUserWithPhone(phone);
+            if (userInfo == null) return res.throwError("소셜 로그인 유저입니다.", "NOT_ALLOWED");
+            else {
+                UserAuth userAuth = userService.selectUserAuth(userInfo.getUserId());
+                if (!userAuth.getLoginType().equals(LoginType.IDPW))
+                    return res.throwError("소셜 로그인 유저입니다.", "NOT_ALLOWED");
+                String newPassword = userService.generateRandomString(6);
+                userAuth.setPassword(newPassword);
+                smsService.sendSms(phone, "[바로피쉬]\n새로운 비밀번호는 " + newPassword + " 입니다.");
+            }
+            return ResponseEntity.ok(res);
+        } catch (Exception e) {
+            return res.defaultError(e);
+        }
+    }
+
+    // ---------------------------결제수단 관리------------------------------------
+    @GetMapping("/payment-method")
+    public ResponseEntity<CustomResponse<List<PaymentMethodDto>>> selectPaymentMethodList(@RequestHeader(value = "Authorization") Optional<String> auth,
+                                                                                          @RequestParam(value = "userId", required = false) Integer userId) {
+        CustomResponse<List<PaymentMethodDto>> res = new CustomResponse<>();
+        Optional<TokenInfo>
+                tokenInfo =
+                jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER, TokenAuthType.ADMIN), auth);
+        if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
+        try {
+            if (tokenInfo.get().getType().equals(TokenAuthType.USER)) {
+                userId = tokenInfo.get().getId();
+            } else {
+                if (userId == null) return res.throwError("유저 아이디를 입력해주세요.", "INPUT_CHECK_REQUIRED");
+            }
+            User user = userService.selectUser(userId);
+            List<PaymentMethod> paymentMethods = paymentMethodService.selectPaymentMethodList(userId);
+            res.setData(Optional.of(paymentMethods.stream().map(v -> {
+                try {
+                    return paymentMethodService.convert2Dto(v);
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+            }).toList()));
+            return ResponseEntity.ok(res);
+        } catch (Exception e) {
+            return res.defaultError(e);
+        }
+    }
+
+    @GetMapping("/payment-method/{id}")
+    public ResponseEntity<CustomResponse<PaymentMethodDto>> selectPaymentMethod(@RequestHeader(value = "Authorization") Optional<String> auth,
+                                                                                @PathVariable("id") Integer id) {
+        CustomResponse<PaymentMethodDto> res = new CustomResponse<>();
+        Optional<TokenInfo>
+                tokenInfo =
+                jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER, TokenAuthType.ADMIN), auth);
+        if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
+        try {
+            PaymentMethod paymentMethod = paymentMethodService.selectPaymentMethod(id);
+            if (tokenInfo.get().getType().equals(TokenAuthType.USER) &&
+                    paymentMethod.getUserId() != tokenInfo.get().getId())
+                return res.throwError("타유저의 결제 수단입니다.", "NOT_ALLOWED");
+            res.setData(Optional.ofNullable(paymentMethodService.convert2Dto(paymentMethod)));
+            return ResponseEntity.ok(res);
+        } catch (Exception e) {
+            return res.defaultError(e);
+        }
+    }
+
+    @Getter
+    @NoArgsConstructor
+    private static class AddPaymentMethodReq {
+        String name;
+        String cardNo;
+        String expiryAt;
+        String birth;
+        String passwordTwoDigit;
+    }
+
+    @PostMapping("/payment-method/add")
+    public ResponseEntity<CustomResponse<PaymentMethodDto>> addPaymentMethod(@RequestHeader(value = "Authorization") Optional<String> auth,
+                                                                             @RequestPart(value = "data") AddPaymentMethodReq data) {
+        CustomResponse<PaymentMethodDto> res = new CustomResponse<>();
+        Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth);
+        if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
+        try {
+            String name = util.validateString(data.name, 20L, "이름");
+            if (data.cardNo == null) return res.throwError("카드번호를 입력해주세요.", "INPUT_CHECK_REQUIRED");
+            if (!Pattern.matches(re.cardNo, data.cardNo))
+                return res.throwError("카드번호 형식을 확인해주세요.", "INPUT_CHECK_REQUIRED");
+            String cardNo = data.cardNo.replaceAll(re.cardNo, "$1$2$3$4");
+            cardNo = aes256.encrypt(cardNo);
+            if (paymentMethodService.checkExistPaymentWithCardNo(cardNo, tokenInfo.get().getId()))
+                return res.throwError("이미 등록된 카드입니다.", "NOT_ALLOWED");
+            if (data.expiryAt == null) return res.throwError("유효기간(월/년) 입력해주세요.", "INPUT_CHECK_REQUIRED");
+            if (!Pattern.matches(re.expiryAt, data.expiryAt))
+                return res.throwError("유효기간 형식을 확인해주세요.", "INPUT_CHECK_REQUIRED");
+            if (data.birth == null) return res.throwError("생년월일을 입력해주세요", "INPUT_CHECK_REQUIRED");
+            if (!Pattern.matches(re.birth, data.birth))
+                return res.throwError("생년월일 형식을 확인해주세요.", "INPUT_CHECK_REQUIRED");
+            String birth = data.birth;
+            //TODO: 배포 시 변경 필요
+//            if (data.passwordTwoDigit == null) return res.throwError("비밀번호 두자리를 입력해주세요.", "INPUT_CHECK_REQUIRED");
+//            if (!Pattern.matches(re.cardPassword, data.passwordTwoDigit))
+//                return res.throwError("비밀번호는 숫자 2자리입니다.", "INPUT_CHECK_REQUIRED");
+//            String password2Digit = aes256.encrypt(data.passwordTwoDigit);
+            String password2Digit = aes256.encrypt("12");
+            //--------------------------------------------
+            PaymentMethod
+                    paymentMethod =
+                    PaymentMethod.builder().name(name).cardNo(aes256.encrypt(cardNo)).userId(tokenInfo.get().getId()).expiryAt(
+                            data.expiryAt).birth(birth).passwordTwoDigit(password2Digit).build();
+            PaymentService.CheckValidCardRes validCardRes = paymentService.checkValidCard(paymentMethod);
+            if (validCardRes == null) return res.throwError("유효하지 않은 카드입니다.", "INPUT_CHECK_REQUIRED");
+            paymentMethod.setCardName(validCardRes.getCardName());
+            paymentMethod.setCustomerUid(validCardRes.getCustomerUid());
+            paymentMethod = paymentMethodService.addPaymentMethod(paymentMethod);
+            res.setData(Optional.ofNullable(paymentMethodService.convert2Dto(paymentMethod)));
+            return ResponseEntity.ok(res);
+        } catch (Exception e) {
+            return res.defaultError(e);
+        }
+    }
+
+    @DeleteMapping("payment-method/{id}")
+    public ResponseEntity<CustomResponse<Boolean>> deletePaymentMethod(@RequestHeader(value = "Authorization") Optional<String> auth,
+                                                                       @PathVariable("id") Integer id) {
+        CustomResponse<Boolean> res = new CustomResponse<>();
+        Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth);
+        if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
+        try {
+            PaymentMethod paymentMethod = paymentMethodService.selectPaymentMethod(id);
+            if (paymentMethod.getUserId() != tokenInfo.get().getId())
+                return res.throwError("타계정의 결제수단입니다.", "NOT_ALLOWED");
+            paymentMethodService.deletePaymentMethod(id);
+            return ResponseEntity.ok(res);
+        } catch (Exception e) {
+            return res.defaultError(e);
+
         }
     }
 }

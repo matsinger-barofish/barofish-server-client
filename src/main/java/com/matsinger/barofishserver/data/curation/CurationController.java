@@ -1,14 +1,13 @@
 package com.matsinger.barofishserver.data.curation;
 
-import com.matsinger.barofishserver.data.curation.object.Curation;
-import com.matsinger.barofishserver.data.curation.object.CurationDto;
-import com.matsinger.barofishserver.data.curation.object.CurationProductMap;
-import com.matsinger.barofishserver.data.curation.object.CurationType;
+import com.matsinger.barofishserver.data.curation.object.*;
 import com.matsinger.barofishserver.jwt.JwtService;
 import com.matsinger.barofishserver.jwt.TokenAuthType;
 import com.matsinger.barofishserver.jwt.TokenInfo;
 import com.matsinger.barofishserver.product.object.Product;
 import com.matsinger.barofishserver.product.ProductService;
+import com.matsinger.barofishserver.product.object.ProductListDto;
+import com.matsinger.barofishserver.store.object.StoreOrderByAdmin;
 import com.matsinger.barofishserver.utils.Common;
 import com.matsinger.barofishserver.utils.CustomResponse;
 import com.matsinger.barofishserver.utils.S3.S3Uploader;
@@ -16,6 +15,9 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Description;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -61,6 +63,35 @@ public class CurationController {
         }
     }
 
+    @GetMapping("/management")
+    public ResponseEntity<CustomResponse<Page<CurationDto>>> selectCurationListByAdmin(@RequestHeader(value = "Authorization", required = false) Optional<String> auth,
+                                                                                       @RequestParam(value = "page", required = false, defaultValue = "0") Integer page,
+                                                                                       @RequestParam(value = "take", required = false, defaultValue = "10") Integer take,
+                                                                                       @RequestParam(value = "orderby", defaultValue = "id") CurationOrderBy orderBy,
+                                                                                       @RequestParam(value = "orderType", defaultValue = "DESC") Sort.Direction sort) {
+        CustomResponse<Page<CurationDto>> res = new CustomResponse();
+        Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
+        if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
+        try {
+            PageRequest pageRequest = PageRequest.of(page, take, Sort.by(sort, orderBy.label));
+            Page<Curation> curations = curationService.selectCurationListByAdmin(pageRequest);
+            Page<CurationDto> curationDtos = curations.map(curation -> {
+                List<Product> products = curationService.selectCurationProducts(curation.getId());
+                CurationDto curationDto = curation.convert2Dto();
+                curationDto.setProducts(products.stream().map(product -> {
+                    return product.convert2ListDto();
+                }).toList());
+                return curationDto;
+            });
+
+            res.setData(Optional.of(curationDtos));
+            return ResponseEntity.ok(res);
+        } catch (Exception e) {
+            return res.defaultError(e);
+        }
+    }
+
+
     @GetMapping("/{id}")
     public ResponseEntity<CustomResponse<CurationDto>> selectCuration(@PathVariable("id") Integer id) {
         CustomResponse<CurationDto> res = new CustomResponse<>();
@@ -80,10 +111,12 @@ public class CurationController {
 
     @Description("큐레이션 상품 목록")
     @GetMapping("/{id}/products")
-    public ResponseEntity<CustomResponse<List<Product>>> selectCurationProducts(@PathVariable("id") Integer id) {
-        CustomResponse<List<Product>> res = new CustomResponse();
+    public ResponseEntity<CustomResponse<List<ProductListDto>>> selectCurationProducts(@PathVariable("id") Integer id) {
+        CustomResponse<List<ProductListDto>> res = new CustomResponse();
         try {
-            List<Product> products = curationService.selectCurationProducts(id);
+            List<ProductListDto>
+                    products =
+                    curationService.selectCurationProducts(id).stream().map(v -> productService.convert2ListDto(v)).toList();
             res.setData(Optional.ofNullable(products));
             return ResponseEntity.ok(res);
         } catch (Exception e) {
@@ -163,10 +196,10 @@ public class CurationController {
 
     @Description("큐레이션 목록 상품 추가")
     @PostMapping("/{id}/add-product")
-    public ResponseEntity<CustomResponse<List<CurationProductMap>>> addProductToCuration(@RequestHeader(value = "Authorization") Optional<String> auth,
-                                                                                         @PathVariable("id") Integer id,
-                                                                                         @RequestBody ArrayList<Integer> productIds) {
-        CustomResponse<List<CurationProductMap>> res = new CustomResponse();
+    public ResponseEntity<CustomResponse<Boolean>> addProductToCuration(@RequestHeader(value = "Authorization") Optional<String> auth,
+                                                                        @PathVariable("id") Integer id,
+                                                                        @RequestPart(value = "data") List<Integer> productIds) {
+        CustomResponse<Boolean> res = new CustomResponse();
         Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
         if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
         try {
@@ -177,7 +210,7 @@ public class CurationController {
                 if (product == null) throw new Error("상품 정보를 찾을 수 없습니다.");
             }
             List<CurationProductMap> result = curationService.addProduct(id, productIds);
-            res.setData(Optional.ofNullable(result));
+            res.setData(Optional.of(true));
             return ResponseEntity.ok(res);
         } catch (Exception e) {
             return res.defaultError(e);

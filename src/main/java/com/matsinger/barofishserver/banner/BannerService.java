@@ -3,6 +3,8 @@ package com.matsinger.barofishserver.banner;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
@@ -21,17 +23,25 @@ public class BannerService {
         return bannerRepository.save(banner);
     }
 
+    public List<Banner> selectBannerListWithIds(List<Integer> ids) {
+        return bannerRepository.findAllByIdIn(ids);
+    }
+
+    public void updateAllBanners(List<Banner> banners) {
+        bannerRepository.saveAll(banners);
+    }
+
     public List<Banner> selectBannerList() {
         return bannerRepository.findAllByStateEqualsAndTypeIn(BannerState.ACTIVE,
                 Arrays.asList(BannerType.NONE, BannerType.CATEGORY, BannerType.CURATION, BannerType.NOTICE));
     }
 
-    public List<Banner> selectBannerListByAdmin() {
-        return bannerRepository.findAll();
+    public Page<Banner> selectBannerListByAdmin(PageRequest pageRequest) {
+        return bannerRepository.findAll(pageRequest);
     }
 
-    public Banner selectMainBanner() {
-        return bannerRepository.findFirstByTypeAndState(BannerType.MAIN, BannerState.ACTIVE);
+    public List<Banner> selectMainBanner() {
+        return bannerRepository.findAllByTypeAndState(BannerType.MAIN, BannerState.ACTIVE);
     }
 
     public Banner selectPcWebBanner() {

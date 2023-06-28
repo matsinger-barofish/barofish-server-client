@@ -10,4 +10,6 @@ import org.springframework.stereotype.Repository;
 public interface CurationRepository extends JpaRepository<Curation, Integer> {
     @Query(value = "SELECT MAX( c.sort_no ) + 1 AS sortNo FROM curation c", nativeQuery = true)
     Tuple selectMaxSortNo();
+
+
 }

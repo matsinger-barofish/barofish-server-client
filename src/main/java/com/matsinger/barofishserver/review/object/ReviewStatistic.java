@@ -1,4 +1,4 @@
-package com.matsinger.barofishserver.review;
+package com.matsinger.barofishserver.review.object;
 
 import lombok.Builder;
 import lombok.Getter;

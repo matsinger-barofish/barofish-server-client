@@ -1,14 +1,23 @@
 package com.matsinger.barofishserver.data.tip;
 
+import com.matsinger.barofishserver.banner.Banner;
+import com.matsinger.barofishserver.inquiry.Inquiry;
+import com.matsinger.barofishserver.inquiry.InquiryType;
 import com.matsinger.barofishserver.jwt.JwtService;
 import com.matsinger.barofishserver.jwt.TokenAuthType;
 import com.matsinger.barofishserver.jwt.TokenInfo;
+import com.matsinger.barofishserver.store.object.StoreOrderByAdmin;
 import com.matsinger.barofishserver.utils.Common;
 import com.matsinger.barofishserver.utils.CustomResponse;
 import com.matsinger.barofishserver.utils.S3.S3Uploader;
+import jakarta.persistence.criteria.Predicate;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -40,6 +49,40 @@ public class TipController {
         }
     }
 
+    @GetMapping("/management")
+    public ResponseEntity<CustomResponse<Page<Tip>>> selectTipList(@RequestHeader(value = "Authorization") Optional<String> auth,
+                                                                   @RequestParam(value = "page", required = false, defaultValue = "0") Integer page,
+                                                                   @RequestParam(value = "take", required = false, defaultValue = "10") Integer take,
+                                                                   @RequestParam(value = "orderby", defaultValue = "id") TipOrderBy orderBy,
+                                                                   @RequestParam(value = "orderType", defaultValue = "DESC") Sort.Direction sort,
+                                                                   @RequestParam(value = "title", required = false) String title,
+                                                                   @RequestParam(value = "content", required = false) String content,
+                                                                   @RequestParam(value = "type", required = false) String type,
+                                                                   @RequestParam(value = "createdAtS", required = false) Timestamp createdAtS,
+                                                                   @RequestParam(value = "createdAtE", required = false) Timestamp createdAtE) {
+        CustomResponse<Page<Tip>> res = new CustomResponse();
+        Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
+        if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
+        try {
+            Specification<Tip> spec = (root, query, builder) -> {
+                List<Predicate> predicates = new ArrayList<>();
+                if (title != null) predicates.add(builder.like(root.get("title"), "%" + title + "%"));
+                if (content != null) predicates.add(builder.like(root.get("content"), "%" + content + "%"));
+                if (type != null)
+                    predicates.add(builder.and(root.get("type").in(Arrays.stream(type.split(",")).map(TipType::valueOf).toList())));
+                if (createdAtS != null) predicates.add(builder.greaterThan(root.get("createdAt"), createdAtS));
+                if (createdAtE != null) predicates.add(builder.lessThan(root.get("createdAt"), createdAtE));
+                return builder.and(predicates.toArray(new Predicate[0]));
+            };
+            PageRequest pageRequest = PageRequest.of(page, take, Sort.by(sort, orderBy.label));
+            Page<Tip> tips = tipService.selectTip(pageRequest, spec);
+            res.setData(Optional.ofNullable(tips));
+            return ResponseEntity.ok(res);
+        } catch (Exception e) {
+            return res.defaultError(e);
+        }
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<CustomResponse<Tip>> selectTip(@PathVariable("id") Integer id) {
         CustomResponse<Tip> res = new CustomResponse();
@@ -58,6 +101,7 @@ public class TipController {
         String title;
         String description;
         TipType type;
+        String content;
     }
 
     @PostMapping("/add")
@@ -72,10 +116,13 @@ public class TipController {
             String title = utils.validateString(data.title, 100L, "제목");
             String description = utils.validateString(data.description, 200L, "설명");
             String imageUrl = s3.upload(image, new ArrayList<>(Arrays.asList("tip")));
+            if (data.content == null) return res.throwError("내용을 입력해주세요.", "INPUT_CHECK_REQUIRED");
+            String contentUrl = s3.uploadEditorStringToS3(data.content, new ArrayList<>(Arrays.asList("tip")));
             tip.setTitle(title);
             tip.setType(data.type == null ? TipType.COMPARE : data.type);
             tip.setDescription(description);
             tip.setImage(imageUrl);
+            tip.setContent(contentUrl);
             tip.setCreatedAt(new Timestamp(System.currentTimeMillis()));
             res.setData(Optional.ofNullable(tipService.add(tip)));
             return ResponseEntity.ok(res);
@@ -109,6 +156,10 @@ public class TipController {
             if (image != null) {
                 String imageUrl = s3.upload(image, new ArrayList<>(Arrays.asList("tip")));
                 tip.setImage(imageUrl);
+            }
+            if (data.content != null) {
+                String contentUrl = s3.uploadEditorStringToS3(data.content, new ArrayList<>(Arrays.asList("tip")));
+                tip.setContent(contentUrl);
             }
 
             res.setData(Optional.ofNullable(tipService.update(id, tip)));

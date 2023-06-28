@@ -1,6 +1,6 @@
 package com.matsinger.barofishserver.order.object;
 
-import com.matsinger.barofishserver.user.object.UserInfo;
+import com.matsinger.barofishserver.user.object.UserInfoDto;
 import lombok.*;
 
 import java.sql.Timestamp;
@@ -13,10 +13,14 @@ import java.util.List;
 @AllArgsConstructor
 public class OrderDto {
     String id;
-    UserInfo user;
+    UserInfoDto user;
     OrderState state;
+    String ordererName;
+    String ordererTel;
     Integer totalAmount;
+    Integer couponDiscount;
+    Integer usePoint;
     Timestamp orderedAt;
     List<OrderProductDto> productInfos;
-    OrderDeliverPlace deliverPlace;
+    OrderDeliverPlaceDto deliverPlace;
 }

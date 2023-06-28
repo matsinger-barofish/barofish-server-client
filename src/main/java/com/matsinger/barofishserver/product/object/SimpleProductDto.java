@@ -1,12 +1,13 @@
 package com.matsinger.barofishserver.product.object;
 
 import com.matsinger.barofishserver.category.CategoryDto;
-import com.matsinger.barofishserver.inquiry.Inquiry;
+import com.matsinger.barofishserver.compare.filter.CompareFilterDto;
 import com.matsinger.barofishserver.inquiry.InquiryDto;
+import com.matsinger.barofishserver.product.filter.ProductFilterValueDto;
 import com.matsinger.barofishserver.product.productinfo.*;
-import com.matsinger.barofishserver.review.Review;
-import com.matsinger.barofishserver.review.ReviewDto;
-import com.matsinger.barofishserver.review.ReviewTotalStatistic;
+import com.matsinger.barofishserver.review.object.ReviewDto;
+import com.matsinger.barofishserver.review.object.ReviewTotalStatistic;
+import com.matsinger.barofishserver.searchFilter.object.SearchFilterFieldDto;
 import com.matsinger.barofishserver.store.object.SimpleStore;
 import lombok.*;
 
@@ -27,10 +28,11 @@ public class SimpleProductDto {
     String[] images;
     String title;
     Boolean isLike;
+    Integer discountPrice;
     Integer originPrice;
-    Integer discountRate;
     String deliveryInfo;
     Integer deliveryFee;
+    Integer deliverBoxPerAmount;
     String description;
     String[] descriptionImages;
     Integer expectedDeliverDay;
@@ -39,8 +41,11 @@ public class SimpleProductDto {
     ProductProcess process;
     ProductUsage usage;
     ProductStorage storage;
+    Integer representOptionItemId;
     Timestamp createdAt;
-
+    List<CompareFilterDto> compareFilters;
+    List<ProductFilterValueDto> filterValues;
+    List<SearchFilterFieldDto> searchFilterFields;
     List<ProductListDto> comparedProduct = new ArrayList<>();
 
     ReviewTotalStatistic reviewStatistics;

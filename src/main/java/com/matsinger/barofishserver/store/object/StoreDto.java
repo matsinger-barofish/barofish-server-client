@@ -20,4 +20,9 @@ public class StoreDto {
     String location;
     String[] keyword;
     String visitNote;
+    StoreDeliverFeeType deliverFeeType;
+    Integer deliverFee;
+    Integer minOrderPrice;
+    String oneLineDescription;
+    StoreAdditionalDto additionalData;
 }

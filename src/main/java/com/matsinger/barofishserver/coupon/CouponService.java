@@ -1,12 +1,23 @@
 package com.matsinger.barofishserver.coupon;
 
+import com.matsinger.barofishserver.notification.NotificationMessage;
+import com.matsinger.barofishserver.notification.NotificationMessageType;
+import com.matsinger.barofishserver.notification.NotificationService;
+import com.matsinger.barofishserver.user.UserService;
+import com.matsinger.barofishserver.user.object.User;
+import com.matsinger.barofishserver.user.object.UserInfo;
+import com.matsinger.barofishserver.user.object.UserState;
 import com.matsinger.barofishserver.utils.Common;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.sql.Timestamp;
 import java.util.List;
+import java.util.Optional;
 
 @RequiredArgsConstructor
 @Service
@@ -14,10 +25,12 @@ import java.util.List;
 public class CouponService {
     private final CouponUserMapRepository mapRepository;
     private final CouponRepository couponRepository;
+    private final UserService userService;
+    private final NotificationService notificationService;
     private final Common utils;
 
-    public List<Coupon> selectCouponListByAdmin() {
-        return couponRepository.findAllByState(CouponState.ACTIVE);
+    public Page<Coupon> selectCouponListByAdmin(PageRequest pageRequest, Specification<Coupon> spec) {
+        return couponRepository.findAll(spec, pageRequest);
     }
 
     public Coupon selectCoupon(Integer couponId) {
@@ -85,4 +98,18 @@ public class CouponService {
         couponRepository.deleteById(id);
     }
 
+    public void sendCouponCreateNotification(Coupon coupon) {
+        List<User> users = userService.selectUserWithState(UserState.ACTIVE);
+        for (User user : users) {
+            UserInfo userInfo = userService.selectUserInfo(user.getId());
+            notificationService.sendFcmToUser(user.getId(),
+                    NotificationMessageType.COUPON_ARRIVED,
+                    NotificationMessage.builder().couponName(coupon.getTitle()).userName(userInfo.getNickname()).build());
+        }
+    }
+
+    public void useCoupon(Integer couponId, Integer userId) {
+        Optional<CouponUserMap> map = mapRepository.findById(new CouponUserMapId(userId, couponId));
+        if (map.isPresent()) map.get().setIsUsed(true);
+    }
 }

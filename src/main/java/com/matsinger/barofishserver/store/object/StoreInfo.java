@@ -2,6 +2,7 @@ package com.matsinger.barofishserver.store.object;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.ColumnDefault;
 
 import java.util.Objects;
 
@@ -18,7 +19,7 @@ public class StoreInfo {
     private int storeId;
 
     @OneToOne(cascade = CascadeType.ALL)
-    @JoinColumn(name = "store_id",updatable = false, insertable = false)
+    @JoinColumn(name = "store_id", updatable = false, insertable = false)
     private Store store;
 
     public void setStore(Store store) {
@@ -45,6 +46,84 @@ public class StoreInfo {
     @Basic
     @Column(name = "visit_note", nullable = false, columnDefinition = "TEXT")
     private String visitNote;
+
+    @Basic
+    @Enumerated(EnumType.STRING)
+    @ColumnDefault("FREE")
+    @Column(name = "deliver_fee_type", nullable = false)
+    private StoreDeliverFeeType deliverFeeType;
+
+    @Basic
+    @Column(name = "one_line_description", nullable = false)
+    private String oneLineDescription;
+
+    @Basic
+    @ColumnDefault("0")
+    @Column(name = "deliver_fee", nullable = false)
+    private Integer deliverFee;
+
+    @Basic
+    @Column(name = "min_order_price", nullable = true)
+    private Integer minOrderPrice;
+    @Basic
+    @Column(name = "settlement_rate", nullable = true)
+    Integer settlementRate;
+    @Basic
+    @Column(name = "bank_name", nullable = true)
+    String bankName;
+    @Basic
+    @Column(name = "bank_holder", nullable = true)
+    String bankHolder;
+    @Basic
+    @Column(name = "bank_account", nullable = true)
+    String bankAccount;
+    @Basic
+    @Column(name = "representative_name", nullable = true)
+    String representativeName;
+    @Basic
+    @Column(name = "company_id", nullable = true)
+    String companyId;
+    @Basic
+    @Column(name = "business_type", nullable = true)
+    String businessType;
+    @Basic
+    @Column(name = "mos_registration_number", nullable = true)
+    String mosRegistrationNumber;
+    @Basic
+    @Column(name = "business_address", nullable = true)
+    String businessAddress;
+    @Basic
+    @Column(name = "postal_code", nullable = true)
+    String postalCode;
+    @Basic
+    @Column(name = "lot_number_address", nullable = true)
+    String lotNumberAddress;
+    @Basic
+    @Column(name = "street_name_address", nullable = true)
+    String streetNameAddress;
+    @Basic
+    @Column(name = "address_detail", nullable = true)
+    String addressDetail;
+    @Basic
+    @Column(name = "tel", nullable = true)
+    String tel;
+    @Basic
+    @Column(name = "email", nullable = true)
+    String email;
+    @Basic
+    @Column(name = "fax_number", nullable = true)
+    String faxNumber;
+    @Basic
+    @Column(name = "mos_registration", nullable = true)
+    String mosRegistration;
+    @Basic
+    @Column(name = "business_registration", nullable = true)
+    String businessRegistration;
+
+    @Basic
+    @Column(name = "bank_account_copy", nullable = true)
+    String bankAccountCopy;
+
 
     public String getBackgroudImage() {
         return backgroudImage;
@@ -88,7 +167,8 @@ public class StoreInfo {
 
     public SimpleStore convert2Dto() {
         return SimpleStore.builder().storeId(this.store.getId()).isLike(false).backgroundImage(backgroudImage).profileImage(
-                profileImage).name(name).location(location).keyword(keyword.split(",")).build();
+                profileImage).name(name).location(location).keyword(keyword.split(",")).visitNote(this.getVisitNote()).deliverFee(
+                this.deliverFee).minOrderPrice(this.minOrderPrice).oneLineDescription(this.oneLineDescription).build();
     }
 
     @Override

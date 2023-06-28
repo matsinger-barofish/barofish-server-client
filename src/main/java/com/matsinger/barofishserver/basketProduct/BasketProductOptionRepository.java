@@ -12,4 +12,6 @@ public interface BasketProductOptionRepository extends JpaRepository<BasketProdu
 
     @Transactional
     void deleteAllByOrderProductIdIn(List<Integer> ids);
+
+    void deleteAllByOptionId(Integer optionId);
 }

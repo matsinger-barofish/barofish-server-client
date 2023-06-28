@@ -1,5 +1,7 @@
 package com.matsinger.barofishserver.utils;
 
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.io.*;
@@ -13,6 +15,19 @@ import java.util.regex.Pattern;
 
 @Component
 public class Common {
+    @Getter
+    @NoArgsConstructor
+    public enum CudType {
+        CREATE, UPDATE, DELETE
+    }
+
+    @Getter
+    @NoArgsConstructor
+    public static class CudInput<T, IdT> {
+        IdT id;
+        T data;
+        CudType type;
+    }
 
 
     public ArrayList iteratorToList(Iterable data) {
@@ -28,7 +43,9 @@ public class Common {
         List<Integer> intArr = new ArrayList<>();
         String[] strArr = str.split(",");
         for (String s : strArr) {
-            intArr.add(Integer.parseInt(s));
+            try {
+                intArr.add(Integer.parseInt(s));
+            } catch (Exception e) {}
         }
         return intArr;
     }
@@ -59,7 +76,7 @@ public class Common {
         str = str.trim();
         if (str.length() == 0) throw new Exception(String.format("%s 입력해주세요.", getPostWord(name, "을", "를")));
         if (str.length() > maxLen)
-            throw new Exception(String.format("%s 최대 %d자 입니다.", getPostWord(name, "을", "를"), maxLen));
+            throw new Exception(String.format("%s 최대 %d자 입니다.", getPostWord(name, "은", "는"), maxLen));
         return str;
     }
 

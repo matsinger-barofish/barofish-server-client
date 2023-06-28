@@ -1,5 +1,6 @@
 package com.matsinger.barofishserver.category;
 
+import com.matsinger.barofishserver.compare.filter.CompareFilterDto;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -19,4 +20,5 @@ public class CategoryDto {
     String image;
     String name;
     List<CategoryDto> categories = new ArrayList<>();
+    List<CompareFilterDto> filters;
 }

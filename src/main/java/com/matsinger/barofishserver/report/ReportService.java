@@ -1,12 +1,14 @@
 package com.matsinger.barofishserver.report;
 
-import com.matsinger.barofishserver.review.ReviewDto;
+import com.matsinger.barofishserver.review.object.ReviewDto;
 import com.matsinger.barofishserver.review.ReviewService;
-import com.matsinger.barofishserver.user.UserRepository;
 import com.matsinger.barofishserver.user.UserService;
-import com.matsinger.barofishserver.user.object.UserDto;
+import com.matsinger.barofishserver.user.object.UserInfoDto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -21,8 +23,9 @@ public class ReportService {
 
     public ReportDto convert2Dto(Report report) {
         ReportDto reportDto = report.convert2Dto();
-        UserDto user = userService.selectUserInfo(report.getUserId()).convert2Dto();
-        ReviewDto review = reviewService.selectReview(report.getReviewId()).convert2Dto();
+        UserInfoDto user = userService.selectUserInfo(report.getUserId()).convert2Dto();
+        user.setUser(userService.selectUser(report.getUserId()).convert2Dto());
+        ReviewDto review = reviewService.convert2Dto(reviewService.selectReview(report.getReviewId()));
         reportDto.setUser(user);
         reportDto.setReview(review);
         return reportDto;
@@ -44,8 +47,8 @@ public class ReportService {
         return reportRepository.save(report);
     }
 
-    public List<Report> selectReportList() {
-        return reportRepository.findAll();
+    public Page<Report> selectReportList(PageRequest pageRequest, Specification<Report> spec) {
+        return reportRepository.findAll(spec, pageRequest);
     }
 
     public Report selectReport(Integer id) {
@@ -58,7 +61,7 @@ public class ReportService {
         reportRepository.deleteById(id);
     }
 
-    public void deleteReportList(List<Integer> ids){
+    public void deleteReportList(List<Integer> ids) {
         reportRepository.deleteAllById(ids);
     }
 

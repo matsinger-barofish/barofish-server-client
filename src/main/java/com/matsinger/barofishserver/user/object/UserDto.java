@@ -1,26 +1,18 @@
 package com.matsinger.barofishserver.user.object;
 
-import com.matsinger.barofishserver.userauth.UserAuth;
+import jakarta.persistence.*;
 import lombok.*;
 
-import java.util.List;
+import java.sql.Timestamp;
 
 @Getter
-@Setter
 @Builder
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 public class UserDto {
-    private User user;
-    private UserAuth auth;
-    private Integer userId;
-    private String profileImage;
-    private String email;
-    private String name;
-    private String nickname;
-    private String phone;
-    private Grade grade;
-    private Integer point;
-    private Boolean isAgreeMarketing;
-    private List<DeliverPlace> deliverPlaces;
+    private int id;
+    private UserState state;
+    private Timestamp joinAt;
+
 }

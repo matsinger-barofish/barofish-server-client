@@ -1,5 +1,6 @@
 package com.matsinger.barofishserver.user.object;
 
+import com.matsinger.barofishserver.grade.Grade;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -33,7 +34,7 @@ public class UserInfo {
     @Column(name = "nickname", nullable = false, length = 50)
     private String nickname;
     @Basic
-    @Column(name = "phone", nullable = false, length = 11)
+    @Column(name = "phone", nullable = true, length = 11)
     private String phone;
     @Basic
     @Column(name = "is_agree_marketing", nullable = false)
@@ -95,8 +96,8 @@ public class UserInfo {
         this.isAgreeMarketing = isAgreeMarketing;
     }
 
-    public UserDto convert2Dto() {
-        return UserDto.builder().userId(this.getUserId()).profileImage(this.getProfileImage()).email(this.getEmail()).name(
+    public UserInfoDto convert2Dto() {
+        return UserInfoDto.builder().userId(this.getUserId()).profileImage(this.getProfileImage()).email(this.getEmail()).name(
                 this.getName()).nickname(this.getNickname()).phone(this.getPhone()).isAgreeMarketing(this.getIsAgreeMarketing()).point(
                 this.getPoint()).grade(this.getGrade()).build();
     }

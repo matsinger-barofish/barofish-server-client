@@ -1,5 +1,6 @@
 package com.matsinger.barofishserver;
 
+import com.matsinger.barofishserver.deliver.DeliverService;
 import com.matsinger.barofishserver.search.SearchKeywordService;
 import lombok.AllArgsConstructor;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -10,9 +11,15 @@ import org.springframework.stereotype.Component;
 public class ScheduleTasks {
 
     private final SearchKeywordService searchKeywordService;
+    private final DeliverService deliverService;
 
     @Scheduled(cron = "0 0 0 * * 1")
-    public void SearchKeywordSchedule(){
+    public void SearchKeywordSchedule() {
         searchKeywordService.resetRank();
+    }
+
+    @Scheduled(cron = "0 0 */1 * * *")
+    public void refreshDeliverState() {
+        deliverService.refreshOrderDeliverState();
     }
 }

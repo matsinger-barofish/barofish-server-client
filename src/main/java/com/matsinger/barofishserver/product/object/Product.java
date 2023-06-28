@@ -3,7 +3,7 @@ package com.matsinger.barofishserver.product.object;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.matsinger.barofishserver.category.Category;
 import com.matsinger.barofishserver.product.productinfo.*;
-import com.matsinger.barofishserver.review.Review;
+import com.matsinger.barofishserver.review.object.Review;
 import com.matsinger.barofishserver.store.object.Store;
 import jakarta.persistence.*;
 import lombok.*;
@@ -67,6 +67,14 @@ public class Product {
     private int expectedDeliverDay;
 
     @Basic
+    @Column(name = "represent_item_id", nullable = true)
+    private Integer representOptionItemId;
+
+    @Basic
+    @Column(name = "deliver_box_per_amount", nullable = true)
+    private Integer deliverBoxPerAmount;
+
+    @Basic
     @Column(name = "created_at", nullable = false)
     private Timestamp createdAt;
 
@@ -79,7 +87,7 @@ public class Product {
     @JoinColumn(name = "type_id")
     private ProductType productType;
 
-    @Column(name = "delivery_fee", nullable = false)
+    @Column(name = "delivery_fee", nullable = true)
     private int deliveryFee;
 
     public void setProductType(ProductType productType) {
@@ -208,19 +216,19 @@ public class Product {
 
     public ProductListDto convert2ListDto() {
         return ProductListDto.builder().id(this.id).image(this.images.substring(1,
-                images.length() - 1).split(",")[0]).originPrice(this.originPrice).discountRate(this.discountRate).title(
-                this.title).build();
+                images.length() - 1).split(",")[0]).originPrice(this.originPrice).title(this.title).build();
     }
 
     public SimpleProductDto convert2SimpleDto() {
-        return SimpleProductDto.builder().id(this.getId()).category(this.category.convert2Dto()).expectedDeliverDay(this.getExpectedDeliverDay()).images(this.images.substring(
-                1,
-                images.length() -
-                        1).split(",")).title(title).state(this.getState()).originPrice(originPrice).discountRate(
-                discountRate).deliveryInfo(deliveryInfo).deliveryFee(deliveryFee).description(descriptionImages
-        ).descriptionImages(
+
+        return SimpleProductDto.builder().id(this.getId()).category(this.category.convert2Dto()).expectedDeliverDay(this.getExpectedDeliverDay()).images(
+                this.images.substring(1,
+                        images.length() -
+                                1).split(",")).title(title).state(this.getState()).originPrice(originPrice).deliveryInfo(
+                deliveryInfo).deliveryFee(deliveryFee).description(descriptionImages).descriptionImages(
                 descriptionImages.substring(1, descriptionImages.length() - 1).split(",")).type(productType).location(
-                productLocation).process(productProcess).usage(productUsage).storage(productStorage).createdAt(this.getCreatedAt()).build();
+                productLocation).process(productProcess).usage(productUsage).representOptionItemId(this.representOptionItemId).storage(
+                productStorage).deliverBoxPerAmount(this.deliverBoxPerAmount).createdAt(this.getCreatedAt()).build();
     }
 
     @Override

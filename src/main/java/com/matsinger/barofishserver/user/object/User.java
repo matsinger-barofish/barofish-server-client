@@ -1,6 +1,6 @@
 package com.matsinger.barofishserver.user.object;
 
-import com.matsinger.barofishserver.review.Review;
+import com.matsinger.barofishserver.userauth.UserAuth;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -8,7 +8,6 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
 import java.sql.Timestamp;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
@@ -24,6 +23,11 @@ public class User {
     @Column(name = "id", nullable = false)
     private int id;
 
+    @OneToOne(mappedBy = "user", fetch = FetchType.LAZY)
+    private UserInfo userInfo;
+
+    @OneToMany(mappedBy = "user")
+    private List<UserAuth> userAuth;
 //    @Builder.Default
 //    @OneToMany(mappedBy = "user")
 //    @Column(name = "user_id", nullable = false)
@@ -62,6 +66,10 @@ public class User {
 
     public void setJoinAt(Timestamp joinAt) {
         this.joinAt = joinAt;
+    }
+
+    public UserDto convert2Dto() {
+        return UserDto.builder().id(this.id).state(this.state).joinAt(this.joinAt).build();
     }
 
     @Override

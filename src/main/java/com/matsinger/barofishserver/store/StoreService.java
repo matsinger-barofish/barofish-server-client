@@ -1,10 +1,15 @@
 package com.matsinger.barofishserver.store;
 
 
+import com.matsinger.barofishserver.review.ReviewService;
+import com.matsinger.barofishserver.review.object.ReviewStatistic;
 import com.matsinger.barofishserver.store.object.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -22,12 +27,25 @@ public class StoreService {
 
     private final StoreScrapRepository storeScrapRepository;
 
-    public StoreDto convert2Dto(Store store){
+    public StoreDto convert2Dto(Store store, Boolean isUser) {
         StoreInfo storeInfo = selectStoreInfo(store.getId());
+        StoreAdditionalDto
+                additionalDto =
+                isUser ? null : StoreAdditionalDto.builder().settlementRate(storeInfo.getSettlementRate()).bankName(
+                        storeInfo.getBankName()).bankHolder(storeInfo.getBankHolder()).bankAccount(storeInfo.getBankAccount()).representativeName(
+                        storeInfo.getRepresentativeName()).companyId(storeInfo.getCompanyId()).businessType(storeInfo.getBusinessType()).mosRegistrationNumber(
+                        storeInfo.getMosRegistrationNumber()).businessAddress(storeInfo.getBusinessAddress()).postalCode(
+                        storeInfo.getPostalCode()).lotNumberAddress(storeInfo.getLotNumberAddress()).streetNameAddress(
+                        storeInfo.getStreetNameAddress()).addressDetail(storeInfo.getAddressDetail()).tel(storeInfo.getTel()).email(
+                        storeInfo.getEmail()).faxNumber(storeInfo.getFaxNumber()).mosRegistration(storeInfo.getMosRegistration()).businessRegistration(
+                        storeInfo.getBusinessRegistration()).bankAccountCopy(storeInfo.getBankAccountCopy()).build();
         return StoreDto.builder().id(store.getId()).state(store.getState()).loginId(store.getLoginId()).joinAt(store.getJoinAt()).backgroundImage(
                 storeInfo.getBackgroudImage()).profileImage(storeInfo.getProfileImage()).name(storeInfo.getName()).location(
-                storeInfo.getLocation()).visitNote(storeInfo.getVisitNote()).keyword(storeInfo.getKeyword().split(",")).build();
+                storeInfo.getLocation()).visitNote(storeInfo.getVisitNote()).deliverFeeType(storeInfo.getDeliverFeeType()).deliverFee(
+                storeInfo.getDeliverFee()).minOrderPrice(storeInfo.getMinOrderPrice()).keyword(storeInfo.getKeyword().split(
+                ",")).oneLineDescription(storeInfo.getOneLineDescription()).additionalData(additionalDto).build();
     }
+
 
     public Optional<Store> selectStoreOptional(Integer id) {
         try {
@@ -86,11 +104,11 @@ public class StoreService {
         });
     }
 
-    public List<Store> selectStoreList(Boolean isAdmin) {
+    public Page<Store> selectStoreList(Boolean isAdmin, PageRequest pageRequest, Specification<Store> spec) {
         if (isAdmin) {
-            return storeRepository.findAll();
+            return storeRepository.findAll(spec, pageRequest);
         } else {
-            return storeRepository.findAllByStateEquals(StoreState.ACTIVE);
+            return storeRepository.findAllByStateEquals(StoreState.ACTIVE, pageRequest);
         }
     }
 
@@ -160,5 +178,21 @@ public class StoreService {
 
     public Boolean checkLikeStore(Integer storeId, Integer userId) {
         return storeScrapRepository.existsByStoreIdAndUserId(storeId, userId);
+    }
+
+    public Integer getDeliverFee(StoreInfo storeInfo, Integer totalPrice) {
+        switch (storeInfo.getDeliverFeeType()) {
+            case FREE -> {
+                return 0;
+            }
+            case FIX -> {
+                return storeInfo.getDeliverFee();
+            }
+            case FREE_IF_OVER -> {
+                if (totalPrice > storeInfo.getMinOrderPrice()) return 0;
+                else return storeInfo.getDeliverFee();
+            }
+        }
+        return 0;
     }
 }

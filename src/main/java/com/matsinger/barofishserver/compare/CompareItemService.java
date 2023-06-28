@@ -1,9 +1,18 @@
 package com.matsinger.barofishserver.compare;
 
+import com.matsinger.barofishserver.category.CategoryFilterRepository;
+import com.matsinger.barofishserver.category.CategoryService;
+import com.matsinger.barofishserver.compare.filter.CompareFilterDto;
+import com.matsinger.barofishserver.compare.filter.CompareFilterService;
 import com.matsinger.barofishserver.compare.obejct.*;
+import com.matsinger.barofishserver.product.filter.ProductFilterService;
+import com.matsinger.barofishserver.product.filter.ProductFilterValue;
+import com.matsinger.barofishserver.product.filter.ProductFilterValueDto;
 import com.matsinger.barofishserver.product.object.Product;
 import com.matsinger.barofishserver.product.ProductService;
 import com.matsinger.barofishserver.product.object.ProductListDto;
+import com.matsinger.barofishserver.store.StoreService;
+import com.matsinger.barofishserver.store.object.StoreInfo;
 import jakarta.persistence.Tuple;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -22,7 +31,11 @@ public class CompareItemService {
     private final CompareSetRepository compareSetRepository;
 
     private final SaveProductRepository saveProductRepository;
+    private final StoreService storeService;
     private final ProductService productService;
+    private final ProductFilterService productFilterService;
+    private final CategoryFilterRepository categoryFilterRepository;
+    private final CompareFilterService compareFilterService;
 
 
     public List<CompareObject.CompareSetDto> selectPopularCompareSetList(Integer userId) {
@@ -142,5 +155,23 @@ public class CompareItemService {
 
     public Boolean checkSaveProduct(Integer userId, Integer productId) {
         return saveProductRepository.existsById(new SaveProductId(userId, productId));
+    }
+
+    public CompareProductDto convertProduct2Dto(Product product) {
+        StoreInfo storeInfo = storeService.selectStoreInfo(product.getStoreId());
+        List<ProductFilterValueDto>
+                filterValues =
+                productFilterService.selectProductFilterValueListWithProductId(product.getId());
+        List<CompareFilterDto>
+                compareFilterDtos =
+                categoryFilterRepository.findAllByCategoryId(product.getCategory().getCategoryId()).stream().map(v -> compareFilterService.selectCompareFilter(
+                        v.getCompareFilterId()).convert2Dto()).toList();
+        return CompareProductDto.builder().id(product.getId()).image(product.getImages().substring(1,
+                product.getImages().length() -
+                        1).split(",")[0]).title(product.getTitle()).originPrice(product.getOriginPrice()).storeName(
+                storeInfo.getName()).discountRate(product.getDiscountRate()).deliveryFee(product.getDeliveryFee()).type(
+                product.getProductType().getField()).location(product.getProductLocation().getField()).process(product.getProductProcess().getField()).usage(
+                product.getProductUsage().getField()).storage(product.getProductStorage().getField()).compareFilters(
+                compareFilterDtos).filterValues(filterValues).build();
     }
 }

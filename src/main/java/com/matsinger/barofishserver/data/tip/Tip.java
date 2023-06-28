@@ -35,6 +35,9 @@ public class Tip {
     @Column(name = "image", nullable = false, length = -1)
     private String image;
     @Basic
+    @Column(name = "content", nullable = false, length = -1)
+    private String content;
+    @Basic
     @Column(name = "created_at", nullable = false, columnDefinition = "TIMESTAMP")
     @ColumnDefault("CURRENT_TIMESTAMP")
     private Timestamp createdAt;

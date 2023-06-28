@@ -7,6 +7,8 @@ import com.matsinger.barofishserver.product.ProductRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
@@ -25,6 +27,10 @@ public class CurationService {
 
     @Autowired
     private final ProductRepository productRepository;
+
+    public Page<Curation> selectCurationListByAdmin(PageRequest pageRequest) {
+        return curationRepository.findAll(pageRequest);
+    }
 
     public List<Curation> selectCurations() {
         return curationRepository.findAll(Sort.by(Sort.Direction.ASC, "sortNo"));
@@ -53,6 +59,10 @@ public class CurationService {
         });
     }
 
+    public void deleteWithProductId(Integer productId) {
+        curationProductRepository.deleteAllByProductId(productId);
+    }
+
     public Integer selectMaxSortNo() {
         return Integer.valueOf(curationRepository.selectMaxSortNo().get("sortNo").toString());
     }
@@ -69,6 +79,7 @@ public class CurationService {
     public List<CurationProductMap> addProduct(Integer curationId, List<Integer> productIds) {
         ArrayList<CurationProductMap> curationProductMapArrayList = new ArrayList<CurationProductMap>();
         for (Integer id : productIds) {
+            if (checkExistCurationProductMap(curationId, id)) continue;
             CurationProductMap data = new CurationProductMap();
             Curation curation = curationRepository.findById(curationId).orElseThrow();
             Product product = productRepository.findById(id).orElseThrow();
@@ -86,5 +97,9 @@ public class CurationService {
 
     public void updateAllCuration(List<Curation> curations) {
         curationRepository.saveAll(curations);
+    }
+
+    public boolean checkExistCurationProductMap(Integer curationId, Integer productId) {
+        return curationProductRepository.existsByCurationIdAndProductId(curationId, productId);
     }
 }

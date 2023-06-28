@@ -25,6 +25,10 @@ public class PortOneCallbackService {
 
     @Value("${iamport.credentials.secretKey}")
     private String secretKey;
+    @Value("${iamport.credentials.channel-name}")
+    public String channelName;
+    @Value("${iamport.webhook.url}")
+    public String callbackUrl;
 
     public final IamportClient iamportClient;
 

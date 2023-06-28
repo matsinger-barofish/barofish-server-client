@@ -20,7 +20,7 @@ public class Option {
     @Id
     @Column(name = "id", nullable = false)
     private int id;
-        @Basic
+    @Basic
     @Column(name = "product_id", nullable = false)
     private int productId;
 
@@ -57,9 +57,10 @@ public class Option {
     }
 
 
-    public OptionDto convert2Dto(){
+    public OptionDto convert2Dto() {
         return OptionDto.builder().id(this.getId()).isNeeded(this.getIsNeeded()).build();
     }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

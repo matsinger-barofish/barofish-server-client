@@ -26,28 +26,48 @@ public class OptionItem {
     private String name;
 
     @Basic
-    @Column(name = "price", nullable = false)
-    private int price;
+    @Column(name = "discount_price", nullable = false)
+    private int discountPrice;
 
-    @Column(name = "discount_rate", nullable = false)
-    private Integer discountRate;
-
-    @Basic
-    @Column(name = "amount", nullable = true)
+    @Column(name = "amount", nullable = false)
     private Integer amount;
 
+    @Basic
+    @Column(name = "purchase_price", nullable = false)
+    private Integer purchasePrice;
+
+    @Basic
+    @Column(name = "origin_price", nullable = false)
+    private Integer originPrice;
+
+    @Basic
+    @Column(name = "delivery_fee", nullable = false)
+    private Integer deliverFee;
+
+    @Basic
+    @Column(name = "deliver_box_per_amount", nullable = true)
+    private Integer deliverBoxPerAmount;
+
+    @Basic
+    @Column(name = "max_available_amount", nullable = true)
+    private Integer maxAvailableAmount;
+
+
     public void reduceAmount(int amount) {
-        int reducedValue = this.amount - amount;
-        if (reducedValue < 0) {
-            String errorMessage = String.format("'%s' 상품의 재고가 부족합니다.", this.name);
-            throw new Error(errorMessage);
+        if (this.amount != null) {
+            int reducedValue = this.amount - amount;
+            if (reducedValue < 0) {
+                String errorMessage = String.format("'%s' 상품의 재고가 부족합니다.", this.name);
+                throw new Error(errorMessage);
+            }
+            this.amount = reducedValue;
         }
-        this.amount = reducedValue;
     }
 
     public OptionItemDto convert2Dto() {
-        return OptionItemDto.builder().optionId(this.getOptionId()).id(this.getId()).name(this.getName()).discountRate(
-                this.getDiscountRate()).price(this.getPrice()).amount(this.getAmount()).build();
+        return OptionItemDto.builder().id(this.id).optionId(this.getOptionId()).name(this.name).discountPrice(this.discountPrice).amount(
+                this.amount).purchasePrice(this.purchasePrice).originPrice(this.originPrice).deliveryFee(this.deliverFee).deliverBoxPerAmount(
+                this.deliverBoxPerAmount).maxAvailableAmount(this.maxAvailableAmount).build();
     }
 
     public int getId() {
@@ -59,7 +79,6 @@ public class OptionItem {
     }
 
 
-
     public String getName() {
         return name;
     }
@@ -68,28 +87,18 @@ public class OptionItem {
         this.name = name;
     }
 
-    public int getPrice() {
-        return price;
-    }
-
-    public void setPrice(int price) {
-        this.price = price;
-    }
-
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         OptionItem that = (OptionItem) o;
-        return id == that.id &&
-                optionId == that.getOptionId() &&
-                price == that.price &&
-                Objects.equals(name, that.name);
+        return id == that.id && optionId == that.getOptionId() && Objects.equals(name, that.name);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, getOptionId(), name, price);
+        return Objects.hash(id, getOptionId(), name);
     }
+
 }

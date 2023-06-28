@@ -10,10 +10,9 @@ import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.FileWriter;
-import java.io.IOException;
+import java.io.*;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.nio.Buffer;
 import java.util.*;
 import java.util.regex.MatchResult;
@@ -31,6 +30,13 @@ public class S3Uploader {
     @Value("${cloud.aws.s3.bucket}")
     private String bucket;
 
+    @Value("${cloud.aws.s3.imageUrl}")
+    private String s3Url;
+
+    public String getS3Url() {
+        return this.s3Url;
+    }
+
     // MultipartFile을 전달받아 File로 전환한 후 S3에 업로드
     public String upload(MultipartFile multipartFile, ArrayList<String> dirName) throws IOException {
         if (multipartFile.getContentType().startsWith("image") && !validateImageType(multipartFile))
@@ -41,7 +47,7 @@ public class S3Uploader {
         return upload(uploadFile, dirName);
     }
 
-    private String upload(File uploadFile, ArrayList<String> dirName) {
+    public String upload(File uploadFile, ArrayList<String> dirName) {
         String fileName = String.join("/", dirName) + "/" + buildFileName(uploadFile.getName());
         String uploadImageUrl = putS3(uploadFile, fileName);
         removeNewFile(uploadFile);  // 로컬에 생성된 File 삭제 (MultipartFile -> File 전환 하며 로컬에 파일 생성됨)
@@ -76,7 +82,7 @@ public class S3Uploader {
     }
 
     public Boolean validateImageType(MultipartFile file) throws IOException {
-        List<String> allowedImageType = List.of("image/jpeg", "image/png", "image/webp", "image/gif");
+        List<String> allowedImageType = List.of("image/jpeg", "image/png", "image/webp", "image/gif", "image/svg+xml");
         return allowedImageType.contains(file.getContentType());
     }
 
@@ -145,12 +151,14 @@ public class S3Uploader {
         Pattern imgPattern = Pattern.compile("<img src=\"data:(image/.*?);base64,(.*?)\">");
         Matcher matcher = imgPattern.matcher(content);
         List<String> imgUrls = new ArrayList<>();
+        System.out.println(imgUrls);
         while (matcher.find()) {
             String base64String = matcher.group();
             String[] splitedString = base64String.replaceAll("<img src=\"data:(image/.*?);base64,(.*?)\"(.*?)>",//(.*?)
                     "$1&--&$2").split("&--&");
             String mimetype = splitedString[0];
-            File file = convertBase64ToFile(splitedString[1]);
+            System.out.println(mimetype);
+            File file = convertBase64ToFile(splitedString[1], mimetype);
             String imgUrl = upload(file, path);
             content =
                     content.replace(base64String,
@@ -162,10 +170,13 @@ public class S3Uploader {
     }
 
 
-    public File convertBase64ToFile(String base64) {
+    public File convertBase64ToFile(String base64, String mimetype) {
         try {
             byte[] bytes = Base64.getDecoder().decode(base64);
-            File tmpFile = File.createTempFile("tmp", ".jpg");
+            File
+                    tmpFile =
+                    mimetype.equals("image/svg+xml") ? File.createTempFile("tmp", ".svg") : File.createTempFile("tmp",
+                            ".jpg");
             FileOutputStream fos = new FileOutputStream(tmpFile);
             fos.write(bytes);
             fos.close();
@@ -175,5 +186,23 @@ public class S3Uploader {
             return null;
         }
 
+    }
+
+    public File extractBase64FromImageUrl(String imageUrl) throws MalformedURLException {
+        URL url = new URL(imageUrl);
+        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+        try (InputStream inputStream = url.openStream()) {
+            byte[] buffer = new byte[4096];
+            int bytesRead;
+            while ((bytesRead = inputStream.read(buffer)) != -1) {
+                byteArrayOutputStream.write(buffer, 0, bytesRead);
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        byte[] imageBytes = byteArrayOutputStream.toByteArray();
+
+        String base64Image = Base64.getEncoder().encodeToString(imageBytes);
+        return convertBase64ToFile(base64Image, null);
     }
 }

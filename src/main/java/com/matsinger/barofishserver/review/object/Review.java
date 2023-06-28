@@ -1,12 +1,15 @@
-package com.matsinger.barofishserver.review;
+package com.matsinger.barofishserver.review.object;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.matsinger.barofishserver.order.object.Orders;
 import com.matsinger.barofishserver.product.object.Product;
 import com.matsinger.barofishserver.store.object.Store;
+import com.matsinger.barofishserver.user.object.User;
 import jakarta.persistence.*;
 import lombok.*;
 
 import java.sql.Timestamp;
+import java.util.List;
 import java.util.Objects;
 
 @Entity
@@ -26,27 +29,33 @@ public class Review {
 //    private int productId;
 
     @ManyToOne
-    @JsonBackReference
-    @JoinColumn(name = "product_id")
+    @JoinColumn(name = "product_id", insertable = false, updatable = false)
     private Product product;
-
+    @Basic
+    @Column(name = "product_id", nullable = false)
+    private Integer productId;
     @ManyToOne
-    @JsonBackReference
-    @JoinColumn(name = "store_id")
+    @JoinColumn(name = "store_id", insertable = false, updatable = false)
     private Store store;
+    @Basic
+    @Column(name = "store_id", nullable = false)
+    private Integer storeId;
 
     @Basic
     @Column(name = "user_id", nullable = false)
     private int userId;
 
+    @ManyToOne
+    @JoinColumn(name = "user_id", insertable = false, updatable = false)
+    private User user;
+
+    @ManyToOne
+    @JoinColumn(name = "order_id", insertable = false, updatable = false)
+    private Orders order;
 
     @Basic
     @Column(name = "order_id")
     private String orderId;
-    @Basic
-    @Column(name = "evaluation", nullable = false)
-    @Enumerated(EnumType.STRING)
-    private ReviewEvaluation evaluation;
     @Basic
     @Column(name = "images", nullable = false, length = -1)
     private String images;
@@ -56,6 +65,9 @@ public class Review {
     @Basic
     @Column(name = "created_at", nullable = false)
     private Timestamp createdAt;
+
+    @OneToMany(mappedBy = "review")
+    private List<ReviewEvaluation> evaluations;
 
     public int getId() {
         return id;
@@ -89,13 +101,6 @@ public class Review {
 //        this.userId = userId;
 //    }
 
-    public ReviewEvaluation getEvaluation() {
-        return evaluation;
-    }
-
-    public void setEvaluation(ReviewEvaluation evaluation) {
-        this.evaluation = evaluation;
-    }
 
     public String getImages() {
         return images;
@@ -122,9 +127,10 @@ public class Review {
     }
 
     public ReviewDto convert2Dto() {
-        return ReviewDto.builder().store(this.store.getStoreInfo().convert2Dto()).evaluation(
-                this.evaluation).images(images.substring(1,
-                images.length() - 1).split(",")).content(this.content).createdAt(this.createdAt).build();
+        return ReviewDto.builder().id(this.id).store(this.store.getStoreInfo().convert2Dto()).images(images.substring(1,
+                images.length() -
+                        1).split(",")).content(this.content).createdAt(this.createdAt).evaluations(this.evaluations !=
+                null ? this.evaluations.stream().map(v -> v.getEvaluation()).toList() : null).build();
     }
 
     @Override
@@ -136,7 +142,6 @@ public class Review {
 //                productId == that.productId &&
 //                storeId == that.storeId &&
 //                userId == that.userId &&
-                Objects.equals(evaluation, that.evaluation) &&
                 Objects.equals(images, that.images) &&
                 Objects.equals(content, that.content) &&
                 Objects.equals(createdAt, that.createdAt);
@@ -144,6 +149,6 @@ public class Review {
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, evaluation, images, content, createdAt);
+        return Objects.hash(id, images, content, createdAt);
     }
 }

@@ -1,7 +1,7 @@
 package com.matsinger.barofishserver.report;
 
-import com.matsinger.barofishserver.review.ReviewDto;
-import com.matsinger.barofishserver.user.object.UserDto;
+import com.matsinger.barofishserver.review.object.ReviewDto;
+import com.matsinger.barofishserver.user.object.UserInfoDto;
 import lombok.*;
 
 import java.sql.Timestamp;
@@ -13,7 +13,8 @@ import java.sql.Timestamp;
 @NoArgsConstructor
 public class ReportDto {
     Integer id;
-    UserDto user;
+    UserInfoDto user;
+
     ReviewDto review;
     String content;
     Timestamp createdAt;

@@ -80,9 +80,11 @@ public class DeliverPlaceController {
                     DeliverPlace.builder().userId(userId).name(name).receiverName(receiverName).tel(tel).address(address).addressDetail(
                             addressDetail).deliverMessage(deliverMessage).isDefault(data.isDefault).postalCode(data.postalCode).build();
             if (data.isDefault) {
-                DeliverPlace place = deliverPlaceService.selectDefaultDeliverPlace(userId);
-                place.setIsDefault(false);
-                deliverPlaceService.updateDeliverPlace(place);
+                Optional<DeliverPlace> place = deliverPlaceService.selectDefaultDeliverPlace(userId);
+                if (place != null && place.isPresent()) {
+                    place.get().setIsDefault(false);
+                    deliverPlaceService.updateDeliverPlace(place.get());
+                }
             }
             deliverPlaceService.addDeliverPlace(deliverPlace);
 
@@ -131,10 +133,19 @@ public class DeliverPlaceController {
                 String deliverMessage = utils.validateString(data.deliverMessage, 100L, "배송메시지");
                 deliverPlace.setDeliverMessage(deliverMessage);
             }
-            if (data.isDefault) {
-                DeliverPlace place = deliverPlaceService.selectDefaultDeliverPlace(deliverPlace.getUserId());
-                place.setIsDefault(false);
-                deliverPlaceService.updateDeliverPlace(place);
+            if (data.isDefault != null) {
+                if (data.isDefault) {
+                    Optional<DeliverPlace>
+                            place =
+                            deliverPlaceService.selectDefaultDeliverPlace(deliverPlace.getUserId());
+                    if (place != null && place.isPresent()) {
+                        place.get().setIsDefault(false);
+                        deliverPlaceService.updateDeliverPlace(place.get());
+                    }
+                    deliverPlace.setIsDefault(true);
+                } else {
+                    deliverPlace.setIsDefault(false);
+                }
             }
             deliverPlaceService.updateDeliverPlace(deliverPlace);
             res.setData(Optional.ofNullable(deliverPlace));

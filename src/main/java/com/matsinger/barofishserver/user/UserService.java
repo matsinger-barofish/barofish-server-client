@@ -1,17 +1,20 @@
 package com.matsinger.barofishserver.user;
 
+import com.matsinger.barofishserver.grade.Grade;
+import com.matsinger.barofishserver.grade.GradeRepository;
 import com.matsinger.barofishserver.user.object.*;
 import com.matsinger.barofishserver.userauth.LoginType;
 import com.matsinger.barofishserver.userauth.UserAuth;
 import com.matsinger.barofishserver.userauth.UserAuthRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Example;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.*;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Random;
+
 
 @Service
 @RequiredArgsConstructor
@@ -24,16 +27,16 @@ public class UserService {
     private final DeliverPlaceRepository deliverPlaceRepository;
     private final GradeRepository gradeRepository;
 
-    public Page<UserDto> selectUserInfoList(Integer page, Integer take) {
-        return userInfoRepository.findAll(Pageable.ofSize(take).withPage(page)).map(userInfo -> {
-            UserDto userDto = userInfo.convert2Dto();
-            userDto.setUser(selectUser(userInfo.getUserId()));
+    public Page<UserInfoDto> selectUserInfoList(PageRequest pageRequest, Specification<UserInfo> spec) {
+        return userInfoRepository.findAll(spec, pageRequest).map(userInfo -> {
+            UserInfoDto userInfoDto = userInfo.convert2Dto();
+            userInfoDto.setUser(selectUser(userInfo.getUserId()).convert2Dto());
             UserAuth userAuth = selectUserAuth(userInfo.getUserId());
-            userAuth.setPassword(null);
-            userDto.setAuth(userAuth);
+            if (userAuth != null) userAuth.setPassword(null);
+            userInfoDto.setAuth(userAuth.convert2Dto());
             List<DeliverPlace> deliverPlaces = selectUserDeliverPlaceList(userInfo.getUserId());
-            userDto.setDeliverPlaces(deliverPlaces);
-            return userDto;
+            userInfoDto.setDeliverPlaces(deliverPlaces);
+            return userInfoDto;
         });
     }
 
@@ -41,6 +44,14 @@ public class UserService {
         return deliverPlaceRepository.findById(id).orElseThrow(() -> {
             throw new Error("배송지 정보를 찾을 수 없습니다.");
         });
+    }
+
+    public Boolean checkExistWithPhone(String phone) {
+        return userInfoRepository.existsByPhone(phone);
+    }
+
+    public Boolean checkExistWithNickname(String nickname) {
+        return userInfoRepository.existsByNickname(nickname);
     }
 
     public Optional<User> selectUserOptional(Integer id) {
@@ -135,5 +146,45 @@ public class UserService {
         return gradeRepository.findById(id).orElseThrow(() -> {
             throw new Error("등급 정보를 찾을 수 없습니다.");
         });
+    }
+
+    public void addPoint(UserInfo userInfo, Integer point) {
+        userInfo.setPoint(userInfo.getPoint() + point);
+        userInfoRepository.save(userInfo);
+    }
+
+    public List<User> selectUserWithState(UserState state) {
+        return userRepository.findAllByState(state);
+    }
+
+    public String generateRandomString(int length) {
+        StringBuilder sb = new StringBuilder(length);
+        Random random = new Random();
+
+        for (int i = 0; i < length; i++) {
+            int randomType = random.nextInt(3);
+            char randomChar;
+
+            switch (randomType) {
+                case 0:
+                    randomChar = (char) (random.nextInt(10) + '0');  // Numbers
+                    break;
+                case 1:
+                    randomChar = (char) (random.nextInt(26) + 'A');  // Uppercase letters
+                    break;
+                default:
+                    randomChar = (char) (random.nextInt(26) + 'a');  // Lowercase letters
+                    break;
+            }
+
+            sb.append(randomChar);
+        }
+
+        return sb.toString();
+    }
+
+
+    public UserInfo selectUserWithPhone(String phone) {
+        return userInfoRepository.findByPhone(phone);
     }
 }

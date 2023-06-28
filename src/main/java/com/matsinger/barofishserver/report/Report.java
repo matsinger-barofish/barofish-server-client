@@ -1,5 +1,7 @@
 package com.matsinger.barofishserver.report;
 
+import com.matsinger.barofishserver.review.object.Review;
+import com.matsinger.barofishserver.user.object.User;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.ColumnDefault;
@@ -23,9 +25,17 @@ public class Report {
     @Column(name = "user_id", nullable = false)
     private int userId;
 
+    @ManyToOne
+    @JoinColumn(name = "user_id", updatable = false, insertable = false)
+    private User user;
+
     @Basic
     @Column(name = "review_id", nullable = false)
     private int reviewId;
+
+    @ManyToOne
+    @JoinColumn(name = "review_id", updatable = false, insertable = false)
+    private Review review;
 
     @Basic
     @Column(name = "content", nullable = false)
@@ -33,7 +43,6 @@ public class Report {
 
     @Basic
     @Column(name = "created_at", nullable = false)
-    @ColumnDefault("CURRENT_TIMESTAMP()")
     private Timestamp createdAt;
 
     @Basic

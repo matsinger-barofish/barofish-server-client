@@ -1,9 +1,8 @@
 package com.matsinger.barofishserver.store.object;
 
-import com.matsinger.barofishserver.product.object.Product;
 import com.matsinger.barofishserver.product.object.ProductListDto;
-import com.matsinger.barofishserver.review.Review;
-import com.matsinger.barofishserver.review.ReviewDto;
+import com.matsinger.barofishserver.review.object.ReviewDto;
+import com.matsinger.barofishserver.review.object.ReviewStatistic;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
@@ -21,8 +20,15 @@ public class SimpleStore {
     String name;
     String location;
     String[] keyword;
+    String visitNote;
+    StoreDeliverFeeType deliverFeeType;
+    Integer deliverFee;
+    Integer minOrderPrice;
+    String oneLineDescription;
 
     Boolean isLike;
+
+    List<ReviewStatistic> reviewStatistic;
 
     List<ProductListDto> products = new ArrayList<>();
     List<ReviewDto> reviews = new ArrayList<>();

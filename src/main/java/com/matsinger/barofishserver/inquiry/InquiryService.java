@@ -7,6 +7,9 @@ import com.matsinger.barofishserver.user.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -32,12 +35,12 @@ public class InquiryService {
         return inquiryDto;
     }
 
-    public List<Inquiry> selectAllInquiryList() {
-        return inquiryRepository.findAll();
+    public Page<Inquiry> selectAllInquiryList(PageRequest pageRequest, Specification<Inquiry> spec) {
+        return inquiryRepository.findAll(spec, pageRequest);
     }
 
-    public List<Inquiry> selectStoreInquiryList(Integer storeId) {
-        return inquiryRepository.findAllByProduct_StoreId(storeId);
+    public Page<Inquiry> selectStoreInquiryList(Integer storeId, PageRequest pageRequest) {
+        return inquiryRepository.findAllByProduct_StoreId(storeId,pageRequest);
     }
 
     public List<Inquiry> selectInquiryListWithProductId(Integer productId) {

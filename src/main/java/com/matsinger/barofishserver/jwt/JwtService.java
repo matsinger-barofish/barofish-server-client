@@ -75,7 +75,7 @@ public class JwtService {
             } else if (auth.equals(TokenAuthType.ADMIN)) {
                 //TODO: 관리자의 상태에 따른 유효성 검증
                 Optional<Admin> admin = adminService.selectAdminOptional(id);
-                if (!admin.isPresent() || !admin.get().getState().equals(AdminState.ACTIVE)) {
+                if (admin == null || !admin.isPresent() || !admin.get().getState().equals(AdminState.ACTIVE)) {
                     return null;
                 }
                 info.setType(auth);

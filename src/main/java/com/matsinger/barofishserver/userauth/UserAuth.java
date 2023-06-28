@@ -1,5 +1,6 @@
 package com.matsinger.barofishserver.userauth;
 
+import com.matsinger.barofishserver.user.object.User;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -26,9 +27,9 @@ public class UserAuth {
     @Column(name = "user_id", nullable = false)
     private Integer userId;
 
-//    @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-//    @JoinColumn(name = "user_id", nullable = true)
-//    private User user;
+    @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @JoinColumn(name = "user_id", insertable = false, updatable = false)
+    private User user;
 
     // 연관관계 편의 메서드
 //    public void setUser(User user) {
@@ -39,4 +40,7 @@ public class UserAuth {
     @Column(name = "password", nullable = false, length = 60)
     private String password;
 
+    public UserAuthDto convert2Dto() {
+        return UserAuthDto.builder().loginId(this.loginId).userId(this.userId).loginType(this.loginType).build();
+    }
 }

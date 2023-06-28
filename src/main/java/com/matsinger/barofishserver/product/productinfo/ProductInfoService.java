@@ -1,5 +1,6 @@
 package com.matsinger.barofishserver.product.productinfo;
 
+import com.matsinger.barofishserver.product.object.ProductState;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -24,6 +25,18 @@ public class ProductInfoService {
         });
     }
 
+    public ProductLocation addProductLocation(ProductLocation location) {
+        return locationRepository.save(location);
+    }
+
+    public ProductLocation updateProductLocation(ProductLocation location) {
+        return locationRepository.save(location);
+    }
+
+    public void deleteProductLocation(List<Integer> ids) {
+        locationRepository.deleteAllById(ids);
+    }
+
     public List<ProductProcess> selectProductProcessList() {
         return processRepository.findAll();
     }
@@ -32,6 +45,18 @@ public class ProductInfoService {
         return processRepository.findById(id).orElseThrow(() -> {
             throw new Error("가공 정보를 찾을 수 없습니다.");
         });
+    }
+
+    public ProductProcess addProductProcess(ProductProcess process) {
+        return processRepository.save(process);
+    }
+
+    public ProductProcess updateProductProcess(ProductProcess process) {
+        return processRepository.save(process);
+    }
+
+    public void deleteProductProcess(List<Integer> ids) {
+        processRepository.deleteAllById(ids);
     }
 
     public List<ProductStorage> selectProductStorageList() {
@@ -44,6 +69,18 @@ public class ProductInfoService {
         });
     }
 
+    public ProductStorage addProductStorage(ProductStorage storage) {
+        return storageRepository.save(storage);
+    }
+
+    public ProductStorage updateProductStorage(ProductStorage storage) {
+        return storageRepository.save(storage);
+    }
+
+    public void deleteProductStorage(List<Integer> ids) {
+        storageRepository.deleteAllById(ids);
+    }
+
     public List<ProductType> selectProductTypeList() {
         return typeRepository.findAll();
     }
@@ -54,6 +91,18 @@ public class ProductInfoService {
         });
     }
 
+    public ProductType addProductType(ProductType type) {
+        return typeRepository.save(type);
+    }
+
+    public ProductType updateProductType(ProductType type) {
+        return typeRepository.save(type);
+    }
+
+    public void deleteProductType(List<Integer> ids) {
+        typeRepository.deleteAllById(ids);
+    }
+
     public List<ProductUsage> selectProductUsageList() {
         return usageRepository.findAll();
     }
@@ -62,5 +111,17 @@ public class ProductInfoService {
         return usageRepository.findById(id).orElseThrow(() -> {
             throw new Error("용도 정보를 찾을 수 없습니다.");
         });
+    }
+
+    public ProductUsage addProductUsage(ProductUsage usage) {
+        return usageRepository.save(usage);
+    }
+
+    public ProductUsage updateProductUsage(ProductUsage usage) {
+        return usageRepository.save(usage);
+    }
+
+    public void deleteProductUsage(List<Integer> ids) {
+        usageRepository.deleteAllById(ids);
     }
 }

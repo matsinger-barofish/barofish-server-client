@@ -2,7 +2,7 @@ package com.matsinger.barofishserver.inquiry;
 
 import com.matsinger.barofishserver.product.object.ProductListDto;
 import com.matsinger.barofishserver.store.object.SimpleStore;
-import com.matsinger.barofishserver.user.object.UserDto;
+import com.matsinger.barofishserver.user.object.UserInfoDto;
 import lombok.*;
 
 import java.sql.Timestamp;
@@ -17,7 +17,7 @@ public class InquiryDto {
     private InquiryType type;
     private Boolean isSecret;
     private int productId;
-    private UserDto user;
+    private UserInfoDto user;
     private String content;
     private Timestamp createdAt;
     private String answer;

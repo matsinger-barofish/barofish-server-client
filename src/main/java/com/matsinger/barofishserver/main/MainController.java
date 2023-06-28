@@ -65,9 +65,7 @@ public class MainController {
             for (Curation curation : curations) {
                 List<Product> products = curationService.selectCurationProducts(curation.getId());
                 CurationDto curationDto = curation.convert2Dto();
-                curationDto.setProducts(products.stream().map(product -> {
-                    return product.convert2ListDto();
-                }).toList());
+                curationDto.setProducts(products.stream().map(productService::convert2ListDto).toList());
                 curationDtos.add(curationDto);
 
             }
@@ -80,10 +78,8 @@ public class MainController {
                     tokenInfo.isPresent() &&
                     tokenInfo.get().getType().equals(TokenAuthType.USER) ? storeService.checkLikeStore(storeId,
                     tokenInfo.get().getId()) : false);
-            List<Tip> tips = tipService.selectTipList(null);
-            Banner subBanner = bannerService.selectMainBanner();
-            data.setTips(tips);
-            data.setSubBanner(subBanner);
+            List<Banner> subBanners = bannerService.selectMainBanner();
+            data.setSubBanner(subBanners);
             data.setCurations(curationDtos);
             data.setBanners(banners);
             data.setTopBars(topBars);

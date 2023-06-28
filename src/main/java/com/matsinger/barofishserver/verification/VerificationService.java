@@ -5,6 +5,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Service;
 
+import java.util.Random;
+
 @RequiredArgsConstructor
 @Slf4j
 @Service
@@ -21,9 +23,24 @@ public class VerificationService {
         }
     }
 
+    public Verification selectVerificationByImpUid(String impUid){
+        return verificationRepository.findFirstByTargetEqualsOrderByCreateAtDesc(impUid);
+    }
+
+    public  String generateVerificationCode(int length) {
+        StringBuilder code = new StringBuilder();
+        Random random = new Random();
+
+        for (int i = 0; i < length; i++) {
+            int digit = random.nextInt(10);
+            code.append(digit);
+        }
+
+        return code.toString();
+    }
+
     public Verification selectVerification(String target, String verificationNumber) {
         try {
-            System.out.println(target + verificationNumber);
             return verificationRepository.findFirstByTargetEqualsAndVerificationNumberEqualsOrderByIdDesc(target, verificationNumber);
         } catch (Exception e) {
             System.out.println(e);

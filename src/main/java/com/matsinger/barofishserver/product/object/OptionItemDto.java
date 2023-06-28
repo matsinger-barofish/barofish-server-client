@@ -9,7 +9,12 @@ public class OptionItemDto {
     Integer id;
     Integer optionId;
     String name;
-    Integer discountRate;
-    Integer price;
+    Integer discountPrice;
     Integer amount;
+    Integer purchasePrice;
+    Integer originPrice;
+    Integer deliveryFee;
+    Integer deliverBoxPerAmount;
+    Integer maxAvailableAmount;
+
 }

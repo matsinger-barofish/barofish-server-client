@@ -1,11 +1,19 @@
 package com.matsinger.barofishserver.notification;
 
 import jakarta.persistence.*;
+import lombok.*;
+import org.hibernate.annotations.ColumnDefault;
+import org.hibernate.annotations.CreationTimestamp;
 
 import java.sql.Timestamp;
 import java.util.Objects;
 
 @Entity
+@Getter
+@Setter
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 @Table(name = "notification", schema = "barofish_dev", catalog = "")
 public class Notification {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -17,7 +25,8 @@ public class Notification {
     private int userId;
     @Basic
     @Column(name = "type", nullable = false)
-    private Object type;
+    @Enumerated(EnumType.STRING)
+    private NotificationType type;
     @Basic
     @Column(name = "title", nullable = false, length = 100)
     private String title;
@@ -26,6 +35,7 @@ public class Notification {
     private String content;
     @Basic
     @Column(name = "created_at", nullable = false)
+    @CreationTimestamp
     private Timestamp createdAt;
 
     public int getId() {
@@ -44,11 +54,11 @@ public class Notification {
         this.userId = userId;
     }
 
-    public Object getType() {
+    public NotificationType getType() {
         return type;
     }
 
-    public void setType(Object type) {
+    public void setType(NotificationType type) {
         this.type = type;
     }
 

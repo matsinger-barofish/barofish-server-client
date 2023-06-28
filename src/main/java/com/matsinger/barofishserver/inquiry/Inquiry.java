@@ -1,6 +1,7 @@
 package com.matsinger.barofishserver.inquiry;
 
 import com.matsinger.barofishserver.product.object.Product;
+import com.matsinger.barofishserver.user.object.User;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -29,10 +30,15 @@ public class Inquiry {
     @Basic
     @Column(name = "product_id", nullable = false)
     private int productId;
+    @ManyToOne
+    @JoinColumn(name = "product_id", insertable = false, updatable = false)
+    private Product product;
     @Basic
     @Column(name = "user_id", nullable = false)
     private int userId;
-
+    @ManyToOne
+    @JoinColumn(name = "user_id", updatable = false, insertable = false)
+    private User user;
     @Basic
     @Column(name = "content", nullable = false, length = -1)
     private String content;
@@ -45,10 +51,6 @@ public class Inquiry {
     @Basic
     @Column(name = "answered_at", nullable = true)
     private Timestamp answeredAt;
-
-    @ManyToOne
-    @JoinColumn(name = "product_id",insertable = false,updatable = false)
-    private Product product;
 
     public int getId() {
         return id;
@@ -115,18 +117,12 @@ public class Inquiry {
         this.answeredAt = answetedAt;
     }
 
-    public InquiryDto convert2Dto(){
-        return InquiryDto.builder()
-                .id(this.getId())
-                .type(this.getType())
-                .isSecret(this.getIsSecret())
-                .productId(this.getProductId())
-                .content(this.getContent())
-                .createdAt(this.getCreatedAt())
-                .answeredAt(this.getAnsweredAt())
-                .answer(this.getAnswer())
-                         .build();
+    public InquiryDto convert2Dto() {
+        return InquiryDto.builder().id(this.getId()).type(this.getType()).isSecret(this.getIsSecret()).productId(this.getProductId()).content(
+                this.getContent()).createdAt(this.getCreatedAt()).answeredAt(this.getAnsweredAt()).answer(this.getAnswer()).user(
+                user.getUserInfo().convert2Dto()).build();
     }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

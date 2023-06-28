@@ -7,7 +7,6 @@ import com.matsinger.barofishserver.jwt.JwtService;
 import com.matsinger.barofishserver.jwt.TokenAuthType;
 import com.matsinger.barofishserver.jwt.TokenInfo;
 import com.matsinger.barofishserver.product.ProductService;
-import com.matsinger.barofishserver.product.object.OptionItem;
 import com.matsinger.barofishserver.product.object.OptionItemDto;
 import com.matsinger.barofishserver.product.object.Product;
 import com.matsinger.barofishserver.utils.Common;
@@ -79,19 +78,10 @@ public class BasketController {
             List<BasketProductDto> productDtos = new ArrayList<>();
 
             for (AddBasketOptionReq optionReq : data.getOptions()) {
-//                OptionItem optionItem = productService.selectOptionItem(optionReq.getOptionId());
-                BasketProductInfo
-                        info =
-                        BasketProductInfo.builder().userId(tokenInfo.get().getId()).productId(product.getId()).amount(
-                                optionReq.getAmount()).deliveryFee(product.getDeliveryFee()).build();
-                infos.add(info);
-            }
-            for (AddBasketOptionReq optionReq : data.getOptions()) {
-                basketService.addProductToBasket(tokenInfo.get().getId(),
+                basketService.processBasketProductAdd(tokenInfo.get().getId(),
                         product.getId(),
-                        optionReq.getOptionId(),
-                        optionReq.getAmount(),
-                        product.getDeliveryFee());
+                        optionReq.optionId,
+                        optionReq.getAmount());
             }
             res.setData(Optional.of(true));
             return ResponseEntity.ok(res);

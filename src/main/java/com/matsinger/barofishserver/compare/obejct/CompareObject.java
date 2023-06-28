@@ -1,5 +1,7 @@
 package com.matsinger.barofishserver.compare.obejct;
 
+import com.matsinger.barofishserver.compare.filter.CompareFilter;
+import com.matsinger.barofishserver.compare.filter.CompareFilterDto;
 import com.matsinger.barofishserver.product.object.ProductListDto;
 import lombok.*;
 

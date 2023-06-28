@@ -15,4 +15,8 @@ public interface CurationProductMapRepository extends JpaRepository<CurationProd
     @Query(value = "delete from curation_product_map WHERE curation_id = :curationId and product_id in (:productIds);", nativeQuery = true)
     public void deleteAllByProductIdIn(@Param("curationId") Integer curationId,
                                        @Param("productIds") List<Integer> productIds);
+
+    Boolean existsByCurationIdAndProductId(Integer curationId, Integer productId);
+
+    void deleteAllByProductId(Integer productId);
 }

@@ -33,7 +33,7 @@ public interface CompareSetRepository extends JpaRepository<CompareSet, Integer>
             "         JOIN compare_item ci ON cs.id = ci.compare_set_id\n" +
             "WHERE ci.product_id = :productId)\n" +
             "GROUP BY product_id\n" +
-            "ORDER BY rand()\n" +
+//            "ORDER BY rand()\n" +
             "limit 3;", nativeQuery = true)
     public List<Tuple> selectRecommendCompareSet(@Param("productId") Integer productId);
 }

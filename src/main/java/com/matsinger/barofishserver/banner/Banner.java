@@ -1,10 +1,19 @@
 package com.matsinger.barofishserver.banner;
 
+import com.matsinger.barofishserver.category.Category;
+import com.matsinger.barofishserver.data.curation.object.Curation;
+import com.matsinger.barofishserver.notice.Notice;
 import jakarta.persistence.*;
+import lombok.*;
 
 import java.util.Objects;
 
 @Entity
+@Setter
+@Getter
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 @Table(name = "banner", schema = "barofish_dev", catalog = "")
 public class Banner {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -22,15 +31,39 @@ public class Banner {
     @Basic
     @Column(name = "image", nullable = false, length = -1)
     private String image;
+
+    @Basic
+    @Column(name = "link", nullable = true)
+    private String link;
     @Basic
     @Column(name = "curation_id", nullable = true)
     private Integer curationId;
+    @ManyToOne
+    @JoinColumn(name = "curation_id", updatable = false, insertable = false)
+    private Curation curation;
     @Basic
     @Column(name = "notice_id", nullable = true)
     private Integer noticeId;
+    @ManyToOne
+    @JoinColumn(name = "notice_id", insertable = false, updatable = false)
+    private Notice notice;
     @Basic
     @Column(name = "category_id", nullable = true)
     private Integer categoryId;
+
+    @ManyToOne
+    @JoinColumn(name = "category_id", updatable = false, insertable = false)
+    private Category category;
+
+    public BannerDto convert2Dto() {
+        return BannerDto.builder().id(this.id).state(this.state).type(this.type).curationId(this.curation !=
+                null ? this.curation.getId() : null).curationName(this.curation !=
+                null ? this.curation.getTitle() : null).noticeId(this.notice !=
+                null ? this.notice.getId() : null).noticeTitle(this.notice !=
+                null ? this.notice.getTitle() : null).categoryId(this.category !=
+                null ? this.category.getId() : null).categoryName(this.category !=
+                null ? this.category.getName() : null).image(this.image).link(this.link).build();
+    }
 
     public int getId() {
         return id;

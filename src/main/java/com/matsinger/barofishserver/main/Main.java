@@ -17,7 +17,6 @@ public class Main {
     List<TopBar> topBars;
     List<Banner> banners;
     List<CurationDto> curations;
-    Banner subBanner;
+    List<Banner> subBanner;
     SimpleStore store;
-    List<Tip> tips;
 }

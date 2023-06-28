@@ -2,6 +2,9 @@ package com.matsinger.barofishserver.data.tip;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -11,6 +14,10 @@ import java.util.List;
 public class TipService {
     @Autowired
     private final TipRepository tipRepository;
+
+    public Page<Tip> selectTip(PageRequest pageRequest, Specification<Tip> spec) {
+        return tipRepository.findAll(spec, pageRequest);
+    }
 
     public List<Tip> selectTipList(TipType type) {
         if (type == null) return tipRepository.findAll();
@@ -32,7 +39,7 @@ public class TipService {
             throw new Error("팁 정보를 찾을 수 없습니다.");
         });
         if (data.getTitle() != null) tip.setTitle(data.getTitle());
-        if(data.getType() != null )tip.setType(data.getType());
+        if (data.getType() != null) tip.setType(data.getType());
         if (data.getDescription() != null) tip.setDescription(data.getDescription());
         if (data.getImage() != null) tip.setImage(data.getImage());
         return tipRepository.save(tip);

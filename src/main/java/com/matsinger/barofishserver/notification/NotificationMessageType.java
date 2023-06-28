@@ -1,0 +1,5 @@
+package com.matsinger.barofishserver.notification;
+
+public enum NotificationMessageType {
+    DELIVER_START, DELIVER_DONE, ORDER_CANCEL, CANCEL_REJECT, EXCHANGE_REJECT, EXCHANGE_ACCEPT, REFUND_REJECT, REFUND_ACCEPT, REFUND_DONE, REVIEW_WRITE, COUPON_ARRIVED, ADMIN
+}

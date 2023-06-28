@@ -1,12 +1,10 @@
-package com.matsinger.barofishserver.user.object;
+package com.matsinger.barofishserver.grade;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
+import lombok.*;
 
 @Getter
+@Setter
 @Builder
 @RequiredArgsConstructor
 @AllArgsConstructor
@@ -23,6 +21,12 @@ public class Grade {
     private String name;
 
     @Basic
-    @Column(name = "point_rate" )
+    @Column(name = "point_rate")
     private int pointRate;
+    @Basic
+    @Column(name = "min_order_price", nullable = false)
+    private Integer minOrderPrice;
+    @Basic
+    @Column(name = "min_order_count", nullable = false)
+    private Integer minOrderCount;
 }

@@ -63,11 +63,19 @@ public class SiteInfoController {
         if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
         try {
             SiteInformation siteInformation = siteInfoService.selectSiteInfo(id);
-//            String fileUrl = s3.uploadHtmlStringToS3(data.getContent());
-            String fileUrl = s3.uploadEditorStringToS3(data.getContent(), new ArrayList<>(Arrays.asList("tmp")));
-            siteInformation.setContent(fileUrl);
-            SiteInformation result = siteInfoService.updateSiteInfo(siteInformation);
-            res.setData(Optional.of(result));
+            if (id.startsWith("HTML")) {
+                String fileUrl = s3.uploadEditorStringToS3(data.getContent(), new ArrayList<>(Arrays.asList("tmp")));
+                siteInformation.setContent(fileUrl);
+                SiteInformation result = siteInfoService.updateSiteInfo(siteInformation);
+                res.setData(Optional.of(result));
+            } else if (id.startsWith("INT_")) {
+                if (!data.getContent().matches("[0-9]+")) return res.throwError("숫자만 입력가능합니다.", "INPUT_CHECK_REQUIRED");
+                siteInformation.setContent(data.getContent());
+                SiteInformation result = siteInfoService.updateSiteInfo(siteInformation);
+                res.setData(Optional.of(result));
+            } else if (id.startsWith("INTERNAL")) {
+                return res.throwError("수정 불가능한 데이터입니다.", "NOT_ALLOWED");
+            }
             return ResponseEntity.ok(res);
         } catch (Exception e) {
             return res.defaultError(e);

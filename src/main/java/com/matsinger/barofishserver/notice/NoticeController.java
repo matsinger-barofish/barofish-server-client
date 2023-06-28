@@ -1,20 +1,26 @@
 package com.matsinger.barofishserver.notice;
 
+import com.matsinger.barofishserver.coupon.Coupon;
+import com.matsinger.barofishserver.coupon.CouponType;
 import com.matsinger.barofishserver.jwt.JwtService;
 import com.matsinger.barofishserver.jwt.TokenAuthType;
 import com.matsinger.barofishserver.jwt.TokenInfo;
 import com.matsinger.barofishserver.utils.Common;
 import com.matsinger.barofishserver.utils.CustomResponse;
 import com.matsinger.barofishserver.utils.S3.S3Uploader;
+import jakarta.persistence.criteria.Predicate;
 import lombok.*;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import retrofit2.http.Path;
 
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.sql.Timestamp;
+import java.util.*;
 
 @RestController
 @RequiredArgsConstructor
@@ -30,6 +36,39 @@ public class NoticeController {
         CustomResponse<List<Notice>> res = new CustomResponse<>();
         try {
             List<Notice> notices = noticeService.selectNoticeList(type);
+            res.setData(Optional.ofNullable(notices));
+            return ResponseEntity.ok(res);
+        } catch (Exception e) {
+            return res.defaultError(e);
+        }
+    }
+
+    @GetMapping("/management")
+    public ResponseEntity<CustomResponse<Page<Notice>>> selectNoticeListByAdmin(@RequestHeader(value = "Authorization", required = false) Optional<String> auth,
+                                                                                @RequestParam(value = "type") NoticeType type,
+                                                                                @RequestParam(value = "page", required = false, defaultValue = "0") Integer page,
+                                                                                @RequestParam(value = "take", required = false, defaultValue = "10") Integer take,
+                                                                                @RequestParam(value = "orderby", defaultValue = "createdAt") NoticeOrderBy orderBy,
+                                                                                @RequestParam(value = "orderType", defaultValue = "DESC") Sort.Direction sort,
+                                                                                @RequestParam(value = "title", required = false) String title,
+                                                                                @RequestParam(value = "createdAtS", required = false) Timestamp createdAtS,
+                                                                                @RequestParam(value = "createdAtE", required = false) Timestamp createdAtE) {
+        CustomResponse<Page<Notice>> res = new CustomResponse<>();
+        Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
+        if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
+        try {
+            Specification<Notice> spec = (root, query, builder) -> {
+                List<Predicate> predicates = new ArrayList<>();
+                if (title != null) predicates.add(builder.like(root.get("title"), "%" + title + "%"));
+                if (createdAtS != null) predicates.add(builder.greaterThan(root.get("createdAt"), createdAtS));
+                if (createdAtE != null) predicates.add(builder.lessThan(root.get("createdAt"), createdAtE));
+                if (tokenInfo.get().getType().equals(TokenAuthType.PARTNER))
+                    predicates.add(builder.equal(root.get("product").get("storeId"), tokenInfo.get().getId()));
+                predicates.add(builder.equal(root.get("type"), type));
+                return builder.and(predicates.toArray(new Predicate[0]));
+            };
+            PageRequest pageRequest = PageRequest.of(page, take, Sort.by(sort, orderBy.label));
+            Page<Notice> notices = noticeService.selectNoticeList(spec, pageRequest);
             res.setData(Optional.ofNullable(notices));
             return ResponseEntity.ok(res);
         } catch (Exception e) {
@@ -65,12 +104,15 @@ public class NoticeController {
         if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
         try {
             if (data.getType() == null) return res.throwError("타입을 입력해주세요.", "INPUT_CHECK_REQUIRED");
+            if (data.content == null) return res.throwError("내용을 입력해주세요.", "INPUT_CHECK_REQUIRED");
             String title = utils.validateString(data.getTitle(), 200L, "제목");
-            String content = utils.validateString(data.getContent(), 500L, "내용");
+            String content = "";
             Notice
                     notice =
                     Notice.builder().content(content).title(title).createdAt(utils.now()).type(data.getType()).build();
-            noticeService.addNotice(notice);
+            notice.setContent(s3.uploadEditorStringToS3(data.getContent(),
+                    new ArrayList<>(Arrays.asList("notice", String.valueOf(notice.getId())))));
+            notice = noticeService.addNotice(notice);
             res.setData(Optional.ofNullable(notice));
             return ResponseEntity.ok(res);
         } catch (Exception e) {
@@ -92,7 +134,10 @@ public class NoticeController {
                 notice.setTitle(title);
             }
             if (data.getContent() != null) {
-                String content = utils.validateString(data.getContent(), 500L, "내용");
+                String
+                        content =
+                        s3.uploadEditorStringToS3(data.getContent(),
+                                new ArrayList<>(Arrays.asList("notice", String.valueOf(notice.getId()))));
                 notice.setContent(content);
             }
             notice.setUpdateAt(utils.now());

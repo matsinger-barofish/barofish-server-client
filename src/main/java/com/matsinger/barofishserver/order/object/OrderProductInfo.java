@@ -5,7 +5,10 @@ import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.matsinger.barofishserver.product.object.Product;
 import jakarta.persistence.*;
 import lombok.*;
+import org.checkerframework.checker.units.qual.C;
+import org.hibernate.annotations.ColumnDefault;
 
+import java.sql.Timestamp;
 import java.util.Objects;
 
 @Getter
@@ -27,9 +30,15 @@ public class OrderProductInfo {
     @Column(name = "product_id", nullable = false)
     private int productId;
     @Basic
+    @Column(name = "option_item_id", nullable = false)
+    private int optionItemId;
+    @Basic
     @Column(name = "state", nullable = false)
     @Enumerated(EnumType.STRING)
     private OrderProductState state;
+    @Basic
+    @Column(name = "settle_price")
+    private Integer settlePrice;
     @Basic
     @Column(name = "price", nullable = false)
     private int price;
@@ -42,6 +51,7 @@ public class OrderProductInfo {
 
     @Basic
     @Column(name = "cancel_reason", nullable = true)
+    @Enumerated(EnumType.STRING)
     private OrderCancelReason cancelReason;
 
     @Basic
@@ -55,6 +65,14 @@ public class OrderProductInfo {
     @Basic
     @Column(name = "invoice_code", nullable = true)
     private String invoiceCode;
+
+    @Basic
+    @Column(name = "isSettled", nullable = false)
+    private Boolean isSettled;
+
+    @Basic
+    @Column(name = "settledAt", nullable = true)
+    private Timestamp settledAt;
 
     @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     @JsonBackReference

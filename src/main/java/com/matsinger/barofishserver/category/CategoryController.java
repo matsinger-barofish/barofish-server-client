@@ -1,11 +1,16 @@
 package com.matsinger.barofishserver.category;
 
+import com.matsinger.barofishserver.compare.filter.CompareFilter;
+import com.matsinger.barofishserver.compare.filter.CompareFilterDto;
+import com.matsinger.barofishserver.compare.filter.CompareFilterService;
 import com.matsinger.barofishserver.jwt.JwtService;
 import com.matsinger.barofishserver.jwt.TokenAuthType;
 import com.matsinger.barofishserver.jwt.TokenInfo;
 import com.matsinger.barofishserver.utils.Common;
 import com.matsinger.barofishserver.utils.CustomResponse;
 import com.matsinger.barofishserver.utils.S3.S3Uploader;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -19,7 +24,8 @@ import java.util.*;
 public class CategoryController {
 
     private final CategoryService categoryService;
-    private final CategoryRepository categoryRepository;
+    private final CompareFilterService compareFilterService;
+    private final CategoryFilterService categoryFilterService;
     private final Common util;
 
     private final S3Uploader s3;
@@ -110,6 +116,101 @@ public class CategoryController {
                 // 품목들이 존재하는 경우 처리 기획 필요
             }
             categoryService.delete(id);
+            return ResponseEntity.ok(res);
+        } catch (Exception e) {
+            return res.defaultError(e);
+        }
+    }
+
+    //비교하기 필터-------------------------
+    @GetMapping("/compare-filter/{categoryId}")
+    public ResponseEntity<CustomResponse<CategoryDto>> selectCategoryCompareFilter(@PathVariable("categoryId") Integer categoryId) {
+        CustomResponse<CategoryDto> res = new CustomResponse<>();
+        try {
+            Category category = categoryService.findById(categoryId);
+            List<Integer> compareFilterIds = categoryFilterService.selectCompareFilterIdList(categoryId);
+            List<CompareFilterDto>
+                    compareFilterDtos =
+                    compareFilterService.selectCompareFilterListWithIds(compareFilterIds).stream().map(v -> v.convert2Dto()).toList();
+            CategoryDto
+                    categoryDto =
+                    CategoryDto.builder().filters(compareFilterDtos).id(categoryId).name(category.getName()).image(
+                            category.getImage()).build();
+            res.setData(Optional.ofNullable(categoryDto));
+            return ResponseEntity.ok(res);
+        } catch (Exception e) {
+            return res.defaultError(e);
+        }
+    }
+
+    @GetMapping("/compare-filter/list")
+    public ResponseEntity<CustomResponse<List<CategoryDto>>> selectCategoryCompareFilter() {
+        CustomResponse<List<CategoryDto>> res = new CustomResponse<>();
+        try {
+            List<Category> categories = categoryService.findParentCategories();
+            List<CategoryDto> categoryDtos = categories.stream().map(category -> {
+
+                List<Integer> compareFilterIds = categoryFilterService.selectCompareFilterIdList(category.getId());
+                List<CompareFilterDto>
+                        compareFilterDtos =
+                        compareFilterService.selectCompareFilterListWithIds(compareFilterIds).stream().map(v -> v.convert2Dto()).toList();
+                CategoryDto
+                        categoryDto =
+                        CategoryDto.builder().filters(compareFilterDtos).id(category.getId()).name(category.getName()).image(
+                                category.getImage()).build();
+                return categoryDto;
+            }).toList();
+            res.setData(Optional.ofNullable(categoryDtos));
+            return ResponseEntity.ok(res);
+        } catch (Exception e) {
+            return res.defaultError(e);
+        }
+    }
+
+    @Getter
+    @NoArgsConstructor
+    private static class AddCategoryCompareFilterReq {
+        Integer categoryId;
+        Integer compareFilterId;
+    }
+
+    @PostMapping("/compare-filter/add/")
+    public ResponseEntity<CustomResponse<CompareFilterDto>> addCategoryCompareFilter(@RequestHeader(value = "Authorization") Optional<String> auth,
+                                                                                     @RequestPart(value = "data") AddCategoryCompareFilterReq data) {
+        CustomResponse<CompareFilterDto> res = new CustomResponse();
+        Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
+        if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
+        try {
+            if (data.categoryId == null) return res.throwError("카테고리 아이디를 입력해주세요.", "INPUT_CHECK_REQUIRED");
+            if (data.compareFilterId == null) return res.throwError("비교하기 필터 아이디를 입력해주세요.", "INPUT_CHECK_REQUIRED");
+            Category category = categoryService.findById(data.categoryId);
+            if (category.getCategoryId() != null) return res.throwError("1차 카테고리만 선택해주세요.", "INPUT_CHECK_REQUIRED");
+            CompareFilter compareFilter = compareFilterService.selectCompareFilter(data.compareFilterId);
+            CategoryFilterMap
+                    categoryFilterMap =
+                    CategoryFilterMap.builder().compareFilterId(data.compareFilterId).categoryId(data.categoryId).build();
+            categoryFilterService.addCategoryFilterMap(categoryFilterMap);
+            return ResponseEntity.ok(res);
+        } catch (Exception e) {
+            return res.defaultError(e);
+        }
+    }
+
+    @DeleteMapping("/compare-filter/delete/")
+    public ResponseEntity<CustomResponse<CompareFilterDto>> deleteCategoryCompareFilter(@RequestHeader(value = "Authorization") Optional<String> auth,
+                                                                                        @RequestPart(value = "data") AddCategoryCompareFilterReq data) {
+        CustomResponse<CompareFilterDto> res = new CustomResponse();
+        Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
+        if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
+        try {
+            if (data.categoryId == null) return res.throwError("카테고리 아이디를 입력해주세요.", "INPUT_CHECK_REQUIRED");
+            if (data.compareFilterId == null) return res.throwError("비교하기 필터 아이디를 입력해주세요.", "INPUT_CHECK_REQUIRED");
+            Category category = categoryService.findById(data.categoryId);
+            CompareFilter compareFilter = compareFilterService.selectCompareFilter(data.compareFilterId);
+            CategoryFilterId categoryFilterId = new CategoryFilterId();
+            categoryFilterId.setCategoryId(data.categoryId);
+            categoryFilterId.setCompareFilterId(data.compareFilterId);
+            categoryFilterService.deleteCategoryFilterMap(categoryFilterId);
             return ResponseEntity.ok(res);
         } catch (Exception e) {
             return res.defaultError(e);

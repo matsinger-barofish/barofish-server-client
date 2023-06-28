@@ -1,24 +1,35 @@
 package com.matsinger.barofishserver.product;
 
 
+import com.matsinger.barofishserver.basketProduct.BasketProductOptionRepository;
 import com.matsinger.barofishserver.category.CategoryDto;
-import com.matsinger.barofishserver.category.CategoryRepository;
+import com.matsinger.barofishserver.category.CategoryFilterService;
+import com.matsinger.barofishserver.compare.SaveProductRepository;
+import com.matsinger.barofishserver.compare.obejct.SaveProductId;
 import com.matsinger.barofishserver.inquiry.Inquiry;
 import com.matsinger.barofishserver.inquiry.InquiryService;
+import com.matsinger.barofishserver.product.filter.ProductFilterService;
 import com.matsinger.barofishserver.product.object.*;
-import com.matsinger.barofishserver.review.Review;
+import com.matsinger.barofishserver.review.object.Review;
 import com.matsinger.barofishserver.review.ReviewService;
-import com.matsinger.barofishserver.review.ReviewTotalStatistic;
+import com.matsinger.barofishserver.review.object.ReviewTotalStatistic;
+import com.matsinger.barofishserver.searchFilter.SearchFilterService;
+import com.matsinger.barofishserver.searchFilter.object.ProductSearchFilterMap;
+import com.matsinger.barofishserver.searchFilter.object.SearchFilterField;
+import com.matsinger.barofishserver.searchFilter.object.SearchFilterFieldDto;
+import com.matsinger.barofishserver.searchFilter.repository.ProductSearchFilterMapRepository;
 import com.matsinger.barofishserver.store.StoreService;
 import com.matsinger.barofishserver.store.object.StoreInfo;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @RequiredArgsConstructor
@@ -27,31 +38,52 @@ import java.util.List;
 public class ProductService {
     @Autowired
     private final ProductRepository productRepository;
+    private final CategoryFilterService categoryFilterService;
 
-    @Autowired
-    private final CategoryRepository categoryRepository;
 
     private final OptionRepository optionRepository;
     private final OptionItemRepository optionItemRepository;
+    private final BasketProductOptionRepository basketProductOptionRepository;
+    private final SaveProductRepository saveProductRepository;
+    private final ProductFilterService productFilterService;
 
     private final StoreService storeService;
     private final InquiryService inquiryService;
     private final ReviewService reviewService;
+    private final ProductSearchFilterMapRepository productSearchFilterMapRepository;
+    private final SearchFilterService searchFilterService;
+
+    public List<Product> selectProductListWithIds(List<Integer> ids) {
+        return productRepository.findAllByIdIn(ids);
+    }
 
     public List<Product> selectProductList() {
         return productRepository.findAll();
     }
 
-    public List<Product> selectProductListByPartner(Integer storeId) {
-        return productRepository.findAllByStoreIdAndStateNot(storeId, ProductState.DELETED);
-    }
+//    public Page<Product> selectProductListByPartner(Integer storeId,
+//                                                    Pageable pageRequest,
+//                                                    Specification<Product> spec) {
+//        return productRepository.findAllByStoreIdAndStateNot(storeId, ProductState.DELETED, pageRequest, spec);
+//    }
 
     public List<Integer> testQuery(List<Integer> ids) {
         return productRepository.testQuery(ids);
     }
 
+    @Transactional
+    public void deleteOption(Integer optionId) {
+        basketProductOptionRepository.deleteAllByOptionId(optionId);
+        optionItemRepository.deleteAllByOptionId(optionId);
+        optionRepository.deleteById(optionId);
+    }
+
     public void deleteOptionItems(Integer optionId) {
         optionItemRepository.deleteAllByOptionId(optionId);
+    }
+
+    public void deleteOptionItem(Integer optionItemId) {
+        optionItemRepository.deleteById(optionItemId);
     }
 
     @Transactional
@@ -75,94 +107,82 @@ public class ProductService {
         return productRepository.selectProductOtherCustomerBuy(productIds);
     }
 
-    public List<ProductListDto> selectProductListWithPagination(Integer page,
+    public Page<ProductListDto> selectProductListWithPagination(Integer page,
                                                                 Integer take,
                                                                 ProductSortBy sortBy,
                                                                 List<Integer> categoryIds,
-                                                                List<Integer> typeIds,
-                                                                List<Integer> locationIds,
-                                                                List<Integer> processIds,
-                                                                List<Integer> usageIds,
-                                                                List<Integer> storageIds) {
-        List<Product> products = new ArrayList<>();
+                                                                List<Integer> filterFieldIds,
+                                                                Integer curationId,
+                                                                String keyword,
+                                                                Integer storeId) {
+        Page<Product> products;
         switch (sortBy) {
             case REVIEW:
                 products =
                         productRepository.findWithPaginationSortByReview(Pageable.ofSize(take).withPage(page),
                                 categoryIds,
-                                typeIds,
-                                locationIds,
-                                processIds,
-                                usageIds,
-                                storageIds);
+                                filterFieldIds,
+                                curationId,
+                                keyword,
+                                storeId);
                 break;
             case NEW:
                 products =
                         productRepository.findWithPaginationSortByNewer(Pageable.ofSize(take).withPage(page),
                                 categoryIds,
-                                typeIds,
-                                locationIds,
-                                processIds,
-                                usageIds,
-                                storageIds);
+                                filterFieldIds,
+                                curationId,
+                                keyword,
+                                storeId);
                 break;
             case LIKE:
                 products =
                         productRepository.findWithPaginationSortByLike(Pageable.ofSize(take).withPage(page),
                                 categoryIds,
-                                typeIds,
-                                locationIds,
-                                processIds,
-                                usageIds,
-                                storageIds);
+                                filterFieldIds,
+                                curationId,
+                                keyword,
+                                storeId);
                 break;
             case SALES:
                 products =
                         productRepository.findWithPaginationSortByOrder(Pageable.ofSize(take).withPage(page),
                                 categoryIds,
-                                typeIds,
-                                locationIds,
-                                processIds,
-                                usageIds,
-                                storageIds);
+                                filterFieldIds,
+                                curationId,
+                                keyword,
+                                storeId);
                 break;
             case RECOMMEND:
                 products =
                         productRepository.findWithPaginationSortByRecommend(Pageable.ofSize(take).withPage(page),
                                 categoryIds,
-                                typeIds,
-                                locationIds,
-                                processIds,
-                                usageIds,
-                                storageIds);
+                                filterFieldIds,
+                                curationId,
+                                keyword,
+                                storeId);
                 break;
             case LOW_PRICE:
                 products =
                         productRepository.findWithPaginationSortByLowPrice(Pageable.ofSize(take).withPage(page),
                                 categoryIds,
-                                typeIds,
-                                locationIds,
-                                processIds,
-                                usageIds,
-                                storageIds);
+                                filterFieldIds,
+                                curationId,
+                                keyword,
+                                storeId);
                 break;
-            case HIGH_PRICE:
+            default:
                 products =
                         productRepository.findWithPaginationSortByHighPrice(Pageable.ofSize(take).withPage(page),
                                 categoryIds,
-                                typeIds,
-                                locationIds,
-                                processIds,
-                                usageIds,
-                                storageIds);
+                                filterFieldIds,
+                                curationId,
+                                keyword,
+                                storeId);
                 break;
         }
 
-        List<ProductListDto> result = new ArrayList<>();
-        for (Product product : products) {
-            result.add(product.convert2ListDto());
-        }
-        return result;
+        return products.map(product -> convert2ListDto(product));
     }
 
     public Option addOption(Option option) {
@@ -173,13 +193,19 @@ public class ProductService {
         return optionItemRepository.save(item);
     }
 
-    public List<Product> selectProductByAdmin() {
-        return productRepository.findALlByStateNot(ProductState.DELETED);
+    public Page<Product> selectProductByAdmin(Pageable pageRequest, Specification<Product> spec) {
+        return productRepository.findAll(spec, pageRequest);
     }
 
     public Product selectProduct(Integer id) {
         return productRepository.findById(id).orElseThrow(() -> {
             throw new Error("상품 정보를 찾을 수 없습니다.");
+        });
+    }
+
+    public Option selectOption(Integer id) {
+        return optionRepository.findById(id).orElseThrow(() -> {
+            throw new Error("상품 옵션 정보를 찾을 수 없습니다.");
         });
     }
 
@@ -206,6 +232,18 @@ public class ProductService {
         return productRepository.selectComparedProductList(productId);
     }
 
+    public ProductListDto convert2ListDto(Product product) {
+        StoreInfo storeInfo = storeService.selectStoreInfo(product.getStoreId());
+        Integer reviewCount = reviewService.countReviewWithProductId(product.getId());
+        OptionItem optionItem = selectOptionItem(product.getRepresentOptionItemId());
+        return ProductListDto.builder().id(product.getId()).state(product.getState()).image(product.getImages().substring(
+                1,
+                product.getImages().length() - 1).split(",")[0]).originPrice(optionItem.getOriginPrice()).discountPrice(
+                optionItem.getDiscountPrice()).title(product.getTitle()).reviewCount(reviewCount).storeId(storeInfo.getStoreId()).storeName(
+                storeInfo.getName()).parentCategoryId(product.getCategory().getCategoryId()).filterValues(
+                productFilterService.selectProductFilterValueListWithProductId(product.getId())).build();
+    }
+
     public SimpleProductDto convert2SimpleDto(Product product, Integer userId) {
         SimpleProductDto productDto = product.convert2SimpleDto();
         List<Inquiry> inquiries = inquiryService.selectInquiryListWithProductId(product.getId());
@@ -215,88 +253,65 @@ public class ProductService {
         ReviewTotalStatistic reviewStatistics = reviewService.selectReviewTotalStatisticWithProductId(product.getId());
         productDto.setReviewStatistics(reviewStatistics);
         CategoryDto category = product.getCategory().convert2Dto();
-        productDto.setIsLike(userId != null ? checkLikeProduct(product.getId(), userId) != 0 : false);
+        List<SearchFilterFieldDto>
+                searchFilterFields =
+                productSearchFilterMapRepository.findAllByProductId(product.getId()).stream().map(ProductSearchFilterMap::getFieldId).map(
+                        v -> searchFilterService.selectSearchFilterField(v).convert2Dto()).toList();
+        OptionItem optionItem = selectOptionItem(product.getRepresentOptionItemId());
+        productDto.setIsLike(userId != null ? saveProductRepository.existsById(new SaveProductId(userId,
+                product.getId())) : false);
+        productDto.setSearchFilterFields(searchFilterFields);
+        productDto.setOriginPrice(optionItem.getOriginPrice());
+        productDto.setDiscountPrice(optionItem.getDiscountPrice());
         productDto.setCategory(category);
-        productDto.setComparedProduct(comparedProducts.stream().map(product1 -> {
-            return product1.convert2ListDto();
-        }).toList());
+        productDto.setComparedProduct(comparedProducts.stream().map(Product::convert2ListDto).toList());
         productDto.setStore(store.convert2Dto());
-        productDto.setInquiries(inquiries.stream().map(inquiry -> {
-            return inquiry.convert2Dto();
-        }).toList());
-        productDto.setReviews(reviews.stream().map(review -> {
-            return review.convert2Dto();
-        }).toList());
+        productDto.setInquiries(inquiries.stream().map(Inquiry::convert2Dto).toList());
+        productDto.setReviews(reviews.stream().map(Review::convert2Dto).toList());
+        productDto.setFilterValues(productFilterService.selectProductFilterValueListWithProductId(product.getId()));
         productDto.setReviewCount(reviews.size());
         return productDto;
 
     }
 
+
     public List<OptionDto> selectProductOption(Integer productId) {
         List<Option> options = optionRepository.findAllByProductId(productId);
-        List<OptionDto> optionDtos = new ArrayList<>();
-        for (Option option : options) {
-            List<OptionItem> items = optionItemRepository.findAllByOptionId(option.getId());
-            List<OptionItemDto> itemDtos = new ArrayList<>();
-            for (OptionItem item : items) {
-                itemDtos.add(item.convert2Dto());
-            }
-            OptionDto optionDto = option.convert2Dto();
-            optionDto.setOptionItems(itemDtos);
-            optionDtos.add(optionDto);
-        }
+        List<OptionDto> optionDtos = options.stream().map(this::convert2OptionDto).toList();
+
         return optionDtos;
     }
 
-    public List<Product> selectNewerProductList(Integer page,
+    public Page<Product> selectNewerProductList(Integer page,
                                                 Integer take,
                                                 List<Integer> categoryIds,
-                                                List<Integer> typeIds,
-                                                List<Integer> locationIds,
-                                                List<Integer> processIds,
-                                                List<Integer> usageIds,
-                                                List<Integer> storageIds) {
+                                                List<Integer> filterFieldIds) {
         return productRepository.findNewerWithPagination(Pageable.ofSize(take).withPage(page),
                 categoryIds,
-                typeIds,
-                locationIds,
-                processIds,
-                usageIds,
-                storageIds);
+                filterFieldIds,
+                null);
     }
 
-    public List<Product> selectDiscountProductList(Integer page,
+    public Page<Product> selectDiscountProductList(Integer page,
                                                    Integer take,
                                                    List<Integer> categoryIds,
-                                                   List<Integer> typeIds,
-                                                   List<Integer> locationIds,
-                                                   List<Integer> processIds,
-                                                   List<Integer> usageIds,
-                                                   List<Integer> storageIds) {
+                                                   List<Integer> filterFieldIds) {
         return productRepository.findDiscountWithPagination(Pageable.ofSize(take).withPage(page),
                 categoryIds,
-                typeIds,
-                locationIds,
-                processIds,
-                usageIds,
-                storageIds);
+                filterFieldIds,
+                null);
     }
 
-    public List<Product> selectPopularProductList(Integer page,
+    public Page<Product> selectPopularProductList(Integer page,
                                                   Integer take,
                                                   List<Integer> categoryIds,
-                                                  List<Integer> typeIds,
-                                                  List<Integer> locationIds,
-                                                  List<Integer> processIds,
-                                                  List<Integer> usageIds,
-                                                  List<Integer> storageIds) {
+                                                  List<Integer> filterFieldIds) {
         return productRepository.findWithPaginationSortByRecommend(Pageable.ofSize(take).withPage(page),
                 categoryIds,
-                typeIds,
-                locationIds,
-                processIds,
-                usageIds,
-                storageIds);
+                filterFieldIds,
+                null,
+                null,
+                null);
     }
 
     public void likeProduct(Integer productId, Integer userId) {
@@ -310,5 +325,26 @@ public class ProductService {
     public Integer checkLikeProduct(Integer productId, Integer userId) {
         if (userId == null) return 0;
         return productRepository.checkLikeProduct(productId, userId);
+    }
+
+    public boolean checkExistProductSearchFilterMap(Integer productId, Integer fieldId) {
+        return productSearchFilterMapRepository.existsByFieldIdAndProductId(fieldId, productId);
+    }
+
+    public List<ProductSearchFilterMap> addProductSearchFilters(List<ProductSearchFilterMap> filterMaps) {
+        return productSearchFilterMapRepository.saveAll(filterMaps);
+    }
+
+    @Transactional
+    public void deleteProductSearchFilters(Integer productId) {
+        productSearchFilterMapRepository.deleteAllByProductId(productId);
+    }
+
+    public OptionDto convert2OptionDto(Option option) {
+        OptionDto optionDto = option.convert2Dto();
+        List<OptionItem> optionItems = optionItemRepository.findAllByOptionId(option.getId());
+        List<OptionItemDto> itemDtos = optionItems.stream().map(OptionItem::convert2Dto).toList();
+        optionDto.setOptionItems(itemDtos);
+        return optionDto;
     }
 }
