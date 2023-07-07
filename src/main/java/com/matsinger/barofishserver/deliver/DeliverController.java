@@ -1,8 +1,6 @@
 package com.matsinger.barofishserver.deliver;
 
-import com.matsinger.barofishserver.data.curation.object.Curation;
 import com.matsinger.barofishserver.utils.CustomResponse;
-import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -24,6 +22,7 @@ public class DeliverController {
     public ResponseEntity<CustomResponse<List<Deliver.Company>>> selectDeliverCompanyList() {
         CustomResponse<List<Deliver.Company>> res = new CustomResponse<>();
         try {
+
             res.setData(Optional.ofNullable(deliverService.selectDeliverCompanyList()));
             return ResponseEntity.ok(res);
         } catch (Exception e) {

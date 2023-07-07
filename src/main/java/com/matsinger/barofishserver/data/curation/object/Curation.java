@@ -19,22 +19,20 @@ public class Curation {
     @Column(name = "id", nullable = false)
     private int id;
     @Basic
-    @Column(name = "image", nullable = false, length = -1)
+    @Column(name = "image", nullable = true, length = -1)
     private String image;
-
-
     @Basic
-    @Column(name = "short_name", nullable = false, length = 20)
+    @Column(name = "short_name", nullable = true, length = 20)
     private String shortName;
     @Basic
-    @Column(name = "title", nullable = false, length = 100)
+    @Column(name = "title", nullable = true, length = 100)
     private String title;
     @Basic
-    @Column(name = "description", nullable = false, length = 200)
+    @Column(name = "description", nullable = true, length = 200)
     private String description;
     @Basic
     @Enumerated(EnumType.STRING)
-    @Column(name = "type", nullable = false)
+    @Column(name = "type", nullable = true)
     private CurationType type;
 
     @Basic

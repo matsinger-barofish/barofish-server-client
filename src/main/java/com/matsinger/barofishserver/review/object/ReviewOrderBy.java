@@ -6,7 +6,7 @@ public enum ReviewOrderBy {
 
     public final String label;
 
-    private ReviewOrderBy(String label) {
+    ReviewOrderBy(String label) {
         this.label = label;
     }
 }

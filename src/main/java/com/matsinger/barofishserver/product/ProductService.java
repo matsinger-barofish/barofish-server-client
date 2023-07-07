@@ -15,16 +15,15 @@ import com.matsinger.barofishserver.review.ReviewService;
 import com.matsinger.barofishserver.review.object.ReviewTotalStatistic;
 import com.matsinger.barofishserver.searchFilter.SearchFilterService;
 import com.matsinger.barofishserver.searchFilter.object.ProductSearchFilterMap;
-import com.matsinger.barofishserver.searchFilter.object.SearchFilterField;
 import com.matsinger.barofishserver.searchFilter.object.SearchFilterFieldDto;
 import com.matsinger.barofishserver.searchFilter.repository.ProductSearchFilterMapRepository;
 import com.matsinger.barofishserver.store.StoreService;
 import com.matsinger.barofishserver.store.object.StoreInfo;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
@@ -36,7 +35,6 @@ import java.util.List;
 @Slf4j
 @Service
 public class ProductService {
-    @Autowired
     private final ProductRepository productRepository;
     private final CategoryFilterService categoryFilterService;
 
@@ -61,11 +59,6 @@ public class ProductService {
         return productRepository.findAll();
     }
 
-//    public Page<Product> selectProductListByPartner(Integer storeId,
-//                                                    Pageable pageRequest,
-//                                                    Specification<Product> spec) {
-//        return productRepository.findAllByStoreIdAndStateNot(storeId, ProductState.DELETED, pageRequest, spec);
-//    }
 
     public List<Integer> testQuery(List<Integer> ids) {
         return productRepository.testQuery(ids);
@@ -73,9 +66,15 @@ public class ProductService {
 
     @Transactional
     public void deleteOption(Integer optionId) {
-        basketProductOptionRepository.deleteAllByOptionId(optionId);
-        optionItemRepository.deleteAllByOptionId(optionId);
-        optionRepository.deleteById(optionId);
+        Option option = selectOption(optionId);
+        List<OptionItem> optionItems = optionItemRepository.findAllByOptionIdAndState(optionId, OptionItemState.ACTIVE);
+        basketProductOptionRepository.deleteAllByOptionIdIn(optionItems.stream().map(OptionItem::getOptionId).toList());
+        optionItems.forEach(v -> {
+            v.setState(OptionItemState.DELETED);
+        });
+        optionItemRepository.saveAll(optionItems);
+        option.setState(OptionState.DELETED);
+        optionRepository.save(option);
     }
 
     public void deleteOptionItems(Integer optionId) {
@@ -83,14 +82,18 @@ public class ProductService {
     }
 
     public void deleteOptionItem(Integer optionItemId) {
-        optionItemRepository.deleteById(optionItemId);
+        basketProductOptionRepository.deleteAllByOptionId(optionItemId);
+        OptionItem optionItem = selectOptionItem(optionItemId);
+        optionItem.setState(OptionItemState.DELETED);
+        optionItemRepository.save(optionItem);
     }
 
     @Transactional
     public void deleteOptions(Integer productId) {
-        List<Integer> optionIds = optionRepository.findAllByProductId(productId).stream().map(option -> {
-            return option.getId();
-        }).toList();
+        List<Integer>
+                optionIds =
+                optionRepository.findAllByProductIdAndState(productId,
+                        OptionState.ACTIVE).stream().map(Option::getId).toList();
         for (Integer id : optionIds) {
             deleteOptionItems(id);
         }
@@ -182,7 +185,7 @@ public class ProductService {
                 break;
         }
 
-        return products.map(product -> convert2ListDto(product));
+        return products.map(this::convert2ListDto);
     }
 
     public Option addOption(Option option) {
@@ -247,7 +250,9 @@ public class ProductService {
     public SimpleProductDto convert2SimpleDto(Product product, Integer userId) {
         SimpleProductDto productDto = product.convert2SimpleDto();
         List<Inquiry> inquiries = inquiryService.selectInquiryListWithProductId(product.getId());
-        List<Review> reviews = reviewService.selectReviewListByProduct(product.getId(), 0, 50).getContent();
+        List<Review>
+                reviews =
+                reviewService.selectReviewListByProduct(product.getId(), PageRequest.of(0, 50)).getContent();
         StoreInfo store = storeService.selectStoreInfo(product.getStoreId());
         List<Product> comparedProducts = selectComparedProductList(product.getId());
         ReviewTotalStatistic reviewStatistics = reviewService.selectReviewTotalStatisticWithProductId(product.getId());
@@ -258,28 +263,28 @@ public class ProductService {
                 productSearchFilterMapRepository.findAllByProductId(product.getId()).stream().map(ProductSearchFilterMap::getFieldId).map(
                         v -> searchFilterService.selectSearchFilterField(v).convert2Dto()).toList();
         OptionItem optionItem = selectOptionItem(product.getRepresentOptionItemId());
-        productDto.setIsLike(userId != null ? saveProductRepository.existsById(new SaveProductId(userId,
-                product.getId())) : false);
+        productDto.setIsLike(userId != null &&
+                saveProductRepository.existsById(new SaveProductId(userId, product.getId())));
         productDto.setSearchFilterFields(searchFilterFields);
         productDto.setOriginPrice(optionItem.getOriginPrice());
         productDto.setDiscountPrice(optionItem.getDiscountPrice());
         productDto.setCategory(category);
         productDto.setComparedProduct(comparedProducts.stream().map(Product::convert2ListDto).toList());
-        productDto.setStore(store.convert2Dto());
+        productDto.setStore(storeService.convert2SimpleDto(store, userId));
         productDto.setInquiries(inquiries.stream().map(Inquiry::convert2Dto).toList());
         productDto.setReviews(reviews.stream().map(Review::convert2Dto).toList());
         productDto.setFilterValues(productFilterService.selectProductFilterValueListWithProductId(product.getId()));
         productDto.setReviewCount(reviews.size());
+        productDto.setNeedTaxation(product.getNeedTaxation());
         return productDto;
 
     }
 
 
     public List<OptionDto> selectProductOption(Integer productId) {
-        List<Option> options = optionRepository.findAllByProductId(productId);
-        List<OptionDto> optionDtos = options.stream().map(this::convert2OptionDto).toList();
+        List<Option> options = optionRepository.findAllByProductIdAndState(productId, OptionState.ACTIVE);
 
-        return optionDtos;
+        return options.stream().map(this::convert2OptionDto).toList();
     }
 
     public Page<Product> selectNewerProductList(Integer page,
@@ -331,8 +336,8 @@ public class ProductService {
         return productSearchFilterMapRepository.existsByFieldIdAndProductId(fieldId, productId);
     }
 
-    public List<ProductSearchFilterMap> addProductSearchFilters(List<ProductSearchFilterMap> filterMaps) {
-        return productSearchFilterMapRepository.saveAll(filterMaps);
+    public void addProductSearchFilters(List<ProductSearchFilterMap> filterMaps) {
+        productSearchFilterMapRepository.saveAll(filterMaps);
     }
 
     @Transactional
@@ -342,7 +347,9 @@ public class ProductService {
 
     public OptionDto convert2OptionDto(Option option) {
         OptionDto optionDto = option.convert2Dto();
-        List<OptionItem> optionItems = optionItemRepository.findAllByOptionId(option.getId());
+        List<OptionItem>
+                optionItems =
+                optionItemRepository.findAllByOptionIdAndState(option.getId(), OptionItemState.ACTIVE);
         List<OptionItemDto> itemDtos = optionItems.stream().map(OptionItem::convert2Dto).toList();
         optionDto.setOptionItems(itemDtos);
         return optionDto;

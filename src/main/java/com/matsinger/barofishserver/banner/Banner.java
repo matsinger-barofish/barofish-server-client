@@ -33,6 +33,9 @@ public class Banner {
     private String image;
 
     @Basic
+    @Column(name = "sort_no",nullable = true)
+    private Integer sortNo;
+    @Basic
     @Column(name = "link", nullable = true)
     private String link;
     @Basic
@@ -62,7 +65,7 @@ public class Banner {
                 null ? this.notice.getId() : null).noticeTitle(this.notice !=
                 null ? this.notice.getTitle() : null).categoryId(this.category !=
                 null ? this.category.getId() : null).categoryName(this.category !=
-                null ? this.category.getName() : null).image(this.image).link(this.link).build();
+                null ? this.category.getName() : null).image(this.image).link(this.link).sortNo(this.sortNo).build();
     }
 
     public int getId() {

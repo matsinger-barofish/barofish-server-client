@@ -1,8 +1,5 @@
 package com.matsinger.barofishserver.search;
 
-import com.matsinger.barofishserver.product.object.Product;
-import lombok.*;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -25,7 +22,7 @@ public interface SearchKeywordRepository extends JpaRepository<SearchKeyword, In
     @Query(value = "update search_keyword set prev_rank = NULL", nativeQuery = true)
     void resetRank();
 
-    public interface KeywordRank {
+    interface KeywordRank {
         Integer getRank();
 
         String getKeyword();
@@ -35,7 +32,7 @@ public interface SearchKeywordRepository extends JpaRepository<SearchKeyword, In
     List<KeywordRank> selectRank();
 
 
-    public interface SearchProduct {
+    interface SearchProduct {
         Integer getId();
 
         String getTitle();

@@ -24,6 +24,10 @@ public class OptionItem {
     @Basic
     @Column(name = "name", nullable = false, length = 100)
     private String name;
+    @Basic
+    @Column(name = "state", nullable = false)
+    @Enumerated(EnumType.STRING)
+    private OptionItemState state;
 
     @Basic
     @Column(name = "discount_price", nullable = false)
@@ -60,7 +64,7 @@ public class OptionItem {
                 String errorMessage = String.format("'%s' 상품의 재고가 부족합니다.", this.name);
                 throw new Error(errorMessage);
             }
-            this.amount = reducedValue;
+//            this.amount = reducedValue;
         }
     }
 

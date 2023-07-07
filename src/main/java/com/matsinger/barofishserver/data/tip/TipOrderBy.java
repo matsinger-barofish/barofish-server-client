@@ -5,7 +5,7 @@ public enum TipOrderBy {
 
     public final String label;
 
-    private TipOrderBy(String label) {
+    TipOrderBy(String label) {
         this.label = label;
     }
 }

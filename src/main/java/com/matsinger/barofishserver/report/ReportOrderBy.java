@@ -5,7 +5,7 @@ public enum ReportOrderBy {
             "review.user.userInfo.email"), createdAt("createdAt"), confirmAt("confirmAt");
     public final String label;
 
-    private ReportOrderBy(String label) {
+    ReportOrderBy(String label) {
         this.label = label;
     }
 

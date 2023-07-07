@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -19,6 +20,7 @@ public class CategoryService {
     @Autowired
     private final CategoryRepository categoryRepository;
     private final CategoryFilterService categoryFilterService;
+    private final CategoryFilterRepository categoryFilterRepository;
     private final CompareFilterService compareFilterService;
 
 
@@ -47,8 +49,10 @@ public class CategoryService {
         return category;
     }
 
+    @Transactional
     public Boolean delete(Integer id) {
         try {
+            categoryFilterRepository.deleteAllByCategoryId(id);
             categoryRepository.deleteById(id);
             return true;
         } catch (Exception e) {

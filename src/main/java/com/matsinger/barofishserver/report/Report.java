@@ -4,7 +4,6 @@ import com.matsinger.barofishserver.review.object.Review;
 import com.matsinger.barofishserver.user.object.User;
 import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.annotations.ColumnDefault;
 
 import java.sql.Timestamp;
 

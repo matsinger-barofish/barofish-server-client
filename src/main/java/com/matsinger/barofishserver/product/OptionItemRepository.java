@@ -1,6 +1,7 @@
 package com.matsinger.barofishserver.product;
 
 import com.matsinger.barofishserver.product.object.OptionItem;
+import com.matsinger.barofishserver.product.object.OptionItemState;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -12,5 +13,5 @@ public interface OptionItemRepository extends JpaRepository<OptionItem, Integer>
 
     @Transactional
     void deleteAllByOptionId(Integer optionId);
-    List<OptionItem> findAllByOptionId(Integer optionId);
+    List<OptionItem> findAllByOptionIdAndState(Integer optionId, OptionItemState state);
 }

@@ -1,11 +1,17 @@
 package com.matsinger.barofishserver.admin;
 
 import jakarta.persistence.*;
+import lombok.*;
 
 import java.sql.Timestamp;
 import java.util.Objects;
 
 @Entity
+@Getter
+@Setter
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class Admin {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Id
@@ -18,12 +24,26 @@ public class Admin {
     @Column(name = "password", nullable = false, length = 60)
     private String password;
     @Basic
+    @Column(name = "authority", nullable = false)
+    @Enumerated(EnumType.STRING)
+    private AdminAuthority authority;
+    @Basic
     @Column(name = "state", nullable = false)
     @Enumerated(EnumType.STRING)
     private AdminState state;
     @Basic
+    @Column(name = "name", nullable = false)
+    private String name;
+    @Basic
+    @Column(name = "tel", nullable = false)
+    private String tel;
+    @Basic
     @Column(name = "created_at", nullable = false)
     private Timestamp createdAt;
+
+    @OneToOne(mappedBy = "admin", fetch = FetchType.LAZY)
+    private AdminAuth adminAuth;
+
 
     public int getId() {
         return id;

@@ -13,6 +13,7 @@ public class BannerDto {
     private BannerState state;
     private BannerType type;
     private String image;
+    private Integer sortNo;
     private String link;
     private Integer curationId;
     private String curationName;

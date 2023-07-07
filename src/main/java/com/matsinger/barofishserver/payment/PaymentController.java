@@ -4,7 +4,6 @@ import com.matsinger.barofishserver.jwt.JwtService;
 import com.matsinger.barofishserver.jwt.TokenAuthType;
 import com.matsinger.barofishserver.jwt.TokenInfo;
 import com.matsinger.barofishserver.order.OrderService;
-import com.matsinger.barofishserver.order.object.OrderState;
 import com.matsinger.barofishserver.order.object.Orders;
 import com.matsinger.barofishserver.utils.CustomResponse;
 import lombok.RequiredArgsConstructor;
@@ -22,16 +21,6 @@ public class PaymentController {
     private final PaymentService paymentService;
     private final OrderService orderService;
     private final JwtService jwt;
-
-    @GetMapping("/test")
-    public ResponseEntity<CustomResponse<Boolean>> paymentTest(@RequestParam(value = "impUid") String impUid) {
-        CustomResponse<Boolean> res = new CustomResponse<>();
-        try {
-            return ResponseEntity.ok(res);
-        } catch (Exception e) {
-            return res.defaultError(e);
-        }
-    }
 
     @PostMapping("/cancel/{orderId}")
     public ResponseEntity<CustomResponse<Boolean>> cancelOrder(@RequestHeader(value = "Authorization") Optional<String> auth,

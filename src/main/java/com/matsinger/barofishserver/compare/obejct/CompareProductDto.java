@@ -17,7 +17,7 @@ public class CompareProductDto {
     String storeName;
     String title;
     Integer originPrice;
-    Integer discountRate;
+    Integer discountPrice;
     Integer deliveryFee;
     List<CompareFilterDto> compareFilters;
     List<ProductFilterValueDto> filterValues;

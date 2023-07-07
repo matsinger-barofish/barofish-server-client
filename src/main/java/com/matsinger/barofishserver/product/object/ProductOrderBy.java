@@ -4,9 +4,9 @@ public enum ProductOrderBy {
     id("id"), storeName("store.storeInfo.name"), state("state"), title("title"), categoryName("category.name"), originPrice(
             "originPrice"), discountRate("discountRate"), createdAt("createdAt");
 
-    public String label;
+    public final String label;
 
-    private ProductOrderBy(String label) {
+    ProductOrderBy(String label) {
         this.label = label;
     }
 }

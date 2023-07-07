@@ -3,10 +3,8 @@ package com.matsinger.barofishserver.settlement;
 import com.matsinger.barofishserver.order.OrderService;
 import com.matsinger.barofishserver.order.object.OrderProductInfo;
 import com.matsinger.barofishserver.product.ProductService;
-import com.matsinger.barofishserver.product.object.Product;
 import com.matsinger.barofishserver.store.StoreService;
 import com.matsinger.barofishserver.store.object.StoreInfo;
-import jakarta.persistence.Tuple;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -40,8 +38,8 @@ public class SettlementService {
         else return settlementRepository.findAllByState(state);
     }
 
-    public Settlement addSettlement(Settlement settlement) {
-        return settlementRepository.save(settlement);
+    public void addSettlement(Settlement settlement) {
+        settlementRepository.save(settlement);
     }
 
     public Settlement updateSettlement(Settlement settlement) {
@@ -74,8 +72,8 @@ public class SettlementService {
                     storeInfo.getSettlementRate() == null ||
                             storeInfo.getSettlementRate() == 100 ? null : storeInfo.getSettlementRate();
             for (OrderProductInfo info : infos) {
-                Integer salePrice = info.getSettlePrice() != null ? info.getSettlePrice() : 0;
-                Integer
+                int salePrice = info.getSettlePrice() != null ? info.getSettlePrice() : 0;
+                int
                         price =
                         (settlementRate == null ? salePrice * info.getAmount() : (int) (salePrice * settlementRate /
                                 100.) / 10 * 10);

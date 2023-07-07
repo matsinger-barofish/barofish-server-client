@@ -12,12 +12,12 @@ import java.util.Optional;
 public class DeliverPlaceService {
     private final DeliverPlaceRepository deliverPlaceRepository;
 
-    DeliverPlace addDeliverPlace(DeliverPlace deliverPlace) {
-        return deliverPlaceRepository.save(deliverPlace);
+    void addDeliverPlace(DeliverPlace deliverPlace) {
+        deliverPlaceRepository.save(deliverPlace);
     }
 
-    DeliverPlace updateDeliverPlace(DeliverPlace deliverPlace) {
-        return deliverPlaceRepository.save(deliverPlace);
+    void updateDeliverPlace(DeliverPlace deliverPlace) {
+        deliverPlaceRepository.save(deliverPlace);
     }
 
     List<DeliverPlace> selectDeliverPlaceList(Integer userId) {

@@ -3,7 +3,6 @@ package com.matsinger.barofishserver.searchFilter;
 import com.matsinger.barofishserver.searchFilter.object.SearchFilter;
 import com.matsinger.barofishserver.searchFilter.object.SearchFilterDto;
 import com.matsinger.barofishserver.searchFilter.object.SearchFilterField;
-import com.matsinger.barofishserver.searchFilter.object.SearchFilterFieldDto;
 import com.matsinger.barofishserver.searchFilter.repository.ProductSearchFilterMapRepository;
 import com.matsinger.barofishserver.searchFilter.repository.SearchFilterFieldRepository;
 import com.matsinger.barofishserver.searchFilter.repository.SearchFilterRepository;
@@ -13,7 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 @RequiredArgsConstructor
@@ -78,7 +77,7 @@ public class SearchFilterService {
 
     @Transactional
     public void deleteSearchFilterField(Integer id) {
-        productSearchFilterMapRepository.deleteAllByFieldIdIn(new ArrayList<>(Arrays.asList(id)));
+        productSearchFilterMapRepository.deleteAllByFieldIdIn(new ArrayList<>(Collections.singletonList(id)));
         searchFilterFieldRepository.deleteById(id);
     }
 }

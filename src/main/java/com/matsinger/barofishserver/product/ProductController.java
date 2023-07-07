@@ -10,7 +10,6 @@ import com.matsinger.barofishserver.jwt.TokenInfo;
 import com.matsinger.barofishserver.product.filter.ProductFilterService;
 import com.matsinger.barofishserver.product.filter.ProductFilterValue;
 import com.matsinger.barofishserver.product.object.*;
-import com.matsinger.barofishserver.product.productinfo.*;
 import com.matsinger.barofishserver.searchFilter.SearchFilterService;
 import com.matsinger.barofishserver.searchFilter.object.ProductSearchFilterMap;
 import com.matsinger.barofishserver.store.object.Store;
@@ -43,7 +42,6 @@ public class ProductController {
     private final ProductService productService;
     private final StoreService storeService;
     private final CategoryService categoryService;
-    private final ProductInfoService productInfoService;
     private final CurationService curationService;
     private final CompareFilterService compareFilterService;
     private final ProductFilterService productFilterService;
@@ -270,18 +268,12 @@ public class ProductController {
         Integer categoryId;
         String title;
         Boolean isActive;
-        //        Integer originPrice;
-//        Integer discountRate;
         String deliveryInfo;
         Integer deliveryFee;
         Integer expectedDeliverDay;
         Integer deliverBoxPerAmount;
-        //        Integer typeId;
-//        Integer locationId;
-//        Integer usageId;
-//        Integer storageId;
-//        Integer processId;
         String descriptionContent;
+        Boolean needTaxation;
         List<Integer> searchFilterFieldIds;
         List<OptionAddReq> options;
         List<ProductFilterValueReq> filterValues;
@@ -308,11 +300,12 @@ public class ProductController {
                 if (!s3.validateImageType(image)) return res.throwError("허용되지 않는 확장자입니다.", "INPUT_CHECK_REQUIRED");
             }
             if (data.getDescriptionContent() == null) return res.throwError("상품 설명을 입력해주세요.", "INPUT_CHECK_REQUIRED");
-
-            if (data.getExpectedDeliverDay() == null) return res.throwError("도착 예정일을 입력해주세요.", "INPUT_CHECK_REQUIRED");
+//            if (data.getExpectedDeliverDay() == null) return res.throwError("도착 예정일을 입력해주세요.", "INPUT_CHECK_REQUIRED");
             String title = utils.validateString(data.getTitle(), 100L, "상품");
             data.getSearchFilterFieldIds().forEach(searchFilterService::selectSearchFilterField);
-            String deliveryInfo = utils.validateString(data.getDeliveryInfo(), 500L, "배송안내");
+            String
+                    deliveryInfo =
+                    data.deliveryInfo != null ? utils.validateString(data.getDeliveryInfo(), 500L, "배송안내") : null;
             boolean existRepresent = false;
             if (data.getDeliveryFee() == null) data.setDeliveryFee(0);
             if (data.getOptions() == null || data.getOptions().size() == 0)
@@ -327,12 +320,15 @@ public class ProductController {
                     String name = utils.validateString(itemData.name, 100L, "옵션 이름");
                     itemData.setName(name);
                     if (itemData.isRepresent != null && itemData.isRepresent) existRepresent = true;
-                    if (itemData.discountPrice == null)
-                        return res.throwError("할인(판매) 가격을 입력해주세요.", "INPUT_CHECK_REQUIRED");
-                    if (itemData.amount == null) return res.throwError("개수를 입력해주세요.", "INPUT_CHECK_REQUIRED");
-                    if (itemData.purchasePrice == null) return res.throwError("매입가를 입력해주세요.", "INPUT_CHECK_REQUIRED");
-                    if (itemData.originPrice == null) itemData.setOriginPrice(0);
-                    if (itemData.deliveryFee == null) return res.throwError("배송비를 입력해주세요.", "INPUT_CHECK_REQUIRED");
+                    if (itemData.discountPrice == null) itemData.setDiscountPrice(0);
+//                        return res.throwError("할인(판매) 가격을 입력해주세요.", "INPUT_CHECK_REQUIRED");
+                    if (itemData.amount == null) itemData.setAmount(null);
+//                        return res.throwError("개수를 입력해주세요.", "INPUT_CHECK_REQUIRED");
+                    if (itemData.purchasePrice == null) itemData.setPurchasePrice(0);
+//                        return res.throwError("매입가를 입력해주세요.", "INPUT_CHECK_REQUIRED");
+                    if (!optionData.isNeeded && itemData.originPrice == null) itemData.setOriginPrice(0);
+                    if (itemData.deliveryFee == null) itemData.setDeliveryFee(0);
+//                    return res.throwError("배송비를 입력해주세요.", "INPUT_CHECK_REQUIRED");
                 }
             }
             if (!existRepresent) return res.throwError("대표 옵션 아이템을 선택해주세요.", "INPUT_CHECK_REQUIRED");
@@ -355,20 +351,17 @@ public class ProductController {
             product.setOriginPrice(0);
             product.setCategory(category);
             product.setStoreId(data.getStoreId());
-            product.setExpectedDeliverDay(data.getExpectedDeliverDay());
-            product.setDeliveryInfo(deliveryInfo);
+            product.setExpectedDeliverDay(data.getExpectedDeliverDay() != null ? data.getExpectedDeliverDay() : 0);
+            product.setDeliveryInfo(deliveryInfo != null ? deliveryInfo : "");
             product.setImages("");
+            product.setPointRate(0.0F);
             product.setDescriptionImages("");
             product.setState(ProductState.ACTIVE);
-            product.setDeliveryFee(data.getDeliveryFee());
             product.setRepresentOptionItemId(null);
+            product.setNeedTaxation(data.needTaxation != null ? data.needTaxation : true);
             product.setDeliverBoxPerAmount(data.deliverBoxPerAmount);
-            product.setState(data.isActive == false ? ProductState.INACTIVE : ProductState.ACTIVE);
-            product.setProductType(productInfoService.selectProductType(1));
-            product.setProductLocation(productInfoService.selectProductLocation(1));
-            product.setProductStorage(productInfoService.selectProductStorage(1));
-            product.setProductProcess(productInfoService.selectProductProcess(1));
-            product.setProductUsage(productInfoService.selectProductUsage(1));
+            product.setDeliveryFee(data.getDeliveryFee() != null ? data.getDeliveryFee() : 0);
+            product.setState(!data.isActive ? ProductState.INACTIVE : ProductState.ACTIVE);
             product.setCreatedAt(new Timestamp(System.currentTimeMillis()));
             Product result = productService.addProduct(product);
             OptionItem representOptionItem = null;
@@ -376,14 +369,15 @@ public class ProductController {
                 for (OptionAddReq od : data.getOptions()) {
                     Option
                             option =
-                            Option.builder().productId(result.getId()).isNeeded(od.getIsNeeded()).description("").build();
+                            Option.builder().productId(result.getId()).state(OptionState.ACTIVE).isNeeded(od.getIsNeeded()).description(
+                                    "").build();
                     option = productService.addOption(option);
                     for (OptionItemAddReq itemData : od.getItems()) {
                         OptionItem
                                 item =
                                 OptionItem.builder().optionId(option.getId()).name(itemData.getName()).discountPrice(
                                         itemData.discountPrice).amount(itemData.getAmount()).purchasePrice(itemData.purchasePrice).originPrice(
-                                        itemData.originPrice).deliverFee(itemData.deliveryFee).deliverBoxPerAmount(
+                                        itemData.originPrice).state(OptionItemState.ACTIVE).deliverFee(itemData.deliveryFee).deliverBoxPerAmount(
                                         itemData.deliverBoxPerAmount).maxAvailableAmount(itemData.maxAvailableAmount).build();
                         item = productService.addOptionItem(item);
                         if (itemData.isRepresent != null && itemData.isRepresent) representOptionItem = item;
@@ -399,9 +393,8 @@ public class ProductController {
                     descriptionContent =
                     s3.uploadEditorStringToS3(data.getDescriptionContent(),
                             new ArrayList<>(Arrays.asList("product", String.valueOf(result.getId()))));
-            productService.addProductSearchFilters(data.searchFilterFieldIds.stream().map(v -> {
-                return ProductSearchFilterMap.builder().productId(product.getId()).fieldId(v).build();
-            }).toList());
+            productService.addProductSearchFilters(data.searchFilterFieldIds.stream().map(v -> ProductSearchFilterMap.builder().productId(
+                    product.getId()).fieldId(v).build()).toList());
             result.setImages(imagesUrl.toString());
             result.setDescriptionImages(descriptionContent);
             result.setRepresentOptionItemId(representOptionItem.getId());
@@ -446,17 +439,12 @@ public class ProductController {
         Integer categoryId;
         String title;
         Boolean isActive;
-        //        Integer originPrice;
-//        Integer discountRate;
+
         String deliveryInfo;
         Integer deliveryFee;
         Integer expectedDeliverDay;
         Integer deliverBoxPerAmount;
-        //        Integer typeId;
-//        Integer locationId;
-//        Integer usageId;
-//        Integer storageId;
-//        Integer processId;
+        Boolean needTaxation;
         List<Integer> searchFilterFieldIds;
         String descriptionContent;
         List<ProductFilterValueReq> filterValues;
@@ -499,17 +487,13 @@ public class ProductController {
             if (data.isActive != null) {
                 product.setState(data.isActive ? ProductState.ACTIVE : ProductState.INACTIVE);
             }
+            if (data.needTaxation != null) {
+                product.setNeedTaxation(data.needTaxation);
+            }
             if (data.deliverBoxPerAmount != null) {
                 product.setDeliverBoxPerAmount(data.deliverBoxPerAmount);
             }
-//            if (data.getOriginPrice() != null) {
-//                if (data.getOriginPrice() <= 0) return res.throwError("금액을 확인해주세요.", "INPUT_CHECK_REQUIRED");
-//                product.setOriginPrice(data.getOriginPrice());
-//            }
-//            if (data.getDiscountRate() != null) {
-//                if (data.getDiscountRate() < 0) return res.throwError("할인률을 확인해주세요.", "INPUT_CHECK_REQUIRED");
-//                product.setDiscountRate(data.getDiscountRate());
-//            }
+
             if (data.getDeliveryInfo() != null) {
                 String deliveryInfo = utils.validateString(data.getDeliveryInfo(), 500L, "배송 안내");
                 product.setDeliveryInfo(deliveryInfo);
@@ -522,26 +506,6 @@ public class ProductController {
                 if (data.getExpectedDeliverDay() < 0) return res.throwError("예상 도착일을 입력해주세요.", "INPUT_CHECK_REQUIRED");
                 product.setExpectedDeliverDay(data.getExpectedDeliverDay());
             }
-//            if (data.getTypeId() != null) {
-//                ProductType type = productInfoService.selectProductType(data.getTypeId());
-//                product.setProductType(type);
-//            }
-//            if (data.getLocationId() != null) {
-//                ProductLocation location = productInfoService.selectProductLocation(data.getLocationId());
-//                product.setProductLocation(location);
-//            }
-//            if (data.getUsageId() != null) {
-//                ProductUsage usage = productInfoService.selectProductUsage(data.getUsageId());
-//                product.setProductUsage(usage);
-//            }
-//            if (data.getStorageId() != null) {
-//                ProductStorage storage = productInfoService.selectProductStorage(data.getStorageId());
-//                product.setProductStorage(storage);
-//            }
-//            if (data.getProcessId() != null) {
-//                ProductProcess process = productInfoService.selectProductProcess(data.getProcessId());
-//                product.setProductProcess(process);
-//            }
             if (data.searchFilterFieldIds != null)
                 data.getSearchFilterFieldIds().forEach(searchFilterService::selectSearchFilterField);
             if (data.getDescriptionContent() != null) {
@@ -581,11 +545,11 @@ public class ProductController {
                         for (OptionItemUpdateReq itemData : optionData.getData().getItems().stream().map(Common.CudInput::getData).toList()) {
                             String name = utils.validateString(itemData.name, 100L, "옵션 이름");
                             itemData.setName(name);
-                            if (itemData.discountPrice == null)
-                                return res.throwError("할인(판매) 가격을 입력해주세요.", "INPUT_CHECK_REQUIRED");
+                            if (itemData.discountPrice == null) itemData.setDiscountPrice(0);
+//                                return res.throwError("할인(판매) 가격을 입력해주세요.", "INPUT_CHECK_REQUIRED");
                             if (itemData.amount == null) return res.throwError("개수를 입력해주세요.", "INPUT_CHECK_REQUIRED");
-                            if (itemData.purchasePrice == null)
-                                return res.throwError("매입가를 입력해주세요.", "INPUT_CHECK_REQUIRED");
+                            if (itemData.purchasePrice == null) itemData.setPurchasePrice(0);
+//                                return res.throwError("매입가를 입력해주세요.", "INPUT_CHECK_REQUIRED");
                             if (itemData.originPrice == null) itemData.setOriginPrice(0);
                             if (itemData.deliveryFee == null)
                                 return res.throwError("배송비를 입력해주세요.", "INPUT_CHECK_REQUIRED");
@@ -609,7 +573,7 @@ public class ProductController {
                                     return res.throwError("배송비를 입력해주세요.", "INPUT_CHECK_REQUIRED");
                             } else if (itemData.getType().equals(Common.CudType.UPDATE)) {
                                 if (itemData.getId() == null)
-                                    return res.throwError("옵션 아이템 UPDATE 시 ID를 필수로 입력해주세요.", "INPUT_CHECK_REQRUIRED");
+                                    return res.throwError("옵션 아이템 UPDATE 시 ID를 필수로 입력해주세요.", "INPUT_CHECK_REQUIRED");
                                 OptionItem optionItem = productService.selectOptionItem(itemData.getId());
                             }
                         }
@@ -627,15 +591,16 @@ public class ProductController {
                     if (optionData.getType().equals(Common.CudType.CREATE)) {
                         Option
                                 option =
-                                productService.addOption(Option.builder().productId(product.getId()).description("").isNeeded(
+                                productService.addOption(Option.builder().productId(product.getId()).description("").state(OptionState.ACTIVE).isNeeded(
                                         optionData.getData().getIsNeeded()).build());
                         for (OptionItemUpdateReq itemData : optionData.getData().getItems().stream().map(Common.CudInput::getData).toList()) {
                             OptionItem
                                     optionItem =
-                                    productService.addOptionItem(OptionItem.builder().name(itemData.name).discountPrice(
-                                            itemData.discountPrice).amount(itemData.amount).purchasePrice(itemData.purchasePrice).originPrice(
-                                            itemData.originPrice).deliverFee(itemData.deliveryFee).deliverBoxPerAmount(
-                                            itemData.deliverBoxPerAmount).maxAvailableAmount(itemData.maxAvailableAmount).build());
+                                    productService.addOptionItem(OptionItem.builder().optionId(option.getId()).name(
+                                            itemData.name).discountPrice(itemData.discountPrice).amount(itemData.amount).purchasePrice(
+                                            itemData.purchasePrice).originPrice(itemData.originPrice).state(OptionItemState.ACTIVE).deliverFee(
+                                            itemData.deliveryFee).deliverBoxPerAmount(itemData.deliverBoxPerAmount).maxAvailableAmount(
+                                            itemData.maxAvailableAmount).build());
                             if (itemData.isRepresent != null && itemData.isRepresent) representOptionItem = optionItem;
                         }
                     } else if (optionData.getType().equals(Common.CudType.UPDATE)) {
@@ -647,18 +612,20 @@ public class ProductController {
                                 OptionItem
                                         optionItem =
                                         productService.addOptionItem(OptionItem.builder().optionId(option.getId()).name(
-                                                d.getName()).discountPrice(d.discountPrice).amount(d.amount).purchasePrice(
+                                                d.getName()).discountPrice(d.discountPrice).state(OptionItemState.ACTIVE).amount(d.amount).purchasePrice(
                                                 d.purchasePrice).originPrice(d.originPrice).deliverFee(d.deliveryFee).deliverBoxPerAmount(
                                                 d.deliverBoxPerAmount).maxAvailableAmount(d.maxAvailableAmount).build());
                                 if (d.isRepresent != null && d.isRepresent) representOptionItem = optionItem;
                             } else if (itemData.getType().equals(Common.CudType.UPDATE)) {
+                                System.out.println("123");
                                 OptionItem
                                         optionItem =
                                         OptionItem.builder().id(itemData.getId()).optionId(option.getId()).name(itemData.getData().name).discountPrice(
-                                                itemData.getData().discountPrice).amount(itemData.getData().amount).purchasePrice(
+                                                itemData.getData().discountPrice).amount(itemData.getData().amount).state(OptionItemState.ACTIVE).purchasePrice(
                                                 itemData.getData().purchasePrice).originPrice(itemData.getData().originPrice).deliverFee(
                                                 itemData.getData().deliveryFee).deliverBoxPerAmount(itemData.getData().deliverBoxPerAmount).maxAvailableAmount(
                                                 itemData.getData().maxAvailableAmount).build();
+                                System.out.println("123");
                                 optionItem = productService.addOptionItem(optionItem);
                                 if (d.isRepresent != null && d.isRepresent) representOptionItem = optionItem;
                             } else {
@@ -672,9 +639,8 @@ public class ProductController {
             }
             if (data.searchFilterFieldIds != null) {
                 productService.deleteProductSearchFilters(product.getId());
-                productService.addProductSearchFilters(data.searchFilterFieldIds.stream().map(v -> {
-                    return ProductSearchFilterMap.builder().productId(product.getId()).fieldId(v).build();
-                }).toList());
+                productService.addProductSearchFilters(data.searchFilterFieldIds.stream().map(v -> ProductSearchFilterMap.builder().productId(
+                        product.getId()).fieldId(v).build()).toList());
             }
             if (representOptionItem != null) {
                 product.setRepresentOptionItemId(representOptionItem.getId());

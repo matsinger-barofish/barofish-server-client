@@ -5,7 +5,6 @@ import com.matsinger.barofishserver.banner.BannerService;
 import com.matsinger.barofishserver.data.curation.object.Curation;
 import com.matsinger.barofishserver.data.curation.object.CurationDto;
 import com.matsinger.barofishserver.data.curation.CurationService;
-import com.matsinger.barofishserver.data.tip.Tip;
 import com.matsinger.barofishserver.data.tip.TipService;
 import com.matsinger.barofishserver.data.topbar.TopBar;
 import com.matsinger.barofishserver.data.topbar.TopBarService;
@@ -16,7 +15,6 @@ import com.matsinger.barofishserver.product.object.Product;
 import com.matsinger.barofishserver.product.ProductService;
 import com.matsinger.barofishserver.siteInfo.SiteInfoService;
 import com.matsinger.barofishserver.siteInfo.SiteInformation;
-import com.matsinger.barofishserver.store.StoreRepository;
 import com.matsinger.barofishserver.store.StoreService;
 import com.matsinger.barofishserver.store.object.SimpleStore;
 import com.matsinger.barofishserver.store.object.StoreInfo;
@@ -54,7 +52,7 @@ public class MainController {
 
     @GetMapping("")
     public ResponseEntity<CustomResponse<Main>> selectMainItems(@RequestHeader(value = "Authorization") Optional<String> auth) {
-        CustomResponse<Main> res = new CustomResponse();
+        CustomResponse<Main> res = new CustomResponse<>();
         Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ALLOW), auth);
         try {
             Main data = new Main();

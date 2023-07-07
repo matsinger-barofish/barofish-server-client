@@ -3,6 +3,7 @@ package com.matsinger.barofishserver.compare;
 import com.matsinger.barofishserver.compare.obejct.RecommendCompareSet;
 import com.matsinger.barofishserver.compare.obejct.RecommendCompareSetDto;
 import com.matsinger.barofishserver.compare.obejct.RecommendCompareSetType;
+import com.matsinger.barofishserver.compare.obejct.SaveProductId;
 import com.matsinger.barofishserver.product.ProductService;
 import com.matsinger.barofishserver.product.object.ProductListDto;
 import lombok.RequiredArgsConstructor;
@@ -19,6 +20,8 @@ import java.util.List;
 public class RecommendCompareSetService {
     private final RecommendCompareSetRepository recommendCompareSetRepository;
     private final ProductService productService;
+    private final SaveProductRepository saveProductRepository;
+
 
     public RecommendCompareSet addRecommendCompareSet(RecommendCompareSet compareSet) {
         return recommendCompareSetRepository.save(compareSet);
@@ -40,13 +43,16 @@ public class RecommendCompareSetService {
         return recommendCompareSetRepository.findAllByTypeRandom();
     }
 
-    public RecommendCompareSetDto convert2Dto(RecommendCompareSet set) {
+    public RecommendCompareSetDto convert2Dto(RecommendCompareSet set, Integer userId) {
         List<ProductListDto>
                 productListDtos =
                 new ArrayList<>(Arrays.asList(set.getProduct1Id(),
                         set.getProduct2Id(),
-                        set.getProduct3Id())).stream().map(v -> productService.convert2ListDto(productService.selectProduct(
-                        v))).toList();
+                        set.getProduct3Id())).stream().map(v -> {
+                    ProductListDto dto = productService.convert2ListDto(productService.selectProduct(v));
+                    if (userId != null) dto.setIsLike(saveProductRepository.existsById(new SaveProductId(userId, v)));
+                    return dto;
+                }).toList();
         return RecommendCompareSetDto.builder().id(set.getId()).type(set.getType()).products(productListDtos).build();
     }
 

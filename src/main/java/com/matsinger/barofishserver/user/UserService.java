@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.*;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -86,15 +87,16 @@ public class UserService {
         return userRepository.save(user);
     }
 
-    public UserInfo addUser(User user, UserAuth userAuth, UserInfo userInfo, DeliverPlace deliverPlace) {
+    @Transactional
+    public void addUser(User user, UserAuth userAuth, UserInfo userInfo, DeliverPlace deliverPlace) {
         User res = userRepository.save(user);
         userAuth.setUserId(res.getId());
+        userInfo.setUserId(res.getId());
         userInfo.setUser(res);
         deliverPlace.setUserId(res.getId());
         userAuthRepository.save(userAuth);
         UserInfo result = userInfoRepository.save(userInfo);
         deliverPlaceRepository.save(deliverPlace);
-        return result;
     }
 
     public UserAuth selectUserByLoginId(LoginType loginType, String loginId) {
@@ -117,24 +119,23 @@ public class UserService {
         return userAuthRepository.save(userAuth);
     }
 
-    public UserInfo addUserInfo(UserInfo userInfo) {
-        return userInfoRepository.save(userInfo);
+    public void addUserInfo(UserInfo userInfo) {
+        userInfoRepository.save(userInfo);
     }
 
-    public List<User> updateUserState(List<Integer> userIds, UserState state) {
+    public void updateUserState(List<Integer> userIds, UserState state) {
         List<User> users = userRepository.findAllById(userIds);
         for (User user : users) {
             user.setState(state);
         }
         users = userRepository.saveAll(users);
-        return users;
     }
 
     public void updateUserInfo(UserInfo userInfo) {
         userInfoRepository.save(userInfo);
     }
 
-    public void updateUerPassword(UserAuth userAuth) {
+    public void updateUserPassword(UserAuth userAuth) {
         userAuthRepository.save(userAuth);
     }
 

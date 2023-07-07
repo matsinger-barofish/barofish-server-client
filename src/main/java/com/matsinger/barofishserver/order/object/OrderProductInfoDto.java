@@ -1,9 +1,6 @@
 package com.matsinger.barofishserver.order.object;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
-import com.matsinger.barofishserver.product.object.Product;
 import com.matsinger.barofishserver.product.object.ProductListDto;
-import jakarta.persistence.*;
 import lombok.Builder;
 import lombok.Getter;
 

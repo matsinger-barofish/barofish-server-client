@@ -1,11 +1,8 @@
 package com.matsinger.barofishserver.product.object;
 
-import com.matsinger.barofishserver.store.object.Store;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Objects;
 
 @Getter
@@ -23,7 +20,10 @@ public class Option {
     @Basic
     @Column(name = "product_id", nullable = false)
     private int productId;
-
+    @Basic
+    @Column(name = "state", nullable = false)
+    @Enumerated(EnumType.STRING)
+    private OptionState state;
     @Basic
     @Column(name = "is_needed", nullable = false)
     private Boolean isNeeded;

@@ -7,7 +7,6 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @Getter
@@ -30,10 +29,10 @@ public class SimpleStore {
 
     List<ReviewStatistic> reviewStatistic;
 
-    List<ProductListDto> products = new ArrayList<>();
-    List<ReviewDto> reviews = new ArrayList<>();
+    List<ProductListDto> products;
+    List<ReviewDto> reviews;
     Integer reviewCount;
     Integer productCount;
 
-    List<ReviewDto> imageReviews = new ArrayList<>();
+    List<ReviewDto> imageReviews;
 }

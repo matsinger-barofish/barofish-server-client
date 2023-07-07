@@ -6,12 +6,10 @@ import org.springframework.stereotype.Component;
 
 import java.io.*;
 import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.regex.Pattern;
 
 @Component
 public class Common {
@@ -52,11 +50,11 @@ public class Common {
 
     public String getPostWord(String str, String firstVal, String secondVal) {
         try {
-            char laststr = str.charAt(str.length() - 1);
-            if (laststr < 0xAC00 || laststr > 0xD7A3) {
+            char lastStr = str.charAt(str.length() - 1);
+            if (lastStr < 0xAC00 || lastStr > 0xD7A3) {
                 return str;
             }
-            int lastCharIndex = (laststr - 0xAC00) % 28;
+            int lastCharIndex = (lastStr - 0xAC00) % 28;
             if (lastCharIndex > 0) {
                 if (firstVal.equals("으로") && lastCharIndex == 8) {
                     str += secondVal;
@@ -103,8 +101,6 @@ public class Common {
             }
             rd.close();
             return response.toString();
-        } catch (MalformedURLException e) {
-            throw new RuntimeException(e);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

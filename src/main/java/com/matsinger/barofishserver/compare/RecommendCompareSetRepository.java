@@ -12,7 +12,7 @@ public interface RecommendCompareSetRepository extends JpaRepository<RecommendCo
 
     void deleteAllByProduct1IdOrProduct2IdOrProduct3Id(Integer product1Id, Integer product2Id, Integer product3Id);
 
-    @Query(value = "select * from recommend_compare_set order by rand() limit 5",nativeQuery = true)
+    @Query(value = "select * from recommend_compare_set where type = 'RECOMMEND' order by rand() limit 5", nativeQuery = true)
     List<RecommendCompareSet> findAllByTypeRandom();
 
 

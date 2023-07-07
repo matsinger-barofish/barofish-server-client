@@ -3,7 +3,6 @@ package com.matsinger.barofishserver.searchFilter.object;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.util.List;
 
 @Entity
 @Getter

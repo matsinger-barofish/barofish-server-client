@@ -1,7 +1,6 @@
 package com.matsinger.barofishserver.review.object;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
-import com.matsinger.barofishserver.order.object.Orders;
+import com.matsinger.barofishserver.order.object.OrderProductInfo;
 import com.matsinger.barofishserver.product.object.Product;
 import com.matsinger.barofishserver.store.object.Store;
 import com.matsinger.barofishserver.user.object.User;
@@ -50,12 +49,12 @@ public class Review {
     private User user;
 
     @ManyToOne
-    @JoinColumn(name = "order_id", insertable = false, updatable = false)
-    private Orders order;
+    @JoinColumn(name = "order_product_info_id", insertable = false, updatable = false)
+    private OrderProductInfo orderProductInfo;
 
     @Basic
-    @Column(name = "order_id")
-    private String orderId;
+    @Column(name = "order_product_info_id")
+    private Integer orderProductInfoId;
     @Basic
     @Column(name = "images", nullable = false, length = -1)
     private String images;
@@ -130,7 +129,7 @@ public class Review {
         return ReviewDto.builder().id(this.id).store(this.store.getStoreInfo().convert2Dto()).images(images.substring(1,
                 images.length() -
                         1).split(",")).content(this.content).createdAt(this.createdAt).evaluations(this.evaluations !=
-                null ? this.evaluations.stream().map(v -> v.getEvaluation()).toList() : null).build();
+                null ? this.evaluations.stream().map(ReviewEvaluation::getEvaluation).toList() : null).build();
     }
 
     @Override

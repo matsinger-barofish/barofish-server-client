@@ -1,9 +1,7 @@
 package com.matsinger.barofishserver.coupon;
 
-import com.matsinger.barofishserver.notice.NoticeType;
 import jakarta.persistence.*;
 import lombok.*;
-import org.checkerframework.checker.units.qual.C;
 
 import java.sql.Timestamp;
 

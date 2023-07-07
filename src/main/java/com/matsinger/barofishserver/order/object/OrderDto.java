@@ -17,6 +17,7 @@ public class OrderDto {
     OrderState state;
     String ordererName;
     String ordererTel;
+    OrderPaymentWay paymentWay;
     Integer totalAmount;
     Integer couponDiscount;
     Integer usePoint;

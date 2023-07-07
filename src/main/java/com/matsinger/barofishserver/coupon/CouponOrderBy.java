@@ -5,7 +5,7 @@ public enum CouponOrderBy {
 
     public final String label;
 
-    private CouponOrderBy(String label) {
+    CouponOrderBy(String label) {
         this.label = label;
     }
 }

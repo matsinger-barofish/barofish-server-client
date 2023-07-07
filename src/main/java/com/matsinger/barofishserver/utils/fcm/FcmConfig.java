@@ -7,11 +7,11 @@ import com.google.firebase.messaging.FirebaseMessaging;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.DefaultResourceLoader;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.ResourcePatternUtils;
 
+import javax.annotation.PostConstruct;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
@@ -22,6 +22,7 @@ public class FcmConfig {
     private String keyFilePath;
 
     @Bean
+    @PostConstruct
     FirebaseMessaging firebaseMessaging() throws IOException {
         Resource
                 resources =
@@ -46,6 +47,7 @@ public class FcmConfig {
                     FirebaseOptions.builder().setCredentials(GoogleCredentials.fromStream(refreshToken)).build();
             firebaseApp = FirebaseApp.initializeApp(options);
         }
+        System.out.println("Fcm Setting Completed");
         return FirebaseMessaging.getInstance(firebaseApp);
     }
 }

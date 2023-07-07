@@ -6,7 +6,7 @@ public enum SettlementOrderBy {
 
     public final String label;
 
-    private SettlementOrderBy(String label) {
+    SettlementOrderBy(String label) {
         this.label = label;
     }
 }

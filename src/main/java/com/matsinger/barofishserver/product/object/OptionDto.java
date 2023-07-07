@@ -1,6 +1,5 @@
 package com.matsinger.barofishserver.product.object;
 
-import com.matsinger.barofishserver.category.CategoryDto;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;

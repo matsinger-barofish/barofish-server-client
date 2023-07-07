@@ -50,7 +50,7 @@ public class CategoryController {
                                                                 @RequestPart(value = "categoryId", required = false) Integer categoryId,
                                                                 @RequestPart(value = "name") String name,
                                                                 @RequestPart(value = "image", required = false) MultipartFile file) {
-        CustomResponse<Category> res = new CustomResponse();
+        CustomResponse<Category> res = new CustomResponse<>();
         Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
         if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
         try {
@@ -60,7 +60,7 @@ public class CategoryController {
             String imageUrl = null;
             if (categoryId == null) {
                 if (file == null) return res.throwError("상위 카테고리의 경우 이미지는 필수입니다.", "INPUT_CHECK_REQUIRED");
-                imageUrl = s3.upload(file, new ArrayList<>(Arrays.asList("category")));
+                imageUrl = s3.upload(file, new ArrayList<>(List.of("category")));
                 category.setImage(imageUrl);
             } else {
                 Category parentCategory = categoryService.findById(categoryId);
@@ -80,7 +80,7 @@ public class CategoryController {
                                                                    @PathVariable("id") Integer id,
                                                                    @RequestPart(value = "name", required = false) String name,
                                                                    @RequestPart(value = "image", required = false) MultipartFile image) {
-        CustomResponse<Category> res = new CustomResponse();
+        CustomResponse<Category> res = new CustomResponse<>();
         Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
         if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
         try {
@@ -91,7 +91,7 @@ public class CategoryController {
                 category.setName(name);
             }
             if (image != null) {
-                imageUrl = s3.upload(image, new ArrayList<>(Arrays.asList("category")));
+                imageUrl = s3.upload(image, new ArrayList<>(List.of("category")));
                 category.setImage(imageUrl);
             }
             categoryService.update(id, category);
@@ -105,7 +105,7 @@ public class CategoryController {
     @DeleteMapping("/{id}")
     public ResponseEntity<CustomResponse<Category>> deleteCategory(@RequestHeader(value = "Authorization") Optional<String> auth,
                                                                    @PathVariable("id") Integer id) {
-        CustomResponse<Category> res = new CustomResponse();
+        CustomResponse<Category> res = new CustomResponse<>();
         Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
         if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
         try {
@@ -131,7 +131,7 @@ public class CategoryController {
             List<Integer> compareFilterIds = categoryFilterService.selectCompareFilterIdList(categoryId);
             List<CompareFilterDto>
                     compareFilterDtos =
-                    compareFilterService.selectCompareFilterListWithIds(compareFilterIds).stream().map(v -> v.convert2Dto()).toList();
+                    compareFilterService.selectCompareFilterListWithIds(compareFilterIds).stream().map(CompareFilter::convert2Dto).toList();
             CategoryDto
                     categoryDto =
                     CategoryDto.builder().filters(compareFilterDtos).id(categoryId).name(category.getName()).image(
@@ -153,14 +153,11 @@ public class CategoryController {
                 List<Integer> compareFilterIds = categoryFilterService.selectCompareFilterIdList(category.getId());
                 List<CompareFilterDto>
                         compareFilterDtos =
-                        compareFilterService.selectCompareFilterListWithIds(compareFilterIds).stream().map(v -> v.convert2Dto()).toList();
-                CategoryDto
-                        categoryDto =
-                        CategoryDto.builder().filters(compareFilterDtos).id(category.getId()).name(category.getName()).image(
-                                category.getImage()).build();
-                return categoryDto;
+                        compareFilterService.selectCompareFilterListWithIds(compareFilterIds).stream().map(CompareFilter::convert2Dto).toList();
+                return CategoryDto.builder().filters(compareFilterDtos).id(category.getId()).name(category.getName()).image(
+                        category.getImage()).build();
             }).toList();
-            res.setData(Optional.ofNullable(categoryDtos));
+            res.setData(Optional.of(categoryDtos));
             return ResponseEntity.ok(res);
         } catch (Exception e) {
             return res.defaultError(e);
@@ -177,7 +174,7 @@ public class CategoryController {
     @PostMapping("/compare-filter/add/")
     public ResponseEntity<CustomResponse<CompareFilterDto>> addCategoryCompareFilter(@RequestHeader(value = "Authorization") Optional<String> auth,
                                                                                      @RequestPart(value = "data") AddCategoryCompareFilterReq data) {
-        CustomResponse<CompareFilterDto> res = new CustomResponse();
+        CustomResponse<CompareFilterDto> res = new CustomResponse<>();
         Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
         if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
         try {
@@ -199,7 +196,7 @@ public class CategoryController {
     @DeleteMapping("/compare-filter/delete/")
     public ResponseEntity<CustomResponse<CompareFilterDto>> deleteCategoryCompareFilter(@RequestHeader(value = "Authorization") Optional<String> auth,
                                                                                         @RequestPart(value = "data") AddCategoryCompareFilterReq data) {
-        CustomResponse<CompareFilterDto> res = new CustomResponse();
+        CustomResponse<CompareFilterDto> res = new CustomResponse<>();
         Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
         if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
         try {

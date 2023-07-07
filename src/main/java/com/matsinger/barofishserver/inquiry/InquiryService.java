@@ -21,7 +21,6 @@ public class InquiryService {
     private final InquiryRepository inquiryRepository;
     private final UserService userService;
     private final StoreService storeService;
-    @Autowired
     private final ProductRepository productRepository;
 
     public InquiryDto convert2Dto(Inquiry inquiry, Integer productId, Integer userId) {

@@ -2,8 +2,6 @@ package com.matsinger.barofishserver.order;
 
 import com.matsinger.barofishserver.coupon.Coupon;
 import com.matsinger.barofishserver.coupon.CouponService;
-import com.matsinger.barofishserver.coupon.CouponType;
-import com.matsinger.barofishserver.inquiry.InquiryType;
 import com.matsinger.barofishserver.jwt.JwtService;
 import com.matsinger.barofishserver.jwt.TokenAuthType;
 import com.matsinger.barofishserver.jwt.TokenInfo;
@@ -26,6 +24,8 @@ import com.matsinger.barofishserver.user.object.UserInfo;
 import com.matsinger.barofishserver.user.UserService;
 import com.matsinger.barofishserver.utils.Common;
 import com.matsinger.barofishserver.utils.CustomResponse;
+import jakarta.persistence.criteria.Join;
+import jakarta.persistence.criteria.JoinType;
 import jakarta.persistence.criteria.Predicate;
 import lombok.*;
 import org.springframework.data.domain.Page;
@@ -62,6 +62,7 @@ public class OrderController {
         Integer pointRate;
         Integer maxReviewPoint;
     }
+
 
     @GetMapping("/point-rule")
     public ResponseEntity<CustomResponse<PointRuleRes>> selectPointRule(@RequestHeader(value = "Authorization") Optional<String> auth) {
@@ -116,7 +117,9 @@ public class OrderController {
                     return res.throwError("접근 권한이 없습니다.", "NOT_ALLOWED");
             }
             UserInfo userInfo = userService.selectUserInfo(order.getUserId());
-            res.setData(Optional.ofNullable(orderService.convert2Dto(order, null, null)));
+            res.setData(Optional.ofNullable(orderService.convert2Dto(order,
+                    tokenInfo.get().getType().equals(TokenAuthType.PARTNER) ? tokenInfo.get().getId() : null,
+                    null)));
             return ResponseEntity.ok(res);
         } catch (Exception e) {
             return res.defaultError(e);
@@ -160,6 +163,22 @@ public class OrderController {
                     predicates.add(builder.like(root.get("deliverPlace").get("postalCode"), "%" + postalCode + "%"));
                 if (orderAtS != null) predicates.add(builder.greaterThan(root.get("orderedAt"), orderAtS));
                 if (orderAtE != null) predicates.add(builder.lessThan(root.get("orderedAt"), orderAtE));
+
+//                query.groupBy(root.get("id"));
+                query.distinct(true);
+                if (state != null) {
+                    predicates.add(root.get("productInfos").get("state").in(Arrays.stream(state.split(",")).map(
+                            OrderProductState::valueOf).toList()));
+                    Join<Orders, OrderProductInfo> t = root.join("productInfos", JoinType.INNER);
+                    predicates.add(builder.isNotNull(t.get("id")));
+                    predicates.add(builder.or(builder.notEqual(t.get("state"), OrderProductState.WAIT_DEPOSIT),
+                            builder.equal(root.get("paymentWay"), OrderPaymentWay.DEPOSIT)));
+
+                    if (tokenInfo.get().getType().equals(TokenAuthType.PARTNER)) {
+                        predicates.add(builder.equal(t.get("product").get("storeId"), tokenInfo.get().getId()));
+                    }
+                }
+//                predicates.add(builder.isNotNull(root.join("productInfos").get("id")));
 //                if (tokenInfo.get().getType().equals(TokenAuthType.PARTNER))
 //                    predicates.add(builder.)
 //                    predicates.add(builder.equal(root.get("storeId"), tokenInfo.get().getId()))
@@ -167,19 +186,17 @@ public class OrderController {
             };
             Specification<OrderProductInfo> productSpec = (root, query, builder) -> {
                 List<Predicate> predicates = new ArrayList<>();
-                if (state != null)
-                    predicates.add(builder.and(root.get("type").in(Arrays.stream(state.split(",")).map(OrderProductState::valueOf).toList())));
                 if (tokenInfo.get().getType().equals(TokenAuthType.PARTNER))
                     predicates.add(builder.equal(root.get("product").get("storeId"), tokenInfo.get().getId()));
                 return builder.and(predicates.toArray(new Predicate[0]));
             };
             PageRequest pageRequest = PageRequest.of(page, take, Sort.by(sort, orderBy.label));
-            Page<OrderDto> orders = orderService.selectOrderLitByAdmin(pageRequest, spec).map(o -> {
-                return orderService.convert2Dto(o,
-                        tokenInfo.get().getType().equals(TokenAuthType.PARTNER) ? tokenInfo.get().getId() : null,
-                        productSpec);
-            });
-            res.setData(Optional.ofNullable(orders));
+            Page<OrderDto>
+                    orders =
+                    orderService.selectOrderLitByAdmin(pageRequest, spec).map(o -> orderService.convert2Dto(o,
+                            tokenInfo.get().getType().equals(TokenAuthType.PARTNER) ? tokenInfo.get().getId() : null,
+                            productSpec));
+            res.setData(Optional.of(orders));
             return ResponseEntity.ok(res);
         } catch (Exception e) {
             return res.defaultError(e);
@@ -196,9 +213,11 @@ public class OrderController {
         if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
         try {
             PageRequest pageRequest = PageRequest.of(page, take, Sort.by(Sort.Direction.DESC, "orderedAt"));
-            List<OrderDto> orders = orderService.selectOrderList(userId, pageRequest).stream().map(o -> {
-                return orderService.convert2Dto(o, null, null);
-            }).toList();
+            List<OrderDto>
+                    orders =
+                    orderService.selectOrderList(userId, pageRequest).stream().map(o -> orderService.convert2Dto(o,
+                            null,
+                            null)).toList();
             res.setData(Optional.of(orders));
             return ResponseEntity.ok(res);
         } catch (Exception e) {
@@ -217,11 +236,10 @@ public class OrderController {
             PageRequest pageRequest = PageRequest.of(page, take, Sort.by(Sort.Direction.DESC, "orderedAt"));
             List<OrderDto>
                     orders =
-                    orderService.selectOrderList(tokenInfo.get().getId(), pageRequest).stream().map(o -> {
-                        return orderService.convert2Dto(o, null, null);
-                    }).toList();
+                    orderService.selectOrderList(tokenInfo.get().getId(),
+                            pageRequest).stream().map(o -> orderService.convert2Dto(o, null, null)).toList();
 
-            res.setData(Optional.ofNullable(orders));
+            res.setData(Optional.of(orders));
             return ResponseEntity.ok(res);
         } catch (Exception e) {
             return res.defaultError(e);
@@ -234,11 +252,13 @@ public class OrderController {
         Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth);
         if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
         try {
-            List<OrderDto> orders = orderService.selectCanceledOrderList(tokenInfo.get().getId()).stream().map(o -> {
-                return orderService.convert2Dto(o, null, null);
-            }).toList();
-            ;
-            res.setData(Optional.ofNullable(orders));
+            List<OrderDto>
+                    orders =
+                    orderService.selectCanceledOrderList(tokenInfo.get().getId()).stream().map(o -> orderService.convert2Dto(
+                            o,
+                            null,
+                            null)).toList();
+            res.setData(Optional.of(orders));
             return ResponseEntity.ok(res);
         } catch (Exception e) {
             return res.defaultError(e);
@@ -285,12 +305,12 @@ public class OrderController {
             int totalPrice = data.totalPrice;
             if (data.paymentWay.equals(OrderPaymentWay.KEY_IN)) {
                 PaymentMethod paymentMethod = paymentMethodService.selectPaymentMethod(data.paymentMethodId);
-//                PaymentService.KeyInPaymentReq
-//                        req =
-//                        PaymentService.KeyInPaymentReq.builder().paymentMethod(paymentMethod).order_name(name).orderId(
-//                                orderId).total_amount(totalPrice).build();
-//                Boolean keyInResult = paymentService.processKeyInPayment(req);
-//                if (!keyInResult) return res.throwError("결제에 실패하였습니다.", "NOT_ALLOWED");
+                PaymentService.KeyInPaymentReq
+                        req =
+                        PaymentService.KeyInPaymentReq.builder().paymentMethod(paymentMethod).order_name(name).orderId(
+                                orderId).total_amount(totalPrice).build();
+                Boolean keyInResult = paymentService.processKeyInPayment(req);
+                if (!keyInResult) return res.throwError("결제에 실패하였습니다.", "NOT_ALLOWED");
             }
             UserInfo userInfo = userService.selectUserInfo(userId);
 
@@ -302,6 +322,14 @@ public class OrderController {
             List<OptionItem> optionItems = new ArrayList<>();
             for (OrderProductReq productReq : data.getProducts()) {
                 Product product = productService.selectProduct(productReq.getProductId());
+                if (!product.getState().equals(ProductState.ACTIVE)) {
+                    if (product.getState().equals(ProductState.SOLD_OUT))
+                        return res.throwError("품절된 상품입니다.", "NOT_ALLOWED");
+                    if (product.getState().equals(ProductState.DELETED))
+                        return res.throwError("주문 불가능한 상품입니다.", "NOT_ALLOWED");
+                    if (product.getState().equals(ProductState.INACTIVE))
+                        return res.throwError("주문 불가능한 상품입니다.", "NOT_ALLOWED");
+                }
                 OptionItem optionItem = productService.selectOptionItem(productReq.getOptionId());
                 if (optionItem.getDeliverBoxPerAmount() != null &&
                         optionItem.getMaxAvailableAmount() < productReq.amount)
@@ -311,8 +339,7 @@ public class OrderController {
                         price =
                         orderService.getProductPrice(product,
                                 productReq.getOptionId(),
-                                productReq.getAmount(),
-                                product.getDeliverBoxPerAmount());
+                                productReq.getAmount());
                 Integer
                         deliveryFee =
                         orderService.getProductDeliveryFee(product, productReq.getOptionId(), productReq.getAmount());
@@ -361,9 +388,7 @@ public class OrderController {
         CustomResponse<List<ProductListDto>> res = new CustomResponse<>();
         try {
             List<Product> products = productService.selectProductOtherCustomerBuy(utils.str2IntList(ids));
-            List<ProductListDto> productListDtos = products.stream().map(product -> {
-                return product.convert2ListDto();
-            }).toList();
+            List<ProductListDto> productListDtos = products.stream().map(Product::convert2ListDto).toList();
             res.setData(Optional.of(productListDtos));
             return ResponseEntity.ok(res);
         } catch (Exception e) {
@@ -372,6 +397,35 @@ public class OrderController {
     }
 
     //PROCESS
+    //무통장 입금 확인
+    @PostMapping("/confirm-deposit/{orderId}")
+    public ResponseEntity<CustomResponse<Boolean>> confirmDeposit(@RequestHeader(value = "Authorization") Optional<String> auth,
+                                                                  @PathVariable("orderId") String orderId) {
+        CustomResponse<Boolean> res = new CustomResponse<>();
+        Optional<TokenInfo>
+                tokenInfo =
+                jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.PARTNER, TokenAuthType.ADMIN), auth);
+        if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
+        try {
+            Orders order = orderService.selectOrder(orderId);
+            if (!order.getPaymentWay().equals(OrderPaymentWay.DEPOSIT))
+                return res.throwError("무통장 입금의 경우만 확인 처리 가능합니다.", "NOT_ALLOWED");
+            List<OrderProductInfo> infos = orderService.selectOrderProductInfoListWithOrderId(orderId);
+            infos.forEach(v -> {
+                Product product = productService.selectProduct(v.getProductId());
+                if ((tokenInfo.get().getType().equals(TokenAuthType.PARTNER) &&
+                        tokenInfo.get().getId() == product.getStoreId()) ||
+                        (tokenInfo.get().getType().equals(TokenAuthType.ADMIN)))
+                    v.setState(OrderProductState.PAYMENT_DONE);
+            });
+            orderService.updateOrderProductInfos(infos);
+            res.setData(Optional.of(true));
+            return ResponseEntity.ok(res);
+        } catch (Exception e) {
+            return res.defaultError(e);
+        }
+    }
+
     // 결제 취소
     @Getter
     @NoArgsConstructor
@@ -396,7 +450,7 @@ public class OrderController {
             info.setCancelReason(data.cancelReason);
             info.setCancelReasonContent(content);
             orderService.requestCancelOrderProduct(info.getId());
-            orderService.updateOrderProductInfo(new ArrayList<>(Arrays.asList(info)));
+            orderService.updateOrderProductInfo(new ArrayList<>(List.of(info)));
             res.setData(Optional.of(true));
             return ResponseEntity.ok(res);
         } catch (Exception e) {
@@ -419,7 +473,7 @@ public class OrderController {
             Orders order = orderService.selectOrder(info.getOrderId());
             Product product = productService.selectProduct(info.getProductId());
             info.setState(OrderProductState.CANCELED);
-            orderService.updateOrderProductInfo(new ArrayList<>(Arrays.asList(info)));
+            orderService.updateOrderProductInfo(new ArrayList<>(List.of(info)));
             notificationService.sendFcmToUser(order.getUserId(),
                     NotificationMessageType.ORDER_CANCEL,
                     NotificationMessage.builder().productName(product.getTitle()).build());
@@ -443,7 +497,7 @@ public class OrderController {
             if (!info.getState().equals(OrderProductState.CANCEL_REQUEST))
                 return res.throwError("취소 신청된 상품이 아닙니다.", "INPUT_CHECK_REQUIRED");
             info.setState(OrderProductState.DELIVERY_READY);
-            orderService.cancelOrderedProduct(info.getId());
+            orderService.updateOrderProductInfos(new ArrayList<>(List.of(info)));
             Orders order = orderService.selectOrder(info.getOrderId());
             Product product = productService.selectProduct(info.getProductId());
             notificationService.sendFcmToUser(order.getUserId(),
@@ -467,8 +521,9 @@ public class OrderController {
             OrderProductInfo info = orderService.selectOrderProductInfo(orderProductInfoId);
             if (!info.getState().equals(OrderProductState.CANCEL_REQUEST))
                 return res.throwError("취소 신청된 상품이 아닙니다.", "INPUT_CHECK_REQUIRED");
-            info.setState(OrderProductState.CANCELED);
             orderService.cancelOrderedProduct(orderProductInfoId);
+            info.setState(OrderProductState.CANCELED);
+            orderService.updateOrderProductInfos(List.of(info));
             return ResponseEntity.ok(res);
         } catch (Exception e) {
             return res.defaultError(e);
@@ -479,12 +534,14 @@ public class OrderController {
     public ResponseEntity<CustomResponse<Boolean>> deliverReady(@RequestHeader(value = "Authorization") Optional<String> auth,
                                                                 @PathVariable("orderProductInfoId") Integer orderProductInfoId) {
         CustomResponse<Boolean> res = new CustomResponse<>();
-        Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.PARTNER), auth);
+        Optional<TokenInfo>
+                tokenInfo =
+                jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.PARTNER, TokenAuthType.ADMIN), auth);
         if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
         try {
             OrderProductInfo info = orderService.selectOrderProductInfo(orderProductInfoId);
             info.setState(OrderProductState.DELIVERY_READY);
-            orderService.updateOrderProductInfo(new ArrayList<>(Arrays.asList(info)));
+            orderService.updateOrderProductInfo(new ArrayList<>(List.of(info)));
             res.setData(Optional.of(true));
             return ResponseEntity.ok(res);
         } catch (Exception e) {
@@ -515,7 +572,8 @@ public class OrderController {
             if (data.invoice == null) return res.throwError("운송장 번호를 입력해주세요.", "INPUT_CHECK_REQUIRED");
             info.setDeliverCompanyCode(data.deliverCompanyCode);
             info.setInvoiceCode(data.invoice);
-            orderService.updateOrderProductInfo(new ArrayList<>(Arrays.asList(info)));
+            info.setState(OrderProductState.ON_DELIVERY);
+            orderService.updateOrderProductInfo(new ArrayList<>(List.of(info)));
             res.setData(Optional.of(true));
             return ResponseEntity.ok(res);
         } catch (Exception e) {
@@ -547,7 +605,7 @@ public class OrderController {
             if (data.reasonContent == null) return res.throwError("교환 사유를 입력해주세요.", "INPUT_CHECK_REQUIRED");
             String content = data.reasonContent.trim();
             info.setState(OrderProductState.EXCHANGE_REQUEST);
-            orderService.updateOrderProductInfo(new ArrayList<>(Arrays.asList(info)));
+            orderService.updateOrderProductInfo(new ArrayList<>(List.of(info)));
             res.setData(Optional.of(true));
             return ResponseEntity.ok(res);
         } catch (Exception e) {
@@ -569,7 +627,7 @@ public class OrderController {
             if (!info.getState().equals(OrderProductState.EXCHANGE_REQUEST))
                 return res.throwError("교환 요청된 주문이 아닙니다.", "INPUT_CHECK_REQUIRED");
             info.setState(OrderProductState.DELIVERY_DONE);
-            orderService.updateOrderProductInfo(new ArrayList<>(Arrays.asList(info)));
+            orderService.updateOrderProductInfo(new ArrayList<>(List.of(info)));
             Orders order = orderService.selectOrder(info.getOrderId());
             Product product = productService.selectProduct(info.getProductId());
             notificationService.sendFcmToUser(order.getUserId(),
@@ -595,7 +653,7 @@ public class OrderController {
             if (!info.getState().equals(OrderProductState.EXCHANGE_REQUEST))
                 return res.throwError("교환 요청된 주문이 아닙니다.", "INPUT_CHECK_REQUIRED");
             info.setState(OrderProductState.EXCHANGE_ACCEPT);
-            orderService.updateOrderProductInfo(new ArrayList<>(Arrays.asList(info)));
+            orderService.updateOrderProductInfo(new ArrayList<>(List.of(info)));
             Orders order = orderService.selectOrder(info.getOrderId());
             Product product = productService.selectProduct(info.getProductId());
             notificationService.sendFcmToUser(order.getUserId(),
@@ -615,13 +673,20 @@ public class OrderController {
         Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth);
         if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
         try {
+            Integer userId = tokenInfo.get().getId();
             OrderProductInfo info = orderService.selectOrderProductInfo(orderProductInfoId);
             Orders order = orderService.selectOrder(info.getOrderId());
-            if (tokenInfo.get().getId() != order.getUserId()) return res.throwError("타인의 주문 내역입니다.", "NOT_ALLOWED");
+            if (userId != order.getUserId()) return res.throwError("타인의 주문 내역입니다.", "NOT_ALLOWED");
             if (!info.getState().equals(OrderProductState.DELIVERY_DONE))
                 return res.throwError("배송 완료 후 처리 가능합니다.", "INPUT_CHECK_REQUIRED");
+            UserInfo userInfo = userService.selectUserInfo(userId);
+            Product product = productService.selectProduct(info.getProductId());
+            float pointRate = product.getPointRate() != null ? product.getPointRate() : 0;
+            Integer point = (int) Math.floor(info.getPrice() * info.getAmount() * pointRate);
+            userInfo.setPoint(userInfo.getPoint() + point);
             info.setState(OrderProductState.FINAL_CONFIRM);
-            orderService.updateOrderProductInfo(new ArrayList<>(Arrays.asList(info)));
+            if (point != 0) userService.updateUserInfo(userInfo);
+            orderService.updateOrderProductInfo(new ArrayList<>(List.of(info)));
             return ResponseEntity.ok(res);
         } catch (Exception e) {
             return res.defaultError(e);
@@ -640,7 +705,7 @@ public class OrderController {
             Orders order = orderService.selectOrder(info.getOrderId());
             if (tokenInfo.get().getId() != order.getUserId()) return res.throwError("타인의 주문 내역입니다.", "NOT_ALLOWED");
             info.setState(OrderProductState.REFUND_REQUEST);
-            orderService.updateOrderProductInfo(new ArrayList<>(Arrays.asList(info)));
+            orderService.updateOrderProductInfo(new ArrayList<>(List.of(info)));
             res.setData(Optional.of(true));
             return ResponseEntity.ok(res);
         } catch (Exception e) {
@@ -665,7 +730,7 @@ public class OrderController {
                     NotificationMessageType.REFUND_REJECT,
                     NotificationMessage.builder().productName(product.getTitle()).build());
             info.setState(OrderProductState.DELIVERY_DONE);
-            orderService.updateOrderProductInfo(new ArrayList<>(Arrays.asList(info)));
+            orderService.updateOrderProductInfo(new ArrayList<>(List.of(info)));
             res.setData(Optional.of(true));
             return ResponseEntity.ok(res);
         } catch (Exception e) {
@@ -690,7 +755,7 @@ public class OrderController {
                     NotificationMessageType.REFUND_ACCEPT,
                     NotificationMessage.builder().orderedAt(order.getOrderedAt()).productName(product.getTitle()).build());
             info.setState(OrderProductState.REFUND_ACCEPT);
-            orderService.updateOrderProductInfo(new ArrayList<>(Arrays.asList(info)));
+            orderService.updateOrderProductInfo(new ArrayList<>(List.of(info)));
             res.setData(Optional.of(true));
             return ResponseEntity.ok(res);
         } catch (Exception e) {
@@ -712,7 +777,7 @@ public class OrderController {
             Orders order = orderService.selectOrder(info.getOrderId());
             Product product = productService.selectProduct(info.getProductId());
             info.setState(OrderProductState.REFUND_DONE);
-            orderService.updateOrderProductInfo(new ArrayList<>(Arrays.asList(info)));
+            orderService.updateOrderProductInfo(new ArrayList<>(List.of(info)));
             res.setData(Optional.of(true));
             notificationService.sendFcmToUser(order.getUserId(),
                     NotificationMessageType.REFUND_DONE,

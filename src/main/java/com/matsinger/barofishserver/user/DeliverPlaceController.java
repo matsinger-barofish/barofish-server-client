@@ -3,7 +3,6 @@ package com.matsinger.barofishserver.user;
 import com.matsinger.barofishserver.jwt.JwtService;
 import com.matsinger.barofishserver.jwt.TokenAuthType;
 import com.matsinger.barofishserver.jwt.TokenInfo;
-import com.matsinger.barofishserver.product.object.Option;
 import com.matsinger.barofishserver.user.object.DeliverPlace;
 import com.matsinger.barofishserver.utils.Common;
 import com.matsinger.barofishserver.utils.CustomResponse;

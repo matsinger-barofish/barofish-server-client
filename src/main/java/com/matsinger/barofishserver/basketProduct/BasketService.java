@@ -39,7 +39,9 @@ public class BasketService {
         List<BasketProductDto> productDtos = new ArrayList<>();
         for (BasketProductInfo info : infos) {
             Product product = productService.selectProduct(info.getProductId());
-            SimpleStore store = storeService.selectStoreInfo(product.getStoreId()).convert2Dto();
+            SimpleStore
+                    store =
+                    storeService.convert2SimpleDto(storeService.selectStoreInfo(product.getStoreId()), userId);
             List<BasketProductOption> options = optionRepository.findAllByOrderProductId(info.getId());
             BasketProductOption option = options.size() == 0 ? null : options.get(0);
             OptionItemDto

@@ -11,15 +11,10 @@ import com.matsinger.barofishserver.product.object.Product;
 import com.matsinger.barofishserver.product.object.ProductListDto;
 import com.matsinger.barofishserver.utils.CustomResponse;
 import lombok.*;
-import org.checkerframework.checker.units.qual.N;
-import org.springframework.data.repository.query.Param;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @RestController
@@ -77,7 +72,7 @@ public class CompareController {
 
     @GetMapping("/set/list")
     public ResponseEntity<CustomResponse<List<CompareObject.CompareSetDto>>> selectCompareSetList(@RequestHeader("Authorization") Optional<String> auth) {
-        CustomResponse<List<CompareObject.CompareSetDto>> res = new CustomResponse();
+        CustomResponse<List<CompareObject.CompareSetDto>> res = new CustomResponse<>();
         Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth);
         if (tokenInfo == null) return ResponseEntity.ok(res);
         try {
@@ -85,15 +80,13 @@ public class CompareController {
             List<CompareObject.CompareSetDto> compareSetDtos = compareSets.stream().map(compareSet -> {
                 List<ProductListDto>
                         products =
-                        compareService.selectCompareItems(compareSet.getId()).stream().map(product -> {
-                            return product.convert2ListDto();
-                        }).toList();
+                        compareService.selectCompareItems(compareSet.getId()).stream().map(productService::convert2ListDto).toList();
                 CompareObject.CompareSetDto compareSetDto = new CompareObject.CompareSetDto();
                 compareSetDto.setCompareSetId(compareSet.getId());
                 compareSetDto.setProducts(products);
                 return compareSetDto;
             }).toList();
-            res.setData(Optional.ofNullable(compareSetDtos));
+            res.setData(Optional.of(compareSetDtos));
             return ResponseEntity.ok(res);
         } catch (Exception e) {
             return res.defaultError(e);
@@ -103,7 +96,7 @@ public class CompareController {
     @GetMapping("/set/{id}")
     public ResponseEntity<CustomResponse<List<CompareProductDto>>> selectCompareSet(@RequestHeader("Authorization") Optional<String> auth,
                                                                                     @PathVariable("id") Integer id) {
-        CustomResponse<List<CompareProductDto>> res = new CustomResponse();
+        CustomResponse<List<CompareProductDto>> res = new CustomResponse<>();
         Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth);
         if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
         try {
@@ -111,7 +104,7 @@ public class CompareController {
             List<CompareProductDto>
                     products =
                     compareService.selectCompareItems(compareSet.getId()).stream().map(compareService::convertProduct2Dto).toList();
-            res.setData(Optional.ofNullable(products));
+            res.setData(Optional.of(products));
             return ResponseEntity.ok(res);
         } catch (Exception e) {
             return res.defaultError(e);
@@ -120,16 +113,14 @@ public class CompareController {
 
     @GetMapping("/save")
     public ResponseEntity<CustomResponse<List<ProductListDto>>> selectSaveProductList(@RequestHeader("Authorization") Optional<String> auth) {
-        CustomResponse<List<ProductListDto>> res = new CustomResponse();
+        CustomResponse<List<ProductListDto>> res = new CustomResponse<>();
         Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth);
         if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
         try {
             List<ProductListDto>
                     products =
-                    compareService.selectSaveProducts(tokenInfo.get().getId()).stream().map(product -> {
-                        return productService.convert2ListDto(product);
-                    }).toList();
-            res.setData(Optional.ofNullable(products));
+                    compareService.selectSaveProducts(tokenInfo.get().getId()).stream().map(productService::convert2ListDto).toList();
+            res.setData(Optional.of(products));
             return ResponseEntity.ok(res);
         } catch (Exception e) {
             return res.defaultError(e);
@@ -139,13 +130,13 @@ public class CompareController {
     @PostMapping("/add-set")
     public ResponseEntity<CustomResponse<CompareSet>> addCompareSet(@RequestHeader("Authorization") Optional<String> auth,
                                                                     @RequestBody List<Integer> productIds) {
-        CustomResponse<CompareSet> res = new CustomResponse();
+        CustomResponse<CompareSet> res = new CustomResponse<>();
         Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth);
         if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
         try {
             if (productIds.size() != 3) return res.throwError("비교하기는 3개의 상품만 가능합니다.", "INPUT_CHECK_REQUIRED");
             List<Product> products = productService.selectProductListWithIds(productIds);
-            if (products.stream().map(v -> v.getCategoryId()).map(v -> {
+            if (products.stream().map(Product::getCategoryId).map(v -> {
                 Category category = categoryService.findById(v);
                 return category.getCategoryId();
             }).collect(Collectors.toSet()).size() != 1)
@@ -168,7 +159,7 @@ public class CompareController {
     @PostMapping("/save-product")
     public ResponseEntity<CustomResponse<Boolean>> saveProduct(@RequestHeader("Authorization") Optional<String> auth,
                                                                @RequestPart(value = "data") SaveProductReq data) {
-        CustomResponse<Boolean> res = new CustomResponse();
+        CustomResponse<Boolean> res = new CustomResponse<>();
         Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth);
         if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
         try {
@@ -189,7 +180,7 @@ public class CompareController {
     @DeleteMapping("/set")
     public ResponseEntity<CustomResponse<Boolean>> deleteCompareSet(@RequestHeader("Authorization") Optional<String> auth,
                                                                     @RequestPart(value = "data") DeleteCompareSetReq data) {
-        CustomResponse<Boolean> res = new CustomResponse();
+        CustomResponse<Boolean> res = new CustomResponse<>();
         Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth);
         if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
         try {
@@ -217,7 +208,7 @@ public class CompareController {
     @DeleteMapping("/save")
     public ResponseEntity<CustomResponse<Boolean>> deleteSaveProducts(@RequestHeader("Authorization") Optional<String> auth,
                                                                       @RequestPart(value = "data") DeleteSaveProductReq data) {
-        CustomResponse<Boolean> res = new CustomResponse();
+        CustomResponse<Boolean> res = new CustomResponse<>();
         Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth);
         if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
         try {
@@ -237,14 +228,15 @@ public class CompareController {
     @GetMapping("/recommend/list")
     public ResponseEntity<CustomResponse<List<RecommendCompareSetDto>>> selectRecommendCompareSetListByAdmin(@RequestHeader("Authorization") Optional<String> auth,
                                                                                                              @RequestParam(value = "type") RecommendCompareSetType type) {
-        CustomResponse<List<RecommendCompareSetDto>> res = new CustomResponse();
+        CustomResponse<List<RecommendCompareSetDto>> res = new CustomResponse<>();
         Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
         if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
         try {
             List<RecommendCompareSetDto>
                     recommendCompareSetDtos =
-                    recommendCompareSetService.selectRecommendCompareSetList(type).stream().map(
-                            recommendCompareSetService::convert2Dto).toList();
+                    recommendCompareSetService.selectRecommendCompareSetList(type).stream().map(v -> recommendCompareSetService.convert2Dto(
+                            v,
+                            null)).toList();
             res.setData(Optional.of(recommendCompareSetDtos));
             return ResponseEntity.ok(res);
         } catch (Exception e) {
@@ -258,7 +250,8 @@ public class CompareController {
         try {
             RecommendCompareSetDto
                     recommendCompareSetDto =
-                    recommendCompareSetService.convert2Dto(recommendCompareSetService.selectRecommendCompareSet(id));
+                    recommendCompareSetService.convert2Dto(recommendCompareSetService.selectRecommendCompareSet(id),
+                            null);
             res.setData(Optional.ofNullable(recommendCompareSetDto));
             return ResponseEntity.ok(res);
         } catch (Exception e) {
@@ -276,15 +269,15 @@ public class CompareController {
     @PostMapping("/recommend/add")
     public ResponseEntity<CustomResponse<RecommendCompareSetDto>> addRecommendCompareSet(@RequestHeader("Authorization") Optional<String> auth,
                                                                                          @RequestPart(value = "data") AddRecommendCompareSet data) {
-        CustomResponse<RecommendCompareSetDto> res = new CustomResponse();
+        CustomResponse<RecommendCompareSetDto> res = new CustomResponse<>();
         Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
         if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
         try {
             if (data.type == null) return res.throwError("타입을 입력해주세요.", "INPUT_CHECK_REQUIRED");
             if (data.productIds == null) return res.throwError("상품 아이디를 입력해주세요.", "INPUT_CHECK_REQUIRED");
-            if (data.productIds.stream().collect(Collectors.toSet()).size() != 3)
+            if (new HashSet<>(data.productIds).size() != 3)
                 return res.throwError("3개의 상품을 입력해주세요.", "INPUT_CHECK_REQUIRED");
-            List<Product> products = data.productIds.stream().map(v -> productService.selectProduct(v)).toList();
+            List<Product> products = data.productIds.stream().map(productService::selectProduct).toList();
             if (products.stream().map(v -> v.getCategory().getCategoryId()).collect(Collectors.toSet()).size() != 1)
                 return res.throwError("같은 카테고리 내에서 선정 가능합니다.", "INPUT_CHECK_REQUIRED");
 
@@ -292,7 +285,7 @@ public class CompareController {
                     recommendCompareSet =
                     recommendCompareSetService.addRecommendCompareSet(RecommendCompareSet.builder().type(data.type).product1Id(
                             data.productIds.get(0)).product2Id(data.productIds.get(1)).product3Id(data.productIds.get(2)).build());
-            res.setData(Optional.ofNullable(recommendCompareSetService.convert2Dto(recommendCompareSet)));
+            res.setData(Optional.ofNullable(recommendCompareSetService.convert2Dto(recommendCompareSet, null)));
             return ResponseEntity.ok(res);
         } catch (Exception e) {
             return res.defaultError(e);
@@ -303,7 +296,7 @@ public class CompareController {
     public ResponseEntity<CustomResponse<RecommendCompareSetDto>> updateRecommendCompareSet(@RequestHeader("Authorization") Optional<String> auth,
                                                                                             @RequestPart(value = "data") AddRecommendCompareSet data,
                                                                                             @PathVariable("id") Integer id) {
-        CustomResponse<RecommendCompareSetDto> res = new CustomResponse();
+        CustomResponse<RecommendCompareSetDto> res = new CustomResponse<>();
         Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
         if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
         try {
@@ -312,9 +305,9 @@ public class CompareController {
             if (data.type != null) {
                 set.setType(data.type);
             }
-            if (data.productIds.stream().collect(Collectors.toSet()).size() != 3)
+            if (new HashSet<>(data.productIds).size() != 3)
                 return res.throwError("3개의 상품을 입력해주세요.", "INPUT_CHECK_REQUIRED");
-            List<Product> products = data.productIds.stream().map(v -> productService.selectProduct(v)).toList();
+            List<Product> products = data.productIds.stream().map(productService::selectProduct).toList();
             if (products.stream().map(v -> v.getCategory().getCategoryId()).collect(Collectors.toSet()).size() != 1)
                 return res.throwError("같은 카테고리 내에서 선정 가능합니다.", "INPUT_CHECK_REQUIRED");
             set.setProduct1Id(data.productIds.get(0));
@@ -322,7 +315,7 @@ public class CompareController {
             set.setProduct3Id(data.productIds.get(2));
             set = recommendCompareSetService.updateRecommendCompareSet(set);
             RecommendCompareSet recommendCompareSet = recommendCompareSetService.addRecommendCompareSet(set);
-            res.setData(Optional.ofNullable(recommendCompareSetService.convert2Dto(recommendCompareSet)));
+            res.setData(Optional.ofNullable(recommendCompareSetService.convert2Dto(recommendCompareSet, null)));
             return ResponseEntity.ok(res);
         } catch (Exception e) {
             return res.defaultError(e);
@@ -332,7 +325,7 @@ public class CompareController {
     @DeleteMapping("/recommend/{id}")
     public ResponseEntity<CustomResponse<Boolean>> deleteRecommendCompareSet(@RequestHeader("Authorization") Optional<String> auth,
                                                                              @PathVariable("id") Integer id) {
-        CustomResponse<Boolean> res = new CustomResponse();
+        CustomResponse<Boolean> res = new CustomResponse<>();
         Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
         if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
         try {

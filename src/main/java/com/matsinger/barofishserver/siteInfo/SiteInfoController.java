@@ -3,16 +3,17 @@ package com.matsinger.barofishserver.siteInfo;
 import com.matsinger.barofishserver.jwt.JwtService;
 import com.matsinger.barofishserver.jwt.TokenAuthType;
 import com.matsinger.barofishserver.jwt.TokenInfo;
-import com.matsinger.barofishserver.notice.Notice;
 import com.matsinger.barofishserver.utils.CustomResponse;
+import com.matsinger.barofishserver.utils.RegexConstructor;
 import com.matsinger.barofishserver.utils.S3.S3Uploader;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.RequiredArgsConstructor;
+import lombok.*;
+import org.json.JSONArray;
+import org.json.JSONObject;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
+import java.util.regex.Pattern;
 
 @RestController
 @RequiredArgsConstructor
@@ -23,12 +24,15 @@ public class SiteInfoController {
 
     private final JwtService jwt;
     private final S3Uploader s3;
+    private final RegexConstructor reg;
 
     @GetMapping("/")
-    public ResponseEntity<CustomResponse<List<SiteInformation>>> selectSiteInfoList() {
-        CustomResponse<List<SiteInformation>> res = new CustomResponse<>();
+    public ResponseEntity<CustomResponse<List<SiteInfoDto>>> selectSiteInfoList() {
+        CustomResponse<List<SiteInfoDto>> res = new CustomResponse<>();
         try {
-            List<SiteInformation> siteInfomations = siteInfoService.selectSiteInfoList();
+            List<SiteInfoDto>
+                    siteInfomations =
+                    siteInfoService.selectSiteInfoList().stream().map(SiteInformation::convert2Dto).toList();
             res.setData(Optional.ofNullable(siteInfomations));
             return ResponseEntity.ok(res);
         } catch (Exception e) {
@@ -37,10 +41,10 @@ public class SiteInfoController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<CustomResponse<SiteInformation>> selectSiteInfo(@PathVariable("id") String id) {
-        CustomResponse<SiteInformation> res = new CustomResponse<>();
+    public ResponseEntity<CustomResponse<SiteInfoDto>> selectSiteInfo(@PathVariable("id") String id) {
+        CustomResponse<SiteInfoDto> res = new CustomResponse<>();
         try {
-            SiteInformation siteInfo = siteInfoService.selectSiteInfo(id);
+            SiteInfoDto siteInfo = siteInfoService.selectSiteInfo(id).convert2Dto();
             res.setData(Optional.ofNullable(siteInfo));
             return ResponseEntity.ok(res);
         } catch (Exception e) {
@@ -50,31 +54,54 @@ public class SiteInfoController {
 
     @Getter
     @NoArgsConstructor
-    private static class SiteInfoReq {
+    @Builder
+    @AllArgsConstructor
+    public static class TitleContentReq {
+        String title;
         String content;
     }
 
+    @Getter
+    @NoArgsConstructor
+    private static class SiteInfoReq {
+        String content;
+        List<TitleContentReq> tcContent;
+    }
+
     @PostMapping(value = "/update/{id}")
-    public ResponseEntity<CustomResponse<SiteInformation>> updateSiteInfo(@PathVariable("id") String id,
-                                                                          @RequestHeader(value = "Authorization") Optional<String> auth,
-                                                                          @RequestPart(value = "data") SiteInfoReq data) {
-        CustomResponse<SiteInformation> res = new CustomResponse<>();
+    public ResponseEntity<CustomResponse<SiteInfoDto>> updateSiteInfo(@PathVariable("id") String id,
+                                                                      @RequestHeader(value = "Authorization") Optional<String> auth,
+                                                                      @RequestPart(value = "data") SiteInfoReq data) {
+        CustomResponse<SiteInfoDto> res = new CustomResponse<>();
         Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
         if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
         try {
             SiteInformation siteInformation = siteInfoService.selectSiteInfo(id);
             if (id.startsWith("HTML")) {
-                String fileUrl = s3.uploadEditorStringToS3(data.getContent(), new ArrayList<>(Arrays.asList("tmp")));
+                String fileUrl = s3.uploadEditorStringToS3(data.getContent(), new ArrayList<>(List.of("tmp")));
                 siteInformation.setContent(fileUrl);
                 SiteInformation result = siteInfoService.updateSiteInfo(siteInformation);
-                res.setData(Optional.of(result));
+                res.setData(Optional.of(result.convert2Dto()));
             } else if (id.startsWith("INT_")) {
                 if (!data.getContent().matches("[0-9]+")) return res.throwError("숫자만 입력가능합니다.", "INPUT_CHECK_REQUIRED");
                 siteInformation.setContent(data.getContent());
                 SiteInformation result = siteInfoService.updateSiteInfo(siteInformation);
-                res.setData(Optional.of(result));
+                res.setData(Optional.of(result.convert2Dto()));
             } else if (id.startsWith("INTERNAL")) {
                 return res.throwError("수정 불가능한 데이터입니다.", "NOT_ALLOWED");
+            } else if (id.startsWith("URL")) {
+                if (!Pattern.matches(reg.httpUrl, data.content))
+                    return res.throwError("URL 형식을 확인해주세요.", "INPUT_CHECK_REQUIRED");
+                siteInformation.setContent(data.getContent());
+                SiteInformation result = siteInfoService.updateSiteInfo(siteInformation);
+                res.setData(Optional.ofNullable(result.convert2Dto()));
+            } else if (id.startsWith("TC")) {
+                if (data.getTcContent() == null) return res.throwError("내용을 입력해주세요.", "INPUT_CHECK_REQUIRED");
+                JSONArray json = new JSONArray(data.getTcContent());
+                String jsonString = json.toString();
+                siteInformation.setContent(jsonString);
+                SiteInformation result = siteInfoService.updateSiteInfo(siteInformation);
+                res.setData(Optional.ofNullable(result.convert2Dto()));
             }
             return ResponseEntity.ok(res);
         } catch (Exception e) {

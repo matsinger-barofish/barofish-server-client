@@ -5,9 +5,6 @@ import com.matsinger.barofishserver.jwt.TokenAuthType;
 import com.matsinger.barofishserver.jwt.TokenInfo;
 import com.matsinger.barofishserver.product.ProductService;
 import com.matsinger.barofishserver.product.object.Product;
-import com.matsinger.barofishserver.report.Report;
-import com.matsinger.barofishserver.report.ReportOrderBy;
-import com.matsinger.barofishserver.user.object.UserState;
 import com.matsinger.barofishserver.utils.Common;
 import com.matsinger.barofishserver.utils.CustomResponse;
 import jakarta.persistence.criteria.Predicate;
@@ -47,7 +44,7 @@ public class InquiryController {
                                                                                      @RequestParam(value = "isAnswered", required = false) Boolean isAnswered,
                                                                                      @RequestParam(value = "createdAtS", required = false) Timestamp createdAtS,
                                                                                      @RequestParam(value = "createdAtE", required = false) Timestamp createdAtE) {
-        CustomResponse<Page<InquiryDto>> res = new CustomResponse();
+        CustomResponse<Page<InquiryDto>> res = new CustomResponse<>();
         Optional<TokenInfo>
                 tokenInfo =
                 jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN, TokenAuthType.PARTNER), auth);
@@ -75,10 +72,8 @@ public class InquiryController {
             };
             PageRequest pageRequest = PageRequest.of(page, take, Sort.by(sort, orderBy.label));
             Page<Inquiry> inquiries = inquiryService.selectAllInquiryList(pageRequest, spec);
-            Page<InquiryDto> inquiryDtos = inquiries.map(inquiry -> {
-                return inquiryService.convert2Dto(inquiry, inquiry.getProductId(), inquiry.getUserId());
-            });
-            res.setData(Optional.ofNullable(inquiryDtos));
+            Page<InquiryDto> inquiryDtos = inquiries.map(inquiry -> inquiryService.convert2Dto(inquiry, inquiry.getProductId(), inquiry.getUserId()));
+            res.setData(Optional.of(inquiryDtos));
             return ResponseEntity.ok(res);
         } catch (Exception e) {
             return res.defaultError(e);
@@ -100,12 +95,10 @@ public class InquiryController {
 
     @GetMapping("/product/{productId}")
     public ResponseEntity<CustomResponse<List<InquiryDto>>> selectInquiryListWithProduct(@PathVariable("productId") Integer productId) {
-        CustomResponse<List<InquiryDto>> res = new CustomResponse();
+        CustomResponse<List<InquiryDto>> res = new CustomResponse<>();
         try {
             List<Inquiry> inquiries = inquiryService.selectInquiryListWithProductId(productId);
-            res.setData(Optional.of(inquiries.stream().map(inquiry -> {
-                return inquiryService.convert2Dto(inquiry, inquiry.getProductId(), inquiry.getUserId());
-            }).toList()));
+            res.setData(Optional.of(inquiries.stream().map(inquiry -> inquiryService.convert2Dto(inquiry, inquiry.getProductId(), inquiry.getUserId())).toList()));
             return ResponseEntity.ok(res);
         } catch (Exception e) {
             return res.defaultError(e);

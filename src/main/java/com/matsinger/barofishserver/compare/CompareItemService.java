@@ -1,19 +1,16 @@
 package com.matsinger.barofishserver.compare;
 
 import com.matsinger.barofishserver.category.CategoryFilterRepository;
-import com.matsinger.barofishserver.category.CategoryService;
 import com.matsinger.barofishserver.compare.filter.CompareFilterDto;
 import com.matsinger.barofishserver.compare.filter.CompareFilterService;
 import com.matsinger.barofishserver.compare.obejct.*;
 import com.matsinger.barofishserver.product.filter.ProductFilterService;
-import com.matsinger.barofishserver.product.filter.ProductFilterValue;
 import com.matsinger.barofishserver.product.filter.ProductFilterValueDto;
+import com.matsinger.barofishserver.product.object.OptionItem;
 import com.matsinger.barofishserver.product.object.Product;
 import com.matsinger.barofishserver.product.ProductService;
-import com.matsinger.barofishserver.product.object.ProductListDto;
 import com.matsinger.barofishserver.store.StoreService;
 import com.matsinger.barofishserver.store.object.StoreInfo;
-import jakarta.persistence.Tuple;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -36,45 +33,26 @@ public class CompareItemService {
     private final ProductFilterService productFilterService;
     private final CategoryFilterRepository categoryFilterRepository;
     private final CompareFilterService compareFilterService;
+    private final RecommendCompareSetService recommendCompareSetService;
 
 
     public List<CompareObject.CompareSetDto> selectPopularCompareSetList(Integer userId) {
-        List<Tuple> data = compareSetRepository.selectPopularCompareSetIdList();
-        List<CompareObject.CompareSetDto> result = new ArrayList<>();
-        for (Tuple t : data) {
-            Integer setId = Integer.parseInt(t.get("setId").toString());
-            List<Product> products = selectCompareItems(setId);
-            List<ProductListDto> productDtos = new ArrayList<>();
-            for (Product p : products) {
-                ProductListDto dto = p.convert2ListDto();
-                dto.setIsLike(checkSaveProduct(userId, p.getId()));
-                productDtos.add(dto);
-
-            }
-            result.add(CompareObject.CompareSetDto.builder().products(productDtos).build());
-        }
-        return result;
+        List<RecommendCompareSet>
+                recommendCompareSets =
+                recommendCompareSetService.selectRecommendCompareSetList(RecommendCompareSetType.POPULAR);
+        return recommendCompareSets.stream().map(v -> {
+            RecommendCompareSetDto dto = recommendCompareSetService.convert2Dto(v, userId);
+            return CompareObject.CompareSetDto.builder().compareSetId(null).products(dto.getProducts()).build();
+        }).toList();
     }
 
     public List<CompareObject.RecommendCompareProduct> selectRecommendCompareSetList(Integer userId) {
-        List<Tuple> productIdsData = compareSetRepository.selectMostComparedProudct();
-        List<CompareObject.RecommendCompareProduct> result = new ArrayList<>();
-        for (Tuple t : productIdsData) {
-            Integer productId = Integer.parseInt(t.get("productId").toString());
-            List<Tuple> recommendProductIdsData = compareSetRepository.selectRecommendCompareSet(productId);
-            ProductListDto mainProduct = productService.selectProduct(productId).convert2ListDto();
-            mainProduct.setIsLike(checkSaveProduct(userId, productId));
-            List<ProductListDto> recommendProductList = new ArrayList<>();
-            for (Tuple t2 : recommendProductIdsData) {
-                Integer pId = Integer.parseInt(t2.get("pId").toString());
-                ProductListDto dto = productService.selectProduct(pId).convert2ListDto();
-                dto.setIsLike(checkSaveProduct(userId, pId));
-                recommendProductList.add(dto);
-            }
-            result.add(CompareObject.RecommendCompareProduct.builder().mainProduct(mainProduct).recommendProducts(
-                    recommendProductList).build());
-        }
-        return result;
+        List<RecommendCompareSet> recommendCompareSets = recommendCompareSetService.selectRecommendCompareSetByRandom();
+        return recommendCompareSets.stream().map(v -> {
+            RecommendCompareSetDto dto = recommendCompareSetService.convert2Dto(v, userId);
+            return CompareObject.RecommendCompareProduct.builder().recommendProducts(dto.getProducts()).mainProduct(dto.getProducts().get(
+                    0)).build();
+        }).toList();
     }
 
     public List<CompareSet> selectCompareSetList(Integer userId) {
@@ -166,12 +144,11 @@ public class CompareItemService {
                 compareFilterDtos =
                 categoryFilterRepository.findAllByCategoryId(product.getCategory().getCategoryId()).stream().map(v -> compareFilterService.selectCompareFilter(
                         v.getCompareFilterId()).convert2Dto()).toList();
+        OptionItem optionItem = productService.selectOptionItem(product.getRepresentOptionItemId());
         return CompareProductDto.builder().id(product.getId()).image(product.getImages().substring(1,
                 product.getImages().length() -
-                        1).split(",")[0]).title(product.getTitle()).originPrice(product.getOriginPrice()).storeName(
-                storeInfo.getName()).discountRate(product.getDiscountRate()).deliveryFee(product.getDeliveryFee()).type(
-                product.getProductType().getField()).location(product.getProductLocation().getField()).process(product.getProductProcess().getField()).usage(
-                product.getProductUsage().getField()).storage(product.getProductStorage().getField()).compareFilters(
+                        1).split(",")[0]).title(product.getTitle()).originPrice(optionItem.getOriginPrice()).storeName(
+                storeInfo.getName()).discountPrice(optionItem.getDiscountPrice()).deliveryFee(product.getDeliveryFee()).compareFilters(
                 compareFilterDtos).filterValues(filterValues).build();
     }
 }

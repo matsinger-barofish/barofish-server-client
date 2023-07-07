@@ -8,7 +8,7 @@ import java.util.Optional;
 
 public interface DeliverPlaceRepository extends JpaRepository<DeliverPlace, Integer> {
 
-    public List<DeliverPlace> findAllByUserId(Integer userId);
+    List<DeliverPlace> findAllByUserId(Integer userId);
 
-    public Optional<DeliverPlace> findByUserIdAndIsDefault(Integer userId, Boolean isDefault);
+    Optional<DeliverPlace> findByUserIdAndIsDefault(Integer userId, Boolean isDefault);
 }

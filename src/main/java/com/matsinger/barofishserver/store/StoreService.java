@@ -1,7 +1,10 @@
 package com.matsinger.barofishserver.store;
 
 
-import com.matsinger.barofishserver.review.ReviewService;
+import com.matsinger.barofishserver.product.ProductRepository;
+import com.matsinger.barofishserver.review.ReviewRepository;
+import com.matsinger.barofishserver.review.object.Review;
+import com.matsinger.barofishserver.review.object.ReviewDto;
 import com.matsinger.barofishserver.review.object.ReviewStatistic;
 import com.matsinger.barofishserver.store.object.*;
 import lombok.RequiredArgsConstructor;
@@ -22,9 +25,9 @@ import java.util.Optional;
 public class StoreService {
 
     private final StoreRepository storeRepository;
-
+    private final ReviewRepository reviewRepository;
     private final StoreInfoRepository storeInfoRepository;
-
+    private final ProductRepository productRepository;
     private final StoreScrapRepository storeScrapRepository;
 
     public StoreDto convert2Dto(Store store, Boolean isUser) {
@@ -46,6 +49,28 @@ public class StoreService {
                 ",")).oneLineDescription(storeInfo.getOneLineDescription()).additionalData(additionalDto).build();
     }
 
+    public SimpleStore convert2SimpleDto(StoreInfo storeInfo, Integer userId) {
+        Boolean isLike = userId != null ? checkLikeStore(storeInfo.getStoreId(), userId) : false;
+        List<ReviewStatistic>
+                reviewStatistics =
+                reviewRepository.selectReviewStatisticsWithStoreId(storeInfo.getStoreId()).stream().map(tuple -> ReviewStatistic.builder().key(
+                        tuple.get("evaluation").toString()).count(Integer.valueOf(tuple.get("count").toString())).build()).toList();
+        List<ReviewDto>
+                reviewDtos =
+                reviewRepository.findAllByStoreId(storeInfo.getStoreId(),
+                        PageRequest.of(0, 20)).getContent().stream().map(Review::convert2Dto).toList();
+        Integer reviewCount = reviewRepository.countAllByStoreId(storeInfo.getStoreId());
+        Integer productCount = productRepository.countAllByStoreId(storeInfo.getStoreId());
+        SimpleStore
+                simpleStore =
+                SimpleStore.builder().storeId(storeInfo.getStoreId()).backgroundImage(storeInfo.getBackgroudImage()).profileImage(
+                        storeInfo.getProfileImage()).name(storeInfo.getName()).location(storeInfo.getLocation()).keyword(
+                        storeInfo.getKeyword().split(",")).visitNote(storeInfo.getVisitNote()).deliverFeeType(storeInfo.getDeliverFeeType()).deliverFee(
+                        storeInfo.getDeliverFee()).minOrderPrice(storeInfo.getMinOrderPrice()).oneLineDescription(
+                        storeInfo.getOneLineDescription()).isLike(isLike).reviewStatistic(reviewStatistics).reviews(
+                        reviewDtos).reviewCount(reviewCount).productCount(productCount).build();
+        return simpleStore;
+    }
 
     public Optional<Store> selectStoreOptional(Integer id) {
         try {
@@ -56,7 +81,7 @@ public class StoreService {
         }
     }
 
-    public List<SimpleStore> selectRecommendStore(StoreRecommendType type, Integer page, Integer take, String keyword) {
+    public List<StoreInfo> selectRecommendStore(StoreRecommendType type, Integer page, Integer take, String keyword) {
         List<StoreInfo> infos = new ArrayList<>();
         switch (type) {
             case RECENT:
@@ -80,16 +105,12 @@ public class StoreService {
                                 keyword);
                 break;
         }
-        List<SimpleStore> stores = new ArrayList<>();
-        for (StoreInfo info : infos) {
-            stores.add(info.convert2Dto());
-        }
-        return stores;
+        return infos;
     }
 
-    public Boolean updateStores(List<Store> stores) {
+
+    public void updateStores(List<Store> stores) {
         storeRepository.saveAll(stores);
-        return true;
     }
 
     public Store selectStore(Integer id) {
@@ -119,6 +140,10 @@ public class StoreService {
         return store;
     }
 
+    public Optional<Store> selectOptionalStoreByLoginId(String loginId) {
+        return storeRepository.findByLoginId(loginId);
+    }
+
     public List<StoreInfo> selectStoreInfoList() {
         return storeInfoRepository.findAll();
     }
@@ -126,8 +151,7 @@ public class StoreService {
     public Boolean checkStoreLoginIdValid(String loginId) {
         try {
             Optional<Store> store = storeRepository.findByLoginId(loginId);
-            if (store.isPresent()) return false;
-            else return true;
+            return store.isEmpty();
         } catch (Error e) {
             return true;
         }

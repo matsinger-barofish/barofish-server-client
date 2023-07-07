@@ -2,7 +2,6 @@ package com.matsinger.barofishserver.filter;
 
 import com.matsinger.barofishserver.category.Category;
 import com.matsinger.barofishserver.category.CategoryService;
-import com.matsinger.barofishserver.product.productinfo.*;
 import com.matsinger.barofishserver.utils.CustomResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -29,16 +28,6 @@ public class FilterController {
             for (Category category : categories) {
                 category.setCategoryList(null);
             }
-            List<ProductType> types = filterService.selectProductTypes();
-            List<ProductLocation> locations = filterService.selectProductLocations();
-            List<ProductProcess> processes = filterService.selectProductProcesses();
-            List<ProductUsage> usages = filterService.selectProductUsages();
-            List<ProductStorage> storages = filterService.selectProductStorages();
-            filter.setLocations(locations);
-            filter.setProcesses(processes);
-            filter.setTypes(types);
-            filter.setUsages(usages);
-            filter.setStorages(storages);
             filter.setCategories(categories);
             res.setData(Optional.of(filter));
             return ResponseEntity.ok(res);

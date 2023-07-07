@@ -38,8 +38,8 @@ public class NoticeService {
         return noticeRepository.save(notice);
     }
 
-    Notice updateNotice(Notice notice) {
-        return noticeRepository.save(notice);
+    void updateNotice(Notice notice) {
+        noticeRepository.save(notice);
     }
 
     Boolean deleteNotice(Integer noticeId) {

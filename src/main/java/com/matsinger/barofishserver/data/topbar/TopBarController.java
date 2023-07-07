@@ -1,10 +1,8 @@
 package com.matsinger.barofishserver.data.topbar;
 
-import com.matsinger.barofishserver.filter.FilterReq;
 import com.matsinger.barofishserver.jwt.JwtService;
 import com.matsinger.barofishserver.jwt.TokenAuthType;
 import com.matsinger.barofishserver.jwt.TokenInfo;
-import com.matsinger.barofishserver.product.ProductRepository;
 import com.matsinger.barofishserver.product.object.Product;
 import com.matsinger.barofishserver.product.ProductService;
 import com.matsinger.barofishserver.product.object.ProductListDto;
@@ -31,9 +29,8 @@ public class TopBarController {
 
     @GetMapping("/test")
     public ResponseEntity<CustomResponse<List<Integer>>> test() {
-        CustomResponse<List<Integer>> res = new CustomResponse();
+        CustomResponse<List<Integer>> res = new CustomResponse<>();
         try {
-//            List<Integer> data = productService.testQuery(Arrays.asList(1, 2, 3));
             List<Integer> data = productService.testQuery(null);
             res.setData(Optional.ofNullable(data));
             return ResponseEntity.ok(res);
@@ -44,7 +41,7 @@ public class TopBarController {
 
     @GetMapping("")
     public ResponseEntity<CustomResponse<List<TopBar>>> selectTopBarList() {
-        CustomResponse<List<TopBar>> res = new CustomResponse();
+        CustomResponse<List<TopBar>> res = new CustomResponse<>();
         try {
             List<TopBar> topBarList = topBarService.selectTopBarList();
             res.setData(Optional.ofNullable(topBarList));
@@ -65,32 +62,22 @@ public class TopBarController {
                                                                   @RequestParam(value = "processIds", required = false) String processIds,
                                                                   @RequestParam(value = "usageIds", required = false) String usageIds,
                                                                   @RequestParam(value = "storageIds", required = false) String storageIds) {
-        CustomResponse<Long> res = new CustomResponse();
+        CustomResponse<Long> res = new CustomResponse<>();
         try {
-            Page<Product> products;
-            switch (id) {
-                case 1:
-                    products =
-                            productService.selectNewerProductList(page - 1,
-                                    take,
-                                    utils.str2IntList(categoryIds),
-                                    utils.str2IntList(filterFieldIds));
-                    break;
-                case 2:
-                    products =
-                            productService.selectPopularProductList(page - 1,
-                                    take,
-                                    utils.str2IntList(categoryIds),
-                                    utils.str2IntList(filterFieldIds));
-                    break;
-                default:
-                    products =
-                            productService.selectDiscountProductList(page - 1,
-                                    take,
-                                    utils.str2IntList(categoryIds),
-                                    utils.str2IntList(filterFieldIds));
-                    break;
-            }
+            Page<Product> products = switch (id) {
+                case 1 -> productService.selectNewerProductList(page - 1,
+                        take,
+                        utils.str2IntList(categoryIds),
+                        utils.str2IntList(filterFieldIds));
+                case 2 -> productService.selectPopularProductList(page - 1,
+                        take,
+                        utils.str2IntList(categoryIds),
+                        utils.str2IntList(filterFieldIds));
+                default -> productService.selectDiscountProductList(page - 1,
+                        take,
+                        utils.str2IntList(categoryIds),
+                        utils.str2IntList(filterFieldIds));
+            };
 
 
             res.setData(Optional.of(products.getTotalElements()));
@@ -111,35 +98,25 @@ public class TopBarController {
                                                                              @RequestParam(value = "processIds", required = false) String processIds,
                                                                              @RequestParam(value = "usageIds", required = false) String usageIds,
                                                                              @RequestParam(value = "storageIds", required = false) String storageIds) {
-        CustomResponse<Page<ProductListDto>> res = new CustomResponse();
+        CustomResponse<Page<ProductListDto>> res = new CustomResponse<>();
         try {
-            Page<Product> products;
-            switch (id) {
-                case 1:
-                    products =
-                            productService.selectNewerProductList(page - 1,
-                                    take,
-                                    utils.str2IntList(categoryIds),
-                                    utils.str2IntList(filterFieldIds));
-                    break;
-                case 2:
-                    products =
-                            productService.selectPopularProductList(page - 1,
-                                    take,
-                                    utils.str2IntList(categoryIds),
-                                    utils.str2IntList(filterFieldIds));
-                    break;
-                default:
-                    products =
-                            productService.selectDiscountProductList(page - 1,
-                                    take,
-                                    utils.str2IntList(categoryIds),
-                                    utils.str2IntList(filterFieldIds));
-                    break;
-            }
+            Page<Product> products = switch (id) {
+                case 1 -> productService.selectNewerProductList(page - 1,
+                        take,
+                        utils.str2IntList(categoryIds),
+                        utils.str2IntList(filterFieldIds));
+                case 2 -> productService.selectPopularProductList(page - 1,
+                        take,
+                        utils.str2IntList(categoryIds),
+                        utils.str2IntList(filterFieldIds));
+                default -> productService.selectDiscountProductList(page - 1,
+                        take,
+                        utils.str2IntList(categoryIds),
+                        utils.str2IntList(filterFieldIds));
+            };
 
 
-            res.setData(Optional.of(products.map(v -> productService.convert2ListDto(v))));
+            res.setData(Optional.of(products.map(productService::convert2ListDto)));
             return ResponseEntity.ok(res);
         } catch (Exception e) {
             return res.defaultError(e);
@@ -149,7 +126,7 @@ public class TopBarController {
     @PostMapping("/add")
     public ResponseEntity<CustomResponse<TopBar>> addTopBar(@RequestHeader(value = "Authorization") Optional<String> auth,
                                                             @RequestPart(value = "name") String name) {
-        CustomResponse<TopBar> res = new CustomResponse();
+        CustomResponse<TopBar> res = new CustomResponse<>();
         Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
         if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
         try {
@@ -168,7 +145,7 @@ public class TopBarController {
     public ResponseEntity<CustomResponse<TopBar>> updateTopBar(@RequestHeader(value = "Authorization") Optional<String> auth,
                                                                @PathVariable("id") Integer id,
                                                                @RequestPart(value = "name") String name) {
-        CustomResponse<TopBar> res = new CustomResponse();
+        CustomResponse<TopBar> res = new CustomResponse<>();
         Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
         if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
         try {
@@ -187,7 +164,7 @@ public class TopBarController {
     public ResponseEntity<CustomResponse<TopBarProductMap>> addProductToTopBar(@RequestHeader(value = "Authorization") Optional<String> auth,
                                                                                @RequestPart(value = "topBarId") Integer topBarId,
                                                                                @RequestPart(value = "productId") Integer productId) {
-        CustomResponse<TopBarProductMap> res = new CustomResponse();
+        CustomResponse<TopBarProductMap> res = new CustomResponse<>();
         Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
         if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
         try {
@@ -207,7 +184,7 @@ public class TopBarController {
     @DeleteMapping("/{id}")
     public ResponseEntity<CustomResponse<Boolean>> deleteTopBar(@RequestHeader(value = "Authorization") Optional<String> auth,
                                                                 @PathVariable("id") Integer id) {
-        CustomResponse<Boolean> res = new CustomResponse();
+        CustomResponse<Boolean> res = new CustomResponse<>();
         Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
         if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
         try {

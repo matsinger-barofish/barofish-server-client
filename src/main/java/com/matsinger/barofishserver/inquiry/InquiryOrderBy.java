@@ -7,7 +7,7 @@ public enum InquiryOrderBy {
 
     public final String label;
 
-    private InquiryOrderBy(String label) {
+    InquiryOrderBy(String label) {
         this.label = label;
     }
 

@@ -1,9 +1,9 @@
 package com.matsinger.barofishserver.review;
 
-import com.matsinger.barofishserver.order.OrderService;
-import com.matsinger.barofishserver.order.object.OrderDto;
-import com.matsinger.barofishserver.order.repository.OrderRepository;
+import com.matsinger.barofishserver.report.ReportRepository;
 import com.matsinger.barofishserver.review.object.*;
+import com.matsinger.barofishserver.siteInfo.SiteInfoService;
+import com.matsinger.barofishserver.siteInfo.SiteInformation;
 import com.matsinger.barofishserver.store.StoreService;
 import com.matsinger.barofishserver.store.object.SimpleStore;
 import com.matsinger.barofishserver.user.UserService;
@@ -28,12 +28,11 @@ public class ReviewService {
     private final UserService userService;
     private final ReviewLikeRepository reviewLikeRepository;
     private final StoreService storeService;
-    private final OrderRepository orderRepository;
+    private final ReportRepository reportRepository;
+    private final SiteInfoService siteInfoService;
 
     public List<ReviewEvaluationType> selectReviewEvaluations(Integer reviewId) {
-        return evaluationRepository.findAllByReviewId(reviewId).stream().map(reviewEvaluation -> {
-            return reviewEvaluation.getEvaluation();
-        }).toList();
+        return evaluationRepository.findAllByReviewId(reviewId).stream().map(ReviewEvaluation::getEvaluation).toList();
     }
 
     public Boolean checkLikeReview(Integer userId, Integer reviewId) {
@@ -68,17 +67,40 @@ public class ReviewService {
         return reviewRepository.findAllByStoreId(storeId, pageRequest);
     }
 
-    public Page<Review> selectReviewListByProduct(Integer productId, Integer page, Integer take) {
-        return reviewRepository.findAllByProductId(productId, Pageable.ofSize(take).withPage(page));
+    public Page<Review> selectReviewListByStoreOrderedRecent(Integer storeId, PageRequest pageRequest) {
+        return reviewRepository.findAllByStoreIdOrderByCreatedAtDesc(storeId, pageRequest);
+    }
+
+    public Page<Review> selectReviewListOrderedBestWithStoreId(Integer storeId, PageRequest pageRequest) {
+        return reviewRepository.selectReviewOrderedBestWithStoreId(storeId, pageRequest);
+    }
+
+    public Page<Review> selectReviewListOrderedBestWithProductId(Integer productId, PageRequest pageRequest) {
+        return reviewRepository.selectReviewOrderedBestWithProductId(productId, pageRequest);
+    }
+
+    public Page<Review> selectReviewListByProduct(Integer productId, PageRequest pageRequest) {
+        return reviewRepository.findAllByProductIdOrderByCreatedAtDesc(productId, pageRequest);
+    }
+
+    public void increaseUserPoint(Integer userId, Boolean hasImage) {
+        UserInfo userInfo = userService.selectUserInfo(userId);
+        String siteInfoId = hasImage ? "INT_REVIEW_POINT_TEXT" : "INT_REVIEW_POINT_IMAGE";
+        SiteInformation siteInformation = siteInfoService.selectSiteInfo(siteInfoId);
+        Integer point = Integer.parseInt(siteInformation.getContent());
+        Integer increasedPoint = userInfo.getPoint() + point;
+        userInfo.setPoint(increasedPoint);
+        userService.updateUserInfo(userInfo);
     }
 
     public ReviewDto convert2Dto(Review review) {
         ReviewDto dto = review.convert2Dto();
         UserInfo userDto = userService.selectUserInfo(review.getUserId());
-        SimpleStore store = storeService.selectStoreInfo(review.getStore().getId()).convert2Dto();
+        SimpleStore
+                store =
+                storeService.convert2SimpleDto(storeService.selectStoreInfo(review.getStore().getId()), null);
         Integer likeCount = countReviewLike(review.getId());
-//        OrderDto order = orderService.convert2Dto(orderService.selectOrder(review.getOrderId()));
-//        dto.setOrder(order);
+
         dto.setLikeCount(likeCount);
         dto.setIsLike(false);
         dto.setLikeCount(0);
@@ -92,12 +114,8 @@ public class ReviewService {
         UserInfo userDto = userService.selectUserInfo(review.getUserId());
         SimpleStore store = storeService.selectStoreInfo(review.getStore().getId()).convert2Dto();
         Integer likeCount = countReviewLike(review.getId());
-        dto.setIsLike(reviewLikeRepository.existsByUserIdAndReviewId(userId, review.getId()));
-//        OrderDto order = orderService.convert2Dto(orderService.selectOrder(review.getOrderId()));
-//        dto.setOrder(order);
+        dto.setIsLike(userId != null ? reviewLikeRepository.existsByUserIdAndReviewId(userId, review.getId()) : false);
         dto.setLikeCount(likeCount);
-        dto.setIsLike(false);
-        dto.setLikeCount(0);
         dto.setUser(userDto.convert2Dto());
         dto.setStore(store);
         return dto;
@@ -128,6 +146,7 @@ public class ReviewService {
     @Transactional
     public Boolean deleteReview(Integer reviewId) {
         try {
+            reportRepository.deleteAllByReviewId(reviewId);
             evaluationRepository.deleteAllByReviewId(reviewId);
             reviewLikeRepository.deleteAllByReviewId(reviewId);
             reviewRepository.deleteById(reviewId);
@@ -138,17 +157,13 @@ public class ReviewService {
     }
 
     public List<ReviewStatistic> selectReviewStatisticsWithProductId(Integer productId) {
-        return reviewRepository.selectReviewStatisticsWithProductId(productId).stream().map(tuple -> {
-            return ReviewStatistic.builder().key(tuple.get("evaluation").toString()).count(Integer.valueOf(tuple.get(
-                    "count").toString())).build();
-        }).toList();
+        return reviewRepository.selectReviewStatisticsWithProductId(productId).stream().map(tuple -> ReviewStatistic.builder().key(
+                tuple.get("evaluation").toString()).count(Integer.parseInt(tuple.get("count").toString())).build()).toList();
     }
 
     public List<ReviewStatistic> selectReviewStatisticsWithStoreId(Integer storeId) {
-        return reviewRepository.selectReviewStatisticsWithStoreId(storeId).stream().map(tuple -> {
-            return ReviewStatistic.builder().key(tuple.get("evaluation").toString()).count(Integer.valueOf(tuple.get(
-                    "count").toString())).build();
-        }).toList();
+        return reviewRepository.selectReviewStatisticsWithStoreId(storeId).stream().map(tuple -> ReviewStatistic.builder().key(
+                tuple.get("evaluation").toString()).count(Integer.valueOf(tuple.get("count").toString())).build()).toList();
     }
 
     private Integer findByKey(List<ReviewStatistic> reviewStatistics, String key) {
@@ -160,12 +175,9 @@ public class ReviewService {
 
     public ReviewTotalStatistic selectReviewTotalStatisticWithProductId(Integer productId) {
         List<ReviewStatistic> statistics = selectReviewStatisticsWithProductId(productId);
-        ReviewTotalStatistic
-                totalStatistic =
-                ReviewTotalStatistic.builder().taste(findByKey(statistics, "TASTE")).fresh(findByKey(statistics,
-                        "FRESH")).price(findByKey(statistics, "PRICE")).packaging(findByKey(statistics,
-                        "PACKAGING")).size(findByKey(statistics, "SIZE")).build();
-        return totalStatistic;
+        return ReviewTotalStatistic.builder().taste(findByKey(statistics, "TASTE")).fresh(findByKey(statistics,
+                "FRESH")).price(findByKey(statistics, "PRICE")).packaging(findByKey(statistics, "PACKAGING")).size(
+                findByKey(statistics, "SIZE")).build();
     }
 
     public Integer selectReviewLikeCount(Integer reviewId) {
@@ -176,14 +188,15 @@ public class ReviewService {
         evaluationRepository.deleteAllByReviewId(reviewId);
     }
 
-    public List<ReviewEvaluation> addReviewEvaluationList(Integer reviewId, List<ReviewEvaluationType> types) {
-        List<ReviewEvaluation> data = types.stream().map(reviewEvaluationType -> {
-            return ReviewEvaluation.builder().reviewId(reviewId).evaluation(reviewEvaluationType).build();
-        }).toList();
-        return evaluationRepository.saveAll(data);
+    public void addReviewEvaluationList(Integer reviewId, List<ReviewEvaluationType> types) {
+        List<ReviewEvaluation>
+                data =
+                types.stream().map(reviewEvaluationType -> ReviewEvaluation.builder().reviewId(reviewId).evaluation(
+                        reviewEvaluationType).build()).toList();
+        evaluationRepository.saveAll(data);
     }
 
-    public Boolean checkReviewWritten(Integer userId, Integer productId, String orderId) {
-        return reviewRepository.existsByUserIdAndProductIdAndOrderId(userId, productId, orderId);
+    public Boolean checkReviewWritten(Integer userId, Integer productId, Integer orderProductInfoId) {
+        return reviewRepository.existsByUserIdAndProductIdAndOrderProductInfoId(userId, productId, orderProductInfoId);
     }
 }

@@ -37,7 +37,7 @@ public class SearchFilterController {
             List<SearchFilterDto>
                     searchFilterDtos =
                     searchFilterService.selectSearchFilterList().stream().map(searchFilterService::convertFilterDto).toList();
-            res.setData(Optional.ofNullable(searchFilterDtos));
+            res.setData(Optional.of(searchFilterDtos));
             return ResponseEntity.ok(res);
         } catch (Exception e) {
             return res.defaultError(e);
@@ -152,7 +152,7 @@ public class SearchFilterController {
         Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
         if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
         try {
-            if (data.searchFilterId == null) return res.throwError("필터 아이디를 입력해주세요.", "INPUT_CHECK_REQRUIED");
+            if (data.searchFilterId == null) return res.throwError("필터 아이디를 입력해주세요.", "INPUT_CHECK_REQUIRED");
             if (data.field == null) return res.throwError("필드를 입력해주세요.", "INPUT_CHECK_REQUIRED");
             String field = utils.validateString(data.field, 20L, "필드명");
             SearchFilterField

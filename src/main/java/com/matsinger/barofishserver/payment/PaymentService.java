@@ -57,27 +57,23 @@ public class PaymentService {
         IamportClient iamportClient = callbackService.getIamportClient();
         IamportResponse<Payment> paymentResponse = iamportClient.paymentByImpUid(impUid);
         Payment payment = paymentResponse.getResponse();
-        Payments
-                payments =
-                Payments.builder().orderId(orderId).impUid(impUid).merchantUid(payment.getMerchantUid()).payMethod(
-                        payment.getPayMethod()).paidAmount(payment.getAmount().intValue()).status(str2PaymentState(
-                        payment.getStatus())).name(payment.getName()).pgProvider(payment.getPgProvider()).embPgProvider(
-                        payment.getEmbPgProvider()).pgTid(payment.getPgTid()).buyerName(payment.getBuyerName()).buyerEmail(
-                        payment.getBuyerEmail()).buyerTel(payment.getBuyerTel()).buyerAddress(payment.getBuyerAddr()).paidAt(
-                        Timestamp.from(payment.getPaidAt().toInstant())).receiptUrl(payment.getReceiptUrl()).applyNum(
-                        payment.getApplyNum()).vbankNum(payment.getVbankNum()).vbankName(payment.getVbankName()).vbankHolder(
-                        payment.getVbankHolder()).vbankDate(Timestamp.from(payment.getVbankDate().toInstant())).build();
-        return payments;
+        return Payments.builder().orderId(orderId).impUid(impUid).merchantUid(payment.getMerchantUid()).payMethod(
+                payment.getPayMethod()).paidAmount(payment.getAmount().intValue()).status(str2PaymentState(
+                payment.getStatus())).name(payment.getName()).pgProvider(payment.getPgProvider()).embPgProvider(
+                payment.getEmbPgProvider()).pgTid(payment.getPgTid()).buyerName(payment.getBuyerName()).buyerEmail(
+                payment.getBuyerEmail()).buyerTel(payment.getBuyerTel()).buyerAddress(payment.getBuyerAddr()).paidAt(
+                Timestamp.from(payment.getPaidAt().toInstant())).receiptUrl(payment.getReceiptUrl()).applyNum(
+                payment.getApplyNum()).vbankNum(payment.getVbankNum()).vbankName(payment.getVbankName()).vbankHolder(
+                payment.getVbankHolder()).vbankDate(Timestamp.from(payment.getVbankDate().toInstant())).build();
     }
 
-    public Boolean cancelPayment(String impUid, Integer amount) throws IamportResponseException, IOException {
+    public void cancelPayment(String impUid, Integer amount) throws IamportResponseException, IOException {
         IamportClient iamportClient = callbackService.getIamportClient();
         CancelData
                 cancelData =
                 amount != null ? new CancelData(impUid, true, BigDecimal.valueOf(amount)) : new CancelData(impUid,
                         true);
         iamportClient.cancelPaymentByImpUid(cancelData);
-        return true;
     }
 
     @Getter
@@ -143,11 +139,8 @@ public class PaymentService {
             return null;
         }
         Certification certification = certificationRes.getResponse();
-        IamPortCertificationRes
-                res =
-                IamPortCertificationRes.builder().impUid(certification.getImpUid()).name(certification.getName()).phone(
-                        certification.getPhone()).certified(certification.isCertified()).certifiedAt(certification.getCertifiedAt().toString()).build();
-        return res;
+        return IamPortCertificationRes.builder().impUid(certification.getImpUid()).name(certification.getName()).phone(
+                certification.getPhone()).certified(certification.isCertified()).certifiedAt(certification.getCertifiedAt().toString()).build();
     }
 
     @Getter
@@ -163,7 +156,7 @@ public class PaymentService {
     public CheckValidCardRes checkValidCard(PaymentMethod paymentMethod) throws Exception {
         IamportClient iamportClient = callbackService.getIamportClient();
         String customerUid = "customer_" + paymentMethod.getUserId() + "_" + paymentMethod.getId();
-        String cardNo = aes256.encrypt(paymentMethod.getCardNo());
+        String cardNo = aes256.decrypt(paymentMethod.getCardNo());
         cardNo = cardNo.replaceAll(re.cardNo, "$1-$2-$3-$4");
         String[] expiryAyData = paymentMethod.getExpiryAt().split("/");
         String expiryMonth = expiryAyData[0];
@@ -171,18 +164,16 @@ public class PaymentService {
         String expiry = expiryYear + "-" + expiryMonth;
         String birth = paymentMethod.getBirth();
         BillingCustomerData billingCustomerData = new BillingCustomerData(customerUid, cardNo, expiry, birth);
+        billingCustomerData.setPwd2Digit(aes256.decrypt(paymentMethod.getPasswordTwoDigit()));
         IamportResponse<BillingCustomer>
                 billingCustomerRes =
                 iamportClient.postBillingCustomer(customerUid, billingCustomerData);
         if (billingCustomerRes.getCode() != 0) {
-            System.out.println(billingCustomerRes.getMessage());
+            System.out.println(billingCustomerRes.getCode() + ": " + billingCustomerRes.getMessage());
             return null;
         }
         BillingCustomer billingCustomer = billingCustomerRes.getResponse();
-        CheckValidCardRes
-                res =
-                CheckValidCardRes.builder().cardName(billingCustomer.getCardName()).customerUid(billingCustomer.getCustomerUid()).build();
-        return res;
+        return CheckValidCardRes.builder().cardName(billingCustomer.getCardName()).customerUid(billingCustomer.getCustomerUid()).build();
     }
 
     public Boolean processKeyInPayment(KeyInPaymentReq data) throws Exception {
@@ -218,7 +209,9 @@ public class PaymentService {
         return paymentRepository.findFirstByImpUid(impUid);
     }
 
-    public Payments upsertPayments(Payments payments) {
-        return paymentRepository.save(payments);
+    public void upsertPayments(Payments payments) {
+        paymentRepository.save(payments);
     }
+
+
 }

@@ -1,7 +1,5 @@
 package com.matsinger.barofishserver.settlement;
 
-import com.matsinger.barofishserver.store.object.Store;
-import jakarta.persistence.*;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;

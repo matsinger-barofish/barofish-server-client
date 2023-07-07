@@ -1,10 +1,8 @@
 package com.matsinger.barofishserver.notification;
 
-import com.matsinger.barofishserver.banner.Banner;
 import com.matsinger.barofishserver.jwt.JwtService;
 import com.matsinger.barofishserver.jwt.TokenAuthType;
 import com.matsinger.barofishserver.jwt.TokenInfo;
-import com.matsinger.barofishserver.notice.NoticeOrderBy;
 import com.matsinger.barofishserver.utils.Common;
 import com.matsinger.barofishserver.utils.CustomResponse;
 import lombok.RequiredArgsConstructor;
@@ -14,7 +12,6 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
@@ -32,7 +29,7 @@ public class NotificationController {
     public ResponseEntity<CustomResponse<Page<Notification>>> selectNotification(@RequestHeader(value = "Authorization") Optional<String> auth,
                                                                                  @RequestParam(value = "page", required = false, defaultValue = "0") Integer page,
                                                                                  @RequestParam(value = "take", required = false, defaultValue = "10") Integer take) {
-        CustomResponse<Page<Notification>> res = new CustomResponse();
+        CustomResponse<Page<Notification>> res = new CustomResponse<>();
         Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth);
         if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
         try {

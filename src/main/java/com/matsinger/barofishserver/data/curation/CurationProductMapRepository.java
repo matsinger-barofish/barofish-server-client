@@ -10,11 +10,10 @@ import java.util.List;
 
 @Repository
 public interface CurationProductMapRepository extends JpaRepository<CurationProductMap, Integer> {
-    public List<CurationProductMap> findAllByCuration_Id(Integer curationId);
+    List<CurationProductMap> findAllByCuration_Id(Integer curationId);
 
     @Query(value = "delete from curation_product_map WHERE curation_id = :curationId and product_id in (:productIds);", nativeQuery = true)
-    public void deleteAllByProductIdIn(@Param("curationId") Integer curationId,
-                                       @Param("productIds") List<Integer> productIds);
+    void deleteAllByProductIdIn(@Param("curationId") Integer curationId, @Param("productIds") List<Integer> productIds);
 
     Boolean existsByCurationIdAndProductId(Integer curationId, Integer productId);
 

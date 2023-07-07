@@ -31,6 +31,10 @@ public class ReportService {
         return reportDto;
     }
 
+    public Boolean checkHasReported(Integer userId, Integer reviewId) {
+        return reportRepository.existsByUserIdAndReviewId(userId, reviewId);
+    }
+
     public List<Report> selectReportListWithIds(List<Integer> ids) {
         return reportRepository.findAllById(ids);
     }
@@ -39,8 +43,8 @@ public class ReportService {
         return reportRepository.saveAll(reports);
     }
 
-    public Report addReport(Report report) {
-        return reportRepository.save(report);
+    public void addReport(Report report) {
+        reportRepository.save(report);
     }
 
     public Report updateReport(Report report) {

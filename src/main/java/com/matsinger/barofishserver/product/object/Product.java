@@ -2,7 +2,6 @@ package com.matsinger.barofishserver.product.object;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.matsinger.barofishserver.category.Category;
-import com.matsinger.barofishserver.product.productinfo.*;
 import com.matsinger.barofishserver.review.object.Review;
 import com.matsinger.barofishserver.store.object.Store;
 import jakarta.persistence.*;
@@ -65,7 +64,9 @@ public class Product {
     @Basic
     @Column(name = "expected_deliver_day", nullable = false)
     private int expectedDeliverDay;
-
+    @Basic
+    @Column(name = "point_rate", nullable = true)
+    private Float pointRate;
     @Basic
     @Column(name = "represent_item_id", nullable = true)
     private Integer representOptionItemId;
@@ -75,6 +76,10 @@ public class Product {
     private Integer deliverBoxPerAmount;
 
     @Basic
+    @Column(name = "need_taxation", nullable = false)
+    private Boolean needTaxation;
+
+    @Basic
     @Column(name = "created_at", nullable = false)
     private Timestamp createdAt;
 
@@ -82,52 +87,8 @@ public class Product {
     @JsonBackReference
     @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL, mappedBy = "product")
     private List<Review> reviews = new ArrayList<>();
-
-    @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-    @JoinColumn(name = "type_id")
-    private ProductType productType;
-
     @Column(name = "delivery_fee", nullable = true)
     private int deliveryFee;
-
-    public void setProductType(ProductType productType) {
-        this.productType = productType;
-//        productType.setProduct(this);
-    }
-
-    @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-    @JoinColumn(name = "location_id")
-    private ProductLocation productLocation;
-
-    public void setProductLocation(ProductLocation productLocation) {
-        this.productLocation = productLocation;
-//        productLocation.setProduct(this);
-    }
-
-    @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-    @JoinColumn(name = "process_id")
-    private ProductProcess productProcess;
-
-    public void setProductProcess(ProductProcess productProcess) {
-        this.productProcess = productProcess;
-//        productProcess.setProduct(this);
-    }
-
-    @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-    @JoinColumn(name = "usage_id")
-    private ProductUsage productUsage;
-
-    public void setProductUsage(ProductUsage productUsage) {
-        this.productUsage = productUsage;
-    }
-
-    @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-    @JoinColumn(name = "storage_id")
-    private ProductStorage productStorage;
-
-    public void setProductStorage(ProductStorage productStorage) {
-        this.productStorage = productStorage;
-    }
 
     public int getId() {
         return id;
@@ -226,9 +187,10 @@ public class Product {
                         images.length() -
                                 1).split(",")).title(title).state(this.getState()).originPrice(originPrice).deliveryInfo(
                 deliveryInfo).deliveryFee(deliveryFee).description(descriptionImages).descriptionImages(
-                descriptionImages.substring(1, descriptionImages.length() - 1).split(",")).type(productType).location(
-                productLocation).process(productProcess).usage(productUsage).representOptionItemId(this.representOptionItemId).storage(
-                productStorage).deliverBoxPerAmount(this.deliverBoxPerAmount).createdAt(this.getCreatedAt()).build();
+                descriptionImages.substring(1,
+                        descriptionImages.length() -
+                                1).split(",")).representOptionItemId(this.representOptionItemId).deliverBoxPerAmount(
+                this.deliverBoxPerAmount).createdAt(this.getCreatedAt()).build();
     }
 
     @Override

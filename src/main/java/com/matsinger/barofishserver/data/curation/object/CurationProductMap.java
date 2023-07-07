@@ -14,12 +14,6 @@ public class CurationProductMap {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-//    @Column(name = "product_id")
-//    private Long productId;
-//
-//    @Column(name = "curation_id")
-//    private Long curationId;
-
     @ManyToOne
     @JsonManagedReference
     @JoinColumn(name = "product_id")

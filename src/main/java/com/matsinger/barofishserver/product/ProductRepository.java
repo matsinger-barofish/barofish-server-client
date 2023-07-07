@@ -4,7 +4,6 @@ import com.matsinger.barofishserver.product.object.Product;
 import com.matsinger.barofishserver.product.object.ProductState;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
@@ -14,15 +13,17 @@ import java.util.List;
 import java.util.Optional;
 
 public interface ProductRepository extends JpaRepository<Product, Integer>, JpaSpecificationExecutor<Product> {
-    public List<Product> findAllByIdIn(List<Integer> ids);
+     List<Product> findAllByIdIn(List<Integer> ids);
 
-    public List<Product> findByTitleContainsAndStateEquals(String title, ProductState state);
+     List<Product> findByTitleContainsAndStateEquals(String title, ProductState state);
 
-    public List<Product> findByTitleContaining(String keyword);
+     List<Product> findByTitleContaining(String keyword);
 
     Optional<Product> findByTitle(String title);
 
-    public List<Product> findByStoreIdAndStateEquals(Integer storeId, ProductState state);
+    Integer countAllByStoreId(Integer storeId);
+
+     List<Product> findByStoreIdAndStateEquals(Integer storeId, ProductState state);
 
 //    Page<Product> findAllByStateIn(List<ProductState> state, Pageable pageable, Specification<Product> spec);
 
@@ -366,7 +367,7 @@ public interface ProductRepository extends JpaRepository<Product, Integer>, JpaS
 
     @Query(value = "SELECT *\n" +
             "FROM product pp\n" +
-            "WHERE pp.id IN\n" +
+            "WHERE pp.state=\'ACTIVE\' AND pp.id IN\n" +
             "      (SELECT i.product_id AS productId\n" +
             "       FROM order_product_info i\n" +
             "       WHERE i.order_id IN\n" +

@@ -2,8 +2,6 @@ package com.matsinger.barofishserver.order.object;
 
 import com.matsinger.barofishserver.product.object.OptionItemDto;
 import com.matsinger.barofishserver.product.object.ProductListDto;
-import com.matsinger.barofishserver.product.object.SimpleProductDto;
-import com.matsinger.barofishserver.store.object.SimpleStore;
 import com.matsinger.barofishserver.store.object.StoreDeliverFeeType;
 import lombok.Builder;
 import lombok.Getter;
@@ -26,6 +24,10 @@ public class OrderProductDto {
     private OptionItemDto optionItem;
     private Integer price;
     private Integer amount;
+    private String deliverCompany;
+    private String invoiceCode;
     //    private Integer deliveryFee;
+    private OrderCancelReason cancelReason;
+    private String cancelReasonContent;
     private Boolean isReviewWritten;
 }

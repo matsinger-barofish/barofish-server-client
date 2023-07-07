@@ -4,23 +4,20 @@ import com.matsinger.barofishserver.jwt.JwtService;
 import com.matsinger.barofishserver.jwt.TokenAuthType;
 import com.matsinger.barofishserver.jwt.TokenInfo;
 import com.matsinger.barofishserver.order.OrderService;
-import com.matsinger.barofishserver.order.object.Orders;
+import com.matsinger.barofishserver.order.object.OrderProductInfo;
 import com.matsinger.barofishserver.product.ProductService;
 import com.matsinger.barofishserver.product.object.Product;
-import com.matsinger.barofishserver.review.object.Review;
-import com.matsinger.barofishserver.review.object.ReviewDto;
-import com.matsinger.barofishserver.review.object.ReviewEvaluationType;
-import com.matsinger.barofishserver.review.object.ReviewOrderBy;
+import com.matsinger.barofishserver.review.object.*;
 import com.matsinger.barofishserver.store.StoreService;
 import com.matsinger.barofishserver.store.object.Store;
 import com.matsinger.barofishserver.user.UserService;
 import com.matsinger.barofishserver.user.object.UserInfo;
-import com.matsinger.barofishserver.user.object.UserState;
-import com.matsinger.barofishserver.userauth.LoginType;
 import com.matsinger.barofishserver.utils.Common;
 import com.matsinger.barofishserver.utils.CustomResponse;
 import com.matsinger.barofishserver.utils.S3.S3Uploader;
 
+import jakarta.persistence.criteria.Join;
+import jakarta.persistence.criteria.JoinType;
 import jakarta.persistence.criteria.Predicate;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -74,7 +71,7 @@ public class ReviewController {
                 if (orderId != null) predicates.add(builder.like(root.get("order").get("id"), "%" + orderId + "%"));
                 if (productName != null)
                     predicates.add(builder.like(root.get("product").get("title"), "%" + productName + "%"));
-                if (partnerName != null) predicates.add(builder.like(root.get("store").get("storeInfo").get("email"),
+                if (partnerName != null) predicates.add(builder.like(root.get("store").get("storeInfo").get("name"),
                         "%" + partnerName + "%"));
                 if (reviewer != null)
                     predicates.add(builder.like(root.get("user").get("userInfo").get("name"), "%" + reviewer + "%"));
@@ -82,6 +79,11 @@ public class ReviewController {
                 if (createdAtE != null) predicates.add(builder.lessThan(root.get("createdAt"), createdAtE));
                 if (tokenInfo.get().getType().equals(TokenAuthType.PARTNER))
                     predicates.add(builder.equal(root.get("product").get("storeId"), tokenInfo.get().getId()));
+                if (evaluation != null) {
+                    Join<Review, ReviewEvaluation> t = root.join("evaluations", JoinType.LEFT);
+                    predicates.add(builder.and(t.get("evaluation").in(Arrays.stream(evaluation.split(",")).map(
+                            ReviewEvaluationType::valueOf).toList())));
+                }
                 return builder.and(predicates.toArray(new Predicate[0]));
             };
             PageRequest pageRequest = PageRequest.of(page, take, Sort.by(sort, orderBy.label));
@@ -91,7 +93,7 @@ public class ReviewController {
                 return dto;
             });
 
-            res.setData(Optional.ofNullable(reviews));
+            res.setData(Optional.of(reviews));
             return ResponseEntity.ok(res);
         } catch (Exception e) {
             return res.defaultError(e);
@@ -101,6 +103,7 @@ public class ReviewController {
     @GetMapping(value = {"/store/{id}", "/store"})
     public ResponseEntity<CustomResponse<Page<ReviewDto>>> selectReviewListWithStoreId(@RequestHeader(value = "Authorization") Optional<String> auth,
                                                                                        @PathVariable(value = "id", required = false) Integer storeId,
+                                                                                       @RequestParam(value = "orderType", required = false, defaultValue = "RECENT") ReviewOrderByType orderType,
                                                                                        @RequestParam(value = "page", required = false, defaultValue = "1") Integer page,
                                                                                        @RequestParam(value = "take", required = false, defaultValue = "10") Integer take) {
         CustomResponse<Page<ReviewDto>> res = new CustomResponse<>();
@@ -108,13 +111,24 @@ public class ReviewController {
         try {
             if (tokenInfo != null && tokenInfo.isPresent() && tokenInfo.get().getType().equals(TokenAuthType.PARTNER))
                 storeId = tokenInfo.get().getId();
+            Integer
+                    userId =
+                    tokenInfo != null &&
+                            tokenInfo.isPresent() &&
+                            tokenInfo.get().getType().equals(TokenAuthType.USER) ? tokenInfo.get().getId() : null;
             PageRequest pageRequest = PageRequest.of(page, take);
-            Page<ReviewDto> reviews = reviewService.selectReviewListByStore(storeId, pageRequest).map(review -> {
-                ReviewDto dto = reviewService.convert2Dto(review);
+            Page<Review>
+                    reviewData =
+                    orderType.equals(ReviewOrderByType.RECENT) ? reviewService.selectReviewListByStoreOrderedRecent(
+                            storeId,
+                            pageRequest) : reviewService.selectReviewListOrderedBestWithStoreId(storeId, pageRequest);
+
+            Page<ReviewDto> reviews = reviewData.map(review -> {
+                ReviewDto dto = reviewService.convert2Dto(review, userId);
                 dto.setSimpleProduct(productService.selectProduct(review.getProduct().getId()).convert2ListDto());
-                return reviewService.convert2Dto(review);
+                return dto;
             });
-            res.setData(Optional.ofNullable(reviews));
+            res.setData(Optional.of(reviews));
             return ResponseEntity.ok(res);
         } catch (Exception e) {
             return res.defaultError(e);
@@ -122,11 +136,18 @@ public class ReviewController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<CustomResponse<ReviewDto>> selectReview(@PathVariable("id") Integer id) {
+    public ResponseEntity<CustomResponse<ReviewDto>> selectReview(@RequestHeader(value = "Authorization") Optional<String> auth,
+                                                                  @PathVariable("id") Integer id) {
         CustomResponse<ReviewDto> res = new CustomResponse<>();
+        Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ALLOW), auth);
         try {
+            Integer
+                    userId =
+                    tokenInfo != null &&
+                            tokenInfo.isPresent() &&
+                            tokenInfo.get().getType().equals(TokenAuthType.USER) ? tokenInfo.get().getId() : null;
             Review review = reviewService.selectReview(id);
-            ReviewDto reviewDto = reviewService.convert2Dto(review);
+            ReviewDto reviewDto = reviewService.convert2Dto(review, userId);
             reviewDto.setSimpleProduct(review.getProduct().convert2ListDto());
             res.setData(Optional.of(reviewDto));
             return ResponseEntity.ok(res);
@@ -137,16 +158,30 @@ public class ReviewController {
 
     @GetMapping("/product/{id}")
     public ResponseEntity<CustomResponse<Page<ReviewDto>>> selectReviewListWithProductId(@PathVariable("id") Integer productId,
+                                                                                         @RequestHeader(value = "Authorization") Optional<String> auth,
+                                                                                         @RequestParam(value = "orderType", required = false, defaultValue = "RECENT") ReviewOrderByType orderType,
                                                                                          @RequestParam(value = "page", required = false, defaultValue = "0") Integer page,
                                                                                          @RequestParam(value = "take", required = false, defaultValue = "10") Integer take) {
         CustomResponse<Page<ReviewDto>> res = new CustomResponse<>();
+        Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ALLOW), auth);
         try {
-            Page<ReviewDto> reviews = reviewService.selectReviewListByProduct(productId, page, take).map(review -> {
-                ReviewDto dto = reviewService.convert2Dto(review);
+            PageRequest pageRequest = PageRequest.of(page, take);
+            Page<Review>
+                    reviewData =
+                    orderType.equals(ReviewOrderByType.RECENT) ? reviewService.selectReviewListByProduct(productId,
+                            pageRequest) : reviewService.selectReviewListOrderedBestWithProductId(productId,
+                            pageRequest);
+            Page<ReviewDto> reviews = reviewData.map(review -> {
+                ReviewDto
+                        dto =
+                        tokenInfo != null &&
+                                tokenInfo.isPresent() &&
+                                tokenInfo.get().getType().equals(TokenAuthType.USER) ? reviewService.convert2Dto(review,
+                                tokenInfo.get().getId()) : reviewService.convert2Dto(review);
                 dto.setSimpleProduct(productService.selectProduct(review.getProduct().getId()).convert2ListDto());
-                return reviewService.convert2Dto(review);
+                return dto;
             });
-            res.setData(Optional.ofNullable(reviews));
+            res.setData(Optional.of(reviews));
             return ResponseEntity.ok(res);
         } catch (Exception e) {
             return res.defaultError(e);
@@ -163,12 +198,11 @@ public class ReviewController {
         try {
             Integer userId = tokenInfo.get().getId();
             Page<ReviewDto> reviews = reviewService.selectAllReviewListByUserId(userId, page - 1, take).map(review -> {
-                ReviewDto dto = reviewService.convert2Dto(review);
-                System.out.println(review.getProductId());
-                dto.setSimpleProduct(productService.selectProduct(review.getProductId()).convert2ListDto());
+                ReviewDto dto = reviewService.convert2Dto(review, userId);
+                dto.setSimpleProduct(productService.convert2ListDto(productService.selectProduct(review.getProductId())));
                 return dto;
             });
-            res.setData(Optional.ofNullable(reviews));
+            res.setData(Optional.of(reviews));
             return ResponseEntity.ok(res);
         } catch (Exception e) {
             return res.defaultError(e);
@@ -180,7 +214,7 @@ public class ReviewController {
     private static class ReviewAddReq {
         Integer productId;
         Integer userId;
-        String orderId;
+        Integer orderProductInfoId;
         List<ReviewEvaluationType> evaluations;
         String content;
     }
@@ -188,32 +222,37 @@ public class ReviewController {
     @PostMapping("/add")
     public ResponseEntity<CustomResponse<ReviewDto>> addReviewByUser(@RequestHeader(value = "Authorization") Optional<String> auth,
                                                                      @RequestPart(value = "data") ReviewAddReq data,
-                                                                     @RequestPart(value = "images") List<MultipartFile> images) {
+                                                                     @RequestPart(value = "images", required = false) List<MultipartFile> images) {
         CustomResponse<ReviewDto> res = new CustomResponse<>();
         Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth);
         if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
         try {
             Integer userId = tokenInfo.get().getId();
             UserInfo user = userService.selectUserInfo(userId);
-            if (data.orderId == null) return res.throwError("주문 아이디를 입력해주세요.", "INPUT_CHECK_REQUIRED");
-            Orders order = orderService.selectOrder(data.getOrderId());
+            if (data.orderProductInfoId == null) return res.throwError("주문 상품 아이디를 입력해주세요.", "INPUT_CHECK_REQUIRED");
+            OrderProductInfo orderProductInfo = orderService.selectOrderProductInfo(data.orderProductInfoId);
             if (data.productId == null) return res.throwError("상품 아이디를 입력해주세요.", "INPUT_CHECK_REQUIRED");
             Product product = productService.selectProduct(data.getProductId());
             Store store = storeService.selectStore(product.getStoreId());
             String content = data.getContent();
+            Boolean isWritten = reviewService.checkReviewWritten(userId, product.getId(), orderProductInfo.getId());
+            if (isWritten) return res.throwError("이미 리뷰를 작성하였습니다.", "NOT_ALLOWED");
             if (content.length() == 0) return res.throwError("내용을 입력해주세요.", "INPUT_CHECK_REQUIRED");
             Review
                     review =
-                    Review.builder().product(product).store(store).storeId(store.getId()).userId(userId).content(content).createdAt(
-                            utils.now()).images("").orderId(order.getId()).build();
+                    Review.builder().productId(product.getId()).store(store).storeId(store.getId()).userId(userId).content(
+                            content).createdAt(utils.now()).images("").orderProductInfoId(orderProductInfo.getId()).build();
             Review result = reviewService.addReview(review);
             reviewService.addReviewEvaluationList(result.getId(), data.evaluations);
-            String
-                    imgUrls =
-                    s3.uploadFiles(images,
-                            new ArrayList<>(Arrays.asList("review", String.valueOf(result.getId())))).toString();
-            result.setImages(imgUrls);
+            if (images != null) {
+                String
+                        imgUrls =
+                        s3.uploadFiles(images,
+                                new ArrayList<>(Arrays.asList("review", String.valueOf(result.getId())))).toString();
+                result.setImages(imgUrls);
+            } else result.setImages("[]");
             result = reviewService.updateReview(review);
+            reviewService.increaseUserPoint(userId, images != null);
             res.setData(Optional.ofNullable(result.convert2Dto()));
             return ResponseEntity.ok(res);
         } catch (Exception e) {
@@ -290,8 +329,8 @@ public class ReviewController {
         try {
             Integer userId = tokenInfo.get().getId();
             Review review = reviewService.selectReview(reviewId);
-            reviewService.likeReview(userId, reviewId);
-            res.setData(Optional.of(true));
+            reviewService.unlikeReview(userId, reviewId);
+            res.setData(Optional.of(false));
             return ResponseEntity.ok(res);
         } catch (Exception e) {
             return res.defaultError(e);

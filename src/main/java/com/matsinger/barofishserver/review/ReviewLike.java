@@ -1,6 +1,5 @@
 package com.matsinger.barofishserver.review;
 
-import com.matsinger.barofishserver.coupon.CouponUserMapId;
 import com.matsinger.barofishserver.review.object.ReviewLikeId;
 import jakarta.persistence.*;
 import lombok.*;

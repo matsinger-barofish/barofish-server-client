@@ -11,6 +11,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -20,12 +21,9 @@ import java.util.List;
 @Slf4j
 public class CurationService {
 
-    @Autowired
     private final CurationRepository curationRepository;
-    @Autowired
     private final CurationProductMapRepository curationProductRepository;
 
-    @Autowired
     private final ProductRepository productRepository;
 
     public Page<Curation> selectCurationListByAdmin(PageRequest pageRequest) {
@@ -59,6 +57,7 @@ public class CurationService {
         });
     }
 
+    @Transactional
     public void deleteWithProductId(Integer productId) {
         curationProductRepository.deleteAllByProductId(productId);
     }
@@ -77,7 +76,7 @@ public class CurationService {
     }
 
     public List<CurationProductMap> addProduct(Integer curationId, List<Integer> productIds) {
-        ArrayList<CurationProductMap> curationProductMapArrayList = new ArrayList<CurationProductMap>();
+        ArrayList<CurationProductMap> curationProductMapArrayList = new ArrayList<>();
         for (Integer id : productIds) {
             if (checkExistCurationProductMap(curationId, id)) continue;
             CurationProductMap data = new CurationProductMap();

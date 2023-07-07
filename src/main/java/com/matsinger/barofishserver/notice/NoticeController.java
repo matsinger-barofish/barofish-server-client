@@ -1,7 +1,5 @@
 package com.matsinger.barofishserver.notice;
 
-import com.matsinger.barofishserver.coupon.Coupon;
-import com.matsinger.barofishserver.coupon.CouponType;
 import com.matsinger.barofishserver.jwt.JwtService;
 import com.matsinger.barofishserver.jwt.TokenAuthType;
 import com.matsinger.barofishserver.jwt.TokenInfo;
@@ -14,10 +12,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import retrofit2.http.Path;
 
 import java.sql.Timestamp;
 import java.util.*;
@@ -142,7 +138,7 @@ public class NoticeController {
             }
             notice.setUpdateAt(utils.now());
             noticeService.updateNotice(notice);
-            res.setData(Optional.ofNullable(notice));
+            res.setData(Optional.of(notice));
             return ResponseEntity.ok(res);
         } catch (Exception e) {
             return res.defaultError(e);

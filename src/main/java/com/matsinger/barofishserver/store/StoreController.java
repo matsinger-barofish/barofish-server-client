@@ -4,9 +4,7 @@ import com.matsinger.barofishserver.jwt.*;
 import com.matsinger.barofishserver.product.LikePostType;
 import com.matsinger.barofishserver.product.ProductService;
 import com.matsinger.barofishserver.product.object.Product;
-import com.matsinger.barofishserver.review.object.Review;
 import com.matsinger.barofishserver.review.ReviewService;
-import com.matsinger.barofishserver.review.object.ReviewStatistic;
 import com.matsinger.barofishserver.siteInfo.SiteInfoService;
 import com.matsinger.barofishserver.siteInfo.SiteInformation;
 import com.matsinger.barofishserver.store.object.*;
@@ -58,9 +56,11 @@ public class StoreController {
                 tokenInfo != null && tokenInfo.isPresent() && tokenInfo.get().getType().equals(TokenAuthType.ADMIN);
         try {
             PageRequest pageRequest = PageRequest.of(page, take, Sort.by(sort, orderBy.label));
-            List<StoreDto> stores = storeService.selectStoreList(true, pageRequest, null).stream().map(store -> {
-                return storeService.convert2Dto(store, false);
-            }).toList();
+            List<StoreDto>
+                    stores =
+                    storeService.selectStoreList(true,
+                            pageRequest,
+                            null).stream().map(store -> storeService.convert2Dto(store, false)).toList();
 
             res.setData(Optional.ofNullable(stores));
 
@@ -105,9 +105,10 @@ public class StoreController {
                 return builder.and(predicates.toArray(new Predicate[0]));
             };
             PageRequest pageRequest = PageRequest.of(page, take, Sort.by(sort, orderBy.label));
-            Page<StoreDto> stores = storeService.selectStoreList(true, pageRequest, spec).map(store -> {
-                return storeService.convert2Dto(store, false);
-            });
+            Page<StoreDto>
+                    stores =
+                    storeService.selectStoreList(true, pageRequest, spec).map(store -> storeService.convert2Dto(store,
+                            false));
 
             res.setData(Optional.ofNullable(stores));
 
@@ -126,12 +127,19 @@ public class StoreController {
         CustomResponse<List<SimpleStore>> res = new CustomResponse<>();
         Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ALLOW), auth);
         try {
-            List<SimpleStore> stores = storeService.selectRecommendStore(type, page - 1, take, keyword);
-            if (tokenInfo != null && tokenInfo.isPresent() && tokenInfo.get().getType().equals(TokenAuthType.USER)) {
-                for (SimpleStore store : stores) {
-                    store.setIsLike(storeService.checkLikeStore(store.getStoreId(), tokenInfo.get().getId()));
-                }
-            }
+            List<StoreInfo> storeInfos = storeService.selectRecommendStore(type, page - 1, take, keyword);
+            List<SimpleStore> stores = storeInfos.stream().map(v -> {
+                Integer
+                        userId =
+                        tokenInfo != null &&
+                                tokenInfo.isPresent() &&
+                                tokenInfo.get().getType().equals(TokenAuthType.USER) ? tokenInfo.get().getId() : null;
+                SimpleStore simpleStore = storeService.convert2SimpleDto(v, userId);
+                simpleStore.setProducts(productService.selectProductListWithStoreIdAndStateActive(v.getStoreId()).stream().map(
+                        productService::convert2ListDto).toList());
+                return simpleStore;
+            }).toList();
+
             res.setData(Optional.ofNullable(stores));
             return ResponseEntity.ok(res);
         } catch (Exception e) {
@@ -144,18 +152,22 @@ public class StoreController {
                                                           @RequestPart(value = "password") String password) {
         CustomResponse<Jwt> res = new CustomResponse<>();
         try {
-            Store store = storeService.selectStoreByLoginId(loginId);
-            if (store == null) return res.throwError("아이디 및 비밀번호를 확인해주세요.", "INPUT_CHECK_REQUIRED");
-            if (!BCrypt.checkpw(password, store.getPassword()))
+            Optional<Store> store = storeService.selectOptionalStoreByLoginId(loginId);
+            if (store == null || store.isEmpty()) return res.throwError("아이디 및 비밀번호를 확인해주세요.", "INPUT_CHECK_REQUIRED");
+            if (!BCrypt.checkpw(password, store.get().getPassword()))
                 return res.throwError("아이디 및 비밀번호를 확인해주세요.", "INPUT_CHECK_REQUIRED");
-            if (!store.getState().equals(StoreState.ACTIVE)) {
-                if (store.getState().equals(StoreState.BANNED)) return res.throwError("정지된 계정입니다.", "NOT_ALLOWED");
-                if (store.getState().equals(StoreState.DELETED)) return res.throwError("삭제된 계정입니다.", "NOT_ALLOWED");
+            if (!store.get().getState().equals(StoreState.ACTIVE)) {
+                if (store.get().getState().equals(StoreState.BANNED))
+                    return res.throwError("정지된 계정입니다.", "NOT_ALLOWED");
+                if (store.get().getState().equals(StoreState.DELETED))
+                    return res.throwError("삭제된 계정입니다.", "NOT_ALLOWED");
             }
-            String accessToken = jwtProvider.generateAccessToken(String.valueOf(store.getId()), TokenAuthType.PARTNER);
+            String
+                    accessToken =
+                    jwtProvider.generateAccessToken(String.valueOf(store.get().getId()), TokenAuthType.PARTNER);
             String
                     refreshToken =
-                    jwtProvider.generateRefreshToken(String.valueOf(store.getId()), TokenAuthType.PARTNER);
+                    jwtProvider.generateRefreshToken(String.valueOf(store.get().getId()), TokenAuthType.PARTNER);
             Jwt token = new Jwt();
             token.setAccessToken(accessToken);
             token.setRefreshToken(refreshToken);
@@ -196,26 +208,14 @@ public class StoreController {
         Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ALLOW), auth);
         try {
             StoreInfo storeInfo = storeService.selectStoreInfo(id);
-            SimpleStore data = storeInfo.convert2Dto();
+            Integer
+                    userId =
+                    tokenInfo != null &&
+                            tokenInfo.isPresent() &&
+                            tokenInfo.get().getType().equals(TokenAuthType.USER) ? tokenInfo.get().getId() : null;
+            SimpleStore data = storeService.convert2SimpleDto(storeInfo, userId);
             List<Product> products = productService.selectProductListWithStoreIdAndStateActive(id);
-            data.setProducts(products.stream().map(product -> {
-                return product.convert2ListDto();
-            }).toList());
-            Page<Review> reviews = reviewService.selectReviewListByStore(id, PageRequest.of(0, 50));
-            if (tokenInfo != null && tokenInfo.isPresent() && tokenInfo.get().getType().equals(TokenAuthType.USER))
-                data.setIsLike(storeService.checkLikeStore(id, tokenInfo.get().getId()));
-            data.setReviews(reviews.stream().map(review -> {
-                return review.convert2Dto();
-            }).toList());
-            List<ReviewStatistic>
-                    reviewStatistic =
-                    reviewService.selectReviewStatisticsWithStoreId(storeInfo.getStoreId());
-            data.setReviewCount((int) reviews.getTotalElements());
-            data.setReviewStatistic(reviewStatistic);
-            data.setProductCount(products.size());
-            data.setImageReviews(reviews.stream().map(review -> {
-                return review.convert2Dto();
-            }).toList());
+            data.setProducts(products.stream().map(Product::convert2ListDto).toList());
             res.setData(Optional.ofNullable(data));
             return ResponseEntity.ok(res);
         } catch (Exception e) {
@@ -240,7 +240,7 @@ public class StoreController {
                 jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.PARTNER, TokenAuthType.ADMIN), auth);
         if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
         try {
-            Integer storeId = null;
+            Integer storeId;
             if (tokenInfo.get().getType().equals(TokenAuthType.PARTNER)) {
                 if (data.oldPassword == null) return res.throwError("이전 비밀번호를 입력해주세요.", "INPUT_CHECK_REQUIRED");
                 else if (data.newPassword == null) return res.throwError("새로운 비밀번호를 입력해주세요.", "INPUT_CHECK_REQUIRED");
@@ -330,7 +330,7 @@ public class StoreController {
             String addressDetail = utils.validateString(data.addressDetail, 200L, "상세 주소");
             String tel = utils.validateString(data.tel, 20L, "전화번호");
             String email = utils.validateString(data.email, 300L, "이메일");
-            String faxNumber = utils.validateString(data.faxNumber, 20L, "팩스 번호");
+            String faxNumber = data.faxNumber != null ? utils.validateString(data.faxNumber, 20L, "팩스 번호") : null;
             String oneLineDescriptionData = "";
             if (oneLineDescription != null)
                 oneLineDescriptionData = utils.validateString(oneLineDescription, 500L, "한 줄 소개");
@@ -348,9 +348,10 @@ public class StoreController {
                             lotNumberAddress).streetNameAddress(streetNameAddress).addressDetail(addressDetail).tel(tel).email(
                             email).faxNumber(faxNumber).build();
             if (deliverFeeType != null) storeInfoData.setDeliverFeeType(storeInfoData.getDeliverFeeType());
-            if (deliverFeeType != null && deliverFeeType.equals(StoreDeliverFeeType.FREE) && deliverFee == null)
+            if (deliverFeeType != null && deliverFeeType.equals(StoreDeliverFeeType.FREE_IF_OVER) && deliverFee == null)
                 return res.throwError("무료 배송 최소 주문 금액을 입력해주세요.", "INPUT_CHECK_REQUIRED");
             if (deliverFee != null) storeInfoData.setDeliverFee(deliverFee);
+            else storeInfoData.setDeliverFee(0);
             storeInfoData.setMinOrderPrice(minOrderPrice);
             Store store = storeService.addStore(storeData);
             String

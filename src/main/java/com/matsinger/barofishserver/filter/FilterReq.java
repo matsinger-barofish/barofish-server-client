@@ -1,7 +1,5 @@
 package com.matsinger.barofishserver.filter;
 
-import com.matsinger.barofishserver.category.Category;
-import com.matsinger.barofishserver.product.productinfo.*;
 import lombok.Builder;
 import lombok.Getter;
 

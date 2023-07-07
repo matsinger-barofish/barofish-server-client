@@ -1,6 +1,5 @@
 package com.matsinger.barofishserver.search;
 
-import com.matsinger.barofishserver.product.object.Product;
 import com.matsinger.barofishserver.product.ProductService;
 import com.matsinger.barofishserver.product.object.ProductListDto;
 import com.matsinger.barofishserver.utils.CustomResponse;
@@ -60,7 +59,7 @@ public class SearchKeywordController {
             for (SearchKeywordRepository.SearchProduct data : result) {
                 dtos.add(SearchProductDto.builder().id(data.getId()).title(data.getTitle()).build());
             }
-            res.setData(Optional.ofNullable(dtos));
+            res.setData(Optional.of(dtos));
             return ResponseEntity.ok(res);
         } catch (Exception e) {
             return res.defaultError(e);

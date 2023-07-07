@@ -1,8 +1,5 @@
 package com.matsinger.barofishserver.coupon;
 
-import com.matsinger.barofishserver.inquiry.Inquiry;
-import com.matsinger.barofishserver.inquiry.InquiryOrderBy;
-import com.matsinger.barofishserver.inquiry.InquiryType;
 import com.matsinger.barofishserver.jwt.JwtService;
 import com.matsinger.barofishserver.jwt.TokenAuthType;
 import com.matsinger.barofishserver.jwt.TokenInfo;
@@ -30,17 +27,6 @@ public class CouponController {
     private final CouponService couponService;
     private final JwtService jwt;
     private final Common utils;
-
-    @GetMapping("/test")
-    public ResponseEntity<CustomResponse<Boolean>> testCoupon() {
-        CustomResponse<Boolean> res = new CustomResponse<>();
-        try {
-            Coupon coupon = couponService.selectCoupon(1);
-            return ResponseEntity.ok(res);
-        } catch (Exception e) {
-            return res.defaultError(e);
-        }
-    }
 
     @GetMapping("/management")
     public ResponseEntity<CustomResponse<Page<Coupon>>> selectCouponListByAdmin(@RequestHeader(value = "Authorization", required = false) Optional<String> auth,

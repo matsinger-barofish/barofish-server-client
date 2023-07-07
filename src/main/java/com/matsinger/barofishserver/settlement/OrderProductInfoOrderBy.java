@@ -7,7 +7,7 @@ public enum OrderProductInfoOrderBy {
 
     public final String label;
 
-    private OrderProductInfoOrderBy(String label) {
+    OrderProductInfoOrderBy(String label) {
         this.label = label;
     }
 }

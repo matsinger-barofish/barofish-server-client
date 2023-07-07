@@ -1,6 +1,5 @@
 package com.matsinger.barofishserver.order.object;
 
-import jakarta.persistence.*;
 import lombok.*;
 
 @Getter

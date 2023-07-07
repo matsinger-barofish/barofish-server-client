@@ -1,6 +1,5 @@
 package com.matsinger.barofishserver.data.curation.object;
 
-import com.matsinger.barofishserver.product.object.Product;
 import com.matsinger.barofishserver.product.object.ProductListDto;
 import lombok.Builder;
 import lombok.Getter;

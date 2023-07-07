@@ -109,14 +109,6 @@ public class Inquiry {
         this.createdAt = createdAt;
     }
 
-    public Timestamp getAnswetedAt() {
-        return answeredAt;
-    }
-
-    public void setAnswetedAt(Timestamp answetedAt) {
-        this.answeredAt = answetedAt;
-    }
-
     public InquiryDto convert2Dto() {
         return InquiryDto.builder().id(this.getId()).type(this.getType()).isSecret(this.getIsSecret()).productId(this.getProductId()).content(
                 this.getContent()).createdAt(this.getCreatedAt()).answeredAt(this.getAnsweredAt()).answer(this.getAnswer()).user(

@@ -39,7 +39,7 @@ public class CouponService {
         });
     }
 
-    public Boolean checkValidCoupon(Integer couponId, Integer userId) {
+    public void checkValidCoupon(Integer couponId, Integer userId) {
         CouponUserMap
                 map =
                 mapRepository.findById(CouponUserMapId.builder().couponId(couponId).userId(userId).build()).orElseThrow(
@@ -53,7 +53,6 @@ public class CouponService {
         Timestamp now = utils.now();
         if (coupon.getStartAt().after(now)) throw new Error("사용 기한 전의 쿠폰입니다.");
         if (coupon.getEndAt().before(now)) throw new Error("사용 기한이 만료되었습니다.");
-        return true;
     }
 
     public Boolean checkHasCoupon(Integer couponId, Integer userId) {
@@ -90,8 +89,8 @@ public class CouponService {
         return couponRepository.save(coupon);
     }
 
-    public Coupon updateCoupon(Coupon coupon) {
-        return couponRepository.save(coupon);
+    public void updateCoupon(Coupon coupon) {
+        couponRepository.save(coupon);
     }
 
     public void deleteCoupon(Integer id) {
@@ -110,6 +109,6 @@ public class CouponService {
 
     public void useCoupon(Integer couponId, Integer userId) {
         Optional<CouponUserMap> map = mapRepository.findById(new CouponUserMapId(userId, couponId));
-        if (map.isPresent()) map.get().setIsUsed(true);
+        map.ifPresent(couponUserMap -> couponUserMap.setIsUsed(true));
     }
 }

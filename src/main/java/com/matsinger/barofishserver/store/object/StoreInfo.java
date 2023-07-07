@@ -166,7 +166,7 @@ public class StoreInfo {
     }
 
     public SimpleStore convert2Dto() {
-        return SimpleStore.builder().storeId(this.store.getId()).isLike(false).backgroundImage(backgroudImage).profileImage(
+        return SimpleStore.builder().storeId(this.store.getId()).backgroundImage(backgroudImage).profileImage(
                 profileImage).name(name).location(location).keyword(keyword.split(",")).visitNote(this.getVisitNote()).deliverFee(
                 this.deliverFee).minOrderPrice(this.minOrderPrice).oneLineDescription(this.oneLineDescription).build();
     }

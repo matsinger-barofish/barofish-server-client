@@ -1,12 +1,9 @@
 package com.matsinger.barofishserver.order.object;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
-import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.matsinger.barofishserver.product.object.Product;
 import jakarta.persistence.*;
 import lombok.*;
-import org.checkerframework.checker.units.qual.C;
-import org.hibernate.annotations.ColumnDefault;
 
 import java.sql.Timestamp;
 import java.util.Objects;

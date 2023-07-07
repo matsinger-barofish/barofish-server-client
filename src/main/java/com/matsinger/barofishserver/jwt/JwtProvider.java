@@ -29,10 +29,12 @@ public class JwtProvider {
 
     public TokenAuthType getTypeFromToken(String token) {
         String issuer = getClaimFromToken(token, Claims::getIssuer);
-        if (issuer.equals("USER")) return TokenAuthType.USER;
-        else if (issuer.equals("ADMIN")) return TokenAuthType.ADMIN;
-        else if (issuer.equals("PARTNER")) return TokenAuthType.PARTNER;
-        else return TokenAuthType.ALLOW;
+        return switch (issuer) {
+            case "USER" -> TokenAuthType.USER;
+            case "ADMIN" -> TokenAuthType.ADMIN;
+            case "PARTNER" -> TokenAuthType.PARTNER;
+            default -> TokenAuthType.ALLOW;
+        };
     }
 
     // token으로 사용자 속성정보 조회
@@ -73,12 +75,9 @@ public class JwtProvider {
 
     // JWT accessToken 생성
     private String doGenerateAccessToken(String id, String issuer, Map<String, Object> claims) {
-        String
-                accessToken =
-                Jwts.builder().setClaims(claims).setIssuer(issuer).setId(id).setIssuedAt(new Date(System.currentTimeMillis())).setExpiration(
-                        new Date(System.currentTimeMillis() +
-                                JWT_TOKEN_VALIDITY * 7)).signWith(SignatureAlgorithm.HS512, secret).compact();
-        return accessToken;
+        return Jwts.builder().setClaims(claims).setIssuer(issuer).setId(id).setIssuedAt(new Date(System.currentTimeMillis())).setExpiration(
+                new Date(System.currentTimeMillis() +
+                        JWT_TOKEN_VALIDITY * 7)).signWith(SignatureAlgorithm.HS512, secret).compact();
     }
 
     // id를 입력받아 accessToken 생성
@@ -92,14 +91,11 @@ public class JwtProvider {
 
     // JWT accessToken 생성
     private String doGenerateRefreshToken(String id, String issuer) {
-        String
-                refreshToken =
-                Jwts.builder().setId(id).setExpiration(new Date(System.currentTimeMillis() +
-                            JWT_TOKEN_VALIDITY * 31))
-                    .setIssuedAt(new Date(System.currentTimeMillis())).signWith(SignatureAlgorithm.HS512,
-                            secret).compact();
 
-        return refreshToken;
+        return Jwts.builder().setId(id).setExpiration(new Date(System.currentTimeMillis() +
+                    JWT_TOKEN_VALIDITY * 31))
+           .setIssuedAt(new Date(System.currentTimeMillis())).signWith(SignatureAlgorithm.HS512,
+                    secret).compact();
     }
 
     // id를 입력받아 accessToken, refreshToken 생성
@@ -114,7 +110,7 @@ public class JwtProvider {
 
     // JWT accessToken, refreshToken 생성
     private Map<String, String> doGenerateTokenSet(String id, Map<String, Object> claims) {
-        Map<String, String> tokens = new HashMap<String, String>();
+        Map<String, String> tokens = new HashMap<>();
 
         String
                 accessToken =

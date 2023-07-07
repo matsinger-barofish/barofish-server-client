@@ -54,9 +54,7 @@ public class SmsService {
         map.put("body", content);
         map.put("sendNo", sendTel);
         map.put("recipientList", recipientList);
-        System.out.println(map.toString());
         HttpEntity<Map<String, Object>> httpEntity = new HttpEntity<>(map, headers);
         ResponseEntity<String> responseEntity = restTemplate.exchange(url, HttpMethod.POST, httpEntity, String.class);
-        System.out.println(responseEntity.toString());
     }
 }

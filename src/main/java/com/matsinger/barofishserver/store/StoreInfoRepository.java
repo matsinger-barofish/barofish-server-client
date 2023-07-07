@@ -15,7 +15,7 @@ import java.util.Optional;
 public interface StoreInfoRepository extends JpaRepository<StoreInfo, Integer> {
     Optional<StoreInfo> findByName(String name);
 
-    public List<StoreInfo> findAllByStoreIdIn(List<Integer> storeIds);
+    List<StoreInfo> findAllByStoreIdIn(List<Integer> storeIds);
 
     @Query(value = "SELECT si.*\n" +
             "FROM store_info si\n" +
@@ -33,7 +33,7 @@ public interface StoreInfoRepository extends JpaRepository<StoreInfo, Integer> {
             "AND INSTR(si.name, :keyword) > 0\n" +
             "GROUP BY si.store_id\n" +
             "ORDER BY COUNT( * ) DESC\n", nativeQuery = true)
-    List<StoreInfo> selectRecommendStoreWithScrap(Pageable pageable,@Param("keyword") String keyword);
+    List<StoreInfo> selectRecommendStoreWithScrap(Pageable pageable, @Param("keyword") String keyword);
 
     @Query(value = "SELECT si.*\n" +
             "FROM store_info si\n" +
@@ -42,8 +42,8 @@ public interface StoreInfoRepository extends JpaRepository<StoreInfo, Integer> {
             "WHERE s.state = 'ACTIVE'\n" +
             "AND INSTR(si.name, :keyword) > 0\n" +
             "GROUP BY si.store_id\n" +
-            "ORDER BY COUNT( * ) DESC\n", nativeQuery = true)
-    List<StoreInfo> selectRecommendStoreWithReview(Pageable pageable,@Param("keyword") String keyword);
+            "ORDER BY COUNT( r.store_id ) DESC\n", nativeQuery = true)
+    List<StoreInfo> selectRecommendStoreWithReview(Pageable pageable, @Param("keyword") String keyword);
 
     @Query(value = "SELECT si.*\n" +
             "FROM store_info si\n" +
@@ -55,5 +55,5 @@ public interface StoreInfoRepository extends JpaRepository<StoreInfo, Integer> {
             "AND INSTR(si.name, :keyword) > 0\n" +
             "GROUP BY si.store_id\n" +
             "ORDER BY COUNT( CASE WHEN o.state = 'FINAL_CONFIRM' THEN 1 END ) DESC\n", nativeQuery = true)
-    List<StoreInfo> selectRecommendStoreWithOrder(Pageable pageable,@Param("keyword") String keyword);
+    List<StoreInfo> selectRecommendStoreWithOrder(Pageable pageable, @Param("keyword") String keyword);
 }

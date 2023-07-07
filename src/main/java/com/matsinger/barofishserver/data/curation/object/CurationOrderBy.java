@@ -5,7 +5,7 @@ public enum CurationOrderBy {
 
     public final String label;
 
-    private CurationOrderBy(String label) {
+    CurationOrderBy(String label) {
         this.label = label;
     }
 }

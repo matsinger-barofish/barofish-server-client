@@ -1,10 +1,8 @@
 package com.matsinger.barofishserver.settlement;
 
-import com.matsinger.barofishserver.inquiry.InquiryType;
 import com.matsinger.barofishserver.jwt.JwtService;
 import com.matsinger.barofishserver.jwt.TokenAuthType;
 import com.matsinger.barofishserver.jwt.TokenInfo;
-import com.matsinger.barofishserver.notice.Notice;
 import com.matsinger.barofishserver.order.OrderService;
 import com.matsinger.barofishserver.order.object.OrderProductInfo;
 import com.matsinger.barofishserver.order.object.OrderProductInfoDto;
@@ -26,10 +24,8 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import javax.swing.*;
 import java.sql.Timestamp;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @RestController
 @RequiredArgsConstructor
@@ -79,7 +75,9 @@ public class SettlementController {
                                                                                                @RequestParam(value = "settledAtS", required = false) Timestamp settledAtS,
                                                                                                @RequestParam(value = "settledAtE", required = false) Timestamp settledAtE) {
         CustomResponse<Page<OrderProductInfoDto>> res = new CustomResponse<>();
-        Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
+        Optional<TokenInfo>
+                tokenInfo =
+                jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN, TokenAuthType.PARTNER), auth);
         if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
         try {
             Specification<OrderProductInfo> spec = (root, query, builder) -> {
@@ -88,6 +86,8 @@ public class SettlementController {
                 if (isSettled != null) predicates.add(builder.equal(root.get("isSettled"), isSettled));
                 if (settledAtS != null) predicates.add(builder.greaterThan(root.get("settledAt"), settledAtS));
                 if (settledAtE != null) predicates.add(builder.lessThan(root.get("settledAt"), settledAtE));
+                if (tokenInfo.get().getType().equals(TokenAuthType.PARTNER))
+                    predicates.add(builder.equal(root.get("product").get("storeId"), tokenInfo.get().getId()));
                 predicates.add(builder.equal(root.get("state"), OrderProductState.FINAL_CONFIRM));
                 return builder.and(predicates.toArray(new Predicate[0]));
             };

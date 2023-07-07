@@ -14,7 +14,7 @@ public class CategoryFilterService {
     private final CategoryFilterRepository categoryFilterRepository;
 
     public List<Integer> selectCompareFilterIdList(Integer categoryId) {
-        return categoryFilterRepository.findAllByCategoryId(categoryId).stream().map(v -> v.getCompareFilterId()).toList();
+        return categoryFilterRepository.findAllByCategoryId(categoryId).stream().map(CategoryFilterMap::getCompareFilterId).toList();
     }
 
     public void addCategoryFilterMap(CategoryFilterMap filter) {

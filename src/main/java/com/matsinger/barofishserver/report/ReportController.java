@@ -61,9 +61,9 @@ public class ReportController {
                 return builder.and(predicates.toArray(new Predicate[0]));
             };
             PageRequest pageRequest = PageRequest.of(page, take, Sort.by(sort, orderBy.label));
-            Page<ReportDto> reportDtos = reportService.selectReportList(pageRequest, spec).map(report -> {
-                return reportService.convert2Dto(report);
-            });
+            Page<ReportDto>
+                    reportDtos =
+                    reportService.selectReportList(pageRequest, spec).map(reportService::convert2Dto);
             res.setData(Optional.of(reportDtos));
             return ResponseEntity.ok(res);
         } catch (Exception e) {
@@ -103,6 +103,8 @@ public class ReportController {
         try {
             Integer userId = tokenInfo.get().getId();
             if (data.reviewId == null) return res.throwError("리뷰 아이디를 입력해주세요.", "INPUT_CHECK_REQUIRED");
+            if (reportService.checkHasReported(userId, data.reviewId))
+                return res.throwError("이미 신고한 리뷰입니다.", "INPUT_CHECK_REQUIRED");
             Review review = reviewService.selectReview(data.reviewId);
             String content = utils.validateString(data.content, 300L, "내용");
             Report

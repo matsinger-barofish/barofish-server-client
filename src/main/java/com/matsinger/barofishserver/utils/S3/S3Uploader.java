@@ -13,9 +13,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.*;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.nio.Buffer;
 import java.util.*;
-import java.util.regex.MatchResult;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -55,7 +53,6 @@ public class S3Uploader {
     }
 
     private String putS3(File uploadFile, String fileName) {
-        System.out.println(fileName + uploadFile);
         amazonS3Client.putObject(new PutObjectRequest(bucket, fileName, uploadFile).withCannedAcl(
                 CannedAccessControlList.PublicRead)    // PublicRead 권한으로 업로드 됨
         );
@@ -151,13 +148,11 @@ public class S3Uploader {
         Pattern imgPattern = Pattern.compile("<img src=\"data:(image/.*?);base64,(.*?)\">");
         Matcher matcher = imgPattern.matcher(content);
         List<String> imgUrls = new ArrayList<>();
-        System.out.println(imgUrls);
         while (matcher.find()) {
             String base64String = matcher.group();
             String[] splitedString = base64String.replaceAll("<img src=\"data:(image/.*?);base64,(.*?)\"(.*?)>",//(.*?)
                     "$1&--&$2").split("&--&");
             String mimetype = splitedString[0];
-            System.out.println(mimetype);
             File file = convertBase64ToFile(splitedString[1], mimetype);
             String imgUrl = upload(file, path);
             content =
@@ -175,8 +170,8 @@ public class S3Uploader {
             byte[] bytes = Base64.getDecoder().decode(base64);
             File
                     tmpFile =
-                    mimetype.equals("image/svg+xml") ? File.createTempFile("tmp", ".svg") : File.createTempFile("tmp",
-                            ".jpg");
+                    mimetype != null && mimetype.equals("image/svg+xml") ? File.createTempFile("tmp",
+                            ".svg") : File.createTempFile("tmp", ".jpg");
             FileOutputStream fos = new FileOutputStream(tmpFile);
             fos.write(bytes);
             fos.close();
