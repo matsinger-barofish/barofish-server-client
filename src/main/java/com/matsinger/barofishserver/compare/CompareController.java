@@ -31,9 +31,10 @@ public class CompareController {
 
 
     @GetMapping("/test")
-    public ResponseEntity<CustomResponse<List<CompareObject.CompareSetDto>>> test() {
-        CustomResponse<List<CompareObject.CompareSetDto>> res = new CustomResponse<>();
+    public ResponseEntity<CustomResponse<Boolean>> test() {
+        CustomResponse<Boolean> res = new CustomResponse<>();
         try {
+            res.setData(Optional.of(false));
             return ResponseEntity.ok(res);
         } catch (Exception e) {
             return res.defaultError(e);
@@ -141,6 +142,8 @@ public class CompareController {
                 return category.getCategoryId();
             }).collect(Collectors.toSet()).size() != 1)
                 return res.throwError("같은 카테고리의 상품끼리 비교 가능합니다.", "INPUT_CHECK_REQUIRED");
+            if (compareService.checkExistProductSet(tokenInfo.get().getId(), productIds))
+                return res.throwError("이미 저장된 조합입니다.", "NOT_ALLOWED");
             CompareSet compareSet = compareService.addCompareSet(tokenInfo.get().getId(), productIds);
             res.setData(Optional.ofNullable(compareSet));
             return ResponseEntity.ok(res);

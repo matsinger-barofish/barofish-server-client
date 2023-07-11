@@ -13,17 +13,17 @@ import java.util.List;
 import java.util.Optional;
 
 public interface ProductRepository extends JpaRepository<Product, Integer>, JpaSpecificationExecutor<Product> {
-     List<Product> findAllByIdIn(List<Integer> ids);
+    List<Product> findAllByIdIn(List<Integer> ids);
 
-     List<Product> findByTitleContainsAndStateEquals(String title, ProductState state);
+    List<Product> findByTitleContainsAndStateEquals(String title, ProductState state);
 
-     List<Product> findByTitleContaining(String keyword);
+    List<Product> findByTitleContaining(String keyword);
 
     Optional<Product> findByTitle(String title);
 
     Integer countAllByStoreId(Integer storeId);
 
-     List<Product> findByStoreIdAndStateEquals(Integer storeId, ProductState state);
+    List<Product> findByStoreIdAndStateEquals(Integer storeId, ProductState state);
 
 //    Page<Product> findAllByStateIn(List<ProductState> state, Pageable pageable, Specification<Product> spec);
 
@@ -50,7 +50,7 @@ public interface ProductRepository extends JpaRepository<Product, Integer>, JpaS
             "and (:curationId is null or p.id in (select cpm.product_id from curation_product_map cpm " +
             "WHERE cpm.curation_id=:curationId)) \n" +
             "and (:storeId is null or p.store_id = :storeId) \n" +
-            "and (:keyword = \'\' or p.title like concat('%', :keyword, '%') ) \n" +
+            "and (:keyword is null or p.title like concat('%', :keyword, '%') ) \n" +
             "and ( (:#{#categoryIds==null ? null : #categoryIds.size()} is null or c.parent_category_id in (:categoryIds)) \n" +
             "or (:#{#categoryIds==null ? null : #categoryIds.size()} is null or c.id in (:categoryIds)) )\n" +
             "and (:#{#filterFieldIds==null ? null : #filterFieldIds.size() } is null or p.id in (select p1.id from " +
@@ -65,7 +65,7 @@ public interface ProductRepository extends JpaRepository<Product, Integer>, JpaS
             "and (:curationId is null or p.id in (select cpm.product_id from curation_product_map cpm " +
             "WHERE cpm.curation_id=:curationId)) \n" +
             "and (:storeId is null or p.store_id = :storeId) \n" +
-            "and (:keyword = \'\' or p.title like concat('%', :keyword, '%') ) \n" +
+            "and (:keyword is null or p.title like concat('%', :keyword, '%') ) \n" +
             "and ( (:#{#categoryIds==null ? null : #categoryIds.size()} is null or c.parent_category_id in (:categoryIds)) \n" +
             "or (:#{#categoryIds==null ? null : #categoryIds.size()} is null or c.id in (:categoryIds)) )\n" +
             "and (:#{#filterFieldIds==null ? null : #filterFieldIds.size() } is null or p.id in (select p1.id from " +
@@ -86,7 +86,7 @@ public interface ProductRepository extends JpaRepository<Product, Integer>, JpaS
             "and (:curationId is null or p.id in (select cpm.product_id from curation_product_map cpm " +
             "WHERE cpm.curation_id=:curationId)) \n" +
             "and (:storeId is null or p.store_id = :storeId) \n" +
-            "and (:keyword = \'\' or p.title like concat('%', :keyword, '%') ) \n" +
+            "and (:keyword is null or p.title like concat('%', :keyword, '%') ) \n" +
             "and ( (:#{#categoryIds==null ? null : #categoryIds.size()} is null or c.parent_category_id in (:categoryIds)) \n" +
             "or (:#{#categoryIds==null ? null : #categoryIds.size()} is null or c.id in (:categoryIds)) )\n" +
             "and (:#{#filterFieldIds==null ? null : #filterFieldIds.size() } is null or p.id in (select p1.id from " +
@@ -100,7 +100,7 @@ public interface ProductRepository extends JpaRepository<Product, Integer>, JpaS
             "and (:curationId is null or p.id in (select cpm.product_id from curation_product_map cpm " +
             "WHERE cpm.curation_id=:curationId)) \n" +
             "and (:storeId is null or p.store_id = :storeId) \n" +
-            "and (:keyword = \'\' or p.title like concat('%', :keyword, '%') ) \n" +
+            "and (:keyword is null or p.title like concat('%', :keyword, '%') ) \n" +
             "and ( (:#{#categoryIds==null ? null : #categoryIds.size()} is null or c.parent_category_id in (:categoryIds)) \n" +
             "or (:#{#categoryIds==null ? null : #categoryIds.size()} is null or c.id in (:categoryIds)) )\n" +
             "and (:#{#filterFieldIds==null ? null : #filterFieldIds.size() } is null or p.id in (select p1.id from " +
@@ -121,7 +121,7 @@ public interface ProductRepository extends JpaRepository<Product, Integer>, JpaS
             "and (:curationId is null or p.id in (select cpm.product_id from curation_product_map cpm " +
             "WHERE cpm.curation_id=:curationId)) \n" +
             "and (:storeId is null or p.store_id = :storeId) \n" +
-            "and (:keyword = \'\' or p.title like concat('%', :keyword, '%') ) \n" +
+            "and (:keyword is null or p.title like concat('%', :keyword, '%') ) \n" +
             "and ( (:#{#categoryIds==null ? null : #categoryIds.size()} is null or c.parent_category_id in (:categoryIds)) \n" +
             "or (:#{#categoryIds==null ? null : #categoryIds.size()} is null or c.id in (:categoryIds)) )\n" +
             "and (:#{#filterFieldIds==null ? null : #filterFieldIds.size() } is null or p.id in (select p1.id from " +
@@ -135,7 +135,7 @@ public interface ProductRepository extends JpaRepository<Product, Integer>, JpaS
             "and (:curationId is null or p.id in (select cpm.product_id from curation_product_map cpm " +
             "WHERE cpm.curation_id=:curationId)) \n" +
             "and (:storeId is null or p.store_id = :storeId) \n" +
-            "and (:keyword = \'\' or p.title like concat('%', :keyword, '%') ) \n" +
+            "and (:keyword is null or p.title like concat('%', :keyword, '%') ) \n" +
             "and ( (:#{#categoryIds==null ? null : #categoryIds.size()} is null or c.parent_category_id in (:categoryIds)) \n" +
             "or (:#{#categoryIds==null ? null : #categoryIds.size()} is null or c.id in (:categoryIds)) )\n" +
             "and (:#{#filterFieldIds==null ? null : #filterFieldIds.size() } is null or p.id in (select p1.id from " +
@@ -156,7 +156,7 @@ public interface ProductRepository extends JpaRepository<Product, Integer>, JpaS
             "and (:curationId is null or p.id in (select cpm.product_id from curation_product_map cpm " +
             "WHERE cpm.curation_id=:curationId)) \n" +
             "and (:storeId is null or p.store_id = :storeId) \n" +
-            "and (:keyword = \'\' or p.title like concat('%', :keyword, '%') ) \n" +
+            "and (:keyword is null or p.title like concat('%', :keyword, '%') ) \n" +
             "and ( (:#{#categoryIds==null ? null : #categoryIds.size()} is null or c.parent_category_id in (:categoryIds)) \n" +
             "or (:#{#categoryIds==null ? null : #categoryIds.size()} is null or c.id in (:categoryIds)) )\n" +
             "and (:#{#filterFieldIds==null ? null : #filterFieldIds.size() } is null or p.id in (select p1.id from " +
@@ -170,7 +170,7 @@ public interface ProductRepository extends JpaRepository<Product, Integer>, JpaS
             "and (:curationId is null or p.id in (select cpm.product_id from curation_product_map cpm " +
             "WHERE cpm.curation_id=:curationId)) \n" +
             "and (:storeId is null or p.store_id = :storeId) \n" +
-            "and (:keyword = \'\' or p.title like concat('%', :keyword, '%') ) \n" +
+            "and (:keyword is null or p.title like concat('%', :keyword, '%') ) \n" +
             "and ( (:#{#categoryIds==null ? null : #categoryIds.size()} is null or c.parent_category_id in (:categoryIds)) \n" +
             "or (:#{#categoryIds==null ? null : #categoryIds.size()} is null or c.id in (:categoryIds)) )\n" +
             "and (:#{#filterFieldIds==null ? null : #filterFieldIds.size() } is null or p.id in (select p1.id from " +
@@ -192,7 +192,7 @@ public interface ProductRepository extends JpaRepository<Product, Integer>, JpaS
             "and (:curationId is null or p.id in (select cpm.product_id from curation_product_map cpm " +
             "WHERE cpm.curation_id=:curationId)) \n" +
             "and (:storeId is null or p.store_id = :storeId) \n" +
-            "and (:keyword = \'\' or p.title like concat('%', :keyword, '%') ) \n" +
+            "and (:keyword is null or p.title like concat('%', :keyword, '%') ) \n" +
             "and ( (:#{#categoryIds==null ? null : #categoryIds.size()} is null or c.parent_category_id in (:categoryIds)) \n" +
             "or (:#{#categoryIds==null ? null : #categoryIds.size()} is null or c.id in (:categoryIds)) )\n" +
             "and (:#{#filterFieldIds==null ? null : #filterFieldIds.size() } is null or p.id in (select p1.id from " +
@@ -207,7 +207,7 @@ public interface ProductRepository extends JpaRepository<Product, Integer>, JpaS
             "and (:curationId is null or p.id in (select cpm.product_id from curation_product_map cpm " +
             "WHERE cpm.curation_id=:curationId)) \n" +
             "and (:storeId is null or p.store_id = :storeId) \n" +
-            "and (:keyword = \'\' or p.title like concat('%', :keyword, '%') ) \n" +
+            "and (:keyword is null or p.title like concat('%', :keyword, '%') ) \n" +
             "and ( (:#{#categoryIds==null ? null : #categoryIds.size()} is null or c.parent_category_id in (:categoryIds)) \n" +
             "or (:#{#categoryIds==null ? null : #categoryIds.size()} is null or c.id in (:categoryIds)) )\n" +
             "and (:#{#filterFieldIds==null ? null : #filterFieldIds.size() } is null or p.id in (select p1.id from " +
@@ -229,7 +229,7 @@ public interface ProductRepository extends JpaRepository<Product, Integer>, JpaS
             "and (:curationId is null or p.id in (select cpm.product_id from curation_product_map cpm " +
             "WHERE cpm.curation_id=:curationId)) \n" +
             "and (:storeId is null or p.store_id = :storeId) \n" +
-            "and (:keyword = \'\' or p.title like concat('%', :keyword, '%') ) \n" +
+            "and (:keyword is null or p.title like concat('%', :keyword, '%') ) \n" +
             "and ( (:#{#categoryIds==null ? null : #categoryIds.size()} is null or c.parent_category_id in (:categoryIds)) \n" +
             "or (:#{#categoryIds==null ? null : #categoryIds.size()} is null or c.id in (:categoryIds)) )\n" +
             "and (:#{#filterFieldIds==null ? null : #filterFieldIds.size() } is null or p.id in (select p1.id from " +
@@ -244,7 +244,7 @@ public interface ProductRepository extends JpaRepository<Product, Integer>, JpaS
             "and (:curationId is null or p.id in (select cpm.product_id from curation_product_map cpm " +
             "WHERE cpm.curation_id=:curationId)) \n" +
             "and (:storeId is null or p.store_id = :storeId) \n" +
-            "and (:keyword = \'\' or p.title like concat('%', :keyword, '%') ) \n" +
+            "and (:keyword = is null or p.title like concat('%', :keyword, '%') ) \n" +
             "and ( (:#{#categoryIds==null ? null : #categoryIds.size()} is null or c.parent_category_id in (:categoryIds)) \n" +
             "or (:#{#categoryIds==null ? null : #categoryIds.size()} is null or c.id in (:categoryIds)) )\n" +
             "and (:#{#filterFieldIds==null ? null : #filterFieldIds.size() } is null or p.id in (select p1.id from " +
@@ -261,12 +261,12 @@ public interface ProductRepository extends JpaRepository<Product, Integer>, JpaS
 
     @Query(value = "select p.* from product p \n" +
             "join category c ON p.category_id = c.id \n" +
-            "LEFT OUTER JOIN order_product_info o ON p.id = o.product_id \n" +
+            "JOIN order_product_info o ON p.id = o.product_id \n" +
             "where p.state = \'ACTIVE\' \n" +
             "and (:curationId is null or p.id in (select cpm.product_id from curation_product_map cpm " +
             "WHERE cpm.curation_id=:curationId)) \n" +
             "and (:storeId is null or p.store_id = :storeId) \n" +
-            "and (:keyword = \'\' or p.title like concat('%', :keyword, '%') ) \n" +
+            "and (:keyword is null or p.title like concat('%', :keyword, '%') ) \n" +
             "and ( (:#{#categoryIds==null ? null : #categoryIds.size()} is null or c.parent_category_id in (:categoryIds)) \n" +
             "or (:#{#categoryIds==null ? null : #categoryIds.size()} is null or c.id in (:categoryIds)) )\n" +
             "and (:#{#filterFieldIds==null ? null : #filterFieldIds.size() } is null or p.id in (select p1.id from " +
@@ -274,21 +274,24 @@ public interface ProductRepository extends JpaRepository<Product, Integer>, JpaS
             "where (:#{#filterFieldIds==null ? null : #filterFieldIds.size() } is null or  ps.field_id in " +
             "(:filterFieldIds) ) )) \n" +
             "group by p.id \n" +
-            "order by COUNT(*) desc", nativeQuery = true, countQuery = "select count(*) from product p \n" +
-            "join category c ON p.category_id = c.id \n" +
-            "LEFT OUTER JOIN order_product_info o ON p.id = o.product_id \n" +
-            "where p.state = \'ACTIVE\' \n" +
-            "and (:curationId is null or p.id in (select cpm.product_id from curation_product_map cpm " +
-            "WHERE cpm.curation_id=:curationId)) \n" +
-            "and (:storeId is null or p.store_id = :storeId) \n" +
-            "and (:keyword = \'\' or p.title like concat('%', :keyword, '%') ) \n" +
-            "and ( (:#{#categoryIds==null ? null : #categoryIds.size()} is null or c.parent_category_id in (:categoryIds)) \n" +
-            "or (:#{#categoryIds==null ? null : #categoryIds.size()} is null or c.id in (:categoryIds)) )\n" +
-            "and (:#{#filterFieldIds==null ? null : #filterFieldIds.size() } is null or p.id in (select p1.id from " +
-            "product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
-            "where (:#{#filterFieldIds==null ? null : #filterFieldIds.size() } is null or  ps.field_id in " +
-            "(:filterFieldIds) ) )) \n" +
-            "group by p.id \n")
+            "order by COUNT( o.state not in (\'CANCELED\',\'WAIT_DEPOSIT\')) desc", nativeQuery = true, countQuery =
+            "select count(*) from " +
+                    "product " +
+                    "p \n" +
+                    "join category c ON p.category_id = c.id \n" +
+                    "JOIN order_product_info o ON p.id = o.product_id \n" +
+                    "where p.state = \'ACTIVE\' \n" +
+                    "and (:curationId is null or p.id in (select cpm.product_id from curation_product_map cpm " +
+                    "WHERE cpm.curation_id=:curationId)) \n" +
+                    "and (:storeId is null or p.store_id = :storeId) \n" +
+                    "and (:keyword is null or p.title like concat('%', :keyword, '%') ) \n" +
+                    "and ( (:#{#categoryIds==null ? null : #categoryIds.size()} is null or c.parent_category_id in (:categoryIds)) \n" +
+                    "or (:#{#categoryIds==null ? null : #categoryIds.size()} is null or c.id in (:categoryIds)) )\n" +
+                    "and (:#{#filterFieldIds==null ? null : #filterFieldIds.size() } is null or p.id in (select p1.id from " +
+                    "product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
+                    "where (:#{#filterFieldIds==null ? null : #filterFieldIds.size() } is null or  ps.field_id in " +
+                    "(:filterFieldIds) ) )) \n" +
+                    "group by p.id \n")
     Page<Product> findWithPaginationSortByOrder(Pageable pageable,
                                                 @Param("categoryIds") List<Integer> categoryIds,
                                                 @Param("filterFieldIds") List<Integer> filterFieldIds,
@@ -323,8 +326,9 @@ public interface ProductRepository extends JpaRepository<Product, Integer>, JpaS
                                           @Param("filterFieldIds") List<Integer> filterFieldIds,
                                           @Param("curationId") Integer curationId);
 
-    @Query(value = "select p.* from product p " +
-            "join category c ON p.category_id = c.id " +
+    @Query(value = "select p.* from product p \n" +
+            "join category c ON p.category_id = c.id \n" +
+            "JOIN option_item oi ON p.represent_item_id = oi.id\n" +
             "where p.state = \'ACTIVE\'" +
             "and (:curationId is null or p.id in (select cpm.product_id from curation_product_map cpm " +
             "WHERE cpm.curation_id=:curationId)) \n" +
@@ -334,17 +338,18 @@ public interface ProductRepository extends JpaRepository<Product, Integer>, JpaS
             "product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
             "where (:#{#filterFieldIds==null ? null : #filterFieldIds.size() } is null or  ps.field_id in " +
             "(:filterFieldIds) ) )) \n" +
-            " order by p.discount_rate desc", nativeQuery = true, countQuery = "select count(*) from product p " +
-            "join category c ON p.category_id = c.id " +
-            "where p.state = \'ACTIVE\'" +
-            "and (:curationId is null or p.id in (select cpm.product_id from curation_product_map cpm " +
-            "WHERE cpm.curation_id=:curationId)) \n" +
-            "and ( (:#{#categoryIds==null ? null : #categoryIds.size()} is null or c.parent_category_id in (:categoryIds)) \n" +
-            "or (:#{#categoryIds==null ? null : #categoryIds.size()} is null or c.id in (:categoryIds)) )\n" +
-            "and (:#{#filterFieldIds==null ? null : #filterFieldIds.size() } is null or p.id in (select p1.id from " +
-            "product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
-            "where (:#{#filterFieldIds==null ? null : #filterFieldIds.size() } is null or  ps.field_id in " +
-            "(:filterFieldIds) ) )) \n")
+            " ORDER BY IF( oi.origin_price != 0, oi.discount_price / oi.origin_price, 100 )", nativeQuery = true, countQuery =
+            "select count(*) from product p " +
+                    "join category c ON p.category_id = c.id " +
+                    "where p.state = \'ACTIVE\'" +
+                    "and (:curationId is null or p.id in (select cpm.product_id from curation_product_map cpm " +
+                    "WHERE cpm.curation_id=:curationId)) \n" +
+                    "and ( (:#{#categoryIds==null ? null : #categoryIds.size()} is null or c.parent_category_id in (:categoryIds)) \n" +
+                    "or (:#{#categoryIds==null ? null : #categoryIds.size()} is null or c.id in (:categoryIds)) )\n" +
+                    "and (:#{#filterFieldIds==null ? null : #filterFieldIds.size() } is null or p.id in (select p1.id from " +
+                    "product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
+                    "where (:#{#filterFieldIds==null ? null : #filterFieldIds.size() } is null or  ps.field_id in " +
+                    "(:filterFieldIds) ) )) \n")
     Page<Product> findDiscountWithPagination(Pageable pageable,
                                              @Param("categoryIds") List<Integer> categoryIds,
                                              @Param("filterFieldIds") List<Integer> filterFieldIds,

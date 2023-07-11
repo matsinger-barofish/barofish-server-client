@@ -53,7 +53,9 @@ public class DashBoardController {
                     dashBoardService.getOrderCount(DashBoardType.MONTHLY, storeId);
             Integer monthlyOrderCount = monthlyOrderAggregation.getCount();
             Integer monthlyOrderAmount = monthlyOrderAggregation.getAmount();
-            List<ProductRankDto> dailyMostSoldProduct = dashBoardService.getProductRankList(DashBoardType.DAILY, null);
+            List<ProductRankDto>
+                    dailyMostSoldProduct =
+                    dashBoardService.getProductRankList(DashBoardType.DAILY, storeId);
             List<ProductRankDto>
                     monthlyMostSoldProduct =
                     dashBoardService.getProductRankList(DashBoardType.MONTHLY, storeId);

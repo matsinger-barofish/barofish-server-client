@@ -13,7 +13,14 @@ import com.siot.IamportRestClient.response.Payment;
 import lombok.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
+import org.springframework.web.client.RestTemplate;
 
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -23,12 +30,12 @@ import java.sql.Timestamp;
 @Slf4j
 @Service
 public class PaymentService {
-    @Value("${iamport.webhook.url}")
-    private String webhookUrl;
     private final PaymentRepository paymentRepository;
     private final PortOneCallbackService callbackService;
     private final AES256 aes256;
     private final RegexConstructor re;
+    @Value("${iamport.webhook.url}")
+    private String webhookUrl;
 
     public Payments selectPayment(String id) {
         return paymentRepository.findFirstByMerchantUid(id);
@@ -48,7 +55,6 @@ public class PaymentService {
                 return PaymentState.CANCELED;
             case "failed":
                 return PaymentState.FAILED;
-
         }
         return PaymentState.FAILED;
     }
@@ -58,13 +64,23 @@ public class PaymentService {
         IamportResponse<Payment> paymentResponse = iamportClient.paymentByImpUid(impUid);
         Payment payment = paymentResponse.getResponse();
         return Payments.builder().orderId(orderId).impUid(impUid).merchantUid(payment.getMerchantUid()).payMethod(
-                payment.getPayMethod()).paidAmount(payment.getAmount().intValue()).status(str2PaymentState(
-                payment.getStatus())).name(payment.getName()).pgProvider(payment.getPgProvider()).embPgProvider(
-                payment.getEmbPgProvider()).pgTid(payment.getPgTid()).buyerName(payment.getBuyerName()).buyerEmail(
-                payment.getBuyerEmail()).buyerTel(payment.getBuyerTel()).buyerAddress(payment.getBuyerAddr()).paidAt(
-                Timestamp.from(payment.getPaidAt().toInstant())).receiptUrl(payment.getReceiptUrl()).applyNum(
-                payment.getApplyNum()).vbankNum(payment.getVbankNum()).vbankName(payment.getVbankName()).vbankHolder(
-                payment.getVbankHolder()).vbankDate(Timestamp.from(payment.getVbankDate().toInstant())).build();
+                payment.getPayMethod()).paidAmount(payment.getAmount().intValue()).status(str2PaymentState(payment.getStatus())).name(
+                payment.getName() != null ? payment.getName() : null).pgProvider(payment.getPgProvider() !=
+                null ? payment.getPgProvider() : null).embPgProvider(payment.getEmbPgProvider() !=
+                null ? payment.getEmbPgProvider() : null).pgTid(payment.getPgTid() !=
+                null ? payment.getPgTid() : null).buyerName(payment.getBuyerName() !=
+                null ? payment.getBuyerName() : null).buyerEmail(payment.getBuyerEmail() !=
+                null ? payment.getBuyerEmail() : null).buyerTel(payment.getBuyerTel() !=
+                null ? payment.getBuyerTel() : null).buyerAddress(payment.getBuyerAddr() !=
+                null ? payment.getBuyerAddr() : null).paidAt(payment.getPaidAt() !=
+                null ? Timestamp.from(payment.getPaidAt().toInstant()) : null).receiptUrl(payment.getReceiptUrl() !=
+                null ? payment.getReceiptUrl() : null).applyNum(payment.getApplyNum() !=
+                null ? payment.getApplyNum() : null).vbankNum(payment.getVbankNum() !=
+                null ? payment.getVbankNum() : null).vbankCode(payment.getVbankCode() !=
+                null ? payment.getVbankCode() : null).vbankName(payment.getVbankName() !=
+                null ? payment.getVbankName() : null).vbankHolder(payment.getVbankHolder() !=
+                null ? payment.getVbankHolder() : null).vbankDate(payment.getVbankDate() != null ? Timestamp.from(
+                payment.getVbankDate().toInstant()) : null).build();
     }
 
     public void cancelPayment(String impUid, Integer amount) throws IamportResponseException, IOException {
@@ -74,26 +90,6 @@ public class PaymentService {
                 amount != null ? new CancelData(impUid, true, BigDecimal.valueOf(amount)) : new CancelData(impUid,
                         true);
         iamportClient.cancelPaymentByImpUid(cancelData);
-    }
-
-    @Getter
-    @Builder
-    @Setter
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public static class KeyInPaymentReq {
-        String order_name;
-        Integer total_amount;
-        String orderId;
-        PaymentMethod paymentMethod;
-    }
-
-    private static class KeyInPaymentRes {
-        String tx_id;
-        String customer_id;
-        String requested_at;
-        String paid_at;
-        String pg_tx_id;
     }
 
     public Boolean keyInPayment(KeyInPaymentReq data) throws IamportResponseException, IOException {
@@ -121,16 +117,6 @@ public class PaymentService {
         return true;
     }
 
-    @Getter
-    @Builder
-    public static class IamPortCertificationRes {
-        String impUid;
-        String name;
-        String phone;
-        Boolean certified;
-        String certifiedAt;
-    }
-
     public IamPortCertificationRes certificateWithImpUid(String impUid) throws Exception {
         IamportClient iamportClient = callbackService.getIamportClient();
         IamportResponse<Certification> certificationRes = iamportClient.certificationByImpUid(impUid);
@@ -141,16 +127,6 @@ public class PaymentService {
         Certification certification = certificationRes.getResponse();
         return IamPortCertificationRes.builder().impUid(certification.getImpUid()).name(certification.getName()).phone(
                 certification.getPhone()).certified(certification.isCertified()).certifiedAt(certification.getCertifiedAt().toString()).build();
-    }
-
-    @Getter
-    @Builder
-    @Setter
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public static class CheckValidCardRes {
-        String customerUid;
-        String cardName;
     }
 
     public CheckValidCardRes checkValidCard(PaymentMethod paymentMethod) throws Exception {
@@ -213,5 +189,71 @@ public class PaymentService {
         paymentRepository.save(payments);
     }
 
+    public void getVBankAccount(GetVBankAccountReq data) throws IamportResponseException, IOException {
+        IamportClient iamportClient = callbackService.getIamportClient();
+        RestTemplate restTemplate = new RestTemplate();
+        String url = "https://api.iamport.kr/vbanks";
+        String accessToken = iamportClient.getAuth().getResponse().getToken();
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Authorization", "Bearer " + accessToken);
+        MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
+        body.add("merchant_uid", data.orderId);
+        body.add("amount", data.price);
+        body.add("vbank_code", data.vBankCode);
+        body.add("vbank_due", data.vBankDue);
+        body.add("vbank_holder", data.vBankHolder);
+        HttpEntity<MultiValueMap<String, Object>> entity = new HttpEntity<>(body, headers);
+        ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.POST, entity, String.class);
+    }
 
+    @Getter
+    @Builder
+    @Setter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class KeyInPaymentReq {
+        String order_name;
+        Integer total_amount;
+        String orderId;
+        PaymentMethod paymentMethod;
+    }
+
+    private static class KeyInPaymentRes {
+        String tx_id;
+        String customer_id;
+        String requested_at;
+        String paid_at;
+        String pg_tx_id;
+    }
+
+    @Getter
+    @Builder
+    public static class IamPortCertificationRes {
+        String impUid;
+        String name;
+        String phone;
+        Boolean certified;
+        String certifiedAt;
+    }
+
+    @Getter
+    @Builder
+    @Setter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class CheckValidCardRes {
+        String customerUid;
+        String cardName;
+    }
+
+    @Getter
+    @Builder
+    @AllArgsConstructor
+    public static class GetVBankAccountReq {
+        String orderId;
+        Integer price;
+        String vBankCode;
+        Integer vBankDue;
+        String vBankHolder;
+    }
 }

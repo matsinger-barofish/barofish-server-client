@@ -445,6 +445,7 @@ public class StoreController {
             } else {
                 if (id == null) return res.throwError("스토어 아이디를 입력해주세요.", "INPUT_CHECK_REQUIRED");
             }
+            boolean isAdmin = tokenInfo.get().getType().equals(TokenAuthType.ADMIN);
             StoreInfo storeInfo = storeService.selectStoreInfo(id);
             if (backgroundImage != null) {
                 String
@@ -468,7 +469,6 @@ public class StoreController {
                 keyword = utils.validateString(keyword, 50L, "위치");
                 storeInfo.setKeyword(keyword);
             }
-
             if (oneLineDescription != null) {
                 oneLineDescription = utils.validateString(oneLineDescription, 500L, "한 줄 소개");
                 storeInfo.setOneLineDescription(oneLineDescription);
@@ -496,6 +496,7 @@ public class StoreController {
             }
             if (data != null) {
                 if (data.settlementRate != null) {
+                    if (!isAdmin) return res.throwError("수정 불가능한 항목입니다.", "NOT_ALLOWED");
                     storeInfo.setSettlementRate(data.settlementRate);
                 }
                 if (data.bankName != null) {

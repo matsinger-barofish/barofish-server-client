@@ -27,18 +27,6 @@ public class TopBarController {
 
     private final JwtService jwt;
 
-    @GetMapping("/test")
-    public ResponseEntity<CustomResponse<List<Integer>>> test() {
-        CustomResponse<List<Integer>> res = new CustomResponse<>();
-        try {
-            List<Integer> data = productService.testQuery(null);
-            res.setData(Optional.ofNullable(data));
-            return ResponseEntity.ok(res);
-        } catch (Exception e) {
-            return res.defaultError(e);
-        }
-    }
-
     @GetMapping("")
     public ResponseEntity<CustomResponse<List<TopBar>>> selectTopBarList() {
         CustomResponse<List<TopBar>> res = new CustomResponse<>();

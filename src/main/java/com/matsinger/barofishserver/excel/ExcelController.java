@@ -3,7 +3,6 @@ package com.matsinger.barofishserver.excel;
 import com.matsinger.barofishserver.jwt.JwtService;
 import com.matsinger.barofishserver.jwt.TokenAuthType;
 import com.matsinger.barofishserver.jwt.TokenInfo;
-import com.matsinger.barofishserver.product.object.Option;
 import com.matsinger.barofishserver.utils.CustomResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -18,14 +17,15 @@ import java.util.Set;
 @RequestMapping("/api/v1/excel")
 public class ExcelController {
 
-    private final ExcelService excelService;
+    private final PartnerExcelService partnerExcelService;
+    private final ProductExcelService productExcelService;
     private final JwtService jwt;
 
-    @GetMapping("/test")
+    @PostMapping("/test")
     public ResponseEntity<CustomResponse<Boolean>> test(@RequestPart(value = "file") MultipartFile file) {
         CustomResponse<Boolean> res = new CustomResponse<>();
         try {
-            System.out.println(file.getContentType());
+            productExcelService.processProductExcel(file);
             return ResponseEntity.ok(res);
         } catch (Exception e) {
             return res.defaultError(e);

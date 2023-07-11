@@ -311,7 +311,10 @@ public class ProductService {
                                                   Integer take,
                                                   List<Integer> categoryIds,
                                                   List<Integer> filterFieldIds) {
-        return productRepository.findWithPaginationSortByRecommend(Pageable.ofSize(take).withPage(page),
+        System.out.println((categoryIds != null ? categoryIds.size() : null) +
+                " | " +
+                (filterFieldIds != null ? filterFieldIds.size() : null));
+        return productRepository.findWithPaginationSortByOrder(Pageable.ofSize(take).withPage(page),
                 categoryIds,
                 filterFieldIds,
                 null,
@@ -338,6 +341,10 @@ public class ProductService {
 
     public void addProductSearchFilters(List<ProductSearchFilterMap> filterMaps) {
         productSearchFilterMapRepository.saveAll(filterMaps);
+    }
+
+    public void updateProducts(List<Product> products) {
+        productRepository.saveAll(products);
     }
 
     @Transactional

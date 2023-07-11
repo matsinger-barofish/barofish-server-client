@@ -45,7 +45,7 @@ public class VerificationController {
                             TimeUnit.MINUTES.toMillis(3))).createAt(utils.now()).target(phone).build());
 //            return res.throwError("인증번호는 [" + verificationCode + "] 입니다.\nToast API 정보가 없어서 실제 SMS 발송을 진행할 수 없습니다.",
 //                    "INTERNAL_ERROR");
-            smsService.sendSms(phone, "[바로피쉬] 인증번호는 " + verificationCode + " 입니다.");
+            smsService.sendSms(phone, "[바로피쉬] 인증번호는 " + verificationCode + " 입니다.",null);
             res.setData(Optional.of(true));
             return ResponseEntity.ok(res);
         } catch (Exception e) {

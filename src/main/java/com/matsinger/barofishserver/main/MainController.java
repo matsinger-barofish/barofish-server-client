@@ -21,6 +21,7 @@ import com.matsinger.barofishserver.store.object.StoreInfo;
 import com.matsinger.barofishserver.store.StoreInfoRepository;
 import com.matsinger.barofishserver.utils.CustomResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
@@ -59,14 +60,8 @@ public class MainController {
             List<TopBar> topBars = topBarService.selectTopBarList();
             List<Banner> banners = bannerService.selectBannerList();
             List<Curation> curations = curationService.selectCurations();
-            List<CurationDto> curationDtos = new ArrayList<>();
-            for (Curation curation : curations) {
-                List<Product> products = curationService.selectCurationProducts(curation.getId());
-                CurationDto curationDto = curation.convert2Dto();
-                curationDto.setProducts(products.stream().map(productService::convert2ListDto).toList());
-                curationDtos.add(curationDto);
+            List<CurationDto> curationDtos = curations.stream().map(Curation::convert2Dto).toList();
 
-            }
             SiteInformation siteInfo = siteInfoService.selectSiteInfo("INTERNAL_MAIN_STORE");
             Integer storeId = Integer.valueOf(siteInfo.getContent());
             StoreInfo store = storeInfoRepository.findById(storeId).orElse(null);
@@ -84,6 +79,27 @@ public class MainController {
             data.setStore(simpleStore);
             res.setData(Optional.of(data));
 
+            return ResponseEntity.ok(res);
+        } catch (Exception e) {
+            return res.defaultError(e);
+        }
+    }
+
+    @GetMapping("/curation")
+    public ResponseEntity<CustomResponse<List<CurationDto>>> selectMainCurationList() {
+        CustomResponse<List<CurationDto>> res = new CustomResponse<>();
+        try {
+            List<Curation> curations = curationService.selectCurations();
+            List<CurationDto> curationDtos = new ArrayList<>();
+            for (Curation curation : curations) {
+                List<Product>
+                        products =
+                        curationService.selectCurationProducts(curation.getId(), PageRequest.of(0, 10));
+                CurationDto curationDto = curation.convert2Dto();
+                curationDto.setProducts(products.stream().map(productService::convert2ListDto).toList());
+                curationDtos.add(curationDto);
+            }
+            res.setData(Optional.of(curationDtos));
             return ResponseEntity.ok(res);
         } catch (Exception e) {
             return res.defaultError(e);

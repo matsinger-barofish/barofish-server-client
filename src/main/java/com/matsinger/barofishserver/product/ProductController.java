@@ -591,16 +591,16 @@ public class ProductController {
                     if (optionData.getType().equals(Common.CudType.CREATE)) {
                         Option
                                 option =
-                                productService.addOption(Option.builder().productId(product.getId()).description("").state(OptionState.ACTIVE).isNeeded(
-                                        optionData.getData().getIsNeeded()).build());
+                                productService.addOption(Option.builder().productId(product.getId()).description("").state(
+                                        OptionState.ACTIVE).isNeeded(optionData.getData().getIsNeeded()).build());
                         for (OptionItemUpdateReq itemData : optionData.getData().getItems().stream().map(Common.CudInput::getData).toList()) {
                             OptionItem
                                     optionItem =
                                     productService.addOptionItem(OptionItem.builder().optionId(option.getId()).name(
                                             itemData.name).discountPrice(itemData.discountPrice).amount(itemData.amount).purchasePrice(
-                                            itemData.purchasePrice).originPrice(itemData.originPrice).state(OptionItemState.ACTIVE).deliverFee(
-                                            itemData.deliveryFee).deliverBoxPerAmount(itemData.deliverBoxPerAmount).maxAvailableAmount(
-                                            itemData.maxAvailableAmount).build());
+                                            itemData.purchasePrice).originPrice(itemData.originPrice).state(
+                                            OptionItemState.ACTIVE).deliverFee(itemData.deliveryFee).deliverBoxPerAmount(
+                                            itemData.deliverBoxPerAmount).maxAvailableAmount(itemData.maxAvailableAmount).build());
                             if (itemData.isRepresent != null && itemData.isRepresent) representOptionItem = optionItem;
                         }
                     } else if (optionData.getType().equals(Common.CudType.UPDATE)) {
@@ -612,19 +612,20 @@ public class ProductController {
                                 OptionItem
                                         optionItem =
                                         productService.addOptionItem(OptionItem.builder().optionId(option.getId()).name(
-                                                d.getName()).discountPrice(d.discountPrice).state(OptionItemState.ACTIVE).amount(d.amount).purchasePrice(
-                                                d.purchasePrice).originPrice(d.originPrice).deliverFee(d.deliveryFee).deliverBoxPerAmount(
-                                                d.deliverBoxPerAmount).maxAvailableAmount(d.maxAvailableAmount).build());
+                                                d.getName()).discountPrice(d.discountPrice).state(OptionItemState.ACTIVE).amount(
+                                                d.amount).purchasePrice(d.purchasePrice).originPrice(d.originPrice).deliverFee(
+                                                d.deliveryFee).deliverBoxPerAmount(d.deliverBoxPerAmount).maxAvailableAmount(
+                                                d.maxAvailableAmount).build());
                                 if (d.isRepresent != null && d.isRepresent) representOptionItem = optionItem;
                             } else if (itemData.getType().equals(Common.CudType.UPDATE)) {
                                 System.out.println("123");
                                 OptionItem
                                         optionItem =
                                         OptionItem.builder().id(itemData.getId()).optionId(option.getId()).name(itemData.getData().name).discountPrice(
-                                                itemData.getData().discountPrice).amount(itemData.getData().amount).state(OptionItemState.ACTIVE).purchasePrice(
-                                                itemData.getData().purchasePrice).originPrice(itemData.getData().originPrice).deliverFee(
-                                                itemData.getData().deliveryFee).deliverBoxPerAmount(itemData.getData().deliverBoxPerAmount).maxAvailableAmount(
-                                                itemData.getData().maxAvailableAmount).build();
+                                                itemData.getData().discountPrice).amount(itemData.getData().amount).state(
+                                                OptionItemState.ACTIVE).purchasePrice(itemData.getData().purchasePrice).originPrice(
+                                                itemData.getData().originPrice).deliverFee(itemData.getData().deliveryFee).deliverBoxPerAmount(
+                                                itemData.getData().deliverBoxPerAmount).maxAvailableAmount(itemData.getData().maxAvailableAmount).build();
                                 System.out.println("123");
                                 optionItem = productService.addOptionItem(optionItem);
                                 if (d.isRepresent != null && d.isRepresent) representOptionItem = optionItem;
@@ -657,6 +658,33 @@ public class ProductController {
         }
     }
 
+
+    @Getter
+    @NoArgsConstructor
+    private static class UpdateStateProductsReq {
+        List<Integer> productIds;
+        Boolean isActive;
+    }
+
+    @PostMapping("/update/state")
+    public ResponseEntity<CustomResponse<Boolean>> updateStateProducts(@RequestHeader(value = "Authorization") Optional<String> auth,
+                                                                       @RequestPart(value = "data") UpdateStateProductsReq data) {
+        CustomResponse<Boolean> res = new CustomResponse<>();
+        Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
+        if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
+        try {
+            if (data.productIds == null || data.productIds.size() == 0)
+                return res.throwError("상품 아이디를 입력해주세요", "INPUT_CHECK_REQUIRED");
+            if (data.isActive == null) return res.throwError("노출 여부를 입력해주세요.", "INPUT_CHECK_REQUIRED");
+            List<Product> products = productService.selectProductListWithIds(data.productIds);
+            products.forEach(v -> v.setState(data.isActive ? ProductState.ACTIVE : ProductState.INACTIVE));
+            productService.updateProducts(products);
+            res.setData(Optional.of(true));
+            return ResponseEntity.ok(res);
+        } catch (Exception e) {
+            return res.defaultError(e);
+        }
+    }
 
     @PostMapping("/like")
     public ResponseEntity<CustomResponse<Boolean>> likeProductByUser(@RequestHeader(value = "Authorization") Optional<String> auth,

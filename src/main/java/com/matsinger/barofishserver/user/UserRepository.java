@@ -15,6 +15,9 @@ import java.util.Optional;
 public interface UserRepository extends JpaRepository<User, Integer>, JpaSpecificationExecutor<User> {
     List<User> findAllByState(UserState state);
 
+    List<User> findAllByIdIn(List<Integer> ids);
+
     Optional<User> findById(@NotNull Integer id);
+
     Integer countAllByJoinAtBetween(Timestamp joinAtS, Timestamp joinAtE);
 }

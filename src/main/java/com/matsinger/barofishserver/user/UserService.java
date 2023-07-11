@@ -62,7 +62,9 @@ public class UserService {
             return null;
         }
     }
-
+    public List<User> selectUserListWithIds(List<Integer> ids) {
+        return userRepository.findAllByIdIn(ids);
+    }
     public UserInfo selectUserInfo(Integer id) {
         return userInfoRepository.findById(id).orElseThrow(() -> {
             throw new Error("유저 정보를 찾을 수 없습니다.");
@@ -81,6 +83,11 @@ public class UserService {
         return userRepository.findById(id).orElseThrow(() -> {
             throw new Error("유저 정보를 찾을 수 없습니다.");
         });
+    }
+
+    @Transactional
+    public void deleteUserAuth(Integer userId) {
+        userAuthRepository.deleteAllByUserId(userId);
     }
 
     public User createUser(User user) {

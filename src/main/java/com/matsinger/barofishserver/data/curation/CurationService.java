@@ -43,6 +43,17 @@ public class CurationService {
         return products;
     }
 
+    public List<Product> selectCurationProducts(Integer curationId, PageRequest pageRequest) {
+        List<CurationProductMap>
+                curationProductMapList =
+                curationProductRepository.findAllByCuration_Id(curationId, pageRequest);
+        List<Product> products = new ArrayList<>();
+        for (CurationProductMap item : curationProductMapList) {
+            products.add(item.getProduct());
+        }
+        return products;
+    }
+
     public Curation add(Curation curation) {
         return curationRepository.save(curation);
     }

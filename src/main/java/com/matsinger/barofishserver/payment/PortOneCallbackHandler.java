@@ -10,6 +10,7 @@ import com.matsinger.barofishserver.product.object.OptionItem;
 import com.matsinger.barofishserver.user.UserService;
 import com.matsinger.barofishserver.user.object.UserInfo;
 import com.matsinger.barofishserver.utils.Common;
+import com.matsinger.barofishserver.utils.sms.SmsService;
 import lombok.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -29,6 +30,7 @@ public class PortOneCallbackHandler {
     private final UserService userService;
     private final OrderService orderService;
     private final ProductService productService;
+    private final SmsService sms;
 
 
     @PostMapping("")
@@ -37,19 +39,35 @@ public class PortOneCallbackHandler {
         System.out.println(XRealIp + " callback received");
         if (!XRealIp.equals("52.78.100.19") && !XRealIp.equals("52.78.48.223"))
             return ResponseEntity.status(403).body(null);
-        System.out.println("Callback has received2\n" +
-                data.getMerchant_uid() +
-                "\n" +
-                utils.now() +
-                "\n" +
-                data.getStatus());
 
-//        utils.fetch(findByMidUrl, "POST", "application/json");
-//        Payments payment = paymentService.selectPayment(data.getMerchant_uid());
         try {
             Orders order = orderService.selectOrder(data.getMerchant_uid());
             if (order != null) {
-                if (data.getStatus().equals("paid")) {
+                if (data.getStatus().equals("ready")) {
+                    Payments paymentData = paymentService.getPaymentInfo(order.getId(), data.getImp_uid());
+                    PaymentService.GetVBankAccountReq
+                            vBankReq =
+                            PaymentService.GetVBankAccountReq.builder().orderId(order.getId()).price(order.getTotalPrice()).vBankCode(
+                                    paymentData.getVbankCode()).vBankDue(Math.toIntExact((paymentData.getVbankDate().getTime() /
+                                    1000))).vBankHolder(paymentData.getVbankHolder()).build();
+                    paymentService.upsertPayments(paymentData);
+                    order.setImpUid(data.getImp_uid());
+                    orderService.updateOrder(order);
+                    System.out.println(paymentData.getPayMethod());
+                    System.out.println(paymentData.getVbankName());
+                    System.out.println(paymentData.getVbankNum());
+                    if (paymentData.getPayMethod().equals("vbank")) {
+                        String
+                                smsContent =
+                                "[바로피쉬] 가상계좌 결제 요청\n" +
+                                        String.format("주문번호: %s\n", data.getMerchant_uid()) +
+                                        String.format("결제 금액: %d원\n", paymentData.getPaidAmount()) +
+                                        String.format("가상계좌은행: %s\n", paymentData.getVbankName()) +
+                                        String.format("가상계좌번호: %s\n",
+                                                paymentData.getVbankNum().replaceAll("[^\\d]", ""));
+                        sms.sendSms(paymentData.getBuyerTel(), smsContent, "가상 계좌 결제 요청");
+                    }
+                } else if (data.getStatus().equals("paid")) {
                     Payments paymentData = paymentService.getPaymentInfo(order.getId(), data.getImp_uid());
                     List<OrderProductInfo> infos = orderService.selectOrderProductInfoListWithOrderId(order.getId());
                     infos.forEach(info -> {

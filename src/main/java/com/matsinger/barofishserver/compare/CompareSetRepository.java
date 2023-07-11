@@ -4,6 +4,7 @@ import com.matsinger.barofishserver.compare.obejct.CompareSet;
 import jakarta.persistence.Tuple;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -20,4 +21,14 @@ public interface CompareSetRepository extends JpaRepository<CompareSet, Integer>
             "ORDER BY COUNT( q1.setId ) DESC\n" +
             "LIMIT 5;", nativeQuery = true)
     List<Tuple> selectPopularCompareSetIdList();
+
+    @Query(value = "SELECT cs.id as id\n" +
+            "FROM compare_set cs\n" +
+            "         JOIN compare_item ci ON cs.id = ci.compare_set_id\n" +
+            "WHERE cs.user_id = :userId\n" +
+            "  AND ci.product_id IN ( :productIds )\n" +
+            "GROUP BY compare_set_id\n" +
+            "HAVING COUNT( * ) = 3\n", nativeQuery = true)
+    List<Tuple> checkExistHavingSet(@Param(value = "userId") Integer userId,
+                              @Param(value = "productIds") List<Integer> productIds);
 }

@@ -1,6 +1,7 @@
 package com.matsinger.barofishserver.data.curation;
 
 import com.matsinger.barofishserver.data.curation.object.CurationProductMap;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -11,7 +12,7 @@ import java.util.List;
 @Repository
 public interface CurationProductMapRepository extends JpaRepository<CurationProductMap, Integer> {
     List<CurationProductMap> findAllByCuration_Id(Integer curationId);
-
+    List<CurationProductMap> findAllByCuration_Id(Integer curationId, Pageable pageable);
     @Query(value = "delete from curation_product_map WHERE curation_id = :curationId and product_id in (:productIds);", nativeQuery = true)
     void deleteAllByProductIdIn(@Param("curationId") Integer curationId, @Param("productIds") List<Integer> productIds);
 

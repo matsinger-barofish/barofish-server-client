@@ -11,6 +11,7 @@ import com.matsinger.barofishserver.product.object.Product;
 import com.matsinger.barofishserver.product.ProductService;
 import com.matsinger.barofishserver.store.StoreService;
 import com.matsinger.barofishserver.store.object.StoreInfo;
+import jakarta.persistence.Tuple;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -53,6 +54,12 @@ public class CompareItemService {
             return CompareObject.RecommendCompareProduct.builder().recommendProducts(dto.getProducts()).mainProduct(dto.getProducts().get(
                     0)).build();
         }).toList();
+    }
+
+    public Boolean checkExistProductSet(Integer userId, List<Integer> productIds) {
+        List<Tuple> data = compareSetRepository.checkExistHavingSet(userId, productIds);
+        System.out.println(data);
+        return data.size() != 0;
     }
 
     public List<CompareSet> selectCompareSetList(Integer userId) {

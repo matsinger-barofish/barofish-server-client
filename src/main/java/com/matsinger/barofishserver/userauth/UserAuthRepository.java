@@ -11,4 +11,6 @@ public interface UserAuthRepository extends JpaRepository<UserAuth, UserAuthId> 
     Optional<UserAuth> findByLoginId(String loginId);
 
     UserAuth findFirstByUserId(Integer userId);
+
+    void deleteAllByUserId(Integer userId);
 }

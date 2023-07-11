@@ -35,24 +35,25 @@ public class Payments {
     private int paidAmount;
     @Basic
     @Column(name = "status", nullable = false)
+    @Enumerated(EnumType.STRING)
     private PaymentState status;
     @Basic
     @Column(name = "name", nullable = false, length = 255)
     private String name;
     @Basic
-    @Column(name = "pg_provider", nullable = false, length = 10)
+    @Column(name = "pg_provider", nullable = false, length = 50)
     private String pgProvider;
     @Basic
-    @Column(name = "emb_pg_provider", nullable = true, length = 10)
+    @Column(name = "emb_pg_provider", nullable = true, length = 50)
     private String embPgProvider;
     @Basic
-    @Column(name = "pg_tid", nullable = false, length = 30)
+    @Column(name = "pg_tid", nullable = false, length = 50)
     private String pgTid;
     @Basic
     @Column(name = "buyer_name", nullable = false, length = 20)
     private String buyerName;
     @Basic
-    @Column(name = "buyer_email", nullable = false, length = 30)
+    @Column(name = "buyer_email", nullable = false, length = 300)
     private String buyerEmail;
     @Basic
     @Column(name = "buyer_tel", nullable = false, length = 20)
@@ -75,6 +76,9 @@ public class Payments {
     @Basic
     @Column(name = "vbank_name", nullable = true, length = 10)
     private String vbankName;
+    @Basic
+    @Column(name = "vbank_code", nullable = true, length = 10)
+    private String vbankCode;
     @Basic
     @Column(name = "vbank_holder", nullable = true, length = 10)
     private String vbankHolder;
