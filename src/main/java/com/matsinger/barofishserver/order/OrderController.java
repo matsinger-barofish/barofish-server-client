@@ -172,7 +172,8 @@ public class OrderController {
                     Join<Orders, OrderProductInfo> t = root.join("productInfos", JoinType.INNER);
                     predicates.add(builder.isNotNull(t.get("id")));
                     predicates.add(builder.or(builder.notEqual(t.get("state"), OrderProductState.WAIT_DEPOSIT),
-                            builder.equal(root.get("paymentWay"), OrderPaymentWay.DEPOSIT)));
+                            builder.and(root.get("paymentWay").in(OrderPaymentWay.DEPOSIT,
+                                    OrderPaymentWay.VIRTUAL_ACCOUNT))));
 
                     if (tokenInfo.get().getType().equals(TokenAuthType.PARTNER)) {
                         predicates.add(builder.equal(t.get("product").get("storeId"), tokenInfo.get().getId()));
@@ -335,11 +336,7 @@ public class OrderController {
                         optionItem.getMaxAvailableAmount() < productReq.amount)
                     return res.throwError("최대 주문 수량을 초과하였습니다.", "INPUT_CHECK_REQUIRED");
                 optionItem.reduceAmount(productReq.getAmount());
-                int
-                        price =
-                        orderService.getProductPrice(product,
-                                productReq.getOptionId(),
-                                productReq.getAmount());
+                int price = orderService.getProductPrice(product, productReq.getOptionId(), productReq.getAmount());
                 Integer
                         deliveryFee =
                         orderService.getProductDeliveryFee(product, productReq.getOptionId(), productReq.getAmount());
@@ -388,7 +385,7 @@ public class OrderController {
         CustomResponse<List<ProductListDto>> res = new CustomResponse<>();
         try {
             List<Product> products = productService.selectProductOtherCustomerBuy(utils.str2IntList(ids));
-            List<ProductListDto> productListDtos = products.stream().map(Product::convert2ListDto).toList();
+            List<ProductListDto> productListDtos = products.stream().map(productService::convert2ListDto).toList();
             res.setData(Optional.of(productListDtos));
             return ResponseEntity.ok(res);
         } catch (Exception e) {

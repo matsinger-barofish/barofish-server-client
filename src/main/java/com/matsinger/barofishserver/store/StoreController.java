@@ -215,7 +215,7 @@ public class StoreController {
                             tokenInfo.get().getType().equals(TokenAuthType.USER) ? tokenInfo.get().getId() : null;
             SimpleStore data = storeService.convert2SimpleDto(storeInfo, userId);
             List<Product> products = productService.selectProductListWithStoreIdAndStateActive(id);
-            data.setProducts(products.stream().map(Product::convert2ListDto).toList());
+            data.setProducts(products.stream().map(productService::convert2ListDto).toList());
             res.setData(Optional.ofNullable(data));
             return ResponseEntity.ok(res);
         } catch (Exception e) {
@@ -362,7 +362,7 @@ public class StoreController {
                     s3.upload(profileImage, new ArrayList<>(Arrays.asList("store", String.valueOf(store.getId()))));
             String
                     visitNoteUrl =
-                    s3.uploadEditorStringToS3(visitNote,
+                    s3.uploadEditorStringToS3(visitNote != null ? visitNote : "",
                             new ArrayList<>(Arrays.asList("store", String.valueOf(store.getId()))));
             String
                     mosRegistrationUrl =

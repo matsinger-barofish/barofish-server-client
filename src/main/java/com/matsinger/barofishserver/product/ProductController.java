@@ -618,15 +618,24 @@ public class ProductController {
                                                 d.maxAvailableAmount).build());
                                 if (d.isRepresent != null && d.isRepresent) representOptionItem = optionItem;
                             } else if (itemData.getType().equals(Common.CudType.UPDATE)) {
-                                System.out.println("123");
+                                OptionItem oi = productService.selectOptionItem(itemData.getId());
                                 OptionItem
                                         optionItem =
-                                        OptionItem.builder().id(itemData.getId()).optionId(option.getId()).name(itemData.getData().name).discountPrice(
-                                                itemData.getData().discountPrice).amount(itemData.getData().amount).state(
-                                                OptionItemState.ACTIVE).purchasePrice(itemData.getData().purchasePrice).originPrice(
-                                                itemData.getData().originPrice).deliverFee(itemData.getData().deliveryFee).deliverBoxPerAmount(
-                                                itemData.getData().deliverBoxPerAmount).maxAvailableAmount(itemData.getData().maxAvailableAmount).build();
-                                System.out.println("123");
+                                        OptionItem.builder().id(itemData.getId()).optionId(option.getId()).name(itemData.getData().name !=
+                                                null ? itemData.getData().name : oi.getName()).discountPrice(itemData.getData().discountPrice !=
+                                                null ? itemData.getData().discountPrice : oi.getDiscountPrice()).amount(
+                                                itemData.getData().amount !=
+                                                        null ? itemData.getData().amount : oi.getAmount()).state(oi.getState()).purchasePrice(
+                                                itemData.getData().purchasePrice !=
+                                                        null ? itemData.getData().purchasePrice : oi.getPurchasePrice()).originPrice(
+                                                itemData.getData().originPrice !=
+                                                        null ? itemData.getData().originPrice : oi.getOriginPrice()).deliverFee(
+                                                itemData.getData().deliveryFee !=
+                                                        null ? itemData.getData().deliveryFee : oi.getDeliverFee()).deliverBoxPerAmount(
+                                                itemData.getData().deliverBoxPerAmount !=
+                                                        null ? itemData.getData().deliverBoxPerAmount : oi.getDeliverBoxPerAmount()).maxAvailableAmount(
+                                                itemData.getData().maxAvailableAmount !=
+                                                        null ? itemData.getData().maxAvailableAmount : oi.getMaxAvailableAmount()).build();
                                 optionItem = productService.addOptionItem(optionItem);
                                 if (d.isRepresent != null && d.isRepresent) representOptionItem = optionItem;
                             } else {

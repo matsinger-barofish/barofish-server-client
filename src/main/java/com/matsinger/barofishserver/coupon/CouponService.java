@@ -100,10 +100,10 @@ public class CouponService {
     public void sendCouponCreateNotification(Coupon coupon) {
         List<User> users = userService.selectUserWithState(UserState.ACTIVE);
         for (User user : users) {
-            UserInfo userInfo = userService.selectUserInfo(user.getId());
-            notificationService.sendFcmToUser(user.getId(),
+            Optional<UserInfo> userInfo = userService.selectOptionalUserInfo(user.getId());
+            if (userInfo.isPresent()) notificationService.sendFcmToUser(user.getId(),
                     NotificationMessageType.COUPON_ARRIVED,
-                    NotificationMessage.builder().couponName(coupon.getTitle()).userName(userInfo.getNickname()).build());
+                    NotificationMessage.builder().couponName(coupon.getTitle()).userName(userInfo.get().getNickname()).build());
         }
     }
 

@@ -30,6 +30,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 
 @RequiredArgsConstructor
 @Slf4j
@@ -269,7 +270,7 @@ public class ProductService {
         productDto.setOriginPrice(optionItem.getOriginPrice());
         productDto.setDiscountPrice(optionItem.getDiscountPrice());
         productDto.setCategory(category);
-        productDto.setComparedProduct(comparedProducts.stream().map(Product::convert2ListDto).toList());
+        productDto.setComparedProduct(comparedProducts.stream().map(this::convert2ListDto).toList());
         productDto.setStore(storeService.convert2SimpleDto(store, userId));
         productDto.setInquiries(inquiries.stream().map(Inquiry::convert2Dto).toList());
         productDto.setReviews(reviews.stream().map(Review::convert2Dto).toList());
@@ -285,6 +286,31 @@ public class ProductService {
         List<Option> options = optionRepository.findAllByProductIdAndState(productId, OptionState.ACTIVE);
 
         return options.stream().map(this::convert2OptionDto).toList();
+    }
+
+    public Option selectProductNeededOption(Integer productId) {
+        return optionRepository.findFirstByProductIdAndIsNeededTrue(productId);
+    }
+
+    public Optional<OptionItem> selectProductWithName(String name, Integer optionId) {
+        return optionItemRepository.findFirstByNameAndOptionId(name, optionId);
+    }
+
+    @Transactional
+    public List<OptionItem> upsertOptionItemList(List<OptionItem> optionItems) {
+        return optionItemRepository.saveAll(optionItems);
+    }
+
+    public Product upsertProduct(Product product) {
+        return productRepository.save(product);
+    }
+
+    public Option upsertOption(Option option) {
+        return optionRepository.save(option);
+    }
+
+    public List<OptionItem> updateOptionItemList(List<OptionItem> optionItems) {
+        return optionItemRepository.saveAll(optionItems);
     }
 
     public Page<Product> selectNewerProductList(Integer page,
@@ -311,9 +337,6 @@ public class ProductService {
                                                   Integer take,
                                                   List<Integer> categoryIds,
                                                   List<Integer> filterFieldIds) {
-        System.out.println((categoryIds != null ? categoryIds.size() : null) +
-                " | " +
-                (filterFieldIds != null ? filterFieldIds.size() : null));
         return productRepository.findWithPaginationSortByOrder(Pageable.ofSize(take).withPage(page),
                 categoryIds,
                 filterFieldIds,
@@ -360,5 +383,9 @@ public class ProductService {
         List<OptionItemDto> itemDtos = optionItems.stream().map(OptionItem::convert2Dto).toList();
         optionDto.setOptionItems(itemDtos);
         return optionDto;
+    }
+
+    public Optional<Product> findOptionalProductWithTitleAndStoreId(String title, Integer storeId) {
+        return productRepository.findByTitleAndStoreId(title, storeId);
     }
 }

@@ -33,8 +33,10 @@ public class UserService {
             UserInfoDto userInfoDto = userInfo.convert2Dto();
             userInfoDto.setUser(selectUser(userInfo.getUserId()).convert2Dto());
             UserAuth userAuth = selectUserAuth(userInfo.getUserId());
-            if (userAuth != null) userAuth.setPassword(null);
-            userInfoDto.setAuth(userAuth.convert2Dto());
+            if (userAuth != null) {
+                userAuth.setPassword(null);
+                userInfoDto.setAuth(userAuth.convert2Dto());
+            }
             List<DeliverPlace> deliverPlaces = selectUserDeliverPlaceList(userInfo.getUserId());
             userInfoDto.setDeliverPlaces(deliverPlaces);
             return userInfoDto;
@@ -62,13 +64,19 @@ public class UserService {
             return null;
         }
     }
+
     public List<User> selectUserListWithIds(List<Integer> ids) {
         return userRepository.findAllByIdIn(ids);
     }
+
     public UserInfo selectUserInfo(Integer id) {
         return userInfoRepository.findById(id).orElseThrow(() -> {
             throw new Error("유저 정보를 찾을 수 없습니다.");
         });
+    }
+
+    public Optional<UserInfo> selectOptionalUserInfo(Integer id) {
+        return userInfoRepository.findById(id);
     }
 
     public UserAuth selectUserAuth(Integer id) {

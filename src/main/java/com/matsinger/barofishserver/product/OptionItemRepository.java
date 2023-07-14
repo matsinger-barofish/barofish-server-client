@@ -13,5 +13,8 @@ public interface OptionItemRepository extends JpaRepository<OptionItem, Integer>
 
     @Transactional
     void deleteAllByOptionId(Integer optionId);
+
     List<OptionItem> findAllByOptionIdAndState(Integer optionId, OptionItemState state);
+
+    Optional<OptionItem> findFirstByNameAndOptionId(String name, Integer optionId);
 }

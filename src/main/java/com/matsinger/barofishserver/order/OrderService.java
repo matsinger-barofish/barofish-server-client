@@ -127,7 +127,8 @@ public class OrderService {
             Join<Orders, OrderProductInfo> t = root.join("productInfos", JoinType.INNER);
             predicates.add(builder.isNotNull(t.get("id")));
             predicates.add(builder.or(builder.notEqual(t.get("state"), OrderProductState.WAIT_DEPOSIT),
-                    builder.equal(root.get("paymentWay"), OrderPaymentWay.DEPOSIT)));
+//                    builder.equal(root.get("paymentWay"), OrderPaymentWay.DEPOSIT)));
+                    builder.and(root.get("paymentWay").in(OrderPaymentWay.DEPOSIT, OrderPaymentWay.VIRTUAL_ACCOUNT))));
             return builder.and(predicates.toArray(new Predicate[0]));
         };
 //        Page<Orders> orders = orderRepository.findAllByUserId(userId, pageRequest);

@@ -42,7 +42,6 @@ public class GithubWebhook {
     }
 
     public String HMAC_SHA256_encode(String key, String message) throws NoSuchAlgorithmException, InvalidKeyException {
-        System.out.println(key);
         SecretKeySpec keySpec = new SecretKeySpec(key.getBytes(), "HmacSHA256");
 
         Mac mac = Mac.getInstance("HmacSHA256");

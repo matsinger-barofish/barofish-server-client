@@ -50,7 +50,7 @@ public class CurationController {
             for (Curation curation : curations) {
                 List<Product> products = curationService.selectCurationProducts(curation.getId());
                 CurationDto curationDto = curation.convert2Dto();
-                curationDto.setProducts(products.stream().map(Product::convert2ListDto).toList());
+                curationDto.setProducts(products.stream().map(productService::convert2ListDto).toList());
                 curationDtos.add(curationDto);
             }
             res.setData(Optional.of(curationDtos));
@@ -75,7 +75,7 @@ public class CurationController {
             Page<CurationDto> curationDtos = curations.map(curation -> {
                 List<Product> products = curationService.selectCurationProducts(curation.getId());
                 CurationDto curationDto = curation.convert2Dto();
-                curationDto.setProducts(products.stream().map(Product::convert2ListDto).toList());
+                curationDto.setProducts(products.stream().map(productService::convert2ListDto).toList());
                 return curationDto;
             });
 
@@ -94,7 +94,7 @@ public class CurationController {
             Curation curation = curationService.selectCuration(id);
             List<Product> products = curationService.selectCurationProducts(curation.getId());
             CurationDto curationDto = curation.convert2Dto();
-            curationDto.setProducts(products.stream().map(Product::convert2ListDto).toList());
+            curationDto.setProducts(products.stream().map(productService::convert2ListDto).toList());
             res.setData(Optional.of(curationDto));
             return ResponseEntity.ok(res);
         } catch (Exception e) {

@@ -8,15 +8,14 @@ import com.matsinger.barofishserver.store.object.StoreState;
 import com.matsinger.barofishserver.utils.Common;
 import lombok.*;
 import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
-import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.bcrypt.BCrypt;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -57,17 +56,15 @@ public class PartnerExcelService {
         // 키워드 5
         String keyword = row.getCell(5).getStringCellValue();
         // 배송비 6
-        Integer deliveryFee = row.getCell(6) == null ? 0 : Integer.parseInt(row.getCell(6).getStringCellValue());
+        Integer deliveryFee = row.getCell(6) == null ? 0 : (int) row.getCell(6).getNumericCellValue();
         // 배송비 유형 (무료 | 유료 ) 7
         StoreDeliverFeeType
                 deliverFeeType =
                 row.getCell(7).getStringCellValue().equals("무료") ? StoreDeliverFeeType.FREE : row.getCell(8) ==
                         null ? StoreDeliverFeeType.FIX : StoreDeliverFeeType.FREE_IF_OVER;
         // 무료 배송 최소 금액 8
-        String minOrderPriceStr = row.getCell(8) == null ? null : row.getCell(8).getStringCellValue();
-        if (!Pattern.matches("^[\\d]+$", minOrderPriceStr)) throw new Exception("무료 배송 최소 금액을 확인해주세요.");
-        minOrderPriceStr = minOrderPriceStr.replaceAll("[^\\d]", "");
-        Integer minOrderPrice = row.getCell(8) == null ? null : Integer.parseInt(minOrderPriceStr);
+        Cell minOrderPriceCell = row.getCell(8);
+        Integer minOrderPrice = minOrderPriceCell == null ? null : (int) minOrderPriceCell.getNumericCellValue();
         // 정산 비율 9
         String settlementRateStr = row.getCell(9).getStringCellValue();
         if (settlementRateStr.equals("공급가")) settlementRateStr = "100";
@@ -150,7 +147,7 @@ public class PartnerExcelService {
         }
     }
 
-    public void processUpsertPartnerExcelData(MultipartFile file) throws Exception {
+    public void processPartnerExcel(MultipartFile file) throws Exception {
         XSSFSheet sheet = excelService.readExcel(file);
         Iterator<Row> rowIterator = sheet.iterator();
         Row firstRow = rowIterator.next();
@@ -185,14 +182,15 @@ public class PartnerExcelService {
         List<StoreData> storeDataList = new ArrayList<>();
         while (rowIterator.hasNext()) {
             Row row = rowIterator.next();
+            if (row.getPhysicalNumberOfCells() == 1) break;
             StoreData storeData = convertRow2StoreInfo(row);
             storeDataList.add(storeData);
-            System.out.println(storeData.storeInfo.getName());
         }
-//        for (StoreData data : storeDataList) {
-//            Store store = storeService.updateStore(data.store);
-//            data.getStoreInfo().setStoreId(store.getId());
-//            StoreInfo storeInfo = storeService.updateStoreInfo(data.getStoreInfo());
-//        }
+
+        for (StoreData data : storeDataList) {
+            Store store = storeService.updateStore(data.store);
+            data.getStoreInfo().setStoreId(store.getId());
+            StoreInfo storeInfo = storeService.updateStoreInfo(data.getStoreInfo());
+        }
     }
 }

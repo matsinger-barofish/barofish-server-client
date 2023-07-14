@@ -9,6 +9,9 @@ import java.util.List;
 
 public interface OptionRepository extends JpaRepository<Option, Integer> {
     List<Option> findAllByProductIdAndState(Integer productId, OptionState state);
+
+    Option findFirstByProductIdAndIsNeededTrue(Integer productId);
+
     @Transactional
     void deleteAllByProductId(Integer productId);
 }

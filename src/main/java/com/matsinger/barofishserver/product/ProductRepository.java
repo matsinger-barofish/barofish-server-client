@@ -21,6 +21,8 @@ public interface ProductRepository extends JpaRepository<Product, Integer>, JpaS
 
     Optional<Product> findByTitle(String title);
 
+    Optional<Product> findByTitleAndStoreId(String title, Integer storeId);
+
     Integer countAllByStoreId(Integer storeId);
 
     List<Product> findByStoreIdAndStateEquals(Integer storeId, ProductState state);
@@ -117,6 +119,7 @@ public interface ProductRepository extends JpaRepository<Product, Integer>, JpaS
 
     @Query(value = "select p.* from product p \n" +
             "join category c ON p.category_id = c.id \n" +
+            "JOIN option_item oi ON oi.id = p.represent_item_id\n" +
             "where p.state = \'ACTIVE\' \n" +
             "and (:curationId is null or p.id in (select cpm.product_id from curation_product_map cpm " +
             "WHERE cpm.curation_id=:curationId)) \n" +
@@ -129,7 +132,7 @@ public interface ProductRepository extends JpaRepository<Product, Integer>, JpaS
             "where (:#{#filterFieldIds==null ? null : #filterFieldIds.size() } is null or  ps.field_id in " +
             "(:filterFieldIds) ) )) \n" +
             "group by p.id \n" +
-            "order by p.origin_price asc", nativeQuery = true, countQuery = "select count(*) from product p \n" +
+            "order by oi.discount_price asc", nativeQuery = true, countQuery = "select count(*) from product p \n" +
             "join category c ON p.category_id = c.id \n" +
             "where p.state = \'ACTIVE\' \n" +
             "and (:curationId is null or p.id in (select cpm.product_id from curation_product_map cpm " +
@@ -152,6 +155,7 @@ public interface ProductRepository extends JpaRepository<Product, Integer>, JpaS
 
     @Query(value = "select p.* from product p \n" +
             "join category c ON p.category_id = c.id \n" +
+            "JOIN option_item oi ON oi.id = p.represent_item_id\n" +
             "where p.state = \'ACTIVE\' \n" +
             "and (:curationId is null or p.id in (select cpm.product_id from curation_product_map cpm " +
             "WHERE cpm.curation_id=:curationId)) \n" +
@@ -164,7 +168,7 @@ public interface ProductRepository extends JpaRepository<Product, Integer>, JpaS
             "where (:#{#filterFieldIds==null ? null : #filterFieldIds.size() } is null or  ps.field_id in " +
             "(:filterFieldIds) ) )) \n" +
             "group by p.id \n" +
-            "order by p.origin_price desc", nativeQuery = true, countQuery = "select count(*) from product p \n" +
+            "order by oi.discount_price desc", nativeQuery = true, countQuery = "select count(*) from product p \n" +
             "join category c ON p.category_id = c.id \n" +
             "where p.state = \'ACTIVE\' \n" +
             "and (:curationId is null or p.id in (select cpm.product_id from curation_product_map cpm " +
@@ -244,7 +248,7 @@ public interface ProductRepository extends JpaRepository<Product, Integer>, JpaS
             "and (:curationId is null or p.id in (select cpm.product_id from curation_product_map cpm " +
             "WHERE cpm.curation_id=:curationId)) \n" +
             "and (:storeId is null or p.store_id = :storeId) \n" +
-            "and (:keyword = is null or p.title like concat('%', :keyword, '%') ) \n" +
+            "and (:keyword is null or p.title like concat('%', :keyword, '%') ) \n" +
             "and ( (:#{#categoryIds==null ? null : #categoryIds.size()} is null or c.parent_category_id in (:categoryIds)) \n" +
             "or (:#{#categoryIds==null ? null : #categoryIds.size()} is null or c.id in (:categoryIds)) )\n" +
             "and (:#{#filterFieldIds==null ? null : #filterFieldIds.size() } is null or p.id in (select p1.id from " +
@@ -261,7 +265,7 @@ public interface ProductRepository extends JpaRepository<Product, Integer>, JpaS
 
     @Query(value = "select p.* from product p \n" +
             "join category c ON p.category_id = c.id \n" +
-            "JOIN order_product_info o ON p.id = o.product_id \n" +
+            "LEFT OUTER JOIN order_product_info o ON p.id = o.product_id \n" +
             "where p.state = \'ACTIVE\' \n" +
             "and (:curationId is null or p.id in (select cpm.product_id from curation_product_map cpm " +
             "WHERE cpm.curation_id=:curationId)) \n" +
@@ -279,7 +283,7 @@ public interface ProductRepository extends JpaRepository<Product, Integer>, JpaS
                     "product " +
                     "p \n" +
                     "join category c ON p.category_id = c.id \n" +
-                    "JOIN order_product_info o ON p.id = o.product_id \n" +
+                    "LEFT OUTER JOIN order_product_info o ON p.id = o.product_id \n" +
                     "where p.state = \'ACTIVE\' \n" +
                     "and (:curationId is null or p.id in (select cpm.product_id from curation_product_map cpm " +
                     "WHERE cpm.curation_id=:curationId)) \n" +

@@ -29,18 +29,18 @@ public interface ReviewRepository extends JpaRepository<Review, Integer>, JpaSpe
 
     @Query(value = "SELECT r.*\n" +
             "FROM review r\n" +
-            "         JOIN review_like rl ON r.id = rl.review_id\n" +
+            "        LEFT OUTER JOIN review_like rl ON r.id = rl.review_id\n" +
             "WHERE store_id = :storeId\n" +
             "GROUP BY r.id\n" +
             "ORDER BY COUNT( rl.user_id ) DESC\n", countQuery = "SELECT COUNT(*)\n" +
             "FROM review r\n" +
-            "         JOIN review_like rl ON r.id = rl.review_id\n" +
+            "        LEFT OUTER JOIN review_like rl ON r.id = rl.review_id\n" +
             "WHERE store_id = :storeId\n", nativeQuery = true)
     Page<Review> selectReviewOrderedBestWithStoreId(@Param(value = "storeId") Integer storeId, Pageable pageable);
 
     @Query(value = "SELECT r.*\n" +
             "FROM review r\n" +
-            "         JOIN review_like rl ON r.id = rl.review_id\n" +
+            "         LEFT OUTER JOIN review_like rl ON r.id = rl.review_id\n" +
             "WHERE product_id = :productId\n" +
             "GROUP BY r.id\n" +
             "ORDER BY COUNT( rl.user_id ) DESC\n", countQuery = "SELECT COUNT(*)\n" +
@@ -51,7 +51,7 @@ public interface ReviewRepository extends JpaRepository<Review, Integer>, JpaSpe
 
     @Query(value = "SELECT re.evaluation, COUNT( re.evaluation ) AS count\n" +
             "FROM review r\n" +
-            "         JOIN review_evaluation re ON r.id = re.review_id\n" +
+            "         LEFT OUTER JOIN review_evaluation re ON r.id = re.review_id\n" +
             "WHERE r.product_id = :productId\n" +
             "GROUP BY re.evaluation;", nativeQuery = true)
     List<Tuple> selectReviewStatisticsWithProductId(Integer productId);

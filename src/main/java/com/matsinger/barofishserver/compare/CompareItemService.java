@@ -58,7 +58,6 @@ public class CompareItemService {
 
     public Boolean checkExistProductSet(Integer userId, List<Integer> productIds) {
         List<Tuple> data = compareSetRepository.checkExistHavingSet(userId, productIds);
-        System.out.println(data);
         return data.size() != 0;
     }
 

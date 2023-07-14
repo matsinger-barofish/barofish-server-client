@@ -46,7 +46,6 @@ public class DeliverService {
         String url = RECOMMEND_COMPANY_LIST_URL + "?t_key=" + accessKey + "&t_invoice=" + invoice;
         String jsonString = restTemplate.getForObject(url, String.class);
         JSONObject object = new JSONObject(jsonString);
-        System.out.println(jsonString);
         JSONArray arrObject = object.getJSONArray("Recommend");
         List<Deliver.Company> companies = new ArrayList<>();
         for (int i = 0; i < arrObject.length(); i++) {

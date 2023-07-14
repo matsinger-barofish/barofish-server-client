@@ -1,6 +1,5 @@
 package com.matsinger.barofishserver.category;
 
-import com.matsinger.barofishserver.compare.filter.CompareFilter;
 import com.matsinger.barofishserver.compare.filter.CompareFilterDto;
 import com.matsinger.barofishserver.compare.filter.CompareFilterService;
 import lombok.RequiredArgsConstructor;
@@ -11,6 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @RequiredArgsConstructor
 @Slf4j
@@ -77,4 +77,12 @@ public class CategoryService {
         return CategoryDto.builder().id(data.getId()).parentId(data.getCategoryId()).name(data.getName()).image(data.getImage()).ParentCategoryName(
                 parentName).categories(categories).build();
     }
+
+    public Optional<Category> findOptionalCategoryWithName(String name) {
+        return categoryRepository.findFirstByName(name);
+    }
+    public Optional<Category> findOptionalCategoryWithName(String name, Integer parentCategoryId) {
+        return categoryRepository.findFirstByNameAndCategoryId(name, parentCategoryId);
+    }
+
 }

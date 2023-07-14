@@ -36,7 +36,7 @@ public class PortOneCallbackHandler {
     @PostMapping("")
     public ResponseEntity<Object> portOneCallback(@RequestHeader(value = "x-real-ip", required = false) String XRealIp,
                                                   @RequestBody(required = false) PortOneCallbackService.PortOneBodyData data) {
-        System.out.println(XRealIp + " callback received");
+        System.out.println("Portone callback received");
         if (!XRealIp.equals("52.78.100.19") && !XRealIp.equals("52.78.48.223"))
             return ResponseEntity.status(403).body(null);
 
@@ -53,9 +53,6 @@ public class PortOneCallbackHandler {
                     paymentService.upsertPayments(paymentData);
                     order.setImpUid(data.getImp_uid());
                     orderService.updateOrder(order);
-                    System.out.println(paymentData.getPayMethod());
-                    System.out.println(paymentData.getVbankName());
-                    System.out.println(paymentData.getVbankNum());
                     if (paymentData.getPayMethod().equals("vbank")) {
                         String
                                 smsContent =

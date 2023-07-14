@@ -1,6 +1,5 @@
 package com.matsinger.barofishserver.user;
 
-
 import com.matsinger.barofishserver.basketProduct.BasketService;
 import com.matsinger.barofishserver.basketProduct.obejct.BasketProductDto;
 import com.matsinger.barofishserver.grade.Grade;
@@ -100,8 +99,7 @@ public class UserController {
                 if (user.getState().equals(UserState.BANNED)) return res.throwError("정지된 사용자입니다.", "NOT_ALLOWED");
                 if (user.getState().equals(UserState.DELETED)) return res.throwError("삭제된 사용자입니다.", "NOT_ALLOWED");
             } else {
-                User user = User.builder().joinAt(util.now()).state(UserState.ACTIVE).build();
-                user = userService.createUser(user);
+
                 Grade grade = userService.selectGrade(1);
                 String profileImage = "";
                 String phone = null;
@@ -111,13 +109,15 @@ public class UserController {
                     phone = data.phone.replaceAll(re.getPhone(), "0$1$2$3");
                     if (userService.checkExistWithPhone(phone)) return res.throwError("회원가입된 이력이 있습니다.", "NOT_ALLOWED");
                 }
+                SiteInformation siteInfo = siteInfoService.selectSiteInfo("INT_JOIN_POINT");
+                Integer point = Integer.parseInt(siteInfo.getContent());
+                User user = User.builder().joinAt(util.now()).state(UserState.ACTIVE).build();
+                user = userService.createUser(user);
                 if (data.profileImage != null) {
                     profileImage =
                             s3.upload(s3.extractBase64FromImageUrl(data.profileImage),
                                     new ArrayList<>(Arrays.asList("user", String.valueOf(user.getId()))));
                 }
-                SiteInformation siteInfo = siteInfoService.selectSiteInfo("INT_JOIN_POINT");
-                Integer point = Integer.parseInt(siteInfo.getContent());
                 UserInfo
                         userInfo =
                         UserInfo.builder().userId(user.getId()).nickname(data.nickname !=
@@ -303,7 +303,6 @@ public class UserController {
 
     }
 
-
     @Getter
     @NoArgsConstructor
     static class UserLoginReq {
@@ -372,8 +371,10 @@ public class UserController {
             UserInfoDto userInfoDto = user.convert2Dto();
             userInfoDto.setUser(userService.selectUser(user.getUserId()).convert2Dto());
             UserAuth userAuth = userService.selectUserAuth(user.getUserId());
-            userAuth.setPassword(null);
-            userInfoDto.setAuth(userAuth.convert2Dto());
+            if (userAuth != null) {
+                userAuth.setPassword(null);
+                userInfoDto.setAuth(userAuth.convert2Dto());
+            }
             List<DeliverPlace> deliverPlaces = userService.selectUserDeliverPlaceList(user.getUserId());
             userInfoDto.setDeliverPlaces(deliverPlaces);
             res.setData(Optional.of(userInfoDto));
@@ -477,13 +478,13 @@ public class UserController {
             userInfo.setNickname("탈퇴한 회원");
             userInfo.setPhone(null);
             userService.deleteUserAuth(userId);
-            //장바구니 제거
+            // 장바구니 제거
             List<Integer>
                     basketIds =
                     basketService.selectBasketList(userId).stream().map(BasketProductDto::getId).toList();
             basketService.deleteBasket(basketIds);
 
-            //리뷰 제거
+            // 리뷰 제거
             reviewService.deleteReviewsByUserId(userId);
             inquiryService.deleteInquiryByUserId(userId);
             return ResponseEntity.ok(res);
