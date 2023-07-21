@@ -42,3 +42,4 @@ out/
 ## custom Settings ##
 *.properties
 *.yml
+*.sql

@@ -17,7 +17,6 @@ import java.util.Objects;
 @AllArgsConstructor
 @Table(name = "site_information", schema = "barofish_dev", catalog = "")
 public class SiteInformation {
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Id
     @Column(name = "id", nullable = false, length = 30)
     private String id;
@@ -30,18 +29,17 @@ public class SiteInformation {
     private String content;
 
     public SiteInfoDto convert2Dto() {
-        SiteInfoDto
-                info =
-                SiteInfoDto.builder().id(this.id).description(this.description).content(this.id.startsWith("TC") ? null : this.content).build();
+        SiteInfoDto info = SiteInfoDto.builder().id(this.id).description(this.description)
+                .content(this.id.startsWith("TC") ? null : this.content).build();
         if (this.id.startsWith("TC")) {
             List<SiteInfoController.TitleContentReq> tcs = new ArrayList<>();
             JSONArray jsonArray = new JSONArray(this.content);
             for (int i = 0; i < jsonArray.length(); i++) {
                 JSONObject obj = jsonArray.getJSONObject(i);
-                SiteInfoController.TitleContentReq
-                        tc =
-                        SiteInfoController.TitleContentReq.builder().title(obj.getString("title")).content(obj.getString(
-                                "content")).build();
+                SiteInfoController.TitleContentReq tc = SiteInfoController.TitleContentReq.builder()
+                        .title(obj.getString("title")).content(obj.getString(
+                                "content"))
+                        .build();
                 tcs.add(tc);
             }
             info.setTcContent(tcs);
@@ -56,7 +54,6 @@ public class SiteInformation {
     public void setId(String id) {
         this.id = id;
     }
-
 
     public String getDescription() {
         return description;
@@ -76,8 +73,10 @@ public class SiteInformation {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o)
+            return true;
+        if (o == null || getClass() != o.getClass())
+            return false;
         SiteInformation that = (SiteInformation) o;
         return Objects.equals(id, that.id) &&
                 Objects.equals(description, that.description) &&

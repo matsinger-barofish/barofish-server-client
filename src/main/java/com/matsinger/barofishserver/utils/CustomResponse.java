@@ -2,10 +2,13 @@ package com.matsinger.barofishserver.utils;
 
 import lombok.Getter;
 import lombok.Setter;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.http.ResponseEntity;
 
 import java.util.Optional;
 
+@Configuration
 @Getter
 @Setter
 public class CustomResponse<T> {

@@ -7,6 +7,7 @@ import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.codec.digest.HmacUtils;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Profile;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -51,12 +52,13 @@ public class GithubWebhook {
         return Hex.encodeHexString(rawHmac);
     }
 
-
     @PostMapping(value = "")
-    ResponseEntity<Boolean> githubWebhookCallback(@RequestHeader(value = "x-hub-signature-256", required = false) String signature,
-                                                  @RequestBody String payload)
+    ResponseEntity<Boolean> githubWebhookCallback(
+            @RequestHeader(value = "x-hub-signature-256", required = false) String signature,
+            @RequestBody String payload)
             throws NoSuchAlgorithmException, InvalidKeyException, IOException {
-        if (githubBranch.equals("none")) return ResponseEntity.status(400).body(false);
+        if (githubBranch.equals("none"))
+            return ResponseEntity.status(400).body(false);
         System.out.println("Github Webhook Request received");
         JSONObject jsonObject = new JSONObject(payload);
         String hash = String.format("sha256=%s", HmacUtils.hmacSha256Hex(githubWebhookSecret, payload));
@@ -65,7 +67,7 @@ public class GithubWebhook {
         }
         if (jsonObject.get("ref").equals("refs/heads/" + githubBranch)) {
             System.out.println("running hook_github.sh");
-            Process process = Runtime.getRuntime().exec("./hook_github.sh");
+            Process process = Runtime.getRuntime().exec("~/barofish-server-client/hook_github.sh");
             // Read output
             StringBuilder output = new StringBuilder();
             BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));

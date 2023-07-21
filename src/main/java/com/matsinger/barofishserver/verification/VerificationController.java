@@ -1,6 +1,6 @@
 package com.matsinger.barofishserver.verification;
 
-import com.matsinger.barofishserver.payment.PaymentService;
+import com.matsinger.barofishserver.payment.application.PaymentService;
 import com.matsinger.barofishserver.utils.Common;
 import com.matsinger.barofishserver.utils.CustomResponse;
 import com.matsinger.barofishserver.utils.RegexConstructor;
@@ -42,10 +42,12 @@ public class VerificationController {
             String verificationCode = verificationService.generateVerificationCode(6);
             verificationService.addVerification(Verification.builder().verificationNumber(verificationCode).expiredAt(
                     new Timestamp(System.currentTimeMillis() +
-                            TimeUnit.MINUTES.toMillis(3))).createAt(utils.now()).target(phone).build());
-//            return res.throwError("인증번호는 [" + verificationCode + "] 입니다.\nToast API 정보가 없어서 실제 SMS 발송을 진행할 수 없습니다.",
-//                    "INTERNAL_ERROR");
-            smsService.sendSms(phone, "[바로피쉬] 인증번호는 " + verificationCode + " 입니다.",null);
+                            TimeUnit.MINUTES.toMillis(3)))
+                    .createAt(utils.now()).target(phone).build());
+            // return res.throwError("인증번호는 [" + verificationCode + "] 입니다.\nToast API 정보가
+            // 없어서 실제 SMS 발송을 진행할 수 없습니다.",
+            // "INTERNAL_ERROR");
+            smsService.sendSms(phone, "[바로피쉬] 인증번호는 " + verificationCode + " 입니다.", null);
             res.setData(Optional.of(true));
             return ResponseEntity.ok(res);
         } catch (Exception e) {
@@ -67,7 +69,8 @@ public class VerificationController {
         try {
             String phone = data.target.replaceAll(re.getPhone(), "0$1$2$3");
             Verification verification = verificationService.selectVerification(phone, data.getVerificationNumber());
-            if (verification == null) return res.throwError("인증 정보가 없거나 만료되었습니다. 다시 시도해주세요.", "INTERNAL_SERVER_ERROR");
+            if (verification == null)
+                return res.throwError("인증 정보가 없거나 만료되었습니다. 다시 시도해주세요.", "INTERNAL_SERVER_ERROR");
             if (verification.getExpiredAt() != null &&
                     verification.getExpiredAt().before(new Timestamp(System.currentTimeMillis()))) {
                 verificationService.deleteVerification(verification.getId());
@@ -89,8 +92,9 @@ public class VerificationController {
             PaymentService.IamPortCertificationRes certificationRes = paymentService.certificateWithImpUid(impUid);
             if (certificationRes.getCertified()) {
                 res.setData(Optional.ofNullable(certificationRes.getImpUid()));
-                verificationService.addVerification(Verification.builder().target(impUid).verificationNumber("").expiredAt(
-                        null).createAt(utils.now()).build());
+                verificationService
+                        .addVerification(Verification.builder().target(impUid).verificationNumber("").expiredAt(
+                                null).createAt(utils.now()).build());
             } else {
                 res.setIsSuccess(false);
                 res.setData(null);

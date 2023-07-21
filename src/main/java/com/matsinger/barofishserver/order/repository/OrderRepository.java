@@ -1,7 +1,7 @@
 package com.matsinger.barofishserver.order.repository;
 
-import com.matsinger.barofishserver.order.object.OrderState;
-import com.matsinger.barofishserver.order.object.Orders;
+import com.matsinger.barofishserver.order.domain.OrderState;
+import com.matsinger.barofishserver.order.domain.Orders;
 import jakarta.persistence.Tuple;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;

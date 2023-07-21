@@ -1,7 +1,7 @@
 package com.matsinger.barofishserver;
 
-import com.matsinger.barofishserver.deliver.DeliverService;
-import com.matsinger.barofishserver.search.SearchKeywordService;
+import com.matsinger.barofishserver.deliver.application.DeliverService;
+import com.matsinger.barofishserver.search.application.SearchKeywordService;
 import lombok.AllArgsConstructor;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;

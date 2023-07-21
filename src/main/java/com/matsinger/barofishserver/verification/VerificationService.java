@@ -1,5 +1,6 @@
 package com.matsinger.barofishserver.verification;
 
+import com.matsinger.barofishserver.user.dto.UserJoinReq;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.repository.query.Param;
@@ -12,6 +13,23 @@ import java.util.Random;
 @Service
 public class VerificationService {
     private final VerificationRepository verificationRepository;
+
+    public void verifyPhoneVerification(UserJoinReq request) {
+
+        Verification verification = null;
+
+        // 인증 아이디나 impUid가 없는 경우
+        if (request.getVerificationId() == null && request.getImpUid() == null) {
+            throw new IllegalArgumentException("인증을 먼저 진행해주세요.");
+        } else if (request.getVerificationId() != null) {
+            verification = selectVerificationById(request.getVerificationId());
+            if (verification.getExpiredAt() != null) throw new IllegalArgumentException("인증을 먼저 진행해주세요.");
+        } else if (request.getImpUid() != null) {
+            verification = selectVerificationByImpUid(request.getImpUid());
+            if (verification.getExpiredAt() != null) throw new IllegalArgumentException("인증을 먼저 진행해주세요.");
+        }
+        if (verification != null) deleteVerification(verification.getId());
+    }
 
     public Verification selectVerificationById(Integer id) {
         try {
