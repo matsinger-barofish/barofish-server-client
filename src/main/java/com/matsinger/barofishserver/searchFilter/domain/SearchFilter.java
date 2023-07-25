@@ -6,7 +6,6 @@ import lombok.*;
 
 @Entity
 @Getter
-@Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
@@ -20,4 +19,7 @@ public class SearchFilter {
     @Column(name = "name", nullable = false)
     private String name;
 
+    public void setName(String name) {
+        this.name = name;
+    }
 }

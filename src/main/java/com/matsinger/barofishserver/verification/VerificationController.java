@@ -1,6 +1,8 @@
 package com.matsinger.barofishserver.verification;
 
 import com.matsinger.barofishserver.payment.application.PaymentService;
+import com.matsinger.barofishserver.payment.dto.IamPortCertificationRes;
+import com.matsinger.barofishserver.payment.dto.KeyInPaymentReq;
 import com.matsinger.barofishserver.utils.Common;
 import com.matsinger.barofishserver.utils.CustomResponse;
 import com.matsinger.barofishserver.utils.RegexConstructor;
@@ -89,7 +91,7 @@ public class VerificationController {
     public ResponseEntity<CustomResponse<String>> verifyCodeWithImpUid(@PathVariable("impUid") String impUid) {
         CustomResponse<String> res = new CustomResponse<>();
         try {
-            PaymentService.IamPortCertificationRes certificationRes = paymentService.certificateWithImpUid(impUid);
+            IamPortCertificationRes certificationRes = paymentService.certificateWithImpUid(impUid);
             if (certificationRes.getCertified()) {
                 res.setData(Optional.ofNullable(certificationRes.getImpUid()));
                 verificationService

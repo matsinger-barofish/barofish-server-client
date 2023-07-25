@@ -17,6 +17,7 @@ public class ProductListDto {
     ProductState state;
     String image;
     String title;
+    Boolean isNeedTaxation;
     Integer discountPrice;
     Integer originPrice;
     Integer reviewCount;

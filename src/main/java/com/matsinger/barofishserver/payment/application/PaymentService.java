@@ -1,6 +1,10 @@
 package com.matsinger.barofishserver.payment.application;
 
 import com.matsinger.barofishserver.payment.domain.PaymentState;
+import com.matsinger.barofishserver.payment.dto.CheckValidCardRes;
+import com.matsinger.barofishserver.payment.dto.GetVBankAccountReq;
+import com.matsinger.barofishserver.payment.dto.IamPortCertificationRes;
+import com.matsinger.barofishserver.payment.dto.KeyInPaymentReq;
 import com.matsinger.barofishserver.payment.portone.application.PortOneCallbackService;
 import com.matsinger.barofishserver.payment.domain.Payments;
 import com.matsinger.barofishserver.payment.repository.PaymentRepository;
@@ -133,26 +137,31 @@ public class PaymentService {
 
     public Boolean processKeyInPayment(KeyInPaymentReq data) throws Exception {
         IamportClient iamportClient = callbackService.getIamportClient();
-        String cardNo = aes256.encrypt(data.paymentMethod.getCardNo());
+        String cardNo = aes256.decrypt(data.getPaymentMethod().getCardNo());
         cardNo = cardNo.replaceAll(re.cardNo, "$1-$2-$3-$4");
-        String[] expiryAyData = data.paymentMethod.getExpiryAt().split("/");
+        String[] expiryAyData = data.getPaymentMethod().getExpiryAt().split("/");
         String expiryMonth = expiryAyData[0];
         String expiryYear = "20" + expiryAyData[1];
         String expiry = expiryYear + "-" + expiryMonth;
-        String password2Digit = aes256.decrypt(data.paymentMethod.getPasswordTwoDigit());
-        CardInfo cardInfo = new CardInfo(cardNo, expiry, data.paymentMethod.getBirth(), password2Digit);
+        String password2Digit = aes256.decrypt(data.getPaymentMethod().getPasswordTwoDigit());
+        CardInfo cardInfo = new CardInfo(cardNo, expiry, data.getPaymentMethod().getBirth(), password2Digit);
 
         OnetimePaymentData
                 onetimePaymentData =
-                new OnetimePaymentData(data.orderId, BigDecimal.valueOf(data.total_amount), cardInfo);
+                new OnetimePaymentData(data.getOrderId(), BigDecimal.valueOf(data.getTotal_amount()), cardInfo);
+        onetimePaymentData.setPg("settle");
+        onetimePaymentData.setCustomer_uid(data.getPaymentMethod().getCustomerUid());
         AgainPaymentData
                 againPaymentData =
-                new AgainPaymentData(data.paymentMethod.getCustomerUid(),
-                        data.orderId,
-                        BigDecimal.valueOf(data.total_amount));
+                new AgainPaymentData(data.getPaymentMethod().getCustomerUid(),
+                        data.getOrderId(),
+                        BigDecimal.valueOf(data.getTotal_amount()));
+        againPaymentData.setName(data.getOrder_name());
         againPaymentData.setNoticeUrl(webhookUrl);
-        IamportResponse<Payment> paymentRes = iamportClient.againPayment(againPaymentData);
-//        IamportResponse<Payment> paymentRes = iamportClient.onetimePayment(onetimePaymentData);
+//        againPaymentData.set
+//        againPaymentData.setTaxFree();
+//        IamportResponse<Payment> paymentRes = iamportClient.againPayment(againPaymentData);
+        IamportResponse<Payment> paymentRes = iamportClient.onetimePayment(onetimePaymentData);
         if (paymentRes.getCode() != 0) {
             System.out.println(paymentRes.getMessage());
             return false;
@@ -176,8 +185,8 @@ public class PaymentService {
         HttpHeaders headers = new HttpHeaders();
         headers.set("Authorization", "Bearer " + accessToken);
         MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
-        body.add("merchant_uid", data.orderId);
-        body.add("amount", data.price);
+        body.add("merchant_uid", data.getOrderId());
+        body.add("amount", data.getPrice());
         body.add("vbank_code", data.vBankCode);
         body.add("vbank_due", data.vBankDue);
         body.add("vbank_holder", data.vBankHolder);
@@ -185,54 +194,5 @@ public class PaymentService {
         ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.POST, entity, String.class);
     }
 
-    @Getter
-    @Builder
-    @Setter
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public static class KeyInPaymentReq {
-        String order_name;
-        Integer total_amount;
-        String orderId;
-        PaymentMethod paymentMethod;
-    }
 
-    private static class KeyInPaymentRes {
-        String tx_id;
-        String customer_id;
-        String requested_at;
-        String paid_at;
-        String pg_tx_id;
-    }
-
-    @Getter
-    @Builder
-    public static class IamPortCertificationRes {
-        String impUid;
-        String name;
-        String phone;
-        Boolean certified;
-        String certifiedAt;
-    }
-
-    @Getter
-    @Builder
-    @Setter
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public static class CheckValidCardRes {
-        String customerUid;
-        String cardName;
-    }
-
-    @Getter
-    @Builder
-    @AllArgsConstructor
-    public static class GetVBankAccountReq {
-        String orderId;
-        Integer price;
-        String vBankCode;
-        Integer vBankDue;
-        String vBankHolder;
-    }
 }

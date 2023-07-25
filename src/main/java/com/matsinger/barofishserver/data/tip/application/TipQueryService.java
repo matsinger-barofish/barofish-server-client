@@ -1,6 +1,7 @@
 package com.matsinger.barofishserver.data.tip.application;
 
 import com.matsinger.barofishserver.data.tip.domain.Tip;
+import com.matsinger.barofishserver.data.tip.domain.TipState;
 import com.matsinger.barofishserver.data.tip.domain.TipType;
 import com.matsinger.barofishserver.data.tip.repository.TipRepository;
 import lombok.RequiredArgsConstructor;
@@ -15,18 +16,23 @@ import java.util.List;
 @Service
 public class TipQueryService {
     private final TipRepository tipRepository;
+
     public Page<Tip> selectTip(PageRequest pageRequest, Specification<Tip> spec) {
         return tipRepository.findAll(spec, pageRequest);
     }
 
-    public List<Tip> selectTipList(TipType type) {
-        if (type == null) return tipRepository.findAll();
-        else return tipRepository.findAllByType(type);
+    public List<Tip> selectTipList(TipType type, TipState state) {
+        if (type == null) return tipRepository.findAllByState(state);
+        else return tipRepository.findAllByTypeAndState(type, state);
     }
 
     public Tip selectTip(Integer id) {
         return tipRepository.findById(id).orElseThrow(() -> {
             throw new Error("팁 정보를 찾을 수 없습니다.");
         });
+    }
+
+    public List<Tip> selectTipListWithIds(List<Integer> ids) {
+        return tipRepository.findAllByIdIn(ids);
     }
 }

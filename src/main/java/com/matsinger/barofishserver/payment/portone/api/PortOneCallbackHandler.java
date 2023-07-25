@@ -13,6 +13,7 @@ import com.matsinger.barofishserver.order.domain.Orders;
 import com.matsinger.barofishserver.payment.application.PaymentService;
 import com.matsinger.barofishserver.payment.domain.PaymentState;
 import com.matsinger.barofishserver.payment.domain.Payments;
+import com.matsinger.barofishserver.payment.dto.GetVBankAccountReq;
 import com.matsinger.barofishserver.payment.portone.application.PortOneCallbackService;
 import com.matsinger.barofishserver.product.application.ProductService;
 import com.matsinger.barofishserver.product.optionitem.domain.OptionItem;
@@ -59,9 +60,9 @@ public class PortOneCallbackHandler {
             if (order != null) {
                 if (data.getStatus().equals("ready")) {
                     Payments paymentData = paymentService.getPaymentInfo(order.getId(), data.getImp_uid());
-                    PaymentService.GetVBankAccountReq
+                    GetVBankAccountReq
                             vBankReq =
-                            PaymentService.GetVBankAccountReq.builder().orderId(order.getId()).price(order.getTotalPrice()).vBankCode(
+                            GetVBankAccountReq.builder().orderId(order.getId()).price(order.getTotalPrice()).vBankCode(
                                     paymentData.getVbankCode()).vBankDue(Math.toIntExact((paymentData.getVbankDate().getTime() /
                                     1000))).vBankHolder(paymentData.getVbankHolder()).build();
                     paymentService.upsertPayments(paymentData);
@@ -120,7 +121,6 @@ public class PortOneCallbackHandler {
                     UserInfo userInfo = userService.selectUserInfo(order.getUserId());
                     userInfo.setPoint(userInfo.getPoint() - order.getUsePoint());
                     userService.updateUserInfo(userInfo);
-                    userService.addPoint(userInfo, order.getTotalPrice() * userInfo.getGrade().getPointRate() / 100);
                     couponCommandService.useCoupon(order.getCouponId(), order.getUserId());
                 } else if (data.getStatus().equals("canceled")) {
                     Payments payment = paymentService.findPaymentByImpUid(data.getImp_uid());

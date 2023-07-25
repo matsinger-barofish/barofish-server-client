@@ -7,7 +7,6 @@ import lombok.*;
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
-@Setter
 @Builder
 @Table(name = "review_evaluation", schema = "barofish_dev", catalog = "")
 @IdClass(ReviewEvaluationId.class)

@@ -1,12 +1,16 @@
 package com.matsinger.barofishserver.store.api;
 
+import com.matsinger.barofishserver.admin.log.application.AdminLogCommandService;
+import com.matsinger.barofishserver.admin.log.application.AdminLogQueryService;
+import com.matsinger.barofishserver.admin.log.domain.AdminLog;
+import com.matsinger.barofishserver.admin.log.domain.AdminLogType;
 import com.matsinger.barofishserver.jwt.*;
 import com.matsinger.barofishserver.product.LikePostType;
 import com.matsinger.barofishserver.product.application.ProductService;
 import com.matsinger.barofishserver.product.domain.Product;
-import com.matsinger.barofishserver.review.application.ReviewService;
-import com.matsinger.barofishserver.siteInfo.SiteInfoService;
-import com.matsinger.barofishserver.siteInfo.SiteInformation;
+import com.matsinger.barofishserver.siteInfo.application.SiteInfoCommandService;
+import com.matsinger.barofishserver.siteInfo.application.SiteInfoQueryService;
+import com.matsinger.barofishserver.siteInfo.domain.SiteInformation;
 import com.matsinger.barofishserver.store.application.StoreService;
 import com.matsinger.barofishserver.store.domain.*;
 import com.matsinger.barofishserver.store.dto.SimpleStore;
@@ -40,9 +44,12 @@ public class StoreController {
     private final StoreInfoRepository storeInfoRepository;
     private final JwtService jwt;
     private final JwtProvider jwtProvider;
-    private final SiteInfoService siteInfoService;
+    private final SiteInfoCommandService siteInfoCommandService;
+    private final SiteInfoQueryService siteInfoQueryService;
     private final Common utils;
     private final S3Uploader s3;
+    private final AdminLogCommandService adminLogCommandService;
+    private final AdminLogQueryService adminLogQueryService;
 
     @GetMapping("")
     public ResponseEntity<CustomResponse<List<StoreDto>>> selectStoreList(@RequestHeader(value = "Authorization", required = false) Optional<String> auth,
@@ -312,6 +319,7 @@ public class StoreController {
         Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
         if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
         try {
+            Integer adminId = tokenInfo.get().getId();
             loginId = utils.validateString(loginId, 50L, "로그인 아이디");
             Boolean check = storeService.checkStoreLoginIdValid(loginId);
             if (!check) return res.throwError("중복된 아이디입니다.", "NOT_ALLOWED");
@@ -387,6 +395,11 @@ public class StoreController {
             storeInfoData.setBankAccountCopy(bankAccountCopyUrl);
             StoreInfo storeInfo = storeService.addStoreInfo(storeInfoData);
             res.setData(Optional.of(storeService.convert2Dto(store, false)));
+            AdminLog
+                    adminLog =
+                    AdminLog.builder().id(adminLogQueryService.getAdminLogId()).adminId(adminId).type(AdminLogType.PARTNER).targetId(
+                            String.valueOf(store.getId())).content("파트너 등록을 완료하였습니다.").createdAt(utils.now()).build();
+            adminLogCommandService.saveAdminLog(adminLog);
             return ResponseEntity.ok(res);
         } catch (Exception e) {
             return res.defaultError(e);
@@ -407,11 +420,22 @@ public class StoreController {
         Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
         if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
         try {
+            Integer adminId = tokenInfo.get().getId();
             List<Store> stores = new ArrayList<>();
             for (Integer storeId : data.getStoreIds()) {
                 Store store = storeService.selectStore(storeId);
                 store.setState(data.state);
                 stores.add(store);
+                String
+                        content =
+                        String.format("%s -> %s 상태 변경하였습니다.",
+                                store.getState().equals(StoreState.ACTIVE) ? "활동중" : "정지",
+                                data.getState().equals(StoreState.ACTIVE) ? "활동중" : "정지");
+                AdminLog
+                        adminLog =
+                        AdminLog.builder().id(adminLogQueryService.getAdminLogId()).adminId(adminId).type(AdminLogType.PARTNER).targetId(
+                                storeId.toString()).content(content).createdAt(utils.now()).build();
+                adminLogCommandService.saveAdminLog(adminLog);
             }
             storeService.updateStores(stores);
             res.setData(Optional.of(true));
@@ -595,6 +619,14 @@ public class StoreController {
             }
             StoreInfo result = storeService.updateStoreInfo(storeInfo);
             Store store = storeService.selectStore(result.getStoreId());
+            if (isAdmin) {
+                String content = "정보를 수정하였습니다.";
+                AdminLog
+                        adminLog =
+                        AdminLog.builder().id(adminLogQueryService.getAdminLogId()).adminId(tokenInfo.get().getId()).type(
+                                AdminLogType.PARTNER).targetId(id.toString()).createdAt(utils.now()).content(content).build();
+                adminLogCommandService.saveAdminLog(adminLog);
+            }
             res.setData(Optional.ofNullable(storeService.convert2Dto(store, false)));
             return ResponseEntity.ok(res);
         } catch (Exception e) {
@@ -648,7 +680,7 @@ public class StoreController {
         Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
         if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
         try {
-            SiteInformation siteInformation = siteInfoService.selectSiteInfo("INTERNAL_MAIN_STORE");
+            SiteInformation siteInformation = siteInfoQueryService.selectSiteInfo("INTERNAL_MAIN_STORE");
             Integer storeId = Integer.valueOf(siteInformation.getContent());
             Store store = storeService.selectStore(storeId);
             StoreDto storeDto = storeService.convert2Dto(store, false);
@@ -672,11 +704,11 @@ public class StoreController {
         Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
         if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
         try {
-            SiteInformation siteInformation = siteInfoService.selectSiteInfo("INTERNAL_MAIN_STORE");
+            SiteInformation siteInformation = siteInfoQueryService.selectSiteInfo("INTERNAL_MAIN_STORE");
             if (data.storeId == null) return res.throwError("파트너 아이디를 입력해주세요.", "INPUT_CHECK_REQUIRED");
             Store store = storeService.selectStore(data.storeId);
             siteInformation.setContent(String.valueOf(data.storeId));
-            siteInfoService.updateSiteInfo(siteInformation);
+            siteInfoCommandService.updateSiteInfo(siteInformation);
             res.setData(Optional.ofNullable(storeService.convert2Dto(store, false)));
             return ResponseEntity.ok(res);
         } catch (Exception e) {
@@ -698,12 +730,21 @@ public class StoreController {
         Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
         if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
         try {
+            Integer adminId = tokenInfo.get().getId();
             if (data.getStoreIds() == null || data.getStoreIds().size() == 0)
                 return res.throwError("파트너 아이디를 입력해주세요.", "INPUT_CHECK_REQUIRED");
             if (data.getIsReliable() == null) return res.throwError("체크 여부를 입력해주세요.", "INPUT_CHECK_REQUIRED");
             List<StoreInfo> storeInfos = data.getStoreIds().stream().map(v -> {
                 StoreInfo storeInfo = storeService.selectStoreInfo(v);
                 storeInfo.setIsReliable(data.getIsReliable());
+                String content = "";
+                if (data.getIsReliable()) content = "믿고 구매할 수 있는 파트너로 지정되었습니다.";
+                else content = "믿고 구매할 수 있는 파트너 지정이 해제되었습니다.";
+                AdminLog
+                        adminLog =
+                        AdminLog.builder().id(adminLogQueryService.getAdminLogId()).adminId(adminId).type(AdminLogType.PARTNER).targetId(
+                                String.valueOf(storeInfo.getStoreId())).content(content).createdAt(utils.now()).build();
+                adminLogCommandService.saveAdminLog(adminLog);
                 return storeInfo;
             }).toList();
             storeInfoRepository.saveAll(storeInfos);

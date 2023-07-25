@@ -1,5 +1,9 @@
 package com.matsinger.barofishserver.inquiry.api;
 
+import com.matsinger.barofishserver.admin.log.application.AdminLogCommandService;
+import com.matsinger.barofishserver.admin.log.application.AdminLogQueryService;
+import com.matsinger.barofishserver.admin.log.domain.AdminLog;
+import com.matsinger.barofishserver.admin.log.domain.AdminLogType;
 import com.matsinger.barofishserver.inquiry.application.InquiryCommandService;
 import com.matsinger.barofishserver.inquiry.application.InquiryQueryService;
 import com.matsinger.barofishserver.inquiry.dto.*;
@@ -34,6 +38,8 @@ public class InquiryController {
     private final InquiryQueryService inquiryQueryService;
     private final InquiryCommandService inquiryCommandService;
     private final ProductService productService;
+    private final AdminLogCommandService adminLogCommandService;
+    private final AdminLogQueryService adminLogQueryService;
     private final JwtService jwt;
     private final Common utils;
 
@@ -151,6 +157,8 @@ public class InquiryController {
                 jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.PARTNER, TokenAuthType.ADMIN), auth);
         if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
         try {
+            Integer adminId = null;
+            if (tokenInfo.get().getType().equals(TokenAuthType.ADMIN)) adminId = tokenInfo.get().getId();
             Inquiry inquiry = inquiryQueryService.selectInquiry(inquiryId);
             if (tokenInfo.get().getType().equals(TokenAuthType.PARTNER) &&
                     inquiry.getProduct().getStoreId() != tokenInfo.get().getId())
@@ -160,6 +168,13 @@ public class InquiryController {
             inquiry.setAnsweredAt(utils.now());
             Inquiry result = inquiryCommandService.updateInquiry(inquiry);
             res.setData(Optional.ofNullable(result.convert2Dto()));
+            if (adminId != null) {
+                AdminLog
+                        adminLog =
+                        AdminLog.builder().id(adminLogQueryService.getAdminLogId()).adminId(adminId).type(AdminLogType.INQUIRY).targetId(
+                                inquiryId.toString()).content("답변을 등록하였습니다.").createdAt(utils.now()).build();
+                adminLogCommandService.saveAdminLog(adminLog);
+            }
             return ResponseEntity.ok(res);
         } catch (Exception e) {
             return res.defaultError(e);

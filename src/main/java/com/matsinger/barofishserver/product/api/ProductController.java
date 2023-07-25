@@ -2,6 +2,10 @@ package com.matsinger.barofishserver.product.api;
 
 import com.matsinger.barofishserver.address.application.AddressQueryService;
 import com.matsinger.barofishserver.address.domain.Address;
+import com.matsinger.barofishserver.admin.log.application.AdminLogCommandService;
+import com.matsinger.barofishserver.admin.log.application.AdminLogQueryService;
+import com.matsinger.barofishserver.admin.log.domain.AdminLog;
+import com.matsinger.barofishserver.admin.log.domain.AdminLogType;
 import com.matsinger.barofishserver.category.application.CategoryQueryService;
 import com.matsinger.barofishserver.category.domain.Category;
 import com.matsinger.barofishserver.compare.filter.application.CompareFilterQueryService;
@@ -21,8 +25,8 @@ import com.matsinger.barofishserver.product.productfilter.domain.ProductFilterVa
 import com.matsinger.barofishserver.product.option.domain.Option;
 import com.matsinger.barofishserver.product.option.dto.OptionDto;
 import com.matsinger.barofishserver.product.optionitem.domain.OptionItem;
-import com.matsinger.barofishserver.search.application.SearchKeywordService;
-import com.matsinger.barofishserver.searchFilter.application.SearchFilterService;
+import com.matsinger.barofishserver.search.application.SearchKeywordQueryService;
+import com.matsinger.barofishserver.searchFilter.application.SearchFilterQueryService;
 import com.matsinger.barofishserver.searchFilter.domain.ProductSearchFilterMap;
 import com.matsinger.barofishserver.store.domain.Store;
 import com.matsinger.barofishserver.store.application.StoreService;
@@ -54,11 +58,13 @@ public class ProductController {
     private final CurationCommandService curationCommandService;
     private final CompareFilterQueryService compareFilterQueryService;
     private final ProductFilterService productFilterService;
-    private final SearchFilterService searchFilterService;
+    private final SearchFilterQueryService searchFilterQueryService;
     private final ProductQueryService productQueryService;
-    private final SearchKeywordService searchKeywordService;
+    private final SearchKeywordQueryService searchKeywordQueryService;
     private final AddressQueryService addressQueryService;
     private final DifficultDeliverAddressCommandService difficultDeliverAddressCommandService;
+    private final AdminLogQueryService adminLogQueryService;
+    private final AdminLogCommandService adminLogCommandService;
     private final JwtService jwt;
 
     private final Common utils;
@@ -70,15 +76,14 @@ public class ProductController {
         CustomResponse<List<ProductListDto>> res = new CustomResponse<>();
         try {
             List<Integer> idList = utils.str2IntList(ids);
-            // List<Product> products = productService.selectProductListWithIds(idList);
-            // res.setData(Optional.of(products.stream().map(v ->
-            // v.convert2ListDto()).toList()));
+            List<Product> products = productService.selectProductListWithIds(idList);
+            res.setData(Optional.of(products.stream().map(Product::convert2ListDto).toList()));
 
-            List<ProductListDto> productListDtos = new ArrayList<>();
-            for (Integer id : idList) {
-                productListDtos.add(productQueryService.createProductListDtos(id));
-            }
-            res.setData(Optional.of(productListDtos));
+//            List<ProductListDto> productListDtos = new ArrayList<>();
+//            for (Integer id : idList) {
+//                productListDtos.add(productQueryService.createProductListDtos(id));
+//            }
+//            res.setData(Optional.of(productListDtos));
             return ResponseEntity.ok(res);
         } catch (Exception e) {
             return res.defaultError(e);
@@ -201,7 +206,7 @@ public class ProductController {
                             curationId,
                             keyword,
                             storeId);
-            if (keyword != null && keyword.length() != 0) searchKeywordService.searchKeyword(keyword);
+            if (keyword != null && keyword.length() != 0) searchKeywordQueryService.searchKeyword(keyword);
             res.setData(Optional.ofNullable(result));
             return ResponseEntity.ok(res);
         } catch (Exception e) {
@@ -255,6 +260,8 @@ public class ProductController {
                 jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN, TokenAuthType.PARTNER), auth);
         if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
         try {
+            Integer adminId = null;
+            if (tokenInfo.get().getType().equals(TokenAuthType.ADMIN)) adminId = tokenInfo.get().getId();
             if (tokenInfo.get().getType().equals(TokenAuthType.ADMIN) && data.getStoreId() == null)
                 return res.throwError("상점 아이디를 입력해주세요.", "INPUT_CHECK_REQUIRED");
             else if (tokenInfo.get().getType().equals(TokenAuthType.PARTNER)) data.setStoreId(tokenInfo.get().getId());
@@ -266,10 +273,8 @@ public class ProductController {
                 if (!s3.validateImageType(image)) return res.throwError("허용되지 않는 확장자입니다.", "INPUT_CHECK_REQUIRED");
             }
             if (data.getDescriptionContent() == null) return res.throwError("상품 설명을 입력해주세요.", "INPUT_CHECK_REQUIRED");
-            // if (data.getExpectedDeliverDay() == null) return res.throwError("도착 예정일을
-            // 입력해주세요.", "INPUT_CHECK_REQUIRED");
             String title = utils.validateString(data.getTitle(), 100L, "상품");
-            data.getSearchFilterFieldIds().forEach(searchFilterService::selectSearchFilterField);
+            data.getSearchFilterFieldIds().forEach(searchFilterQueryService::selectSearchFilterField);
             String
                     deliveryInfo =
                     data.getDeliveryInfo() != null ? utils.validateString(data.getDeliveryInfo(), 500L, "배송안내") : null;
@@ -304,7 +309,7 @@ public class ProductController {
                     data.getFilterValues() != null ? data.getFilterValues().stream().map(v -> {
                         try {
                             String valueName = utils.validateString(v.getValue(), 50L, "필터 값");
-                            searchFilterService.selectSearchFilterField(v.getCompareFilterId());
+                            searchFilterQueryService.selectSearchFilterField(v.getCompareFilterId());
                             return ProductFilterValue.builder().compareFilterId(v.getCompareFilterId()).value(valueName).build();
                         } catch (Exception e) {
                             System.out.println(e.getStackTrace());
@@ -378,6 +383,14 @@ public class ProductController {
             Product finalResult = productService.update(result.getId(), result);
             SimpleProductDto dto = productService.convert2SimpleDto(finalResult, null);
             dto.setReviews(null);
+            if (adminId != null) {
+                String content = "상품을 등록하였습니다.";
+                AdminLog
+                        adminLog =
+                        AdminLog.builder().id(adminLogQueryService.getAdminLogId()).adminId(adminId).type(AdminLogType.PRODUCT).targetId(
+                                String.valueOf(result.getId())).content(content).createdAt(utils.now()).build();
+                adminLogCommandService.saveAdminLog(adminLog);
+            }
             res.setData(Optional.of(dto));
             return ResponseEntity.ok(res);
         } catch (Exception e) {
@@ -397,6 +410,8 @@ public class ProductController {
                 jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN, TokenAuthType.PARTNER), auth);
         if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
         try {
+            Integer adminId = null;
+            if (tokenInfo.get().getType().equals(TokenAuthType.ADMIN)) adminId = tokenInfo.get().getId();
             if (tokenInfo.get().getType().equals(TokenAuthType.ADMIN) && data.getStoreId() == null)
                 return res.throwError("상점 아이디를 입력해주세요.", "INPUT_CHECK_REQUIRED");
             else if (tokenInfo.get().getType().equals(TokenAuthType.PARTNER)) data.setStoreId(tokenInfo.get().getId());
@@ -441,7 +456,7 @@ public class ProductController {
                 product.setExpectedDeliverDay(data.getExpectedDeliverDay());
             }
             if (data.getSearchFilterFieldIds() != null)
-                data.getSearchFilterFieldIds().forEach(searchFilterService::selectSearchFilterField);
+                data.getSearchFilterFieldIds().forEach(searchFilterQueryService::selectSearchFilterField);
             if (data.getDescriptionContent() != null) {
                 String
                         url =
@@ -612,6 +627,14 @@ public class ProductController {
                 productFilterService.deleteAllFilterValueWithProductId(product.getId());
                 productFilterService.addAllProductFilter(filterValues);
             }
+            if (adminId != null) {
+                String content = "상품 정보를 수정하였습니다.";
+                AdminLog
+                        adminLog =
+                        AdminLog.builder().id(adminLogQueryService.getAdminLogId()).adminId(adminId).type(AdminLogType.PARTNER).targetId(
+                                String.valueOf(product.getId())).content(content).createdAt(utils.now()).build();
+                adminLogCommandService.saveAdminLog(adminLog);
+            }
             res.setData(Optional.ofNullable(productService.convert2SimpleDto(result, null)));
             return ResponseEntity.ok(res);
         } catch (Exception e) {
@@ -626,11 +649,24 @@ public class ProductController {
         Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
         if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
         try {
+            Integer adminId = tokenInfo.get().getId();
             if (data.getProductIds() == null || data.getProductIds().size() == 0)
                 return res.throwError("상품 아이디를 입력해주세요", "INPUT_CHECK_REQUIRED");
             if (data.getIsActive() == null) return res.throwError("노출 여부를 입력해주세요.", "INPUT_CHECK_REQUIRED");
             List<Product> products = productService.selectProductListWithIds(data.getProductIds());
-            products.forEach(v -> v.setState(data.getIsActive() ? ProductState.ACTIVE : ProductState.INACTIVE));
+            products.forEach(v -> {
+                v.setState(data.getIsActive() ? ProductState.ACTIVE : ProductState.INACTIVE);
+                String
+                        content =
+                        String.format("%s -> %s 상태 변경하였습니다.",
+                                v.getState().equals(ProductState.ACTIVE) ? "노출" : "미노출",
+                                data.getIsActive() ? "노출" : "미노출");
+                AdminLog
+                        adminLog =
+                        AdminLog.builder().id(adminLogQueryService.getAdminLogId()).adminId(adminId).type(AdminLogType.PRODUCT).targetId(
+                                String.valueOf(v.getId())).createdAt(utils.now()).build();
+                adminLogCommandService.saveAdminLog(adminLog);
+            });
             productService.updateProducts(products);
             res.setData(Optional.of(true));
             return ResponseEntity.ok(res);
@@ -670,6 +706,8 @@ public class ProductController {
                 jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.PARTNER, TokenAuthType.ADMIN), auth);
         if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
         try {
+            Integer adminId = null;
+            if (tokenInfo.get().getType().equals(TokenAuthType.ADMIN)) adminId = tokenInfo.get().getId();
             Product product = productService.findById(id);
             if (tokenInfo.get().getType().equals(TokenAuthType.PARTNER) &&
                     product.getStoreId() != tokenInfo.get().getId())
@@ -677,6 +715,14 @@ public class ProductController {
             curationCommandService.deleteWithProductId(product.getId());
             product.setState(ProductState.DELETED);
             product = productService.update(product.getId(), product);
+            if (adminId != null) {
+                String content = "삭제 처리 되었습니다.";
+                AdminLog
+                        adminLog =
+                        AdminLog.builder().id(adminLogQueryService.getAdminLogId()).adminId(adminId).type(AdminLogType.PRODUCT).targetId(
+                                String.valueOf(product.getId())).content(content).createdAt(utils.now()).build();
+                adminLogCommandService.saveAdminLog(adminLog);
+            }
             res.setData(Optional.of(true));
             return ResponseEntity.ok(res);
         } catch (Exception e) {

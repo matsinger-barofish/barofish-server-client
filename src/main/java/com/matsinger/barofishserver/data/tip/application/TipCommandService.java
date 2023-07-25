@@ -5,10 +5,13 @@ import com.matsinger.barofishserver.data.tip.repository.TipRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @RequiredArgsConstructor
 @Service
 public class TipCommandService {
     private final TipRepository tipRepository;
+
     public Tip add(Tip data) {
         return tipRepository.save(data);
     }
@@ -34,5 +37,9 @@ public class TipCommandService {
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public void updateTipList(List<Tip> tips) {
+        tipRepository.saveAll(tips);
     }
 }

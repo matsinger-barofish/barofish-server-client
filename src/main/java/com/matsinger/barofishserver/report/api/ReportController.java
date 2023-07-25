@@ -1,5 +1,9 @@
 package com.matsinger.barofishserver.report.api;
 
+import com.matsinger.barofishserver.admin.log.application.AdminLogCommandService;
+import com.matsinger.barofishserver.admin.log.application.AdminLogQueryService;
+import com.matsinger.barofishserver.admin.log.domain.AdminLog;
+import com.matsinger.barofishserver.admin.log.domain.AdminLogType;
 import com.matsinger.barofishserver.jwt.JwtService;
 import com.matsinger.barofishserver.jwt.TokenAuthType;
 import com.matsinger.barofishserver.jwt.TokenInfo;
@@ -8,8 +12,8 @@ import com.matsinger.barofishserver.report.application.ReportQueryService;
 import com.matsinger.barofishserver.report.dto.ReportDto;
 import com.matsinger.barofishserver.report.domain.ReportOrderBy;
 import com.matsinger.barofishserver.report.domain.Report;
+import com.matsinger.barofishserver.review.application.ReviewQueryService;
 import com.matsinger.barofishserver.review.domain.Review;
-import com.matsinger.barofishserver.review.application.ReviewService;
 import com.matsinger.barofishserver.utils.Common;
 import com.matsinger.barofishserver.utils.CustomResponse;
 import jakarta.persistence.criteria.Predicate;
@@ -36,7 +40,9 @@ public class ReportController {
     private final JwtService jwt;
     private final ReportQueryService reportQueryService;
     private final ReportCommandService reportCommandService;
-    private final ReviewService reviewService;
+    private final ReviewQueryService reviewQueryService;
+    private final AdminLogCommandService adminLogCommandService;
+    private final AdminLogQueryService adminLogQueryService;
     private final Common utils;
 
     @GetMapping("/list")
@@ -111,7 +117,7 @@ public class ReportController {
             if (data.reviewId == null) return res.throwError("리뷰 아이디를 입력해주세요.", "INPUT_CHECK_REQUIRED");
             if (reportQueryService.checkHasReported(userId, data.reviewId))
                 return res.throwError("이미 신고한 리뷰입니다.", "INPUT_CHECK_REQUIRED");
-            Review review = reviewService.selectReview(data.reviewId);
+            Review review = reviewQueryService.selectReview(data.reviewId);
             String content = utils.validateString(data.content, 300L, "내용");
             Report
                     report =
@@ -137,11 +143,18 @@ public class ReportController {
         Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
         if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
         try {
+            Integer adminId = tokenInfo.get().getId();
             List<Report> reports = reportQueryService.selectReportListWithIds(data.getReportIds());
             for (Report report : reports) {
                 report.setConfirmAt(utils.now());
+                AdminLog
+                        adminLog =
+                        AdminLog.builder().id(adminLogQueryService.getAdminLogId()).adminId(adminId).type(AdminLogType.REPORT).targetId(
+                                String.valueOf(report.getId())).content("신고 확인 처리되었습니다.").createdAt(utils.now()).build();
+                adminLogCommandService.saveAdminLog(adminLog);
             }
             List<Report> result = reportCommandService.updateManyReport(reports);
+
             res.setData(Optional.of(true));
             return ResponseEntity.ok(res);
         } catch (Exception e) {

@@ -6,7 +6,9 @@ import com.matsinger.barofishserver.data.curation.domain.Curation;
 import com.matsinger.barofishserver.data.curation.domain.CurationOrderBy;
 import com.matsinger.barofishserver.data.curation.domain.CurationProductMap;
 import com.matsinger.barofishserver.data.curation.domain.CurationType;
+import com.matsinger.barofishserver.data.curation.dto.CurationDeleteProductReq;
 import com.matsinger.barofishserver.data.curation.dto.CurationDto;
+import com.matsinger.barofishserver.data.curation.dto.SortCurationReq;
 import com.matsinger.barofishserver.jwt.JwtService;
 import com.matsinger.barofishserver.jwt.TokenAuthType;
 import com.matsinger.barofishserver.jwt.TokenInfo;
@@ -251,12 +253,6 @@ public class CurationController {
         }
     }
 
-    @Getter
-    @NoArgsConstructor
-    private static class CurationDeleteProductReq {
-        Integer curationId;
-        List<Integer> productIds;
-    }
 
     @DeleteMapping("/delete-product")
     public ResponseEntity<CustomResponse<Boolean>> deleteProductList(@RequestHeader(value = "Authorization") Optional<String> auth,
@@ -265,9 +261,9 @@ public class CurationController {
         Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
         if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
         try {
-            if (data.curationId == null) return res.throwError("큐레이션 아이디를 입력해주세요.", "INPUT_CHECK_REQUIRED");
-            Curation curation = curationQueryService.selectCuration(data.curationId);
-            curationCommandService.deleteProducts(data.curationId, data.productIds);
+            if (data.getCurationId() == null) return res.throwError("큐레이션 아이디를 입력해주세요.", "INPUT_CHECK_REQUIRED");
+            Curation curation = curationQueryService.selectCuration(data.getCurationId());
+            curationCommandService.deleteProducts(data.getCurationId(), data.getProductIds());
             res.setData(Optional.of(true));
             return ResponseEntity.ok(res);
         } catch (Exception e) {
@@ -275,11 +271,6 @@ public class CurationController {
         }
     }
 
-    @Getter
-    @NoArgsConstructor
-    private static class SortCurationReq {
-        List<Integer> curationIds;
-    }
 
     @PostMapping("/sort-curation")
     public ResponseEntity<CustomResponse<List<CurationDto>>> sortCuration(@RequestHeader(value = "Authorization") Optional<String> auth,
@@ -290,8 +281,8 @@ public class CurationController {
         try {
             List<CurationDto> curationDtos = new ArrayList<>();
             List<Curation> curations = new ArrayList<>();
-            for (int i = 0; i < data.curationIds.size(); i++) {
-                Curation curation = curationQueryService.selectCuration(data.curationIds.get(i));
+            for (int i = 0; i < data.getCurationIds().size(); i++) {
+                Curation curation = curationQueryService.selectCuration(data.getCurationIds().get(i));
                 curation.setSortNo(i + 1);
                 curations.add(curation);
                 curationDtos.add(curation.convert2Dto());

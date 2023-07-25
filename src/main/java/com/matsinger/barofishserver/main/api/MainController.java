@@ -13,7 +13,6 @@ import com.matsinger.barofishserver.jwt.TokenInfo;
 import com.matsinger.barofishserver.main.dto.Main;
 import com.matsinger.barofishserver.product.domain.Product;
 import com.matsinger.barofishserver.product.application.ProductService;
-import com.matsinger.barofishserver.siteInfo.SiteInfoService;
 import com.matsinger.barofishserver.store.application.StoreService;
 import com.matsinger.barofishserver.store.dto.SimpleStore;
 import com.matsinger.barofishserver.store.repository.StoreInfoRepository;
@@ -39,9 +38,6 @@ public class MainController {
     private final TopBarQueryService topBarQueryService;
     private final BannerQueryService bannerService;
     private final CurationQueryService curationQueryService;
-
-    private final SiteInfoService siteInfoService;
-
     private final ProductService productService;
 
     private final StoreInfoRepository storeInfoRepository;

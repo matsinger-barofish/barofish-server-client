@@ -25,6 +25,7 @@ public class OrderDto {
     Integer couponDiscount;
     Integer usePoint;
     Timestamp orderedAt;
+    Boolean needTaxation;
     List<OrderProductDto> productInfos;
     OrderDeliverPlaceDto deliverPlace;
 }

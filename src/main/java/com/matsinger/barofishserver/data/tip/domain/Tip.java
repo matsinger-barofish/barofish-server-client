@@ -23,6 +23,10 @@ public class Tip {
     @Enumerated(EnumType.STRING)
     private TipType type;
     @Basic
+    @Column(name = "state", nullable = false)
+    @Enumerated(EnumType.STRING)
+    private TipState state;
+    @Basic
     @Column(name = "title", nullable = false, length = 100)
     private String title;
     @Basic
@@ -41,6 +45,10 @@ public class Tip {
     @Column(name = "created_at", nullable = false, columnDefinition = "TIMESTAMP")
     @ColumnDefault("CURRENT_TIMESTAMP")
     private Timestamp createdAt;
+
+    public void setState(TipState state) {
+        this.state = state;
+    }
 
     public void setTitle(String title) {
         this.title = title;

@@ -2,6 +2,8 @@ package com.matsinger.barofishserver.search.api;
 
 import com.matsinger.barofishserver.product.application.ProductService;
 import com.matsinger.barofishserver.product.dto.ProductListDto;
+import com.matsinger.barofishserver.search.application.SearchKeywordCommandService;
+import com.matsinger.barofishserver.search.application.SearchKeywordQueryService;
 import com.matsinger.barofishserver.search.repository.SearchKeywordRepository;
 import com.matsinger.barofishserver.search.application.SearchKeywordService;
 import com.matsinger.barofishserver.search.dto.SearchProductDto;
@@ -20,18 +22,14 @@ import java.util.Optional;
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/search")
 public class SearchKeywordController {
-    private final SearchKeywordService searchKeywordService;
-
-    private final ProductService productService;
-
-    private final S3Uploader s3;
+    private final SearchKeywordQueryService searchKeywordQueryService;
 
 
     @GetMapping("/rank")
     public ResponseEntity<CustomResponse<List<SearchKeyword>>> selectTopSearchKeywords() {
         CustomResponse<List<SearchKeyword>> res = new CustomResponse<>();
         try {
-            List<SearchKeyword> keywords = searchKeywordService.selectTopSearchKeywords();
+            List<SearchKeyword> keywords = searchKeywordQueryService.selectTopSearchKeywords();
             res.setData(Optional.ofNullable(keywords));
             return ResponseEntity.ok(res);
         } catch (Exception e) {
@@ -45,8 +43,8 @@ public class SearchKeywordController {
                                                                               @RequestParam(value = "take", defaultValue = "10", required = false) Integer take) {
         CustomResponse<List<ProductListDto>> res = new CustomResponse<>();
         try {
-            searchKeywordService.searchKeyword(keyword);
-            List<ProductListDto> products = searchKeywordService.searchKeyword(keyword, page - 1, take);
+            searchKeywordQueryService.searchKeyword(keyword);
+            List<ProductListDto> products = searchKeywordQueryService.searchKeyword(keyword, page - 1, take);
             res.setData(Optional.ofNullable(products));
             return ResponseEntity.ok(res);
         } catch (Exception e) {
@@ -58,7 +56,9 @@ public class SearchKeywordController {
     public ResponseEntity<CustomResponse<List<SearchProductDto>>> searchingProductDirect(@RequestParam("keyword") String keyword) {
         CustomResponse<List<SearchProductDto>> res = new CustomResponse<>();
         try {
-            List<SearchKeywordRepository.SearchProduct> result = searchKeywordService.selectSearchProductTitle(keyword);
+            List<SearchKeywordRepository.SearchProduct>
+                    result =
+                    searchKeywordQueryService.selectSearchProductTitle(keyword);
             List<SearchProductDto> dtos = new ArrayList<>();
             for (SearchKeywordRepository.SearchProduct data : result) {
                 dtos.add(SearchProductDto.builder().id(data.getId()).title(data.getTitle()).build());

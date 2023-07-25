@@ -1,14 +1,22 @@
 package com.matsinger.barofishserver.order.application;
 
+import com.matsinger.barofishserver.coupon.application.CouponCommandService;
 import com.matsinger.barofishserver.coupon.application.CouponQueryService;
 import com.matsinger.barofishserver.coupon.domain.Coupon;
 import com.matsinger.barofishserver.deliver.domain.DeliveryCompany;
 import com.matsinger.barofishserver.deliver.repository.DeliveryCompanyRepository;
+import com.matsinger.barofishserver.notification.application.NotificationCommandService;
+import com.matsinger.barofishserver.notification.dto.NotificationMessage;
+import com.matsinger.barofishserver.notification.dto.NotificationMessageType;
 import com.matsinger.barofishserver.order.api.OrderController;
 import com.matsinger.barofishserver.order.domain.OrderDeliverPlace;
 import com.matsinger.barofishserver.order.domain.OrderPaymentWay;
+import com.matsinger.barofishserver.order.domain.OrderState;
 import com.matsinger.barofishserver.order.domain.Orders;
 import com.matsinger.barofishserver.order.dto.OrderDto;
+import com.matsinger.barofishserver.order.dto.OrderProductReq;
+import com.matsinger.barofishserver.order.dto.OrderReq;
+import com.matsinger.barofishserver.order.orderprductinfo.domain.OrderCancelReason;
 import com.matsinger.barofishserver.order.orderprductinfo.domain.OrderProductInfo;
 import com.matsinger.barofishserver.order.orderprductinfo.domain.OrderProductOption;
 import com.matsinger.barofishserver.order.orderprductinfo.domain.OrderProductState;
@@ -19,21 +27,22 @@ import com.matsinger.barofishserver.order.orderprductinfo.repository.OrderProduc
 import com.matsinger.barofishserver.order.orderprductinfo.repository.OrderProductOptionRepository;
 import com.matsinger.barofishserver.order.repository.OrderRepository;
 import com.matsinger.barofishserver.payment.application.PaymentService;
+import com.matsinger.barofishserver.payment.domain.Payments;
 import com.matsinger.barofishserver.product.application.ProductService;
 import com.matsinger.barofishserver.product.difficultDeliverAddress.application.DifficultDeliverAddressQueryService;
 import com.matsinger.barofishserver.product.difficultDeliverAddress.domain.DifficultDeliverAddress;
 import com.matsinger.barofishserver.product.optionitem.domain.OptionItem;
 import com.matsinger.barofishserver.product.domain.Product;
-import com.matsinger.barofishserver.review.application.ReviewService;
+import com.matsinger.barofishserver.review.application.ReviewQueryService;
 import com.matsinger.barofishserver.store.application.StoreService;
 import com.matsinger.barofishserver.store.domain.StoreDeliverFeeType;
 import com.matsinger.barofishserver.store.domain.StoreInfo;
 import com.matsinger.barofishserver.user.application.UserCommandService;
 import com.matsinger.barofishserver.userinfo.domain.UserInfo;
 import com.matsinger.barofishserver.userinfo.dto.UserInfoDto;
+import com.siot.IamportRestClient.exception.IamportResponseException;
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.JoinType;
-import jakarta.persistence.criteria.Order;
 import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -44,6 +53,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -59,11 +69,13 @@ public class OrderService {
     private final UserCommandService userService;
     private final StoreService storeService;
     private final OrderDeliverPlaceRepository deliverPlaceRepository;
-    private final ReviewService reviewService;
+    private final ReviewQueryService reviewQueryService;
     private final PaymentService paymentService;
     private final DeliveryCompanyRepository deliveryCompanyRepository;
     private final DifficultDeliverAddressQueryService difficultDeliverAddressQueryService;
     private final CouponQueryService couponQueryService;
+    private final NotificationCommandService notificationCommandService;
+    private final CouponCommandService couponCommandService;
 
     public OrderDto convert2Dto(Orders order, Integer storeId, Specification<OrderProductInfo> productSpec) {
         OrderDeliverPlace deliverPlace = selectDeliverPlace(order.getId());
@@ -88,21 +100,23 @@ public class OrderService {
                     deliveryCompany =
                     opi.getDeliverCompanyCode() !=
                             null ? deliveryCompanyRepository.findById(opi.getDeliverCompanyCode()) : Optional.empty();
-            Boolean isWritten = reviewService.checkReviewWritten(order.getUserId(), product.getId(), opi.getId());
+            Boolean isWritten = reviewQueryService.checkReviewWritten(order.getUserId(), product.getId(), opi.getId());
             return OrderProductDto.builder().id(opi.getId()).storeId(storeInfo.getStoreId()).optionItem(optionItem.convert2Dto()).product(
                     productService.convert2ListDto(productService.selectProduct(opi.getProductId()))).optionName(
                     optionItem.getName()).amount(opi.getAmount()).state(opi.getState()).price(opi.getPrice()).storeName(
-                    storeInfo.getName()).storeProfile(storeInfo.getProfileImage()).deliverFee(storeInfo.getDeliverFee()).deliverCompany(
-                    deliveryCompany.map(DeliveryCompany::getName).orElse(null)).invoiceCode(opi.getInvoiceCode()).cancelReason(
-                    opi.getCancelReason()).cancelReasonContent(opi.getCancelReasonContent()).isReviewWritten(isWritten).deliverFeeType(
-                    storeInfo.getDeliverFeeType()).minOrderPrice(storeInfo.getMinOrderPrice()).build();
+                    storeInfo.getName()).storeProfile(storeInfo.getProfileImage()).deliverFee(getProductDeliveryFee(
+                    product,
+                    optionItem.getId(),
+                    opi.getAmount())).deliverCompany(deliveryCompany.map(DeliveryCompany::getName).orElse(null)).invoiceCode(
+                    opi.getInvoiceCode()).cancelReason(opi.getCancelReason()).cancelReasonContent(opi.getCancelReasonContent()).isReviewWritten(
+                    isWritten).deliverFeeType(storeInfo.getDeliverFeeType()).minOrderPrice(storeInfo.getMinOrderPrice()).build();
         }).filter(Objects::nonNull).toList();
 
         UserInfoDto userInfoDto = userService.selectUserInfo(order.getUserId()).convert2Dto();
         return OrderDto.builder().id(order.getId()).orderedAt(order.getOrderedAt()).user(userInfoDto).totalAmount(order.getTotalPrice()).deliverPlace(
-                deliverPlace.convert2Dto()).paymentWay(order.getPaymentWay()).productInfos(orderProductDtos).couponDiscount(
-                order.getCouponDiscount()).usePoint(order.getUsePoint()).ordererName(order.getOrdererName()).ordererTel(
-                order.getOrdererTel()).build();
+                deliverPlace.convert2Dto()).paymentWay(order.getPaymentWay()).productInfos(
+                orderProductDtos).couponDiscount(order.getCouponDiscount()).usePoint(order.getUsePoint()).ordererName(
+                order.getOrdererName()).ordererTel(order.getOrdererTel()).build();
     }
 
     public OrderDeliverPlace selectDeliverPlace(String orderId) {
@@ -378,7 +392,7 @@ public class OrderService {
                 info.getIsSettled()).settledAt(info.getSettledAt()).product(productService.convert2ListDto(info.getProduct())).build();
     }
 
-    public Integer calculateTotalPrice(OrderController.OrderReq data) {
+    public Integer calculateTotalPrice(OrderReq data) {
         List<Product> products = new ArrayList<>();
         Integer totalPrice = data.getProducts().stream().mapToInt(v -> {
             Product product = productService.findById(v.getProductId());
@@ -389,7 +403,7 @@ public class OrderService {
         Integer deliverFee = products.stream().map(Product::getStoreId).distinct().mapToInt(v -> {
             StoreInfo storeInfo = storeService.selectStoreInfo(v);
             Integer storePrice = products.stream().filter(p -> p.getStoreId() == v).mapToInt(v1 -> {
-                for (OrderController.OrderProductReq d : data.getProducts()) {
+                for (OrderProductReq d : data.getProducts()) {
                     if (d.getProductId() == v1.getId()) {
                         Product product = productService.selectProduct(d.getProductId());
                         return getProductPrice(v1, d.getOptionId(), d.getAmount());
@@ -422,5 +436,41 @@ public class OrderService {
                         DifficultDeliverAddress::getBcode).toList();
         return difficultDeliverBcode.stream().noneMatch(v -> v.substring(0,
                 5).equals(orderDeliverPlace.getBcode().substring(0, 5)));
+    }
+
+    public void processOrderZeroAmount(Orders order){
+        List<OrderProductInfo> infos = selectOrderProductInfoListWithOrderId(order.getId());
+        infos.forEach(info -> {
+            if (!checkProductCanDeliver(order.getDeliverPlace(), info)) {
+                int cancelPrice = 0;
+                try {
+                    cancelPrice = getCancelPrice(order, List.of(info));
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+                info.setCancelReasonContent("배송 불가 지역");
+                info.setCancelReason(OrderCancelReason.ORDER_FAULT);
+                info.setState(OrderProductState.CANCELED);
+                notificationCommandService.sendFcmToUser(order.getUserId(),
+                        NotificationMessageType.ORDER_CANCEL,
+                        NotificationMessage.builder().productName(info.getProduct().getTitle()).build());
+            } else {
+                OptionItem optionItem = productService.selectOptionItem(info.getOptionItemId());
+                if (optionItem.getAmount() != null)
+                    optionItem.setAmount(optionItem.getAmount() - info.getAmount());
+                productService.addOptionItem(optionItem);
+                info.setState(OrderProductState.PAYMENT_DONE);
+                notificationCommandService.sendFcmToUser(order.getUserId(),
+                        NotificationMessageType.PAYMENT_DONE,
+                        NotificationMessage.builder().productName(info.getProduct().getTitle()).build());
+            }
+        });
+        order.setState(OrderState.PAYMENT_DONE);
+        updateOrderProductInfo(infos);
+        updateOrder(order);
+        UserInfo userInfo = userService.selectUserInfo(order.getUserId());
+        userInfo.setPoint(userInfo.getPoint() - order.getUsePoint());
+        userService.updateUserInfo(userInfo);
+        couponCommandService.useCoupon(order.getCouponId(), order.getUserId());
     }
 }

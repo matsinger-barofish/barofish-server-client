@@ -7,6 +7,8 @@ import com.matsinger.barofishserver.banner.domain.BannerOrderBy;
 import com.matsinger.barofishserver.banner.domain.BannerState;
 import com.matsinger.barofishserver.banner.domain.BannerType;
 import com.matsinger.barofishserver.banner.dto.BannerDto;
+import com.matsinger.barofishserver.banner.dto.SortBannerReq;
+import com.matsinger.barofishserver.banner.dto.UpdateBannerStateReq;
 import com.matsinger.barofishserver.banner.repository.BannerRepository;
 import com.matsinger.barofishserver.category.application.CategoryQueryService;
 import com.matsinger.barofishserver.data.curation.application.CurationQueryService;
@@ -60,11 +62,7 @@ public class BannerController {
         }
     }
 
-    @Getter
-    @NoArgsConstructor
-    private static class SortBannerReq {
-        List<Integer> bannerIds;
-    }
+
 
     @PostMapping("/sort-banner")
     public ResponseEntity<CustomResponse<List<BannerDto>>> sortCuration(@RequestHeader(value = "Authorization") Optional<String> auth,
@@ -75,8 +73,8 @@ public class BannerController {
         try {
             List<BannerDto> bannerDtos = new ArrayList<>();
             List<Banner> banners = new ArrayList<>();
-            for (int i = 0; i < data.bannerIds.size(); i++) {
-                Banner banner = bannerQueryService.selectBanner(data.bannerIds.get(i));
+            for (int i = 0; i < data.getBannerIds().size(); i++) {
+                Banner banner = bannerQueryService.selectBanner(data.getBannerIds().get(i));
                 banner.setSortNo(i + 1);
                 banners.add(banner);
                 bannerDtos.add(banner.convert2Dto());
@@ -254,12 +252,7 @@ public class BannerController {
         }
     }
 
-    @Getter
-    @NoArgsConstructor
-    private static class UpdateBannerStateReq {
-        List<Integer> ids;
-        BannerState state;
-    }
+
 
     @PostMapping("/update/state")
     public ResponseEntity<CustomResponse<Boolean>> updateBannerState(@RequestHeader(value = "Authorization") Optional<String> auth,
@@ -268,10 +261,10 @@ public class BannerController {
         Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
         if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
         try {
-            if (data.ids == null || data.ids.size() == 0) return res.throwError("아이디를 입력해주세요.", "INPUT_CHECK_REQUIRED");
-            if (data.state == null) return res.throwError("변경할 상태를 입력해주세요.", "INPUT_CHECK_REQUIRED");
-            List<Banner> banners = bannerQueryService.selectBannerListWithIds(data.ids);
-            banners.forEach(v -> v.setState(data.state));
+            if (data.getIds() == null || data.getIds().size() == 0) return res.throwError("아이디를 입력해주세요.", "INPUT_CHECK_REQUIRED");
+            if (data.getState() == null) return res.throwError("변경할 상태를 입력해주세요.", "INPUT_CHECK_REQUIRED");
+            List<Banner> banners = bannerQueryService.selectBannerListWithIds(data.getIds());
+            banners.forEach(v -> v.setState(data.getState()));
             bannerCommandService.updateAllBanners(banners);
             return ResponseEntity.ok(res);
         } catch (Exception e) {

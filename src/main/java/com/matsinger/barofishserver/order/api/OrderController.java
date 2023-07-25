@@ -1,5 +1,10 @@
 package com.matsinger.barofishserver.order.api;
 
+import com.matsinger.barofishserver.admin.domain.Admin;
+import com.matsinger.barofishserver.admin.log.application.AdminLogCommandService;
+import com.matsinger.barofishserver.admin.log.application.AdminLogQueryService;
+import com.matsinger.barofishserver.admin.log.domain.AdminLog;
+import com.matsinger.barofishserver.admin.log.domain.AdminLogType;
 import com.matsinger.barofishserver.coupon.application.CouponCommandService;
 import com.matsinger.barofishserver.coupon.application.CouponQueryService;
 import com.matsinger.barofishserver.coupon.domain.Coupon;
@@ -11,18 +16,19 @@ import com.matsinger.barofishserver.notification.dto.NotificationMessage;
 import com.matsinger.barofishserver.notification.dto.NotificationMessageType;
 import com.matsinger.barofishserver.order.application.OrderService;
 import com.matsinger.barofishserver.order.domain.*;
-import com.matsinger.barofishserver.order.dto.OrderDto;
+import com.matsinger.barofishserver.order.dto.*;
 import com.matsinger.barofishserver.order.orderprductinfo.domain.OrderCancelReason;
 import com.matsinger.barofishserver.order.orderprductinfo.domain.OrderProductInfo;
 import com.matsinger.barofishserver.order.orderprductinfo.domain.OrderProductState;
 import com.matsinger.barofishserver.payment.application.PaymentService;
+import com.matsinger.barofishserver.payment.dto.KeyInPaymentReq;
 import com.matsinger.barofishserver.product.application.ProductService;
 import com.matsinger.barofishserver.product.domain.ProductState;
 import com.matsinger.barofishserver.product.optionitem.domain.OptionItem;
 import com.matsinger.barofishserver.product.domain.Product;
 import com.matsinger.barofishserver.product.dto.ProductListDto;
-import com.matsinger.barofishserver.siteInfo.SiteInfoService;
-import com.matsinger.barofishserver.siteInfo.SiteInformation;
+import com.matsinger.barofishserver.siteInfo.application.SiteInfoQueryService;
+import com.matsinger.barofishserver.siteInfo.domain.SiteInformation;
 import com.matsinger.barofishserver.user.paymentMethod.application.PaymentMethodService;
 import com.matsinger.barofishserver.user.deliverplace.DeliverPlace;
 import com.matsinger.barofishserver.user.paymentMethod.domain.PaymentMethod;
@@ -55,20 +61,13 @@ public class OrderController {
     private final CouponCommandService couponCommandService;
     private final PaymentService paymentService;
     private final NotificationCommandService notificationCommandService;
-    private final SiteInfoService siteInfoService;
+    private final SiteInfoQueryService siteInfoQueryService;
     private final PaymentMethodService paymentMethodService;
+    private final AdminLogCommandService adminLogCommandService;
+    private final AdminLogQueryService adminLogQueryService;
     private final JwtService jwt;
     private final Common utils;
 
-    @Builder
-    @Getter
-    @Setter
-    @NoArgsConstructor
-    @AllArgsConstructor
-    private static class PointRuleRes {
-        Integer pointRate;
-        Integer maxReviewPoint;
-    }
 
     @GetMapping("/point-rule")
     public ResponseEntity<CustomResponse<PointRuleRes>> selectPointRule(@RequestHeader(value = "Authorization") Optional<String> auth) {
@@ -78,7 +77,7 @@ public class OrderController {
         try {
             Integer userId = tokenInfo.get().getId();
             UserInfo userInfo = userService.selectUserInfo(userId);
-            SiteInformation siteInfo = siteInfoService.selectSiteInfo("INT_REVIEW_POINT_TEXT");
+            SiteInformation siteInfo = siteInfoQueryService.selectSiteInfo("INT_REVIEW_POINT_TEXT");
             Integer maxReviewPoint = Integer.parseInt(siteInfo.getContent());
             res.setData(Optional.ofNullable(PointRuleRes.builder().maxReviewPoint(maxReviewPoint).pointRate(userInfo.getGrade().getPointRate()).build()));
             return ResponseEntity.ok(res);
@@ -271,31 +270,6 @@ public class OrderController {
         }
     }
 
-    @Getter
-    @NoArgsConstructor
-    @ToString
-    public static class OrderProductReq {
-        Integer productId;
-        Integer optionId;
-        Integer amount;
-        Integer deliveryFee;
-    }
-
-    @Getter
-    @NoArgsConstructor
-    public static class OrderReq {
-        private String name;
-        private String tel;
-        private Integer couponId;
-        private OrderPaymentWay paymentWay;
-        private Integer point;
-        private Integer totalPrice;
-        private Integer couponDiscountPrice;
-        private List<OrderProductReq> products;
-
-        private Integer deliverPlaceId;
-        private Integer paymentMethodId;
-    }
 
     @PostMapping("")
     public ResponseEntity<CustomResponse<OrderDto>> orderProduct(@RequestHeader(value = "Authorization") Optional<String> auth,
@@ -312,12 +286,12 @@ public class OrderController {
 
             Coupon coupon = null;
             if (data.getCouponId() != null) coupon = couponQueryService.selectCoupon(data.getCouponId());
-            if (data.point != null && userInfo.getPoint() < data.point)
+            if (data.getPoint() != null && userInfo.getPoint() < data.getPoint())
                 return res.throwError("보유한 적립금보다 많은 적립금입니다.", "INPUT_CHECK_REQUIRED");
             List<OrderProductInfo> infos = new ArrayList<>();
             List<OptionItem> optionItems = new ArrayList<>();
+            int taxFreeAmount = 0;
             for (OrderProductReq productReq : data.getProducts()) {
-
                 Product product = productService.selectProduct(productReq.getProductId());
                 if (!product.getState().equals(ProductState.ACTIVE)) {
                     if (product.getState().equals(ProductState.SOLD_OUT))
@@ -330,29 +304,31 @@ public class OrderController {
 
                 OptionItem optionItem = productService.selectOptionItem(productReq.getOptionId());
                 if (optionItem.getDeliverBoxPerAmount() != null &&
-                        optionItem.getMaxAvailableAmount() < productReq.amount)
+                        optionItem.getMaxAvailableAmount() < productReq.getAmount())
                     return res.throwError("최대 주문 수량을 초과하였습니다.", "INPUT_CHECK_REQUIRED");
                 optionItem.reduceAmount(productReq.getAmount());
                 int price = orderService.getProductPrice(product, productReq.getOptionId(), productReq.getAmount());
+                if (!product.getNeedTaxation()) {
+                    taxFreeAmount += price;
+                }
                 Integer
                         deliveryFee =
                         orderService.getProductDeliveryFee(product, productReq.getOptionId(), productReq.getAmount());
-                // int deliveryFee = productReq.deliveryFee != null ? productReq.deliveryFee :
-                // 0;
                 optionItems.add(productService.selectOptionItem(productReq.getOptionId()));
                 infos.add(OrderProductInfo.builder().optionItemId(optionItem.getId()).orderId(orderId).productId(
                         productReq.getProductId()).state(OrderProductState.WAIT_DEPOSIT).settlePrice(optionItem.getPurchasePrice()).price(
                         price).amount(productReq.getAmount()).isSettled(false).deliveryFee(deliveryFee).build());
             }
             if (coupon != null) {
-                if (data.totalPrice < coupon.getMinPrice())
+                if (data.getTotalPrice() < coupon.getMinPrice())
                     return res.throwError("쿠폰 최소 금액에 맞지 않습니다.", "INPUT_CHECK_REQUIRED");
                 couponQueryService.checkValidCoupon(coupon.getId(), userId);
 
             }
-            if (data.totalPrice != data.getTotalPrice()) return res.throwError("총 금액을 확인해주세요.", "INPUT_CHECK_REQUIRED");
-            if (data.deliverPlaceId == null) return res.throwError("배송지를 입력해주세요.", "INPUT_CHECK_REQUIRED");
-            DeliverPlace deliverPlace = userService.selectDeliverPlace(data.deliverPlaceId);
+            if (!Objects.equals(data.getTotalPrice(), data.getTotalPrice()))
+                return res.throwError("총 금액을 확인해주세요.", "INPUT_CHECK_REQUIRED");
+            if (data.getDeliverPlaceId() == null) return res.throwError("배송지를 입력해주세요.", "INPUT_CHECK_REQUIRED");
+            DeliverPlace deliverPlace = userService.selectDeliverPlace(data.getDeliverPlaceId());
             OrderDeliverPlace
                     orderDeliverPlace =
                     OrderDeliverPlace.builder().orderId(orderId).name(deliverPlace.getName()).receiverName(deliverPlace.getReceiverName()).tel(
@@ -361,21 +337,27 @@ public class OrderController {
                             deliverPlace.getBcode()).build();
             Orders
                     order =
-                    Orders.builder().id(orderId).userId(tokenInfo.get().getId()).paymentWay(data.paymentWay).state(
-                            OrderState.WAIT_DEPOSIT).couponId(data.couponId).orderedAt(utils.now()).totalPrice(data.getTotalPrice()).usePoint(
-                            data.point).couponDiscount(data.couponDiscountPrice).ordererName(name).ordererTel(tel).build();
+                    Orders.builder().id(orderId).userId(tokenInfo.get().getId()).paymentWay(data.getPaymentWay()).state(
+                            OrderState.WAIT_DEPOSIT).couponId(data.getCouponId()).orderedAt(utils.now()).totalPrice(data.getTotalPrice()).usePoint(
+                            data.getPoint()).couponDiscount(data.getCouponDiscountPrice()).ordererName(name).ordererTel(
+                            tel).build();
 
             Orders result = orderService.orderProduct(order, infos, orderDeliverPlace);
-            if (data.paymentWay.equals(OrderPaymentWay.KEY_IN)) {
-                PaymentMethod paymentMethod = paymentMethodService.selectPaymentMethod(data.paymentMethodId);
-                PaymentService.KeyInPaymentReq
+            taxFreeAmount = taxFreeAmount - data.getCouponDiscountPrice() + data.getPoint();
+            if (data.getPaymentWay().equals(OrderPaymentWay.KEY_IN)) {
+                PaymentMethod paymentMethod = paymentMethodService.selectPaymentMethod(data.getPaymentMethodId());
+                Product product = productService.selectProduct(data.getProducts().get(0).getProductId());
+                KeyInPaymentReq
                         req =
-                        PaymentService.KeyInPaymentReq.builder().paymentMethod(paymentMethod).order_name(name).orderId(
-                                orderId).total_amount(data.totalPrice).build();
+                        KeyInPaymentReq.builder().paymentMethod(paymentMethod).order_name(name).orderId(orderId).total_amount(
+                                data.getTotalPrice()).order_name(product.getTitle()).taxFree(taxFreeAmount).build();
                 Boolean keyInResult = paymentService.processKeyInPayment(req);
                 if (!keyInResult) return res.throwError("결제에 실패하였습니다.", "NOT_ALLOWED");
             }
             res.setData(Optional.ofNullable(orderService.convert2Dto(result, null, null)));
+            if (data.getTotalPrice() == 0) {
+                orderService.processOrderZeroAmount(result);
+            }
             return ResponseEntity.ok(res);
         } catch (Exception e) {
             return res.defaultError(e);
@@ -406,6 +388,8 @@ public class OrderController {
                 jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.PARTNER, TokenAuthType.ADMIN), auth);
         if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
         try {
+            Integer adminId = null;
+            if (tokenInfo.get().getType().equals(TokenAuthType.ADMIN)) adminId = tokenInfo.get().getId();
             Orders order = orderService.selectOrder(orderId);
             if (!order.getPaymentWay().equals(OrderPaymentWay.DEPOSIT))
                 return res.throwError("무통장 입금의 경우만 확인 처리 가능합니다.", "NOT_ALLOWED");
@@ -418,6 +402,14 @@ public class OrderController {
                     v.setState(OrderProductState.PAYMENT_DONE);
             });
             orderService.updateOrderProductInfos(infos);
+            if (adminId != null) {
+                String content = "무통장 입금 확인하였습니다.";
+                AdminLog
+                        adminLog =
+                        AdminLog.builder().id(adminLogQueryService.getAdminLogId()).adminId(adminId).type(AdminLogType.ORDER).targetId(
+                                orderId).content(content).createdAt(utils.now()).build();
+                adminLogCommandService.saveAdminLog(adminLog);
+            }
             res.setData(Optional.of(true));
             return ResponseEntity.ok(res);
         } catch (Exception e) {
@@ -426,12 +418,7 @@ public class OrderController {
     }
 
     // 결제 취소
-    @Getter
-    @NoArgsConstructor
-    private static class RequestCancelReq {
-        private OrderCancelReason cancelReason;
-        private String content;
-    }
+
 
     @PostMapping("/cancel/{orderProductInfoId}")
     public ResponseEntity<CustomResponse<Boolean>> cancelOrderByUser(@RequestHeader(value = "Authorization") Optional<String> auth,
@@ -446,7 +433,7 @@ public class OrderController {
             if (tokenInfo.get().getId() != order.getUserId()) return res.throwError("타인의 주문 내역입니다.", "NOT_ALLOWED");
             if (data.getCancelReason() == null) return res.throwError("취소/환불 사유를 선택해주세요.", "INPUT_CHECK_REQUIRED");
             String content = utils.validateString(data.getContent(), 1000L, "사유");
-            info.setCancelReason(data.cancelReason);
+            info.setCancelReason(data.getCancelReason());
             info.setCancelReasonContent(content);
             orderService.requestCancelOrderProduct(info.getId());
             orderService.updateOrderProductInfo(new ArrayList<>(List.of(info)));
@@ -466,6 +453,8 @@ public class OrderController {
                 jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.PARTNER, TokenAuthType.ADMIN), auth);
         if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
         try {
+            Integer adminId = null;
+            if (tokenInfo.get().getType().equals(TokenAuthType.ADMIN)) adminId = null;
             OrderProductInfo info = orderService.selectOrderProductInfo(orderProductInfoId);
             orderService.cancelOrderedProduct(orderProductInfoId);
             res.setData(Optional.of(true));
@@ -476,6 +465,14 @@ public class OrderController {
             notificationCommandService.sendFcmToUser(order.getUserId(),
                     NotificationMessageType.ORDER_CANCEL,
                     NotificationMessage.builder().productName(product.getTitle()).build());
+            if (adminId != null) {
+                String content = product.getTitle() + " 주문이 취소 처리되었습니다.";
+                AdminLog
+                        adminLog =
+                        AdminLog.builder().id(adminLogQueryService.getAdminLogId()).adminId(adminId).type(AdminLogType.ORDER).targetId(
+                                order.getId()).content(content).createdAt(utils.now()).build();
+                adminLogCommandService.saveAdminLog(adminLog);
+            }
             return ResponseEntity.ok(res);
         } catch (Exception e) {
             return res.defaultError(e);
@@ -492,6 +489,8 @@ public class OrderController {
                 jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.PARTNER, TokenAuthType.ADMIN), auth);
         if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
         try {
+            Integer adminId = null;
+            if (tokenInfo.get().getType().equals(TokenAuthType.ADMIN)) adminId = tokenInfo.get().getId();
             OrderProductInfo info = orderService.selectOrderProductInfo(orderProductInfoId);
             if (!info.getState().equals(OrderProductState.CANCEL_REQUEST))
                 return res.throwError("취소 신청된 상품이 아닙니다.", "INPUT_CHECK_REQUIRED");
@@ -502,6 +501,14 @@ public class OrderController {
             notificationCommandService.sendFcmToUser(order.getUserId(),
                     NotificationMessageType.CANCEL_REJECT,
                     NotificationMessage.builder().productName(product.getTitle()).build());
+            if (adminId != null) {
+                String content = product.getTitle() + " 주문 취소 신청이 반려 처리되었습니다.";
+                AdminLog
+                        adminLog =
+                        AdminLog.builder().id(adminLogQueryService.getAdminLogId()).adminId(adminId).type(AdminLogType.ORDER).targetId(
+                                order.getId()).content(content).createdAt(utils.now()).build();
+                adminLogCommandService.saveAdminLog(adminLog);
+            }
             return ResponseEntity.ok(res);
         } catch (Exception e) {
             return res.defaultError(e);
@@ -517,12 +524,23 @@ public class OrderController {
                 jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.PARTNER, TokenAuthType.ADMIN), auth);
         if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
         try {
+            Integer adminId = null;
+            if (tokenInfo.get().getType().equals(TokenAuthType.ADMIN)) adminId = tokenInfo.get().getId();
             OrderProductInfo info = orderService.selectOrderProductInfo(orderProductInfoId);
             if (!info.getState().equals(OrderProductState.CANCEL_REQUEST))
                 return res.throwError("취소 신청된 상품이 아닙니다.", "INPUT_CHECK_REQUIRED");
             orderService.cancelOrderedProduct(orderProductInfoId);
             info.setState(OrderProductState.CANCELED);
             orderService.updateOrderProductInfos(List.of(info));
+            if (adminId != null) {
+                Product product = productService.selectProduct(info.getProductId());
+                String content = product.getTitle() + " 주문이 취소 처리되었습니다.";
+                AdminLog
+                        adminLog =
+                        AdminLog.builder().id(adminLogQueryService.getAdminLogId()).adminId(adminId).type(AdminLogType.ORDER).targetId(
+                                info.getOrderId()).content(content).createdAt(utils.now()).build();
+                adminLogCommandService.saveAdminLog(adminLog);
+            }
             return ResponseEntity.ok(res);
         } catch (Exception e) {
             return res.defaultError(e);
@@ -538,9 +556,20 @@ public class OrderController {
                 jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.PARTNER, TokenAuthType.ADMIN), auth);
         if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
         try {
+            Integer adminId = null;
+            if (tokenInfo.get().getType().equals(TokenAuthType.ADMIN)) adminId = tokenInfo.get().getId();
             OrderProductInfo info = orderService.selectOrderProductInfo(orderProductInfoId);
             info.setState(OrderProductState.DELIVERY_READY);
             orderService.updateOrderProductInfo(new ArrayList<>(List.of(info)));
+            if (adminId != null) {
+                Product product = productService.selectProduct(info.getProductId());
+                String content = product.getTitle() + " 주문이 발송 준비 처리되었습니다.";
+                AdminLog
+                        adminLog =
+                        AdminLog.builder().id(adminLogQueryService.getAdminLogId()).adminId(adminId).type(AdminLogType.ORDER).targetId(
+                                info.getOrderId()).content(content).createdAt(utils.now()).build();
+                adminLogCommandService.saveAdminLog(adminLog);
+            }
             res.setData(Optional.of(true));
             return ResponseEntity.ok(res);
         } catch (Exception e) {
@@ -549,12 +578,7 @@ public class OrderController {
     }
 
     // 발송 처리
-    @Getter
-    @NoArgsConstructor
-    private static class ProcessDeliverStartReq {
-        private String deliverCompanyCode;
-        private String invoice;
-    }
+
 
     @PostMapping("/process-deliver/{orderProductInfoId}")
     public ResponseEntity<CustomResponse<Boolean>> processDeliverStart(@RequestHeader(value = "Authorization") Optional<String> auth,
@@ -566,11 +590,13 @@ public class OrderController {
                 jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.PARTNER, TokenAuthType.ADMIN), auth);
         if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
         try {
+            Integer adminId = null;
+            if (tokenInfo.get().getType().equals(TokenAuthType.ADMIN)) adminId = tokenInfo.get().getId();
             OrderProductInfo info = orderService.selectOrderProductInfo(orderProductInfoId);
-            if (data.deliverCompanyCode == null) return res.throwError("택배사 코드를 입력해주세요.", "INPUT_CHECK_REQUIRED");
-            if (data.invoice == null) return res.throwError("운송장 번호를 입력해주세요.", "INPUT_CHECK_REQUIRED");
-            info.setDeliverCompanyCode(data.deliverCompanyCode);
-            info.setInvoiceCode(data.invoice);
+            if (data.getDeliverCompanyCode() == null) return res.throwError("택배사 코드를 입력해주세요.", "INPUT_CHECK_REQUIRED");
+            if (data.getInvoice() == null) return res.throwError("운송장 번호를 입력해주세요.", "INPUT_CHECK_REQUIRED");
+            info.setDeliverCompanyCode(data.getDeliverCompanyCode());
+            info.setInvoiceCode(data.getInvoice());
             info.setState(OrderProductState.ON_DELIVERY);
             orderService.updateOrderProductInfo(new ArrayList<>(List.of(info)));
             Orders order = orderService.selectOrder(info.getOrderId());
@@ -578,6 +604,14 @@ public class OrderController {
             notificationCommandService.sendFcmToUser(order.getUserId(),
                     NotificationMessageType.DELIVER_READY,
                     NotificationMessage.builder().productName(product.getTitle()).build());
+            if (adminId != null) {
+                String content = product.getTitle() + " 주문이 발송 처리 되었습니다.";
+                AdminLog
+                        adminLog =
+                        AdminLog.builder().id(adminLogQueryService.getAdminLogId()).adminId(adminId).type(AdminLogType.ORDER).targetId(
+                                order.getId()).content(content).createdAt(utils.now()).build();
+                adminLogCommandService.saveAdminLog(adminLog);
+            }
             res.setData(Optional.of(true));
             return ResponseEntity.ok(res);
         } catch (Exception e) {
@@ -586,12 +620,7 @@ public class OrderController {
     }
 
     // 교환 신청
-    @Getter
-    @NoArgsConstructor
-    private static class RequestChangeProduct {
-        private OrderCancelReason cancelReason;
-        private String reasonContent;
-    }
+
 
     @PostMapping("/change/{orderProductInfoId}")
     public ResponseEntity<CustomResponse<Boolean>> requestChangeProduct(@RequestHeader(value = "Authorization") Optional<String> auth,
@@ -606,8 +635,8 @@ public class OrderController {
             if (tokenInfo.get().getId() != order.getUserId()) return res.throwError("타인의 주문 내역입니다.", "NOT_ALLOWED");
             if (!info.getState().equals(OrderProductState.DELIVERY_DONE))
                 return res.throwError("교환 요청 가능한 상품이 아닙니다.", "INPUT_CHECK_REQUIRED");
-            if (data.reasonContent == null) return res.throwError("교환 사유를 입력해주세요.", "INPUT_CHECK_REQUIRED");
-            String content = data.reasonContent.trim();
+            if (data.getReasonContent() == null) return res.throwError("교환 사유를 입력해주세요.", "INPUT_CHECK_REQUIRED");
+            String content = data.getReasonContent().trim();
             info.setState(OrderProductState.EXCHANGE_REQUEST);
             orderService.updateOrderProductInfo(new ArrayList<>(List.of(info)));
             res.setData(Optional.of(true));
@@ -627,6 +656,8 @@ public class OrderController {
                 jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.PARTNER, TokenAuthType.ADMIN), auth);
         if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
         try {
+            Integer adminId = null;
+            if (tokenInfo.get().getType().equals(TokenAuthType.ADMIN)) adminId = tokenInfo.get().getId();
             OrderProductInfo info = orderService.selectOrderProductInfo(orderProductInfoId);
             if (!info.getState().equals(OrderProductState.EXCHANGE_REQUEST))
                 return res.throwError("교환 요청된 주문이 아닙니다.", "INPUT_CHECK_REQUIRED");
@@ -637,6 +668,14 @@ public class OrderController {
             notificationCommandService.sendFcmToUser(order.getUserId(),
                     NotificationMessageType.EXCHANGE_REJECT,
                     NotificationMessage.builder().productName(product.getTitle()).build());
+            if (adminId != null) {
+                String content = product.getTitle() + " 주문 교환 신청이 반려 처리되었습니다.";
+                AdminLog
+                        adminLog =
+                        AdminLog.builder().id(adminLogQueryService.getAdminLogId()).adminId(adminId).type(AdminLogType.ORDER).targetId(
+                                order.getId()).content(content).createdAt(utils.now()).build();
+                adminLogCommandService.saveAdminLog(adminLog);
+            }
             return ResponseEntity.ok(res);
         } catch (Exception e) {
             return res.defaultError(e);
@@ -653,6 +692,8 @@ public class OrderController {
                 jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.PARTNER, TokenAuthType.ADMIN), auth);
         if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
         try {
+            Integer adminId = null;
+            if (tokenInfo.get().getType().equals(TokenAuthType.ADMIN)) adminId = tokenInfo.get().getId();
             OrderProductInfo info = orderService.selectOrderProductInfo(orderProductInfoId);
             if (!info.getState().equals(OrderProductState.EXCHANGE_REQUEST))
                 return res.throwError("교환 요청된 주문이 아닙니다.", "INPUT_CHECK_REQUIRED");
@@ -663,6 +704,14 @@ public class OrderController {
             notificationCommandService.sendFcmToUser(order.getUserId(),
                     NotificationMessageType.EXCHANGE_ACCEPT,
                     NotificationMessage.builder().productName(product.getTitle()).build());
+            if (adminId != null) {
+                String content = product.getTitle() + " 주문 교환 신청이 처리되었습니다.";
+                AdminLog
+                        adminLog =
+                        AdminLog.builder().id(adminLogQueryService.getAdminLogId()).adminId(adminId).type(AdminLogType.ORDER).targetId(
+                                order.getId()).content(content).createdAt(utils.now()).build();
+                adminLogCommandService.saveAdminLog(adminLog);
+            }
             return ResponseEntity.ok(res);
         } catch (Exception e) {
             return res.defaultError(e);
@@ -727,6 +776,8 @@ public class OrderController {
                 jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.PARTNER, TokenAuthType.ADMIN), auth);
         if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
         try {
+            Integer adminId = null;
+            if (tokenInfo.get().getType().equals(TokenAuthType.ADMIN)) adminId = tokenInfo.get().getId();
             OrderProductInfo info = orderService.selectOrderProductInfo(orderProductInfoId);
             Orders order = orderService.selectOrder(info.getOrderId());
             Product product = productService.findById(info.getProductId());
@@ -735,6 +786,14 @@ public class OrderController {
                     NotificationMessage.builder().productName(product.getTitle()).build());
             info.setState(OrderProductState.DELIVERY_DONE);
             orderService.updateOrderProductInfo(new ArrayList<>(List.of(info)));
+            if (adminId != null) {
+                String content = product.getTitle() + " 주문 반품 신청이 반려되었습니다.";
+                AdminLog
+                        adminLog =
+                        AdminLog.builder().id(adminLogQueryService.getAdminLogId()).adminId(adminId).type(AdminLogType.ORDER).targetId(
+                                order.getId()).content(content).createdAt(utils.now()).build();
+                adminLogCommandService.saveAdminLog(adminLog);
+            }
             res.setData(Optional.of(true));
             return ResponseEntity.ok(res);
         } catch (Exception e) {
@@ -752,6 +811,8 @@ public class OrderController {
                 jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.PARTNER, TokenAuthType.ADMIN), auth);
         if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
         try {
+            Integer adminId = null;
+            if (tokenInfo.get().getType().equals(TokenAuthType.ADMIN)) adminId = tokenInfo.get().getId();
             OrderProductInfo info = orderService.selectOrderProductInfo(orderProductInfoId);
             Orders order = orderService.selectOrder(info.getOrderId());
             Product product = productService.findById(info.getProductId());
@@ -761,6 +822,14 @@ public class OrderController {
             info.setState(OrderProductState.REFUND_ACCEPT);
             orderService.updateOrderProductInfo(new ArrayList<>(List.of(info)));
             res.setData(Optional.of(true));
+            if (adminId != null) {
+                String content = product.getTitle() + " 주문 반품 신청이 처리되었습니다.";
+                AdminLog
+                        adminLog =
+                        AdminLog.builder().id(adminLogQueryService.getAdminLogId()).adminId(adminId).type(AdminLogType.ORDER).targetId(
+                                order.getId()).content(content).createdAt(utils.now()).build();
+                adminLogCommandService.saveAdminLog(adminLog);
+            }
             return ResponseEntity.ok(res);
         } catch (Exception e) {
             return res.defaultError(e);
@@ -777,6 +846,8 @@ public class OrderController {
                 jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.PARTNER, TokenAuthType.ADMIN), auth);
         if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
         try {
+            Integer adminId = null;
+            if (tokenInfo.get().getType().equals(TokenAuthType.ADMIN)) adminId = tokenInfo.get().getId();
             OrderProductInfo info = orderService.selectOrderProductInfo(orderProductInfoId);
             Orders order = orderService.selectOrder(info.getOrderId());
             Product product = productService.findById(info.getProductId());
@@ -786,6 +857,14 @@ public class OrderController {
             notificationCommandService.sendFcmToUser(order.getUserId(),
                     NotificationMessageType.REFUND_DONE,
                     NotificationMessage.builder().productName(product.getTitle()).build());
+            if (adminId != null) {
+                String content = product.getTitle() + " 주문 반품 신청이 완료 처리되었습니다.";
+                AdminLog
+                        adminLog =
+                        AdminLog.builder().id(adminLogQueryService.getAdminLogId()).adminId(adminId).type(AdminLogType.ORDER).targetId(
+                                order.getId()).content(content).createdAt(utils.now()).build();
+                adminLogCommandService.saveAdminLog(adminLog);
+            }
             return ResponseEntity.ok(res);
         } catch (Exception e) {
             return res.defaultError(e);

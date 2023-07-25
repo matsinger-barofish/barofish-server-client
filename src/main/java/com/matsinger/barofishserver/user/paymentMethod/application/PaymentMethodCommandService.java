@@ -1,6 +1,7 @@
 package com.matsinger.barofishserver.user.paymentMethod.application;
 
 import com.matsinger.barofishserver.payment.application.PaymentService;
+import com.matsinger.barofishserver.payment.dto.CheckValidCardRes;
 import com.matsinger.barofishserver.payment.portone.application.PortOneCallbackService;
 import com.matsinger.barofishserver.user.paymentMethod.domain.PaymentMethod;
 import com.matsinger.barofishserver.user.dto.AddPaymentMethodReq;
@@ -13,6 +14,7 @@ import com.siot.IamportRestClient.request.BillingCustomerData;
 import com.siot.IamportRestClient.response.BillingCustomer;
 import com.siot.IamportRestClient.response.IamportResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.regex.Pattern;
@@ -28,6 +30,8 @@ public class PaymentMethodCommandService {
     private final Common util;
     private final AES256 aes256;
     private final RegexConstructor re;
+    @Value("${iamport.credentials.mid}")
+    public String mid;
 
     public PaymentMethod addPaymentMethod(AddPaymentMethodReq request, int userId) throws Exception {
 
@@ -37,7 +41,6 @@ public class PaymentMethodCommandService {
         String hashedCardNo = aes256.encrypt(AdjustedCardNo);
         validateCardInfo(request, userId, hashedCardNo);
 
-        // //TODO: 배포 시 주석 제거
         if (request.getPasswordTwoDigit() == null) {
             throw new IllegalArgumentException("비밀번호 두자리를 입력해주세요.");
         }
@@ -45,22 +48,13 @@ public class PaymentMethodCommandService {
             throw new IllegalArgumentException("비밀번호는 숫자 2자리입니다.");
         }
         String password2Digit = aes256.encrypt(request.getPasswordTwoDigit());
-        // TODO: 배포 시 주석 제거
 
-        // TODO: 배포시 주석처리
-        // String password2Digit = aes256.encrypt("12");
-        // TODO: 배포시 주석처리
+        PaymentMethod
+                paymentMethod =
+                PaymentMethod.builder().name(name).cardNo(hashedCardNo).userId(userId).expiryAt(request.getExpiryAt()).birth(
+                        request.getBirth()).passwordTwoDigit(password2Digit).build();
 
-        PaymentMethod paymentMethod = PaymentMethod.builder()
-                .name(name)
-                .cardNo(hashedCardNo)
-                .userId(userId)
-                .expiryAt(request.getExpiryAt())
-                .birth(request.getBirth())
-                .passwordTwoDigit(password2Digit)
-                .build();
-
-        PaymentService.CheckValidCardRes validCardRes = checkValidCard(paymentMethod);
+        CheckValidCardRes validCardRes = checkValidCard(paymentMethod);
         if (validCardRes == null) {
             throw new IllegalArgumentException("유효하지 않은 카드입니다.");
         }
@@ -93,10 +87,10 @@ public class PaymentMethodCommandService {
         }
     }
 
-    private PaymentService.CheckValidCardRes checkValidCard(PaymentMethod paymentMethod) throws Exception {
+    private CheckValidCardRes checkValidCard(PaymentMethod paymentMethod) throws Exception {
         IamportClient iamportClient = callbackService.getIamportClient();
         String customerUid = "customer_" + paymentMethod.getUserId() + "_" + paymentMethod.getId();
-        String cardNo = aes256.encrypt(paymentMethod.getCardNo());
+        String cardNo = aes256.decrypt(paymentMethod.getCardNo());
         cardNo = cardNo.replaceAll(re.cardNo, "$1-$2-$3-$4");
         String[] expiryAyData = paymentMethod.getExpiryAt().split("/");
         String expiryMonth = expiryAyData[0];
@@ -104,16 +98,16 @@ public class PaymentMethodCommandService {
         String expiry = expiryYear + "-" + expiryMonth;
         String birth = paymentMethod.getBirth();
         BillingCustomerData billingCustomerData = new BillingCustomerData(customerUid, cardNo, expiry, birth);
-        IamportResponse<BillingCustomer> billingCustomerRes = iamportClient.postBillingCustomer(customerUid,
-                billingCustomerData);
+        billingCustomerData.setPwd2Digit(aes256.decrypt(paymentMethod.getPasswordTwoDigit()));
+        billingCustomerData.setPg("settle");
+        IamportResponse<BillingCustomer>
+                billingCustomerRes =
+                iamportClient.postBillingCustomer(customerUid, billingCustomerData);
         if (billingCustomerRes.getCode() != 0) {
-            System.out.println(billingCustomerRes.getMessage());
+            System.out.println(billingCustomerRes.getCode() + ": " + billingCustomerRes.getMessage());
             return null;
         }
         BillingCustomer billingCustomer = billingCustomerRes.getResponse();
-        return PaymentService.CheckValidCardRes.builder()
-                .cardName(billingCustomer.getCardName())
-                .customerUid(billingCustomer.getCustomerUid())
-                .build();
+        return CheckValidCardRes.builder().cardName(billingCustomer.getCardName()).customerUid(billingCustomer.getCustomerUid()).build();
     }
 }

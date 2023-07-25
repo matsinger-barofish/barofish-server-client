@@ -1,12 +1,16 @@
 package com.matsinger.barofishserver.user.application;
 
+import com.matsinger.barofishserver.admin.log.application.AdminLogCommandService;
+import com.matsinger.barofishserver.admin.log.application.AdminLogQueryService;
+import com.matsinger.barofishserver.admin.log.domain.AdminLog;
+import com.matsinger.barofishserver.admin.log.domain.AdminLogType;
 import com.matsinger.barofishserver.basketProduct.application.BasketCommandService;
 import com.matsinger.barofishserver.basketProduct.application.BasketQueryService;
 import com.matsinger.barofishserver.basketProduct.dto.BasketProductDto;
 import com.matsinger.barofishserver.grade.domain.Grade;
 import com.matsinger.barofishserver.grade.repository.GradeRepository;
 import com.matsinger.barofishserver.inquiry.application.InquiryCommandService;
-import com.matsinger.barofishserver.review.application.ReviewService;
+import com.matsinger.barofishserver.review.application.ReviewCommandService;
 import com.matsinger.barofishserver.user.deliverplace.DeliverPlace;
 import com.matsinger.barofishserver.user.deliverplace.repository.DeliverPlaceRepository;
 import com.matsinger.barofishserver.user.dto.UserJoinReq;
@@ -46,11 +50,13 @@ public class UserCommandService {
     private final BasketQueryService basketQueryService;
     private final BasketCommandService basketCommandService;
     private final UserException userJoinValidator;
-    private final ReviewService reviewService;
+    private final ReviewCommandService reviewService;
     private final InquiryCommandService inquiryCommandService;
     private final UserAuthCommandService userAuthCommandService;
     private final UserInfoCommandService userInfoCommandService;
     private final Common util;
+    private final AdminLogCommandService adminLogCommandService;
+    private final AdminLogQueryService adminLogQueryService;
 
     public int createSnsUserAndSave(SnsJoinReq request) throws MalformedURLException {
         userJoinValidator.nullCheck(request.getLoginType());
@@ -108,6 +114,12 @@ public class UserCommandService {
         return deliverPlaceRepository.save(createdDeliver);
     }
 
+    @Transactional
+    public void deleteUserAuth(Integer userId) {
+        userAuthRepository.deleteAllByUserId(userId);
+    }
+
+    @Transactional
     public void withdrawUser(int userId) {
         User findUser = userRepository.findById(userId).orElseThrow(() -> {
             throw new IllegalArgumentException("유저를 찾을 수 없습니다.");
@@ -117,6 +129,8 @@ public class UserCommandService {
         });
         findUser.setState(UserState.DELETED);
         findUserInfo.setNickname("탈퇴한 회원");
+        findUserInfo.setPhone(null);
+        deleteUserAuth(userId);
 
         // 장바구니 제거
         List<Integer>
@@ -209,6 +223,17 @@ public class UserCommandService {
         deliverPlaceRepository.save(deliverPlace);
     }
 
+    @Transactional
+    public UserInfo addUser(User user, UserAuth userAuth, UserInfo userInfo) {
+        User res = userRepository.save(user);
+        userAuth.setUserId(res.getId());
+        userInfo.setUserId(res.getId());
+        userInfo.setUser(res);
+        userAuthRepository.save(userAuth);
+        UserInfo result = userInfoRepository.save(userInfo);
+        return result;
+    }
+
     public UserAuth selectUserByLoginId(LoginType loginType, String loginId) {
         try {
             return userAuthRepository.findByLoginTypeAndLoginId(loginType, loginId).orElseThrow();
@@ -217,10 +242,8 @@ public class UserCommandService {
         }
     }
 
-    public UserAuth checkUserAuthExist(LoginType loginType, String loginId) {
-        return userAuthRepository.findByLoginTypeAndLoginId(loginType, loginId).orElseThrow(() -> {
-            throw new IllegalArgumentException("유저를 찾을 수 없습니다.");
-        });
+    public Optional<UserAuth> checkUserAuthExist(LoginType loginType, String loginId) {
+        return userAuthRepository.findByLoginTypeAndLoginId(loginType, loginId);
     }
 
     public List<DeliverPlace> selectUserDeliverPlaceList(Integer userId) {
@@ -235,10 +258,20 @@ public class UserCommandService {
         userInfoRepository.save(userInfo);
     }
 
-    public void updateUserState(List<Integer> userIds, UserState state) {
+    public void updateUserState(List<Integer> userIds, UserState state, Integer adminId) {
         List<User> users = userRepository.findAllById(userIds);
         for (User user : users) {
             user.setState(state);
+            String
+                    content =
+                    String.format("%s -> %s 상태 변경하였습니다.",
+                            user.getState().equals(UserState.ACTIVE) ? "활동중" : "정지",
+                            state.equals(UserState.ACTIVE) ? "활동중" : "정지");
+            AdminLog
+                    adminLog =
+                    AdminLog.builder().id(adminLogQueryService.getAdminLogId()).adminId(adminId).type(AdminLogType.USER).targetId(
+                            String.valueOf(user.getId())).content(content).createdAt(util.now()).build();
+            adminLogCommandService.saveAdminLog(adminLog);
         }
         users = userRepository.saveAll(users);
     }

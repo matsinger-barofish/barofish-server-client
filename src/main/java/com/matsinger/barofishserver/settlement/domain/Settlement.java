@@ -11,7 +11,6 @@ import java.sql.Timestamp;
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter
-@Setter
 @Entity
 @Table(name = "settlement", schema = "barofish_dev", catalog = "")
 public class Settlement {

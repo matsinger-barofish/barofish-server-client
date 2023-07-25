@@ -4,7 +4,8 @@ import com.matsinger.barofishserver.jwt.JwtService;
 import com.matsinger.barofishserver.jwt.TokenAuthType;
 import com.matsinger.barofishserver.jwt.TokenInfo;
 import com.matsinger.barofishserver.product.application.ProductService;
-import com.matsinger.barofishserver.searchFilter.application.SearchFilterService;
+import com.matsinger.barofishserver.searchFilter.application.SearchFilterCommandService;
+import com.matsinger.barofishserver.searchFilter.application.SearchFilterQueryService;
 import com.matsinger.barofishserver.searchFilter.domain.SearchFilter;
 import com.matsinger.barofishserver.searchFilter.dto.SearchFilterDto;
 import com.matsinger.barofishserver.searchFilter.domain.SearchFilterField;
@@ -26,7 +27,8 @@ import java.util.Set;
 @RequestMapping("/api/v1/search-filter")
 public class SearchFilterController {
 
-    private final SearchFilterService searchFilterService;
+    private final SearchFilterQueryService searchFilterQueryService;
+    private final SearchFilterCommandService searchFilterCommandService;
     private final ProductService productService;
     private final JwtService jwt;
     private final Common utils;
@@ -37,7 +39,7 @@ public class SearchFilterController {
         try {
             List<SearchFilterDto>
                     searchFilterDtos =
-                    searchFilterService.selectSearchFilterList().stream().map(searchFilterService::convertFilterDto).toList();
+                    searchFilterQueryService.selectSearchFilterList().stream().map(searchFilterCommandService::convertFilterDto).toList();
             res.setData(Optional.of(searchFilterDtos));
             return ResponseEntity.ok(res);
         } catch (Exception e) {
@@ -52,7 +54,7 @@ public class SearchFilterController {
             if (id == null) return res.throwError("검색 필터 아이디를 입력해주세요.", "INPUT_CHECK_REQUIRED");
             SearchFilterDto
                     searchFilterDto =
-                    searchFilterService.convertFilterDto(searchFilterService.selectSearchFilter(id));
+                    searchFilterCommandService.convertFilterDto(searchFilterQueryService.selectSearchFilter(id));
             res.setData(Optional.ofNullable(searchFilterDto));
             return ResponseEntity.ok(res);
         } catch (Exception e) {
@@ -77,7 +79,7 @@ public class SearchFilterController {
             SearchFilter searchFilter = SearchFilter.builder().name(name).build();
             SearchFilterDto
                     searchFilterDto =
-                    searchFilterService.convertFilterDto(searchFilterService.addSearchFilter(searchFilter));
+                    searchFilterCommandService.convertFilterDto(searchFilterCommandService.addSearchFilter(searchFilter));
             res.setData(Optional.ofNullable(searchFilterDto));
             return ResponseEntity.ok(res);
         } catch (Exception e) {
@@ -93,14 +95,15 @@ public class SearchFilterController {
         Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
         if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
         try {
-            SearchFilter searchFilter = searchFilterService.selectSearchFilter(id);
+            SearchFilter searchFilter = searchFilterQueryService.selectSearchFilter(id);
             if (data.name != null) {
                 String name = utils.validateString(data.name, 20L, "이름");
                 searchFilter.setName(name);
             }
             SearchFilterDto
                     searchFilterDto =
-                    searchFilterService.convertFilterDto(searchFilterService.updateSearchFilter(searchFilter));
+                    searchFilterCommandService.convertFilterDto(searchFilterCommandService.updateSearchFilter(
+                            searchFilter));
             res.setData(Optional.ofNullable(searchFilterDto));
             return ResponseEntity.ok(res);
         } catch (Exception e) {
@@ -115,8 +118,8 @@ public class SearchFilterController {
         Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
         if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
         try {
-            SearchFilter searchFilter = searchFilterService.selectSearchFilter(id);
-            searchFilterService.deleteSearchFilter(id);
+            SearchFilter searchFilter = searchFilterQueryService.selectSearchFilter(id);
+            searchFilterCommandService.deleteSearchFilter(id);
             res.setData(Optional.of(true));
             return ResponseEntity.ok(res);
         } catch (Exception e) {
@@ -131,7 +134,7 @@ public class SearchFilterController {
         try {
             List<SearchFilterField>
                     searchFilterFields =
-                    searchFilterService.selectSearchFilterFieldWithFilterId(filterId);
+                    searchFilterQueryService.selectSearchFilterFieldWithFilterId(filterId);
             res.setData(Optional.of(searchFilterFields.stream().map(SearchFilterField::convert2Dto).toList()));
             return ResponseEntity.ok(res);
         } catch (Exception e) {
@@ -161,7 +164,7 @@ public class SearchFilterController {
                     SearchFilterField.builder().searchFilterId(data.searchFilterId).field(field).build();
             SearchFilterFieldDto
                     searchFilterFieldDto =
-                    searchFilterService.addSearchFilterField(searchFilterField).convert2Dto();
+                    searchFilterCommandService.addSearchFilterField(searchFilterField).convert2Dto();
             res.setData(Optional.ofNullable(searchFilterFieldDto));
             return ResponseEntity.ok(res);
         } catch (Exception e) {
@@ -183,12 +186,12 @@ public class SearchFilterController {
         Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
         if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
         try {
-            SearchFilterField searchFilterField = searchFilterService.selectSearchFilterField(id);
+            SearchFilterField searchFilterField = searchFilterQueryService.selectSearchFilterField(id);
             if (data.field != null) {
                 String field = utils.validateString(data.field, 20L, "필드명");
                 searchFilterField.setField(field);
             }
-            SearchFilterField result = searchFilterService.updateSearchFilterField(searchFilterField);
+            SearchFilterField result = searchFilterCommandService.updateSearchFilterField(searchFilterField);
             res.setData(Optional.ofNullable(result.convert2Dto()));
             return ResponseEntity.ok(res);
         } catch (Exception e) {
@@ -203,8 +206,8 @@ public class SearchFilterController {
         Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
         if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
         try {
-            SearchFilterField searchFilterField = searchFilterService.selectSearchFilterField(id);
-            searchFilterService.deleteSearchFilterField(id);
+            SearchFilterField searchFilterField = searchFilterQueryService.selectSearchFilterField(id);
+            searchFilterCommandService.deleteSearchFilterField(id);
             res.setData(Optional.of(true));
             return ResponseEntity.ok(res);
         } catch (Exception e) {

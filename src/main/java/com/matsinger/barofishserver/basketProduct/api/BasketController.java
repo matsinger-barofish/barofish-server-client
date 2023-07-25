@@ -2,9 +2,12 @@ package com.matsinger.barofishserver.basketProduct.api;
 
 import com.matsinger.barofishserver.basketProduct.application.BasketCommandService;
 import com.matsinger.barofishserver.basketProduct.application.BasketQueryService;
+import com.matsinger.barofishserver.basketProduct.dto.AddBasketOptionReq;
+import com.matsinger.barofishserver.basketProduct.dto.AddBasketReq;
 import com.matsinger.barofishserver.basketProduct.dto.BasketProductDto;
 import com.matsinger.barofishserver.basketProduct.domain.BasketProductInfo;
 import com.matsinger.barofishserver.basketProduct.domain.BasketProductOption;
+import com.matsinger.barofishserver.basketProduct.dto.DeleteBasketReq;
 import com.matsinger.barofishserver.basketProduct.repository.BasketProductOptionRepository;
 import com.matsinger.barofishserver.jwt.JwtService;
 import com.matsinger.barofishserver.jwt.TokenAuthType;
@@ -53,20 +56,6 @@ public class BasketController {
     }
 
 
-    @Getter
-    @NoArgsConstructor
-    private static class AddBasketOptionReq {
-        private Integer optionId;
-        private Integer amount;
-    }
-
-    @Getter
-    @NoArgsConstructor
-    private static class AddBasketReq {
-        private Integer productId;
-        private List<AddBasketOptionReq> options;
-    }
-
     @PostMapping("/add")
     public ResponseEntity<CustomResponse<Boolean>> addBasket(@RequestHeader(value = "Authorization") Optional<String> auth,
                                                              @RequestPart(value = "data") AddBasketReq data) {
@@ -84,7 +73,7 @@ public class BasketController {
             for (AddBasketOptionReq optionReq : data.getOptions()) {
                 basketCommandService.processBasketProductAdd(tokenInfo.get().getId(),
                         product.getId(),
-                        optionReq.optionId,
+                        optionReq.getOptionId(),
                         optionReq.getAmount());
             }
             res.setData(Optional.of(true));
@@ -125,11 +114,6 @@ public class BasketController {
         }
     }
 
-    @Getter
-    @NoArgsConstructor
-    private static class DeleteBasketReq {
-        List<Integer> ids;
-    }
 
     @DeleteMapping("/")
     public ResponseEntity<CustomResponse<Boolean>> deleteBasket(@RequestHeader(value = "Authorization") Optional<String> auth,
