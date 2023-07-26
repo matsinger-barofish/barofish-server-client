@@ -2,8 +2,6 @@ package com.matsinger.barofishserver.report.application;
 
 import com.matsinger.barofishserver.report.domain.Report;
 import com.matsinger.barofishserver.report.repository.ReportRepository;
-import com.matsinger.barofishserver.review.application.ReviewService;
-import com.matsinger.barofishserver.user.application.UserCommandService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -18,8 +16,6 @@ import java.util.List;
 @Service
 public class ReportQueryService {
     private final ReportRepository reportRepository;
-    private final UserCommandService userService;
-    private final ReviewService reviewService;
 
     public Boolean checkHasReported(Integer userId, Integer reviewId) {
         return reportRepository.existsByUserIdAndReviewId(userId, reviewId);

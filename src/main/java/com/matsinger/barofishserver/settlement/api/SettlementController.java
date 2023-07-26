@@ -8,12 +8,16 @@ import com.matsinger.barofishserver.order.orderprductinfo.domain.OrderProductInf
 import com.matsinger.barofishserver.order.orderprductinfo.dto.OrderProductInfoDto;
 import com.matsinger.barofishserver.order.orderprductinfo.domain.OrderProductState;
 import com.matsinger.barofishserver.product.application.ProductService;
+import com.matsinger.barofishserver.settlement.application.SettlementCommandService;
+import com.matsinger.barofishserver.settlement.application.SettlementQueryService;
+import com.matsinger.barofishserver.settlement.dto.ProcessSettleReq;
+import com.matsinger.barofishserver.settlement.dto.SettlementAmountRes;
 import com.matsinger.barofishserver.settlement.dto.SettlementDto;
 import com.matsinger.barofishserver.settlement.domain.SettlementOrderBy;
-import com.matsinger.barofishserver.settlement.application.SettlementService;
 import com.matsinger.barofishserver.settlement.domain.SettlementState;
 import com.matsinger.barofishserver.settlement.domain.OrderProductInfoOrderBy;
 import com.matsinger.barofishserver.settlement.domain.Settlement;
+import com.matsinger.barofishserver.settlement.dto.cancelSettleReq;
 import com.matsinger.barofishserver.store.application.StoreService;
 import com.matsinger.barofishserver.store.domain.StoreInfo;
 import com.matsinger.barofishserver.utils.Common;
@@ -37,19 +41,15 @@ import java.util.*;
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/settlement")
 public class SettlementController {
-    private final SettlementService settlementService;
+    private final SettlementQueryService settlementQueryService;
+    private final SettlementCommandService settlementCommandService;
     private final ProductService productService;
     private final OrderService orderService;
     private final StoreService storeService;
     private final JwtService jwt;
     private final Common utils;
 
-    @Getter
-    @Builder
-    private static class SettlementAmountRes {
-        Integer settledAmount;
-        Integer needSettleAmount;
-    }
+
 
     @GetMapping("/")
     ResponseEntity<CustomResponse<SettlementAmountRes>> selectSettlementAmount(@RequestHeader(value = "Authorization") Optional<String> auth) {
@@ -60,8 +60,8 @@ public class SettlementController {
         if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
         try {
             Integer storeId = tokenInfo.get().getType().equals(TokenAuthType.PARTNER) ? tokenInfo.get().getId() : null;
-            Integer settledAmount = settlementService.getSettlementAmount(storeId, true);
-            Integer needSettleAmount = settlementService.getSettlementAmount(storeId, false);
+            Integer settledAmount = settlementQueryService.getSettlementAmount(storeId, true);
+            Integer needSettleAmount = settlementQueryService.getSettlementAmount(storeId, false);
             res.setData(Optional.ofNullable(SettlementAmountRes.builder().settledAmount(settledAmount).needSettleAmount(
                     needSettleAmount).build()));
             return ResponseEntity.ok(res);
@@ -133,7 +133,7 @@ public class SettlementController {
             PageRequest pageRequest = PageRequest.of(page, take, Sort.by(orderType, orderby.label));
             Page<SettlementDto>
                     settlements =
-                    settlementService.selectSettlementList(spec, pageRequest).map(settlementService::convert2Dto);
+                    settlementQueryService.selectSettlementList(spec, pageRequest).map(settlementCommandService::convert2Dto);
             res.setData(Optional.of(settlements));
             return ResponseEntity.ok(res);
         } catch (Exception e) {
@@ -141,12 +141,6 @@ public class SettlementController {
         }
     }
 
-    @Getter
-    @NoArgsConstructor
-    private static class ProcessSettleReq {
-        Integer storeId;
-        List<Integer> orderProductInfoIds;
-    }
 
     @PostMapping("/request")
     public ResponseEntity<CustomResponse<Boolean>> processSettleByAdmin(@RequestHeader(value = "Authorization") Optional<String> auth,
@@ -155,21 +149,21 @@ public class SettlementController {
         Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
         if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
         try {
-            if (data.storeId == null) return res.throwError("파트너를 선택해주세요.", "INPUT_CHECK_REQUIRED");
-            if (data.orderProductInfoIds == null || data.orderProductInfoIds.size() == 0)
+            if (data.getStoreId() == null) return res.throwError("파트너를 선택해주세요.", "INPUT_CHECK_REQUIRED");
+            if (data.getOrderProductInfoIds() == null || data.getOrderProductInfoIds().size() == 0)
                 return res.throwError("정산 처리할 주문 내역을 선택해주세요.", "INPUT_CHECK_REQUIRED");
-            StoreInfo storeInfo = storeService.selectStoreInfo(data.storeId);
-            List<OrderProductInfo> productInfos = orderService.selectOrderProductInfoWithIds(data.orderProductInfoIds);
+            StoreInfo storeInfo = storeService.selectStoreInfo(data.getStoreId());
+            List<OrderProductInfo> productInfos = orderService.selectOrderProductInfoWithIds(data.getOrderProductInfoIds());
             if (productInfos.stream().map(v -> productService.findById(v.getProductId())).anyMatch(v -> v.getStoreId() !=
-                    data.storeId)) return res.throwError("동일한 파트너의 주문만 묶어서 정산 처리 진행해주세요.", "INPUT_CHECK_REQUIRED");
-            int totalPrice = settlementService.getSettlementAmount(productInfos, storeInfo.getStoreId());
+                    data.getStoreId())) return res.throwError("동일한 파트너의 주문만 묶어서 정산 처리 진행해주세요.", "INPUT_CHECK_REQUIRED");
+            int totalPrice = settlementQueryService.getSettlementAmount(productInfos, storeInfo.getStoreId());
 
             for (OrderProductInfo info : productInfos) {
                 info.setIsSettled(true);
                 info.setSettledAt(utils.now());
             }
             orderService.updateOrderProductInfos(productInfos);
-            settlementService.addSettlement(Settlement.builder().storeId(storeInfo.getStoreId()).state(SettlementState.DONE).settlementAmount(
+            settlementCommandService.addSettlement(Settlement.builder().storeId(storeInfo.getStoreId()).state(SettlementState.DONE).settlementAmount(
                     totalPrice).settledAt(utils.now()).build());
             res.setData(Optional.of(true));
             return ResponseEntity.ok(res);
@@ -206,13 +200,7 @@ public class SettlementController {
 //        }
 //    }
 
-    @Getter
-    @NoArgsConstructor
-    private static class cancelSettleReq {
-        Integer storeId;
-        List<Integer> orderProductInfoIds;
-        String cancelReason;
-    }
+
 
     @PostMapping("/cancel")
     public ResponseEntity<CustomResponse<Boolean>> cancelSettleByAdmin(@RequestHeader(value = "Authorization") Optional<String> auth,
@@ -221,20 +209,20 @@ public class SettlementController {
         Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
         if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
         try {
-            if (data.storeId == null) return res.throwError("파트너를 선택해주세요.", "INPUT_CHECK_REQUIRED");
-            if (data.orderProductInfoIds == null || data.orderProductInfoIds.size() == 0)
+            if (data.getStoreId() == null) return res.throwError("파트너를 선택해주세요.", "INPUT_CHECK_REQUIRED");
+            if (data.getOrderProductInfoIds() == null || data.getOrderProductInfoIds().size() == 0)
                 return res.throwError("정산 처리할 주문 내역을 선택해주세요.", "INPUT_CHECK_REQUIRED");
-            StoreInfo storeInfo = storeService.selectStoreInfo(data.storeId);
-            List<OrderProductInfo> productInfos = orderService.selectOrderProductInfoWithIds(data.orderProductInfoIds);
+            StoreInfo storeInfo = storeService.selectStoreInfo(data.getStoreId());
+            List<OrderProductInfo> productInfos = orderService.selectOrderProductInfoWithIds(data.getOrderProductInfoIds());
             if (productInfos.stream().map(v -> productService.findById(v.getProductId())).anyMatch(v -> v.getStoreId() !=
-                    data.storeId)) return res.throwError("동일한 파트너의 주문만 묶어서 정산 처리 진행해주세요.", "INPUT_CHECK_REQUIRED");
-            int totalPrice = settlementService.getSettlementAmount(productInfos, storeInfo.getStoreId());
+                    data.getStoreId())) return res.throwError("동일한 파트너의 주문만 묶어서 정산 처리 진행해주세요.", "INPUT_CHECK_REQUIRED");
+            int totalPrice = settlementQueryService.getSettlementAmount(productInfos, storeInfo.getStoreId());
             for (OrderProductInfo info : productInfos) {
                 info.setIsSettled(false);
                 info.setSettledAt(null);
             }
-            settlementService.addSettlement(Settlement.builder().storeId(storeInfo.getStoreId()).state(SettlementState.CANCELED).settlementAmount(
-                    totalPrice).settledAt(utils.now()).cancelReason(data.cancelReason).build());
+            settlementCommandService.addSettlement(Settlement.builder().storeId(storeInfo.getStoreId()).state(SettlementState.CANCELED).settlementAmount(
+                    totalPrice).settledAt(utils.now()).cancelReason(data.getCancelReason()).build());
             orderService.updateOrderProductInfos(productInfos);
             return ResponseEntity.ok(res);
         } catch (Exception e) {

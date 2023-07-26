@@ -16,7 +16,6 @@ import java.util.Objects;
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
-@Setter
 @Builder
 @Table(name = "review", schema = "barofish_dev", catalog = "")
 public class Review {
@@ -24,9 +23,6 @@ public class Review {
     @Id
     @Column(name = "id", nullable = false)
     private int id;
-//    @Basic
-//    @Column(name = "product_id", nullable = false)
-//    private int productId;
 
     @ManyToOne
     @JoinColumn(name = "product_id", insertable = false, updatable = false)
@@ -69,61 +65,11 @@ public class Review {
     @OneToMany(mappedBy = "review")
     private List<ReviewEvaluation> evaluations;
 
-    public int getId() {
-        return id;
-    }
-
-    public void setId(int id) {
-        this.id = id;
-    }
-
-//    public Product getProduct() {
-//        return product;
-//    }
-//
-//    public void setProductId(Product product) {
-//        this.product = product;
-//    }
-
-//    public int getStoreId() {
-//        return storeId;
-//    }
-//
-//    public void setStoreId(int storeId) {
-//        this.storeId = storeId;
-//    }
-
-//    public int getUserId() {
-//        return userId;
-//    }
-//
-//    public void setUserId(int userId) {
-//        this.userId = userId;
-//    }
-
-
-    public String getImages() {
-        return images;
-    }
-
     public void setImages(String images) {
         this.images = images;
     }
-
-    public String getContent() {
-        return content;
-    }
-
     public void setContent(String content) {
         this.content = content;
-    }
-
-    public Timestamp getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(Timestamp createdAt) {
-        this.createdAt = createdAt;
     }
 
     public ReviewDto convert2Dto() {
@@ -131,24 +77,5 @@ public class Review {
                 images.length() -
                         1).split(",")).content(this.content).createdAt(this.createdAt).evaluations(this.evaluations !=
                 null ? this.evaluations.stream().map(ReviewEvaluation::getEvaluation).toList() : null).build();
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        Review that = (Review) o;
-        return id == that.id &&
-//                productId == that.productId &&
-//                storeId == that.storeId &&
-//                userId == that.userId &&
-                Objects.equals(images, that.images) &&
-                Objects.equals(content, that.content) &&
-                Objects.equals(createdAt, that.createdAt);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(id, images, content, createdAt);
     }
 }

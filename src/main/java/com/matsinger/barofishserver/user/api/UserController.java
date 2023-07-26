@@ -69,27 +69,20 @@ public class UserController {
 
         CustomResponse<Jwt> res = new CustomResponse<>();
 
-        String loginId;
         try {
-            userCommandService.addUserAuthIfPhoneNumberExists(request);
+            SnsJoinLoginResponseDto responseDto = userCommandService.createSnsUserAndSave(request);
 
-            loginId = userQueryService.getExistingLoginId(request);
-
-            if (loginId == null) {
-                SnsJoinLoginResponseDto responseDto = userCommandService.createSnsUserAndSave(request);
-                loginId = responseDto.getLoginId();
-
-                String profileImage = "";
-                if (request.getProfileImage() != null) {
-                    profileImage =
-                            s3.upload(s3.extractBase64FromImageUrl(request.getProfileImage()),
-                                    new ArrayList<>(Arrays.asList("user", String.valueOf(responseDto.getUserId()))));
-                }
-                userInfoCommandService.setImageUrl(responseDto.getUserId(), profileImage);
+            String profileImage = "";
+            if (request.getProfileImage() != null) {
+                profileImage =
+                        s3.upload(s3.extractBase64FromImageUrl(request.getProfileImage()),
+                                new ArrayList<>(Arrays.asList("user", String.valueOf(responseDto.getUserId()))));
             }
 
-            String accessToken = jwtProvider.generateAccessToken(String.valueOf(loginId), TokenAuthType.USER);
-            String refreshToken = jwtProvider.generateRefreshToken(String.valueOf(loginId), TokenAuthType.USER);
+            userInfoCommandService.setImageUrl(responseDto.getUserId(), profileImage);
+
+            String accessToken = jwtProvider.generateAccessToken(String.valueOf(responseDto.getLoginId()), TokenAuthType.USER);
+            String refreshToken = jwtProvider.generateRefreshToken(String.valueOf(responseDto.getLoginId()), TokenAuthType.USER);
             Jwt token = new Jwt();
             token.setAccessToken(accessToken);
             token.setRefreshToken(refreshToken);
@@ -106,27 +99,23 @@ public class UserController {
                                                             @RequestPart(value = "profileImage", required = false) MultipartFile profileImage) {
         CustomResponse<Boolean> res = new CustomResponse<>();
         try {
-//            verificationService.verifyPhoneVerification(request); // 휴대폰 번호 검증
+            verificationService.verifyPhoneVerification(request); // 휴대폰 번호 검증
 
-            boolean isUserAlreadyExists = userCommandService.addUserAuthIfPhoneNumberExists(request); // 유저가 이미 있으면 user_auth에 추가
+            int userId = userCommandService.createIdPwUserAndSave(request);
 
-            if (!isUserAlreadyExists) {
-                int userId = userCommandService.createIdPwUserAndSave(request);
-
-                ArrayList<String> directoryElement = new ArrayList<String>();
-                directoryElement.add("user");
-                directoryElement.add(String.valueOf(userId));
-                if (profileImage != null && !profileImage.isEmpty() && !s3.validateImageType(profileImage)) {
-                    return res.throwError("지원하지 않는 이미지 확장자입니다.", "INPUT_CHECK_REQUIRED");
-                }
-                String
-                        imageUrl =
-                        profileImage != null && !profileImage.isEmpty() ? s3.upload(profileImage,
-                                directoryElement) : String.join("/", Arrays.asList(s3.getS3Url(), "default_profile.png"));
-                userInfoCommandService.setImageUrl(userId, imageUrl);
-
-                res.setData(Optional.of(true));
+            ArrayList<String> directoryElement = new ArrayList<String>();
+            directoryElement.add("user");
+            directoryElement.add(String.valueOf(userId));
+            if (profileImage != null && !profileImage.isEmpty() && !s3.validateImageType(profileImage)) {
+                return res.throwError("지원하지 않는 이미지 확장자입니다.", "INPUT_CHECK_REQUIRED");
             }
+            String
+                    imageUrl =
+                    profileImage != null && !profileImage.isEmpty() ? s3.upload(profileImage,
+                            directoryElement) : String.join("/", Arrays.asList(s3.getS3Url(), "default_profile.png"));
+            userInfoCommandService.setImageUrl(userId, imageUrl);
+
+            res.setData(Optional.of(true));
             return ResponseEntity.ok(res);
         } catch (Exception e) {
             return res.defaultError(e);
@@ -299,8 +288,10 @@ public class UserController {
         Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
         if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
         try {
+            Integer adminId = tokenInfo.get().getId();
             if (data.getState() == null) return res.throwError("상태를 입력해주세요.", "INPUT_CHECK_REQUIRED");
-            userCommandService.updateUserState(data.getUserIds(), data.getState());
+            userCommandService.updateUserState(data.getUserIds(), data.getState(), adminId);
+
             res.setData(Optional.of(true));
             return ResponseEntity.ok(res);
         } catch (Exception e) {

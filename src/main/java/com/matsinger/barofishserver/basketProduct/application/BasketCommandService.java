@@ -4,6 +4,7 @@ import com.matsinger.barofishserver.basketProduct.domain.BasketProductInfo;
 import com.matsinger.barofishserver.basketProduct.domain.BasketProductOption;
 import com.matsinger.barofishserver.basketProduct.repository.BasketProductInfoRepository;
 import com.matsinger.barofishserver.basketProduct.repository.BasketProductOptionRepository;
+import com.matsinger.barofishserver.product.application.ProductService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -17,6 +18,7 @@ import java.util.List;
 public class BasketCommandService {
     private final BasketProductInfoRepository infoRepository;
     private final BasketProductOptionRepository optionRepository;
+    private final ProductService productService;
     private final com.matsinger.barofishserver.product.optionitem.repository.OptionItemRepository optionItemRepository;
 
     public void addProductToBasket(Integer userId,
@@ -53,7 +55,8 @@ public class BasketCommandService {
     }
 
 
-    public void processBasketProductAdd(Integer userId, Integer productId, Integer optionId, Integer amount) {
+    public void processBasketProductAdd(Integer userId, Integer productId, Integer optionId, Integer amount)
+            throws Exception {
         List<BasketProductInfo> infos = infoRepository.findByUserIdAndProductId(userId, productId);
         boolean isExist = false;
         for (BasketProductInfo info : infos) {
@@ -61,6 +64,12 @@ public class BasketCommandService {
             for (BasketProductOption option : options) {
                 if (option.getOptionId() == optionId) {
                     isExist = true;
+                    com.matsinger.barofishserver.product.optionitem.domain.OptionItem
+                            optionItem =
+                            productService.selectOptionItem(optionId);
+                    if (info.getAmount() + amount > optionItem.getMaxAvailableAmount())
+                        throw new IllegalArgumentException("최대 주문 수량을 초과하였습니다.");
+
                     info.setAmount(info.getAmount() + amount);
                     infoRepository.save(info);
                 }

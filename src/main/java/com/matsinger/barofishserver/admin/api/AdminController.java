@@ -7,6 +7,8 @@ import com.matsinger.barofishserver.admin.domain.AdminState;
 import com.matsinger.barofishserver.admin.domain.Admin;
 import com.matsinger.barofishserver.admin.domain.AdminAuth;
 import com.matsinger.barofishserver.admin.domain.AdminAuthority;
+import com.matsinger.barofishserver.admin.dto.AddAdminReq;
+import com.matsinger.barofishserver.admin.dto.UpdateAdminReq;
 import com.matsinger.barofishserver.jwt.*;
 import com.matsinger.barofishserver.utils.Common;
 import com.matsinger.barofishserver.utils.CustomResponse;
@@ -127,21 +129,7 @@ public class AdminController {
         }
     }
 
-    @Getter
-    @NoArgsConstructor
-    private static class AddAdminReq {
-        String loginId;
-        String password;
-        String name;
-        String tel;
-        Boolean accessUser;
-        Boolean accessProduct;
-        Boolean accessOrder;
-        Boolean accessSettlement;
-        Boolean accessBoard;
-        Boolean accessPromotion;
-        Boolean accessSetting;
-    }
+
 
     @PostMapping("/add")
     public ResponseEntity<CustomResponse<Admin>> addAdminByMaster(@RequestHeader(value = "Authorization") Optional<String> auth,
@@ -153,28 +141,28 @@ public class AdminController {
             Admin master = adminQueryService.selectAdmin(tokenInfo.get().getId());
             if (!master.getAuthority().equals(AdminAuthority.MASTER))
                 return res.throwError("최고 관리자만 생성 가능합니다.", "NOT_ALLOWED");
-            if (data.loginId == null) return res.throwError("로그인 아이디를 입력해주세요.", "INPUT_CHECK_REQUIRED");
-            Admin checkExist = adminQueryService.selectAdminByLoginId(data.loginId);
+            if (data.getLoginId() == null) return res.throwError("로그인 아이디를 입력해주세요.", "INPUT_CHECK_REQUIRED");
+            Admin checkExist = adminQueryService.selectAdminByLoginId(data.getLoginId());
             if (checkExist != null) return res.throwError("이미 존재하는 아이디입니다.", "NOT_ALLOWED");
-            if (data.password == null) return res.throwError("비밀번호를 입력해주세요.", "INPUT_CHECK_REQUIRED");
-            String password = BCrypt.hashpw(data.password, BCrypt.gensalt());
-            String name = utils.validateString(data.name, 20L, "이름");
-            if (!Pattern.matches(reg.tel, data.tel)) return res.throwError("전화번호 형식을 확인해주세요.", "INPUT_CHECK_REQUIRED");
-            String tel = data.tel.replaceAll("[^\\d]*", "");
+            if (data.getPassword() == null) return res.throwError("비밀번호를 입력해주세요.", "INPUT_CHECK_REQUIRED");
+            String password = BCrypt.hashpw(data.getPassword(), BCrypt.gensalt());
+            String name = utils.validateString(data.getName(), 20L, "이름");
+            if (!Pattern.matches(reg.tel, data.getTel())) return res.throwError("전화번호 형식을 확인해주세요.", "INPUT_CHECK_REQUIRED");
+            String tel = data.getTel().replaceAll("[^\\d]*", "");
             Admin
                     admin =
-                    Admin.builder().loginId(data.loginId).password(password).authority(AdminAuthority.MANAGER).state(
+                    Admin.builder().loginId(data.getLoginId()).password(password).authority(AdminAuthority.MANAGER).state(
                             AdminState.ACTIVE).name(name).tel(tel).createdAt(utils.now()).build();
             AdminAuth
                     adminAuth =
-                    AdminAuth.builder().adminId(admin.getId()).accessUser(data.accessUser != null &&
-                            data.accessUser).accessProduct(data.accessProduct != null &&
-                            data.accessProduct).accessOrder(data.accessOrder != null &&
-                            data.accessOrder).accessSettlement(data.accessSettlement != null &&
-                            data.accessSettlement).accessBoard(data.accessBoard != null &&
-                            data.accessBoard).accessPromotion(data.accessPromotion != null &&
-                            data.accessPromotion).accessSetting(data.accessSetting != null &&
-                            data.accessSetting).build();
+                    AdminAuth.builder().adminId(admin.getId()).accessUser(data.getAccessUser() != null &&
+                            data.getAccessUser()).accessProduct(data.getAccessProduct() != null &&
+                            data.getAccessProduct()).accessOrder(data.getAccessOrder() != null &&
+                            data.getAccessOrder()).accessSettlement(data.getAccessSettlement() != null &&
+                            data.getAccessSettlement()).accessBoard(data.getAccessBoard() != null &&
+                            data.getAccessBoard()).accessPromotion(data.getAccessPromotion() != null &&
+                            data.getAccessPromotion()).accessSetting(data.getAccessSetting() != null &&
+                            data.getAccessSetting()).build();
             admin = adminCommandService.addAdmin(admin);
             adminAuth = adminCommandService.upsertAdminAuth(adminAuth);
             admin.setPassword(null);
@@ -185,21 +173,7 @@ public class AdminController {
         }
     }
 
-    @Getter
-    @NoArgsConstructor
-    private static class UpdateAdminReq {
-        String password;
-        AdminState state;
-        String name;
-        String tel;
-        Boolean accessUser;
-        Boolean accessProduct;
-        Boolean accessOrder;
-        Boolean accessSettlement;
-        Boolean accessBoard;
-        Boolean accessPromotion;
-        Boolean accessSetting;
-    }
+
 
     @PostMapping("/update/{id}")
     public ResponseEntity<CustomResponse<Admin>> updateAdminByMaster(@RequestHeader(value = "Authorization") Optional<String> auth,
@@ -214,35 +188,35 @@ public class AdminController {
                 return res.throwError("최고 관리자의 경우 수정 가능합니다.", "NOT_ALLOWED");
             Admin admin = adminQueryService.selectAdmin(id);
             AdminAuth adminAuth = adminQueryService.selectAdminAuth(id);
-            if (data.password != null) {
-                String password = BCrypt.hashpw(data.password, BCrypt.gensalt());
+            if (data.getPassword() != null) {
+                String password = BCrypt.hashpw(data.getPassword(), BCrypt.gensalt());
                 admin.setPassword(password);
             }
-            if (data.state != null) admin.setState(data.state);
-            if (data.name != null) {
-                String name = utils.validateString(data.name, 20L, "이름");
+            if (data.getState() != null) admin.setState(data.getState());
+            if (data.getName() != null) {
+                String name = utils.validateString(data.getName(), 20L, "이름");
                 admin.setName(name);
             }
-            if (data.tel != null) {
-                if (!Pattern.matches(reg.tel, data.tel))
+            if (data.getTel() != null) {
+                if (!Pattern.matches(reg.tel, data.getTel()))
                     return res.throwError("전화번호 형식을 확인해주세요.", "INPUT_CHECK_REQUIRED");
-                String tel = data.tel.replaceAll("[^\\d]*", "");
+                String tel = data.getTel().replaceAll("[^\\d]*", "");
                 admin.setTel(tel);
             }
-            if (data.accessUser != null)
-                adminAuth.setAccessUser(data.accessUser || admin.getAuthority().equals(AdminAuthority.MASTER));
-            if (data.accessProduct != null)
-                adminAuth.setAccessProduct(data.accessProduct || admin.getAuthority().equals(AdminAuthority.MASTER));
-            if (data.accessOrder != null)
-                adminAuth.setAccessOrder(data.accessOrder || admin.getAuthority().equals(AdminAuthority.MASTER));
-            if (data.accessSettlement != null) adminAuth.setAccessSettlement(data.accessSettlement ||
+            if (data.getAccessUser() != null)
+                adminAuth.setAccessUser(data.getAccessUser() || admin.getAuthority().equals(AdminAuthority.MASTER));
+            if (data.getAccessProduct() != null)
+                adminAuth.setAccessProduct(data.getAccessProduct() || admin.getAuthority().equals(AdminAuthority.MASTER));
+            if (data.getAccessOrder() != null)
+                adminAuth.setAccessOrder(data.getAccessOrder() || admin.getAuthority().equals(AdminAuthority.MASTER));
+            if (data.getAccessSettlement() != null) adminAuth.setAccessSettlement(data.getAccessSettlement() ||
                     admin.getAuthority().equals(AdminAuthority.MASTER));
-            if (data.accessBoard != null)
-                adminAuth.setAccessBoard(data.accessBoard || admin.getAuthority().equals(AdminAuthority.MASTER));
-            if (data.accessPromotion != null) adminAuth.setAccessPromotion(data.accessPromotion ||
+            if (data.getAccessBoard() != null)
+                adminAuth.setAccessBoard(data.getAccessBoard() || admin.getAuthority().equals(AdminAuthority.MASTER));
+            if (data.getAccessPromotion() != null) adminAuth.setAccessPromotion(data.getAccessPromotion() ||
                     admin.getAuthority().equals(AdminAuthority.MASTER));
-            if (data.accessSetting != null)
-                adminAuth.setAccessSetting(data.accessSetting || admin.getAuthority().equals(AdminAuthority.MASTER));
+            if (data.getAccessSetting() != null)
+                adminAuth.setAccessSetting(data.getAccessSetting() || admin.getAuthority().equals(AdminAuthority.MASTER));
             admin = adminCommandService.addAdmin(admin);
             adminCommandService.upsertAdminAuth(adminAuth);
             admin.setPassword(null);

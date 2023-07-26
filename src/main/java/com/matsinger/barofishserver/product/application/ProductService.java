@@ -26,11 +26,11 @@ import com.matsinger.barofishserver.product.productfilter.dto.ProductFilterValue
 import com.matsinger.barofishserver.product.productfilter.repository.ProductFilterRepository;
 import com.matsinger.barofishserver.product.repository.ProductRepository;
 import com.matsinger.barofishserver.product.productfilter.application.ProductFilterService;
-import com.matsinger.barofishserver.review.application.ReviewService;
+import com.matsinger.barofishserver.review.application.ReviewQueryService;
 import com.matsinger.barofishserver.review.domain.Review;
 import com.matsinger.barofishserver.review.dto.ReviewTotalStatistic;
 import com.matsinger.barofishserver.review.repository.ReviewRepository;
-import com.matsinger.barofishserver.searchFilter.application.SearchFilterService;
+import com.matsinger.barofishserver.searchFilter.application.SearchFilterQueryService;
 import com.matsinger.barofishserver.searchFilter.domain.ProductSearchFilterMap;
 import com.matsinger.barofishserver.searchFilter.dto.SearchFilterFieldDto;
 import com.matsinger.barofishserver.searchFilter.repository.ProductSearchFilterMapRepository;
@@ -67,8 +67,8 @@ public class ProductService {
     private final ProductFilterService productFilterService;
     private final StoreService storeService;
     private final InquiryQueryService inquiryQueryService;
-    private final ReviewService reviewService;
-    private final SearchFilterService searchFilterService;
+    private final ReviewQueryService reviewQueryService;
+    private final SearchFilterQueryService searchFilterQueryService;
     private final ReviewRepository reviewRepository;
     private final ProductFilterRepository productFilterRepository;
     private final CompareFilterRepository compareFilterRepository;
@@ -307,11 +307,12 @@ public class ProductService {
 
     public ProductListDto convert2ListDto(Product product) {
         StoreInfo storeInfo = storeService.selectStoreInfo(product.getStoreId());
-        Integer reviewCount = reviewService.countReviewWithProductId(product.getId());
+        Integer reviewCount = reviewQueryService.countReviewWithProductId(product.getId());
         OptionItem optionItem = selectOptionItem(product.getRepresentOptionItemId());
         return ProductListDto.builder().id(product.getId()).state(product.getState()).image(product.getImages().substring(
                 1,
-                product.getImages().length() - 1).split(",")[0]).originPrice(optionItem.getOriginPrice()).discountPrice(
+                product.getImages().length() -
+                        1).split(",")[0]).originPrice(optionItem.getOriginPrice()).isNeedTaxation(product.getNeedTaxation()).discountPrice(
                 optionItem.getDiscountPrice()).title(product.getTitle()).reviewCount(reviewCount).storeId(storeInfo.getStoreId()).storeName(
                 storeInfo.getName()).parentCategoryId(product.getCategory().getCategoryId()).filterValues(
                 productFilterService.selectProductFilterValueListWithProductId(product.getId())).build();
@@ -322,16 +323,18 @@ public class ProductService {
         List<Inquiry> inquiries = inquiryQueryService.selectInquiryListWithProductId(product.getId());
         List<Review>
                 reviews =
-                reviewService.selectReviewListByProduct(product.getId(), PageRequest.of(0, 50)).getContent();
+                reviewQueryService.selectReviewListByProduct(product.getId(), PageRequest.of(0, 50)).getContent();
         StoreInfo store = storeService.selectStoreInfo(product.getStoreId());
         List<Product> comparedProducts = selectComparedProductList(product.getId());
-        ReviewTotalStatistic reviewStatistics = reviewService.selectReviewTotalStatisticWithProductId(product.getId());
+        ReviewTotalStatistic
+                reviewStatistics =
+                reviewQueryService.selectReviewTotalStatisticWithProductId(product.getId());
         productDto.setReviewStatistics(reviewStatistics);
         CategoryDto category = product.getCategory().convert2Dto();
         List<SearchFilterFieldDto>
                 searchFilterFields =
                 productSearchFilterMapRepository.findAllByProductId(product.getId()).stream().map(ProductSearchFilterMap::getFieldId).map(
-                        v -> searchFilterService.selectSearchFilterField(v).convert2Dto()).toList();
+                        v -> searchFilterQueryService.selectSearchFilterField(v).convert2Dto()).toList();
         List<Address>
                 addresses =
                 difficultDeliverAddressQueryService.selectDifficultDeliverAddressWithProductId(product.getId()).stream().map(

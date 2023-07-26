@@ -27,7 +27,6 @@ public class Orders {
     @Column(name = "state", nullable = false)
     @Enumerated(EnumType.STRING)
     private OrderState state;
-
     @Basic
     @Column(name = "payment_way", nullable = false)
     @Enumerated(EnumType.STRING)

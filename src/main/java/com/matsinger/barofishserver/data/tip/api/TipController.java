@@ -3,23 +3,20 @@ package com.matsinger.barofishserver.data.tip.api;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.matsinger.barofishserver.data.tip.application.TipCommandService;
 import com.matsinger.barofishserver.data.tip.application.TipQueryService;
-import com.matsinger.barofishserver.data.tip.domain.TipInfo;
-import com.matsinger.barofishserver.data.tip.domain.TipOrderBy;
-import com.matsinger.barofishserver.data.tip.domain.TipType;
-import com.matsinger.barofishserver.data.tip.domain.Tip;
+import com.matsinger.barofishserver.data.tip.domain.*;
 import com.matsinger.barofishserver.data.tip.dto.AddTipReq;
 import com.matsinger.barofishserver.data.tip.dto.TipInfoUpdateReq;
+import com.matsinger.barofishserver.data.tip.dto.UpdateTipStateReq;
 import com.matsinger.barofishserver.jwt.JwtService;
 import com.matsinger.barofishserver.jwt.TokenAuthType;
 import com.matsinger.barofishserver.jwt.TokenInfo;
-import com.matsinger.barofishserver.siteInfo.SiteInfoService;
-import com.matsinger.barofishserver.siteInfo.SiteInformation;
+import com.matsinger.barofishserver.siteInfo.application.SiteInfoCommandService;
+import com.matsinger.barofishserver.siteInfo.application.SiteInfoQueryService;
+import com.matsinger.barofishserver.siteInfo.domain.SiteInformation;
 import com.matsinger.barofishserver.utils.Common;
 import com.matsinger.barofishserver.utils.CustomResponse;
 import com.matsinger.barofishserver.utils.S3.S3Uploader;
 import jakarta.persistence.criteria.Predicate;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import org.json.JSONObject;
 import org.springframework.data.domain.Page;
@@ -43,14 +40,15 @@ public class TipController {
 
     private final Common utils;
     private final S3Uploader s3;
-    private final SiteInfoService siteInfoService;
+    private final SiteInfoQueryService siteInfoQueryService;
+    private final SiteInfoCommandService siteInfoCommandService;
     private final JwtService jwt;
 
     @GetMapping("")
     public ResponseEntity<CustomResponse<List<Tip>>> selectTipList(@RequestParam(value = "type", required = false) TipType type) {
         CustomResponse<List<Tip>> res = new CustomResponse<>();
         try {
-            List<Tip> tips = tipQueryService.selectTipList(type);
+            List<Tip> tips = tipQueryService.selectTipList(type, TipState.ACTIVE);
             res.setData(Optional.ofNullable(tips));
             return ResponseEntity.ok(res);
         } catch (Exception e) {
@@ -62,7 +60,7 @@ public class TipController {
     public ResponseEntity<CustomResponse<TipInfo>> selectTipInfo() {
         CustomResponse<TipInfo> res = new CustomResponse<>();
         try {
-            SiteInformation info = siteInfoService.selectSiteInfo("INTERNAL_TIP_INFO");
+            SiteInformation info = siteInfoQueryService.selectSiteInfo("INTERNAL_TIP_INFO");
             String jsonStr = info.getContent();
             JSONObject jsonObject = new JSONObject(jsonStr);
             TipInfo
@@ -139,8 +137,9 @@ public class TipController {
             String contentUrl = s3.uploadEditorStringToS3(data.getContent(), new ArrayList<>(List.of("tip")));
             Tip
                     tip =
-                    Tip.builder().title(title).type(data.getType() == null ? TipType.COMPARE : data.getType()).description(
-                            description).image(imageUrl).imageDetail(imageDetailUrl).content(contentUrl).createdAt(utils.now()).build();
+                    Tip.builder().title(title).type(data.getType() ==
+                            null ? TipType.COMPARE : data.getType()).description(description).state(TipState.ACTIVE).image(
+                            imageUrl).imageDetail(imageDetailUrl).content(contentUrl).createdAt(utils.now()).build();
             res.setData(Optional.ofNullable(tipCommandService.add(tip)));
             return ResponseEntity.ok(res);
         } catch (Exception e) {
@@ -191,7 +190,6 @@ public class TipController {
     }
 
 
-
     @PostMapping("/info/update")
     public ResponseEntity<CustomResponse<TipInfo>> updateTipInfo(@RequestHeader(value = "Authorization") Optional<String> auth,
                                                                  @RequestPart(value = "data") TipInfoUpdateReq data,
@@ -200,7 +198,7 @@ public class TipController {
         Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
         if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
         try {
-            SiteInformation info = siteInfoService.selectSiteInfo("INTERNAL_TIP_INFO");
+            SiteInformation info = siteInfoQueryService.selectSiteInfo("INTERNAL_TIP_INFO");
             String jsonStr = info.getContent();
             JSONObject jsonObject = new JSONObject(jsonStr);
             TipInfo
@@ -225,8 +223,27 @@ public class TipController {
             }
             ObjectMapper mapper = new ObjectMapper();
             info.setContent(mapper.writeValueAsString(tipInfo));
-            siteInfoService.updateSiteInfo(info);
+            siteInfoCommandService.updateSiteInfo(info);
             res.setData(Optional.ofNullable(tipInfo));
+            return ResponseEntity.ok(res);
+        } catch (Exception e) {
+            return res.defaultError(e);
+        }
+    }
+
+    @PostMapping("/update/state")
+    public ResponseEntity<CustomResponse<Boolean>> updateTipState(@RequestHeader(value = "Authorization") Optional<String> auth,
+                                                                  @RequestPart(value = "data") UpdateTipStateReq data) {
+        CustomResponse<Boolean> res = new CustomResponse<>();
+        Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
+        if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
+        try {
+            if (data.getTipIds() == null) return res.throwError("아이디를 입력해주세요.", "INPUT_CHECK_REQUIRED");
+            if (data.getState() == null) return res.throwError("변경할 상태를 입력해주세요.", "INPUT_CHECK_REQUIRED");
+            List<Tip> tips = tipQueryService.selectTipListWithIds(data.getTipIds());
+            tips.forEach(v -> v.setState(data.getState()));
+            tipCommandService.updateTipList(tips);
+            res.setData(Optional.of(true));
             return ResponseEntity.ok(res);
         } catch (Exception e) {
             return res.defaultError(e);

@@ -1,11 +1,16 @@
 package com.matsinger.barofishserver.coupon.api;
 
+import com.matsinger.barofishserver.admin.log.application.AdminLogCommandService;
+import com.matsinger.barofishserver.admin.log.application.AdminLogQueryService;
+import com.matsinger.barofishserver.admin.log.domain.AdminLog;
+import com.matsinger.barofishserver.admin.log.domain.AdminLogType;
 import com.matsinger.barofishserver.coupon.application.CouponCommandService;
 import com.matsinger.barofishserver.coupon.application.CouponQueryService;
 import com.matsinger.barofishserver.coupon.domain.Coupon;
 import com.matsinger.barofishserver.coupon.domain.CouponOrderBy;
 import com.matsinger.barofishserver.coupon.domain.CouponState;
 import com.matsinger.barofishserver.coupon.domain.CouponType;
+import com.matsinger.barofishserver.coupon.dto.CouponAddReq;
 import com.matsinger.barofishserver.jwt.JwtService;
 import com.matsinger.barofishserver.jwt.TokenAuthType;
 import com.matsinger.barofishserver.jwt.TokenInfo;
@@ -32,6 +37,8 @@ import java.util.*;
 public class CouponController {
     private final CouponQueryService couponQueryService;
     private final CouponCommandService couponCommandService;
+    private final AdminLogQueryService adminLogQueryService;
+    private final AdminLogCommandService adminLogCommandService;
     private final JwtService jwt;
     private final Common utils;
 
@@ -143,17 +150,7 @@ public class CouponController {
         }
     }
 
-    @Getter
-    @Setter
-    @NoArgsConstructor
-    private static class CouponAddReq {
-        String title;
-        CouponType type;
-        Integer amount;
-        Timestamp startAt;
-        Timestamp endAt;
-        Integer minPrice;
-    }
+
 
     @PostMapping("add")
     public ResponseEntity<CustomResponse<Coupon>> addCoupon(@RequestHeader(value = "Authorization") Optional<String> auth,
@@ -162,6 +159,7 @@ public class CouponController {
         Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
         if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
         try {
+            Integer adminId = tokenInfo.get().getId();
             String title = utils.validateString(data.getTitle(), 100L, "제목");
             if (data.getType() == null) return res.throwError("할인 유형을 입력해주세요.", "INPUT_CHECK_REQUIRED");
             if (data.getType().equals(CouponType.RATE)) {
@@ -179,6 +177,10 @@ public class CouponController {
                             data.getEndAt()).minPrice(data.getMinPrice()).state(CouponState.ACTIVE).build();
             coupon = couponCommandService.addCoupon(coupon);
             couponCommandService.sendCouponCreateNotification(coupon);
+            AdminLog
+                    adminLog =
+                    AdminLog.builder().id(adminLogQueryService.getAdminLogId()).adminId(adminId).type(AdminLogType.COUPON).targetId(
+                            String.valueOf(coupon.getId())).content("쿠폰을 등록하였습니다.").createdAt(utils.now()).build();
             res.setData(Optional.ofNullable(coupon));
             return ResponseEntity.ok(res);
         } catch (Exception e) {

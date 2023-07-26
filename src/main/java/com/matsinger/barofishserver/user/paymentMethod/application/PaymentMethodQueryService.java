@@ -25,32 +25,26 @@ public class PaymentMethodQueryService {
     private final AES256 aes256;
 
     public Optional<List<PaymentMethodDto>> getPaymentMethods(int userId) {
-        User findUser = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("유저를 찾을 수 없습니다."));
+        User
+                findUser =
+                userRepository.findById(userId).orElseThrow(() -> new IllegalArgumentException("유저를 찾을 수 없습니다."));
 
         List<PaymentMethod> paymentMethods = paymentMethodRepository.findAllByUserId(userId);
-        Optional<List<PaymentMethodDto>> paymentMethodDtos = Optional.of(paymentMethods.stream()
-                .map(method -> {
-                            try {
-                                return convert2Dto(method);
-                            } catch (Exception e) {
-                                throw new RuntimeException(e);
-                            }
-                        }
-                ).toList());
+        Optional<List<PaymentMethodDto>> paymentMethodDtos = Optional.of(paymentMethods.stream().map(method -> {
+            try {
+                return convert2Dto(method);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        }).toList());
         return paymentMethodDtos;
     }
 
     public PaymentMethodDto convert2Dto(PaymentMethod paymentMethod) throws Exception {
-        return PaymentMethodDto.builder()
-                .id(paymentMethod.getId())
-                .userId(paymentMethod.getUserId())
-                .cardNo(aes256.decrypt(paymentMethod.getCardNo()).replaceAll("(\\d{6})(\\d{6})(\\d{3})(\\d)", "$1******$3*"))
-                .expiryAt(paymentMethod.getExpiryAt())
-                .birth(paymentMethod.getBirth())
-                .cardName(paymentMethod.getCardName())
-                .name(paymentMethod.getName())
-                .build();
+        return PaymentMethodDto.builder().id(paymentMethod.getId()).userId(paymentMethod.getUserId()).cardNo(aes256.decrypt(
+                paymentMethod.getCardNo()).replaceAll("(\\d{6})(\\d{6})(\\d{3})(\\d)", "$1******$3*")).expiryAt(
+                paymentMethod.getExpiryAt()).birth(paymentMethod.getBirth()).cardName(paymentMethod.getCardName()).name(
+                paymentMethod.getName()).build();
     }
 
     public PaymentMethod addPaymentMethod(PaymentMethod paymentMethod) {
@@ -75,6 +69,7 @@ public class PaymentMethodQueryService {
         return paymentMethodRepository.existsByCardNoAndUserId(cardNo, userId);
     }
 
+    @Transactional
     public void deletePaymentMethod(Integer id) {
         paymentMethodRepository.deleteById(id);
     }

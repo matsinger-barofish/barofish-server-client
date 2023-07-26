@@ -2,6 +2,7 @@ package com.matsinger.barofishserver.category.api;
 
 import com.matsinger.barofishserver.category.application.CategoryCommandService;
 import com.matsinger.barofishserver.category.application.CategoryQueryService;
+import com.matsinger.barofishserver.category.dto.AddCategoryCompareFilterReq;
 import com.matsinger.barofishserver.category.filter.application.CategoryFilterCommandService;
 import com.matsinger.barofishserver.category.filter.application.CategoryFilterQueryService;
 import com.matsinger.barofishserver.category.domain.Category;
@@ -17,8 +18,6 @@ import com.matsinger.barofishserver.jwt.TokenInfo;
 import com.matsinger.barofishserver.utils.Common;
 import com.matsinger.barofishserver.utils.CustomResponse;
 import com.matsinger.barofishserver.utils.S3.S3Uploader;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -174,13 +173,6 @@ public class CategoryController {
         }
     }
 
-    @Getter
-    @NoArgsConstructor
-    private static class AddCategoryCompareFilterReq {
-        Integer categoryId;
-        Integer compareFilterId;
-    }
-
     @PostMapping("/compare-filter/add/")
     public ResponseEntity<CustomResponse<CompareFilterDto>> addCategoryCompareFilter(@RequestHeader(value = "Authorization") Optional<String> auth,
                                                                                      @RequestPart(value = "data") AddCategoryCompareFilterReq data) {
@@ -188,14 +180,14 @@ public class CategoryController {
         Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
         if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
         try {
-            if (data.categoryId == null) return res.throwError("카테고리 아이디를 입력해주세요.", "INPUT_CHECK_REQUIRED");
-            if (data.compareFilterId == null) return res.throwError("비교하기 필터 아이디를 입력해주세요.", "INPUT_CHECK_REQUIRED");
-            Category category = categoryQueryService.findById(data.categoryId);
+            if (data.getCategoryId() == null) return res.throwError("카테고리 아이디를 입력해주세요.", "INPUT_CHECK_REQUIRED");
+            if (data.getCompareFilterId() == null) return res.throwError("비교하기 필터 아이디를 입력해주세요.", "INPUT_CHECK_REQUIRED");
+            Category category = categoryQueryService.findById(data.getCategoryId());
             if (category.getCategoryId() != null) return res.throwError("1차 카테고리만 선택해주세요.", "INPUT_CHECK_REQUIRED");
-            CompareFilter compareFilter = compareFilterQueryService.selectCompareFilter(data.compareFilterId);
+            CompareFilter compareFilter = compareFilterQueryService.selectCompareFilter(data.getCompareFilterId());
             CategoryFilterMap
                     categoryFilterMap =
-                    CategoryFilterMap.builder().compareFilterId(data.compareFilterId).categoryId(data.categoryId).build();
+                    CategoryFilterMap.builder().compareFilterId(data.getCompareFilterId()).categoryId(data.getCategoryId()).build();
             categoryFilterCommandService.addCategoryFilterMap(categoryFilterMap);
             return ResponseEntity.ok(res);
         } catch (Exception e) {
@@ -210,13 +202,13 @@ public class CategoryController {
         Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
         if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
         try {
-            if (data.categoryId == null) return res.throwError("카테고리 아이디를 입력해주세요.", "INPUT_CHECK_REQUIRED");
-            if (data.compareFilterId == null) return res.throwError("비교하기 필터 아이디를 입력해주세요.", "INPUT_CHECK_REQUIRED");
-            Category category = categoryQueryService.findById(data.categoryId);
-            CompareFilter compareFilter = compareFilterQueryService.selectCompareFilter(data.compareFilterId);
+            if (data.getCategoryId() == null) return res.throwError("카테고리 아이디를 입력해주세요.", "INPUT_CHECK_REQUIRED");
+            if (data.getCompareFilterId() == null) return res.throwError("비교하기 필터 아이디를 입력해주세요.", "INPUT_CHECK_REQUIRED");
+            Category category = categoryQueryService.findById(data.getCategoryId());
+            CompareFilter compareFilter = compareFilterQueryService.selectCompareFilter(data.getCompareFilterId());
             CategoryFilterId categoryFilterId = new CategoryFilterId();
-            categoryFilterId.setCategoryId(data.categoryId);
-            categoryFilterId.setCompareFilterId(data.compareFilterId);
+            categoryFilterId.setCategoryId(data.getCategoryId());
+            categoryFilterId.setCompareFilterId(data.getCompareFilterId());
             categoryFilterCommandService.deleteCategoryFilterMap(categoryFilterId);
             return ResponseEntity.ok(res);
         } catch (Exception e) {

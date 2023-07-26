@@ -16,8 +16,8 @@ import com.matsinger.barofishserver.product.productfilter.domain.ProductFilterVa
 import com.matsinger.barofishserver.product.productfilter.dto.ProductFilterValueDto;
 import com.matsinger.barofishserver.product.productfilter.repository.ProductFilterRepository;
 import com.matsinger.barofishserver.product.repository.ProductRepository;
+import com.matsinger.barofishserver.review.application.ReviewQueryService;
 import com.matsinger.barofishserver.review.repository.ReviewRepository;
-import com.matsinger.barofishserver.review.application.ReviewService;
 import com.matsinger.barofishserver.review.dto.ReviewTotalStatistic;
 import com.matsinger.barofishserver.searchFilter.domain.ProductSearchFilterMap;
 import com.matsinger.barofishserver.searchFilter.dto.SearchFilterFieldDto;
@@ -47,8 +47,7 @@ public class ProductQueryService {
     private final StoreInfoRepository storeInfoRepository;
     private final ProductSearchFilterMapRepository productSearchFilterMapRepository;
     private final StoreService storeService;
-    private final ReviewService reviewService;
-    private final ProductFilterService productFilterService;
+    private final ReviewQueryService reviewQueryService;
     private final SearchFilterFieldRepository searchFilterFieldRepository;
     private final SaveProductRepository saveProductRepository;
     private final InquiryRepository inquiryRepository;
@@ -101,7 +100,7 @@ public class ProductQueryService {
     }
 
     private void setReviewStatistics(int productId, SimpleProductDto productDto) {
-        ReviewTotalStatistic reviewStatistics = reviewService.selectReviewTotalStatisticWithProductId(productId);
+        ReviewTotalStatistic reviewStatistics = reviewQueryService.selectReviewTotalStatisticWithProductId(productId);
         productDto.setReviewStatistics(reviewStatistics);
     }
 

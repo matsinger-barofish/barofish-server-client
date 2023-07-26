@@ -29,6 +29,7 @@ public class OrderProductDto {
     private Integer amount;
     private String deliverCompany;
     private String invoiceCode;
+
     //    private Integer deliveryFee;
     private OrderCancelReason cancelReason;
     private String cancelReasonContent;

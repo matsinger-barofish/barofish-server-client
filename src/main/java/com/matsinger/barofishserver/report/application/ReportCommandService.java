@@ -3,7 +3,8 @@ package com.matsinger.barofishserver.report.application;
 import com.matsinger.barofishserver.report.domain.Report;
 import com.matsinger.barofishserver.report.dto.ReportDto;
 import com.matsinger.barofishserver.report.repository.ReportRepository;
-import com.matsinger.barofishserver.review.application.ReviewService;
+import com.matsinger.barofishserver.review.application.ReviewCommandService;
+import com.matsinger.barofishserver.review.application.ReviewQueryService;
 import com.matsinger.barofishserver.review.dto.ReviewDto;
 import com.matsinger.barofishserver.user.application.UserCommandService;
 import com.matsinger.barofishserver.userinfo.dto.UserInfoDto;
@@ -19,13 +20,14 @@ import java.util.List;
 public class ReportCommandService {
     private final ReportRepository reportRepository;
     private final UserCommandService userService;
-    private final ReviewService reviewService;
+    private final ReviewQueryService reviewQueryService;
+    private final ReviewCommandService reviewCommandService;
 
     public ReportDto convert2Dto(Report report) {
         ReportDto reportDto = report.convert2Dto();
         UserInfoDto user = userService.selectUserInfo(report.getUserId()).convert2Dto();
         user.setUser(userService.selectUser(report.getUserId()).convert2Dto());
-        ReviewDto review = reviewService.convert2Dto(reviewService.selectReview(report.getReviewId()));
+        ReviewDto review = reviewCommandService.convert2Dto(reviewQueryService.selectReview(report.getReviewId()));
         reportDto.setUser(user);
         reportDto.setReview(review);
         return reportDto;

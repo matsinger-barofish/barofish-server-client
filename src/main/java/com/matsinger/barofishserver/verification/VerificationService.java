@@ -18,14 +18,10 @@ public class VerificationService {
 
         Verification verification = null;
 
-        // 인증 아이디나 impUid가 없는 경우
         if (request.getVerificationId() == null && request.getImpUid() == null) {
             throw new IllegalArgumentException("인증을 먼저 진행해주세요.");
         } else if (request.getVerificationId() != null) {
             verification = selectVerificationById(request.getVerificationId());
-            if (verification.getExpiredAt() != null) throw new IllegalArgumentException("인증을 먼저 진행해주세요.");
-        } else if (request.getImpUid() != null) {
-            verification = selectVerificationByImpUid(request.getImpUid());
             if (verification.getExpiredAt() != null) throw new IllegalArgumentException("인증을 먼저 진행해주세요.");
         }
         if (verification != null) deleteVerification(verification.getId());

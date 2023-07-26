@@ -6,9 +6,12 @@ import com.matsinger.barofishserver.jwt.TokenInfo;
 import com.matsinger.barofishserver.order.application.OrderService;
 import com.matsinger.barofishserver.product.application.ProductService;
 import com.matsinger.barofishserver.product.domain.Product;
-import com.matsinger.barofishserver.review.application.ReviewService;
+import com.matsinger.barofishserver.review.application.ReviewCommandService;
+import com.matsinger.barofishserver.review.application.ReviewQueryService;
 import com.matsinger.barofishserver.review.domain.*;
+import com.matsinger.barofishserver.review.dto.ReviewAddReq;
 import com.matsinger.barofishserver.review.dto.ReviewDto;
+import com.matsinger.barofishserver.review.dto.UpdateReviewReq;
 import com.matsinger.barofishserver.store.application.StoreService;
 import com.matsinger.barofishserver.store.domain.Store;
 import com.matsinger.barofishserver.user.application.UserCommandService;
@@ -39,7 +42,8 @@ import java.util.*;
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/review")
 public class ReviewController {
-    private final ReviewService reviewService;
+    private final ReviewCommandService reviewCommandService;
+    private final ReviewQueryService reviewQueryService;
     private final ProductService productService;
     private final StoreService storeService;
     private final UserCommandService userService;
@@ -89,12 +93,11 @@ public class ReviewController {
                 return builder.and(predicates.toArray(new Predicate[0]));
             };
             PageRequest pageRequest = PageRequest.of(page, take, Sort.by(sort, orderBy.label));
-            Page<ReviewDto> reviews = reviewService.selectAllReviewList(spec, pageRequest).map(review -> {
-                ReviewDto dto = reviewService.convert2Dto(review);
+            Page<ReviewDto> reviews = reviewQueryService.selectAllReviewList(spec, pageRequest).map(review -> {
+                ReviewDto dto = reviewCommandService.convert2Dto(review);
                 dto.setSimpleProduct(productService.convert2ListDto(productService.findById(review.getProduct().getId())));
                 return dto;
             });
-
             res.setData(Optional.of(reviews));
             return ResponseEntity.ok(res);
         } catch (Exception e) {
@@ -113,20 +116,18 @@ public class ReviewController {
         try {
             if (tokenInfo != null && tokenInfo.isPresent() && tokenInfo.get().getType().equals(TokenAuthType.PARTNER))
                 storeId = tokenInfo.get().getId();
-            Integer
-                    userId =
-                    tokenInfo != null &&
-                            tokenInfo.isPresent() &&
-                            tokenInfo.get().getType().equals(TokenAuthType.USER) ? tokenInfo.get().getId() : null;
+            Integer userId = null;
+            if (tokenInfo != null && tokenInfo.isPresent() && tokenInfo.get().getType().equals(TokenAuthType.USER))
+                userId = tokenInfo.get().getId();
             PageRequest pageRequest = PageRequest.of(page, take);
-            Page<Review>
-                    reviewData =
-                    orderType.equals(ReviewOrderByType.RECENT) ? reviewService.selectReviewListByStoreOrderedRecent(
-                            storeId,
-                            pageRequest) : reviewService.selectReviewListOrderedBestWithStoreId(storeId, pageRequest);
+            Page<Review> reviewData = null;
+            if (orderType.equals(ReviewOrderByType.RECENT))
+                reviewData = reviewQueryService.selectReviewListByStoreOrderedRecent(storeId, pageRequest);
+            else reviewData = reviewQueryService.selectReviewListOrderedBestWithStoreId(storeId, pageRequest);
 
+            Integer finalUserId = userId;
             Page<ReviewDto> reviews = reviewData.map(review -> {
-                ReviewDto dto = reviewService.convert2Dto(review, userId);
+                ReviewDto dto = reviewCommandService.convert2Dto(review, finalUserId);
                 dto.setSimpleProduct(productService.selectProduct(review.getProduct().getId()).convert2ListDto());
                 return dto;
             });
@@ -143,13 +144,11 @@ public class ReviewController {
         CustomResponse<ReviewDto> res = new CustomResponse<>();
         Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ALLOW), auth);
         try {
-            Integer
-                    userId =
-                    tokenInfo != null &&
-                            tokenInfo.isPresent() &&
-                            tokenInfo.get().getType().equals(TokenAuthType.USER) ? tokenInfo.get().getId() : null;
-            Review review = reviewService.selectReview(id);
-            ReviewDto reviewDto = reviewService.convert2Dto(review, userId);
+            Integer userId = null;
+            if (tokenInfo != null && tokenInfo.isPresent() && tokenInfo.get().getType().equals(TokenAuthType.USER))
+                userId = tokenInfo.get().getId();
+            Review review = reviewQueryService.selectReview(id);
+            ReviewDto reviewDto = reviewCommandService.convert2Dto(review, userId);
             reviewDto.setSimpleProduct(review.getProduct().convert2ListDto());
             res.setData(Optional.of(reviewDto));
             return ResponseEntity.ok(res);
@@ -170,16 +169,14 @@ public class ReviewController {
             PageRequest pageRequest = PageRequest.of(page, take);
             Page<Review>
                     reviewData =
-                    orderType.equals(ReviewOrderByType.RECENT) ? reviewService.selectReviewListByProduct(productId,
-                            pageRequest) : reviewService.selectReviewListOrderedBestWithProductId(productId,
+                    orderType.equals(ReviewOrderByType.RECENT) ? reviewQueryService.selectReviewListByProduct(productId,
+                            pageRequest) : reviewQueryService.selectReviewListOrderedBestWithProductId(productId,
                             pageRequest);
             Page<ReviewDto> reviews = reviewData.map(review -> {
-                ReviewDto
-                        dto =
-                        tokenInfo != null &&
-                                tokenInfo.isPresent() &&
-                                tokenInfo.get().getType().equals(TokenAuthType.USER) ? reviewService.convert2Dto(review,
-                                tokenInfo.get().getId()) : reviewService.convert2Dto(review);
+                ReviewDto dto = new ReviewDto();
+                if (tokenInfo != null && tokenInfo.isPresent() && tokenInfo.get().getType().equals(TokenAuthType.USER))
+                    dto = reviewCommandService.convert2Dto(review, tokenInfo.get().getId());
+                else dto = reviewCommandService.convert2Dto(review);
                 dto.setSimpleProduct(productService.selectProduct(review.getProduct().getId()).convert2ListDto());
                 return dto;
             });
@@ -199,11 +196,13 @@ public class ReviewController {
         if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
         try {
             Integer userId = tokenInfo.get().getId();
-            Page<ReviewDto> reviews = reviewService.selectAllReviewListByUserId(userId, page - 1, take).map(review -> {
-                ReviewDto dto = reviewService.convert2Dto(review, userId);
-                dto.setSimpleProduct(productService.convert2ListDto(productService.selectProduct(review.getProductId())));
-                return dto;
-            });
+            Page<ReviewDto>
+                    reviews =
+                    reviewQueryService.selectAllReviewListByUserId(userId, page - 1, take).map(review -> {
+                        ReviewDto dto = reviewCommandService.convert2Dto(review, userId);
+                        dto.setSimpleProduct(productService.convert2ListDto(productService.selectProduct(review.getProductId())));
+                        return dto;
+                    });
             res.setData(Optional.of(reviews));
             return ResponseEntity.ok(res);
         } catch (Exception e) {
@@ -211,15 +210,6 @@ public class ReviewController {
         }
     }
 
-    @Getter
-    @NoArgsConstructor
-    private static class ReviewAddReq {
-        Integer productId;
-        Integer userId;
-        Integer orderProductInfoId;
-        List<ReviewEvaluationType> evaluations;
-        String content;
-    }
 
     @PostMapping("/add")
     public ResponseEntity<CustomResponse<ReviewDto>> addReviewByUser(@RequestHeader(value = "Authorization") Optional<String> auth,
@@ -231,21 +221,24 @@ public class ReviewController {
         try {
             Integer userId = tokenInfo.get().getId();
             UserInfo user = userService.selectUserInfo(userId);
-            if (data.orderProductInfoId == null) return res.throwError("주문 상품 아이디를 입력해주세요.", "INPUT_CHECK_REQUIRED");
-            OrderProductInfo orderProductInfo = orderService.selectOrderProductInfo(data.orderProductInfoId);
-            if (data.productId == null) return res.throwError("상품 아이디를 입력해주세요.", "INPUT_CHECK_REQUIRED");
+            if (data.getOrderProductInfoId() == null)
+                return res.throwError("주문 상품 아이디를 입력해주세요.", "INPUT_CHECK_REQUIRED");
+            OrderProductInfo orderProductInfo = orderService.selectOrderProductInfo(data.getOrderProductInfoId());
+            if (data.getProductId() == null) return res.throwError("상품 아이디를 입력해주세요.", "INPUT_CHECK_REQUIRED");
             Product product = productService.findById(data.getProductId());
             Store store = storeService.selectStore(product.getStoreId());
             String content = data.getContent();
-            Boolean isWritten = reviewService.checkReviewWritten(userId, product.getId(), orderProductInfo.getId());
+            Boolean
+                    isWritten =
+                    reviewQueryService.checkReviewWritten(userId, product.getId(), orderProductInfo.getId());
             if (isWritten) return res.throwError("이미 리뷰를 작성하였습니다.", "NOT_ALLOWED");
             if (content.length() == 0) return res.throwError("내용을 입력해주세요.", "INPUT_CHECK_REQUIRED");
             Review
                     review =
                     Review.builder().productId(product.getId()).store(store).storeId(store.getId()).userId(userId).content(
                             content).createdAt(utils.now()).images("").orderProductInfoId(orderProductInfo.getId()).build();
-            Review result = reviewService.addReview(review);
-            reviewService.addReviewEvaluationList(result.getId(), data.evaluations);
+            Review result = reviewCommandService.addReview(review);
+            reviewCommandService.addReviewEvaluationList(result.getId(), data.getEvaluations());
             if (images != null) {
                 String
                         imgUrls =
@@ -253,8 +246,8 @@ public class ReviewController {
                                 new ArrayList<>(Arrays.asList("review", String.valueOf(result.getId())))).toString();
                 result.setImages(imgUrls);
             } else result.setImages("[]");
-            result = reviewService.updateReview(review);
-            reviewService.increaseUserPoint(userId, images != null);
+            result = reviewCommandService.updateReview(review);
+            reviewCommandService.increaseUserPoint(userId, images != null);
             res.setData(Optional.ofNullable(result.convert2Dto()));
             return ResponseEntity.ok(res);
         } catch (Exception e) {
@@ -263,12 +256,6 @@ public class ReviewController {
 
     }
 
-    @Getter
-    @NoArgsConstructor
-    private static class UpdateReviewReq {
-        String content;
-        List<ReviewEvaluationType> evaluations;
-    }
 
     @PostMapping("/update/{id}")
     public ResponseEntity<CustomResponse<ReviewDto>> updateReview(@RequestHeader(value = "Authorization") Optional<String> auth,
@@ -281,15 +268,15 @@ public class ReviewController {
         if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
         try {
             Integer userId = tokenInfo.get().getId();
-            Review review = reviewService.selectReview(id);
+            Review review = reviewQueryService.selectReview(id);
             if (review.getUserId() != userId) return res.throwError("타인의 리뷰입니다.", "NOT_ALLOWED");
-            if (data.content != null) {
-                if (data.content.length() == 0) return res.throwError("리뷰 내용을 입력해주세요.", "INPUT_CHECK_REQUIRED");
-                review.setContent(data.content);
+            if (data.getContent() != null) {
+                if (data.getContent().length() == 0) return res.throwError("리뷰 내용을 입력해주세요.", "INPUT_CHECK_REQUIRED");
+                review.setContent(data.getContent());
             }
-            if (data.evaluations != null) {
-                reviewService.deleteReviewWithReviewId(review.getId());
-                reviewService.addReviewEvaluationList(review.getId(), data.evaluations);
+            if (data.getEvaluations() != null) {
+                reviewCommandService.deleteReviewWithReviewId(review.getId());
+                reviewCommandService.addReviewEvaluationList(review.getId(), data.getEvaluations());
             }
             if (existingImages != null || newImages != null) {
                 List<String> imgUrls = existingImages;
@@ -297,8 +284,8 @@ public class ReviewController {
                         new ArrayList<>(Arrays.asList("review", String.valueOf(id)))));
                 review.setImages(imgUrls.toString());
             }
-            review = reviewService.updateReview(review);
-            res.setData(Optional.ofNullable(reviewService.convert2Dto(review)));
+            review = reviewCommandService.updateReview(review);
+            res.setData(Optional.ofNullable(reviewCommandService.convert2Dto(review)));
             return ResponseEntity.ok(res);
         } catch (Exception e) {
             return res.defaultError(e);
@@ -313,8 +300,8 @@ public class ReviewController {
         if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
         try {
             Integer userId = tokenInfo.get().getId();
-            Review review = reviewService.selectReview(reviewId);
-            reviewService.likeReview(userId, reviewId);
+            Review review = reviewQueryService.selectReview(reviewId);
+            reviewCommandService.likeReview(userId, reviewId);
             res.setData(Optional.of(true));
             return ResponseEntity.ok(res);
         } catch (Exception e) {
@@ -330,8 +317,8 @@ public class ReviewController {
         if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
         try {
             Integer userId = tokenInfo.get().getId();
-            Review review = reviewService.selectReview(reviewId);
-            reviewService.unlikeReview(userId, reviewId);
+            Review review = reviewQueryService.selectReview(reviewId);
+            reviewCommandService.unlikeReview(userId, reviewId);
             res.setData(Optional.of(false));
             return ResponseEntity.ok(res);
         } catch (Exception e) {
@@ -350,7 +337,7 @@ public class ReviewController {
                         auth);
         if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
         try {
-            Review review = reviewService.selectReview(reviewId);
+            Review review = reviewQueryService.selectReview(reviewId);
             if (tokenInfo.isPresent() &&
                     tokenInfo.get().getType().equals(TokenAuthType.USER) &&
                     review.getUserId() != tokenInfo.get().getId())
@@ -359,7 +346,7 @@ public class ReviewController {
                     tokenInfo.get().getType().equals(TokenAuthType.PARTNER) &&
                     review.getStore().getId() != tokenInfo.get().getId())
                 return res.throwError("타 상점의 리뷰입니다.", "NOT_ALLOWED");
-            Boolean result = reviewService.deleteReview(reviewId);
+            Boolean result = reviewCommandService.deleteReview(reviewId);
             res.setData(Optional.ofNullable(result));
             return ResponseEntity.ok(res);
         } catch (Exception e) {
