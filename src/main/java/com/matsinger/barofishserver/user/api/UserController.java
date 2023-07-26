@@ -69,10 +69,10 @@ public class UserController {
 
         CustomResponse<Jwt> res = new CustomResponse<>();
 
-        userCommandService.addUserAuthIfPhoneNumberExists(request);
-
         String loginId;
         try {
+            userCommandService.addUserAuthIfPhoneNumberExists(request);
+
             loginId = userQueryService.getExistingLoginId(request);
 
             if (loginId == null) {
@@ -106,23 +106,27 @@ public class UserController {
                                                             @RequestPart(value = "profileImage", required = false) MultipartFile profileImage) {
         CustomResponse<Boolean> res = new CustomResponse<>();
         try {
-            verificationService.verifyPhoneVerification(request); // 휴대폰 번호 검증
+//            verificationService.verifyPhoneVerification(request); // 휴대폰 번호 검증
 
-            int userId = userCommandService.createIdPwUserAndSave(request);
+            boolean isUserAlreadyExists = userCommandService.addUserAuthIfPhoneNumberExists(request); // 유저가 이미 있으면 user_auth에 추가
 
-            ArrayList<String> directoryElement = new ArrayList<String>();
-            directoryElement.add("user");
-            directoryElement.add(String.valueOf(userId));
-            if (profileImage != null && !profileImage.isEmpty() && !s3.validateImageType(profileImage)) {
-                return res.throwError("지원하지 않는 이미지 확장자입니다.", "INPUT_CHECK_REQUIRED");
+            if (!isUserAlreadyExists) {
+                int userId = userCommandService.createIdPwUserAndSave(request);
+
+                ArrayList<String> directoryElement = new ArrayList<String>();
+                directoryElement.add("user");
+                directoryElement.add(String.valueOf(userId));
+                if (profileImage != null && !profileImage.isEmpty() && !s3.validateImageType(profileImage)) {
+                    return res.throwError("지원하지 않는 이미지 확장자입니다.", "INPUT_CHECK_REQUIRED");
+                }
+                String
+                        imageUrl =
+                        profileImage != null && !profileImage.isEmpty() ? s3.upload(profileImage,
+                                directoryElement) : String.join("/", Arrays.asList(s3.getS3Url(), "default_profile.png"));
+                userInfoCommandService.setImageUrl(userId, imageUrl);
+
+                res.setData(Optional.of(true));
             }
-            String
-                    imageUrl =
-                    profileImage != null && !profileImage.isEmpty() ? s3.upload(profileImage,
-                            directoryElement) : String.join("/", Arrays.asList(s3.getS3Url(), "default_profile.png"));
-            userInfoCommandService.setImageUrl(userId, imageUrl);
-
-            res.setData(Optional.of(true));
             return ResponseEntity.ok(res);
         } catch (Exception e) {
             return res.defaultError(e);

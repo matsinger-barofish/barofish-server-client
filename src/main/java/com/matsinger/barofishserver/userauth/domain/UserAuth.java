@@ -49,16 +49,14 @@ public class UserAuth extends BaseTimeEntity implements Persistable<UserAuthId> 
     @Column(name = "password", length = 60)
     private String password;
 
-
+    @Override
+    public boolean isNew() {
+        return this.getCreatedAt() == null;
+    }
 
     @Override
     public UserAuthId getId() {
         return new UserAuthId(getLoginType(), getLoginId());
-    }
-
-    @Override
-    public boolean isNew() {
-        return this.getCreatedAt() == null;
     }
 
     public UserAuthDto convert2Dto() {

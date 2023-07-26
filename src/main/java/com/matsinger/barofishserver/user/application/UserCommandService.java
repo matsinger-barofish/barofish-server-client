@@ -310,4 +310,27 @@ public class UserCommandService {
             userAuthRepository.save(createdUserAuth);
         }
     }
+
+    @Transactional
+    public boolean addUserAuthIfPhoneNumberExists(UserJoinReq request) throws Exception {
+
+        Optional<UserInfo> optionalUserInfo = userInfoRepository.findByPhone(request.getPhone().replace("-", ""));
+
+        if (!optionalUserInfo.isPresent()) {
+            return false;
+        }
+
+        UserInfo findUserInfo = optionalUserInfo.get();
+        List<UserAuth> existingUserAuth = findUserInfo.getUser().getUserAuth();
+
+        for (UserAuth userAuth : existingUserAuth) {
+            if (userAuth.getLoginType() == LoginType.IDPW) {
+                throw new IllegalArgumentException("회원가입된 이력이 있습니다");
+            }
+        }
+
+        userAuthCommandService.createIdPwUserAuthAndSave(findUserInfo.getUser(), request);
+
+        return true;
+    }
 }
