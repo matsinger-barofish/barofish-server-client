@@ -1,8 +1,6 @@
 package com.matsinger.barofishserver.user.api;
 
 
-import com.matsinger.barofishserver.deliver.application.DeliverService;
-import com.matsinger.barofishserver.grade.application.GradeService;
 import com.matsinger.barofishserver.jwt.*;
 import com.matsinger.barofishserver.user.application.UserCommandService;
 import com.matsinger.barofishserver.user.application.UserQueryService;
@@ -71,20 +69,27 @@ public class UserController {
 
         CustomResponse<Jwt> res = new CustomResponse<>();
 
-        try {
-            int userId = userCommandService.createSnsUserAndSave(request);
+        userCommandService.addUserAuthIfPhoneNumberExists(request);
 
-            String profileImage = "";
-            if (request.getProfileImage() != null) {
-                profileImage =
-                        s3.upload(s3.extractBase64FromImageUrl(request.getProfileImage()),
-                                new ArrayList<>(Arrays.asList("user", String.valueOf(userId))));
+        String loginId;
+        try {
+            loginId = userQueryService.getExistingLoginId(request);
+
+            if (loginId == null) {
+                SnsJoinLoginResponseDto responseDto = userCommandService.createSnsUserAndSave(request);
+                loginId = responseDto.getLoginId();
+
+                String profileImage = "";
+                if (request.getProfileImage() != null) {
+                    profileImage =
+                            s3.upload(s3.extractBase64FromImageUrl(request.getProfileImage()),
+                                    new ArrayList<>(Arrays.asList("user", String.valueOf(responseDto.getUserId()))));
+                }
+                userInfoCommandService.setImageUrl(responseDto.getUserId(), profileImage);
             }
 
-            userInfoCommandService.setImageUrl(userId, profileImage);
-
-            String accessToken = jwtProvider.generateAccessToken(String.valueOf(userId), TokenAuthType.USER);
-            String refreshToken = jwtProvider.generateRefreshToken(String.valueOf(userId), TokenAuthType.USER);
+            String accessToken = jwtProvider.generateAccessToken(String.valueOf(loginId), TokenAuthType.USER);
+            String refreshToken = jwtProvider.generateRefreshToken(String.valueOf(loginId), TokenAuthType.USER);
             Jwt token = new Jwt();
             token.setAccessToken(accessToken);
             token.setRefreshToken(refreshToken);

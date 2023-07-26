@@ -2,6 +2,7 @@ package com.matsinger.barofishserver.user.application;
 
 import com.matsinger.barofishserver.user.deliverplace.repository.DeliverPlaceRepository;
 import com.matsinger.barofishserver.user.deliverplace.DeliverPlace;
+import com.matsinger.barofishserver.user.dto.SnsJoinReq;
 import com.matsinger.barofishserver.user.repository.UserRepository;
 import com.matsinger.barofishserver.user.dto.UserLoginReq;
 import com.matsinger.barofishserver.user.domain.User;
@@ -20,6 +21,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @Transactional(readOnly = true)
@@ -87,5 +89,13 @@ public class UserQueryService {
         userInfoDto.setAuth(findUserAuth.convert2Dto());
         userInfoDto.setDeliverPlaces(deliverPlaces);
         return userInfoDto;
+    }
+
+    public String getExistingLoginId(SnsJoinReq request) {
+        Optional<UserAuth> optionalUserAuth = userAuthRepository.findByLoginIdAndLoginType(request.getLoginId(), request.getLoginType());
+        if (optionalUserAuth.isPresent()) {
+            return optionalUserAuth.get().getLoginId();
+        }
+        return null;
     }
 }

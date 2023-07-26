@@ -1,9 +1,17 @@
 package com.matsinger.barofishserver.userauth.domain;
 
+import com.matsinger.barofishserver.global.config.BaseTimeEntity;
 import com.matsinger.barofishserver.user.domain.User;
 import com.matsinger.barofishserver.userauth.dto.UserAuthDto;
 import jakarta.persistence.*;
 import lombok.*;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.domain.Persistable;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+
+import java.sql.Time;
+import java.sql.Timestamp;
 
 @Builder
 @Getter
@@ -13,7 +21,7 @@ import lombok.*;
 @IdClass(UserAuthId.class)
 @Entity
 @Table(name = "user_auth", schema = "barofish_dev")
-public class UserAuth {
+public class UserAuth extends BaseTimeEntity implements Persistable<UserAuthId> {
 
     @Id
     @Enumerated(EnumType.STRING)
@@ -40,6 +48,18 @@ public class UserAuth {
 
     @Column(name = "password", length = 60)
     private String password;
+
+
+
+    @Override
+    public UserAuthId getId() {
+        return new UserAuthId(getLoginType(), getLoginId());
+    }
+
+    @Override
+    public boolean isNew() {
+        return this.getCreatedAt() == null;
+    }
 
     public UserAuthDto convert2Dto() {
         return UserAuthDto.builder().loginId(this.loginId).userId(this.userId).loginType(this.loginType).build();

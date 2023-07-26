@@ -9,6 +9,7 @@ import com.matsinger.barofishserver.inquiry.application.InquiryCommandService;
 import com.matsinger.barofishserver.review.application.ReviewService;
 import com.matsinger.barofishserver.user.deliverplace.DeliverPlace;
 import com.matsinger.barofishserver.user.deliverplace.repository.DeliverPlaceRepository;
+import com.matsinger.barofishserver.user.dto.SnsJoinLoginResponseDto;
 import com.matsinger.barofishserver.user.dto.UserJoinReq;
 import com.matsinger.barofishserver.user.repository.UserRepository;
 import com.matsinger.barofishserver.user.dto.SnsJoinReq;
@@ -52,25 +53,23 @@ public class UserCommandService {
     private final UserInfoCommandService userInfoCommandService;
     private final Common util;
 
-    public int createSnsUserAndSave(SnsJoinReq request) throws MalformedURLException {
+    @Transactional
+    public SnsJoinLoginResponseDto createSnsUserAndSave(SnsJoinReq request) throws MalformedURLException {
+
         userJoinValidator.nullCheck(request.getLoginType());
         userJoinValidator.nullCheck(request.getLoginId());
-
-        String loginId = request.getLoginId();
-
-        Optional<UserAuth> optionalUserAuth = userAuthRepository.findByLoginId(loginId);
-        if (optionalUserAuth.isPresent()) {
-            throw new IllegalArgumentException("중복된 아이디가 존재합니다.");
-        }
 
         User user = User.builder().joinAt(new Timestamp(System.currentTimeMillis())).state(UserState.ACTIVE).build();
         userRepository.save(user);
 
-        userAuthCommandService.createUserAuth(request, user);
+        UserAuth createdUserAuth = userAuthCommandService.createUserAuth(request, user);
         Grade grade = gradeRepository.findById(1).orElseThrow(() -> new IllegalStateException("등급 정보를 찾을 수 없습니다."));
         userInfoCommandService.createAndSaveUserInfo(user, request, "", grade);
 
-        return user.getId();
+        return SnsJoinLoginResponseDto.builder()
+                .userId(user.getId())
+                .loginId(createdUserAuth.getLoginId())
+                .build();
     }
 
     @Transactional
@@ -278,5 +277,37 @@ public class UserCommandService {
 
     public Optional<UserInfo> selectOptionalUserInfo(int userId) {
         return userInfoRepository.findByUserId(userId);
+    }
+
+    @Transactional
+    public void addUserAuthIfPhoneNumberExists(SnsJoinReq request) {
+
+        Optional<UserInfo> optionalUserInfo = userInfoRepository.findByPhone(request.getPhone().replace("-", ""));
+
+        boolean isUserInfoExists = optionalUserInfo.isPresent();
+
+        boolean isLoginTypeExists = false;
+        if (isUserInfoExists) {
+            UserInfo findUserInfo = optionalUserInfo.get();
+            List<UserAuth> existingUserAuth = findUserInfo.getUser().getUserAuth();
+
+            for (UserAuth userAuth : existingUserAuth) {
+                if (userAuth.getLoginType() == request.getLoginType()) {
+                    isLoginTypeExists = true;
+                }
+            }
+        }
+
+        if (isUserInfoExists && !isLoginTypeExists) {
+            UserAuth createdUserAuth = UserAuth.builder()
+                    .loginType(request.getLoginType())
+                    .loginId(request.getLoginId())
+                    .build();
+            User findUser = optionalUserInfo.get().getUser();
+            createdUserAuth.setUserId(findUser.getId());
+            createdUserAuth.setUser(findUser);
+
+            userAuthRepository.save(createdUserAuth);
+        }
     }
 }
