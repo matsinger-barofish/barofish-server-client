@@ -17,17 +17,17 @@ import com.matsinger.barofishserver.order.orderprductinfo.domain.OrderProductInf
 import com.matsinger.barofishserver.order.orderprductinfo.domain.OrderProductState;
 import com.matsinger.barofishserver.payment.application.PaymentService;
 import com.matsinger.barofishserver.product.application.ProductService;
-import com.matsinger.barofishserver.product.domain.ProductState;
-import com.matsinger.barofishserver.product.optionitem.domain.OptionItem;
 import com.matsinger.barofishserver.product.domain.Product;
+import com.matsinger.barofishserver.product.domain.ProductState;
 import com.matsinger.barofishserver.product.dto.ProductListDto;
+import com.matsinger.barofishserver.product.optionitem.domain.OptionItem;
 import com.matsinger.barofishserver.siteInfo.SiteInfoService;
 import com.matsinger.barofishserver.siteInfo.SiteInformation;
-import com.matsinger.barofishserver.user.paymentMethod.application.PaymentMethodService;
+import com.matsinger.barofishserver.user.application.UserCommandService;
 import com.matsinger.barofishserver.user.deliverplace.DeliverPlace;
+import com.matsinger.barofishserver.user.paymentMethod.application.PaymentMethodService;
 import com.matsinger.barofishserver.user.paymentMethod.domain.PaymentMethod;
 import com.matsinger.barofishserver.userinfo.domain.UserInfo;
-import com.matsinger.barofishserver.user.application.UserCommandService;
 import com.matsinger.barofishserver.utils.Common;
 import com.matsinger.barofishserver.utils.CustomResponse;
 import jakarta.persistence.criteria.Join;
@@ -59,16 +59,6 @@ public class OrderController {
     private final PaymentMethodService paymentMethodService;
     private final JwtService jwt;
     private final Common utils;
-
-    @Builder
-    @Getter
-    @Setter
-    @NoArgsConstructor
-    @AllArgsConstructor
-    private static class PointRuleRes {
-        Integer pointRate;
-        Integer maxReviewPoint;
-    }
 
     @GetMapping("/point-rule")
     public ResponseEntity<CustomResponse<PointRuleRes>> selectPointRule(@RequestHeader(value = "Authorization") Optional<String> auth) {
@@ -271,32 +261,6 @@ public class OrderController {
         }
     }
 
-    @Getter
-    @NoArgsConstructor
-    @ToString
-    public static class OrderProductReq {
-        Integer productId;
-        Integer optionId;
-        Integer amount;
-        Integer deliveryFee;
-    }
-
-    @Getter
-    @NoArgsConstructor
-    public static class OrderReq {
-        private String name;
-        private String tel;
-        private Integer couponId;
-        private OrderPaymentWay paymentWay;
-        private Integer point;
-        private Integer totalPrice;
-        private Integer couponDiscountPrice;
-        private List<OrderProductReq> products;
-
-        private Integer deliverPlaceId;
-        private Integer paymentMethodId;
-    }
-
     @PostMapping("")
     public ResponseEntity<CustomResponse<OrderDto>> orderProduct(@RequestHeader(value = "Authorization") Optional<String> auth,
                                                                  @RequestBody OrderReq data) {
@@ -425,14 +389,6 @@ public class OrderController {
         }
     }
 
-    // 결제 취소
-    @Getter
-    @NoArgsConstructor
-    private static class RequestCancelReq {
-        private OrderCancelReason cancelReason;
-        private String content;
-    }
-
     @PostMapping("/cancel/{orderProductInfoId}")
     public ResponseEntity<CustomResponse<Boolean>> cancelOrderByUser(@RequestHeader(value = "Authorization") Optional<String> auth,
                                                                      @PathVariable("orderProductInfoId") Integer orderProductInfoId,
@@ -548,14 +504,6 @@ public class OrderController {
         }
     }
 
-    // 발송 처리
-    @Getter
-    @NoArgsConstructor
-    private static class ProcessDeliverStartReq {
-        private String deliverCompanyCode;
-        private String invoice;
-    }
-
     @PostMapping("/process-deliver/{orderProductInfoId}")
     public ResponseEntity<CustomResponse<Boolean>> processDeliverStart(@RequestHeader(value = "Authorization") Optional<String> auth,
                                                                        @PathVariable("orderProductInfoId") Integer orderProductInfoId,
@@ -583,14 +531,6 @@ public class OrderController {
         } catch (Exception e) {
             return res.defaultError(e);
         }
-    }
-
-    // 교환 신청
-    @Getter
-    @NoArgsConstructor
-    private static class RequestChangeProduct {
-        private OrderCancelReason cancelReason;
-        private String reasonContent;
     }
 
     @PostMapping("/change/{orderProductInfoId}")
@@ -790,5 +730,65 @@ public class OrderController {
         } catch (Exception e) {
             return res.defaultError(e);
         }
+    }
+
+    @Builder
+    @Getter
+    @Setter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    private static class PointRuleRes {
+        Integer pointRate;
+        Integer maxReviewPoint;
+    }
+
+    @Getter
+    @NoArgsConstructor
+    @ToString
+    public static class OrderProductReq {
+        Integer productId;
+        Integer optionId;
+        Integer amount;
+        Integer deliveryFee;
+    }
+
+    @Getter
+    @NoArgsConstructor
+    public static class OrderReq {
+        private String name;
+        private String tel;
+        private Integer couponId;
+        private OrderPaymentWay paymentWay;
+        private Integer point;
+        private Integer totalPrice;
+        private Integer couponDiscountPrice;
+        private List<OrderProductReq> products;
+
+        private Integer deliverPlaceId;
+        private Integer paymentMethodId;
+    }
+
+    // 결제 취소
+    @Getter
+    @NoArgsConstructor
+    private static class RequestCancelReq {
+        private OrderCancelReason cancelReason;
+        private String content;
+    }
+
+    // 발송 처리
+    @Getter
+    @NoArgsConstructor
+    private static class ProcessDeliverStartReq {
+        private String deliverCompanyCode;
+        private String invoice;
+    }
+
+    // 교환 신청
+    @Getter
+    @NoArgsConstructor
+    private static class RequestChangeProduct {
+        private OrderCancelReason cancelReason;
+        private String reasonContent;
     }
 }
