@@ -7,6 +7,7 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface UserInfoRepository extends JpaRepository<UserInfo, Integer>, JpaSpecificationExecutor<UserInfo> {
@@ -21,6 +22,6 @@ public interface UserInfoRepository extends JpaRepository<UserInfo, Integer>, Jp
 
     Boolean existsByUserId(Integer userId);
     Page<UserInfo> findAll(Specification<UserInfo> spec, Pageable pageable);
-
+    List<UserInfo> findAllByUserIdIn(List<Integer> ids);
     Optional<UserInfo> findByUserId(int userId);
 }

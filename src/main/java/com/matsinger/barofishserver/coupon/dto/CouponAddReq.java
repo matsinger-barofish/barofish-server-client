@@ -6,11 +6,13 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.sql.Timestamp;
+import java.util.List;
 
 @Getter
 @Setter
 @NoArgsConstructor
 public class CouponAddReq {
+    List<Integer> userIds;
     String title;
     CouponType type;
     Integer amount;

@@ -1,5 +1,5 @@
 package com.matsinger.barofishserver.product.domain;
 
 public enum ProductState {
-    ACTIVE, INACTIVE, SOLD_OUT, DELETED;
+    ACTIVE, INACTIVE, INACTIVE_PARTNER, SOLD_OUT, DELETED;
 }

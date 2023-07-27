@@ -106,6 +106,7 @@ public class ProductService {
         optionItemRepository.deleteAllByOptionId(optionId);
     }
 
+    @Transactional
     public void deleteOptionItem(Integer optionItemId) {
         basketProductOptionRepository.deleteAllByOptionId(optionItemId);
         OptionItem optionItem = selectOptionItem(optionItemId);

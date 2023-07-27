@@ -1,6 +1,7 @@
 package com.matsinger.barofishserver.coupon.application;
 
 import com.matsinger.barofishserver.coupon.domain.Coupon;
+import com.matsinger.barofishserver.coupon.domain.CouponPublicType;
 import com.matsinger.barofishserver.coupon.domain.CouponUserMap;
 import com.matsinger.barofishserver.coupon.domain.CouponUserMapId;
 import com.matsinger.barofishserver.coupon.repository.CouponRepository;
@@ -32,6 +33,10 @@ public class CouponQueryService {
         return couponRepository.findById(couponId).orElseThrow(() -> {
             throw new Error("쿠폰 정보를 찾을 수 없습니다.");
         });
+    }
+
+    public List<Coupon> selectCouponWithPublicType(CouponPublicType couponPublicType) {
+        return couponRepository.findAllByPublicType(couponPublicType);
     }
 
     public void checkValidCoupon(Integer couponId, Integer userId) {
@@ -74,5 +79,9 @@ public class CouponQueryService {
 
     public List<Coupon> selectCanUseCoupon(Integer userId) {
         return couponRepository.selectCanUseCoupon(userId);
+    }
+
+    public List<Integer> selectPublishedCouponUserIds(Integer couponId) {
+        return mapRepository.findAllByCouponId(couponId).stream().map(CouponUserMap::getUserId).toList();
     }
 }

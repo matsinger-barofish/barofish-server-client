@@ -332,7 +332,7 @@ public class ProductController {
             product.setImages("");
             product.setPointRate(0.0F);
             product.setDescriptionImages("");
-            product.setState(ProductState.ACTIVE);
+            product.setState(adminId == null ? ProductState.INACTIVE_PARTNER : ProductState.ACTIVE);
             product.setRepresentOptionItemId(null);
             product.setNeedTaxation(data.getNeedTaxation() != null ? data.getNeedTaxation() : true);
             product.setDeliverBoxPerAmount(data.getDeliverBoxPerAmount());
@@ -535,6 +535,8 @@ public class ProductController {
                     }
                 }
             }
+            if (adminId == null) product.setState(ProductState.INACTIVE_PARTNER);
+            else product.setState(ProductState.INACTIVE);
             Product result = productService.update(id, product);
 
             if (data.getOptions() != null) {
@@ -664,7 +666,7 @@ public class ProductController {
                 AdminLog
                         adminLog =
                         AdminLog.builder().id(adminLogQueryService.getAdminLogId()).adminId(adminId).type(AdminLogType.PRODUCT).targetId(
-                                String.valueOf(v.getId())).createdAt(utils.now()).build();
+                                String.valueOf(v.getId())).createdAt(utils.now()).content(content).build();
                 adminLogCommandService.saveAdminLog(adminLog);
             });
             productService.updateProducts(products);

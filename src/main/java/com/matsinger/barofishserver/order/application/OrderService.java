@@ -41,6 +41,7 @@ import com.matsinger.barofishserver.user.application.UserCommandService;
 import com.matsinger.barofishserver.userinfo.domain.UserInfo;
 import com.matsinger.barofishserver.userinfo.dto.UserInfoDto;
 import com.siot.IamportRestClient.exception.IamportResponseException;
+import jakarta.persistence.Tuple;
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.JoinType;
 import jakarta.persistence.criteria.Predicate;
@@ -51,6 +52,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -111,12 +113,16 @@ public class OrderService {
                     opi.getInvoiceCode()).cancelReason(opi.getCancelReason()).cancelReasonContent(opi.getCancelReasonContent()).isReviewWritten(
                     isWritten).deliverFeeType(storeInfo.getDeliverFeeType()).minOrderPrice(storeInfo.getMinOrderPrice()).build();
         }).filter(Objects::nonNull).toList();
-
+        String couponName = null;
+        if (order.getCouponId() != null) {
+            Coupon coupon = couponQueryService.selectCoupon(order.getCouponId());
+            couponName = coupon.getTitle();
+        }
         UserInfoDto userInfoDto = userService.selectUserInfo(order.getUserId()).convert2Dto();
         return OrderDto.builder().id(order.getId()).orderedAt(order.getOrderedAt()).user(userInfoDto).totalAmount(order.getTotalPrice()).deliverPlace(
-                deliverPlace.convert2Dto()).paymentWay(order.getPaymentWay()).productInfos(
-                orderProductDtos).couponDiscount(order.getCouponDiscount()).usePoint(order.getUsePoint()).ordererName(
-                order.getOrdererName()).ordererTel(order.getOrdererTel()).build();
+                deliverPlace.convert2Dto()).paymentWay(order.getPaymentWay()).productInfos(orderProductDtos).couponDiscount(
+                order.getCouponDiscount()).usePoint(order.getUsePoint()).ordererName(order.getOrdererName()).ordererTel(
+                order.getOrdererTel()).couponName(couponName).build();
     }
 
     public OrderDeliverPlace selectDeliverPlace(String orderId) {
@@ -385,11 +391,24 @@ public class OrderService {
     }
 
     public OrderProductInfoDto convert2InfoDto(OrderProductInfo info) {
+        Orders order = selectOrder(info.getOrderId());
+        OrderDto orderDto = convert2Dto(order, null, null);
+        orderDto.setProductInfos(null);
+        Product product = productService.selectProduct(info.getProductId());
+        StoreInfo storeInfo = storeService.selectStoreInfo(product.getStoreId());
+        OptionItem optionItem = productService.selectOptionItem(info.getOptionItemId());
+        Optional<DeliveryCompany>
+                deliveryCompany =
+                info.getDeliverCompanyCode() !=
+                        null ? deliveryCompanyRepository.findById(info.getDeliverCompanyCode()) : Optional.empty();
+
         return OrderProductInfoDto.builder().id(info.getId()).orderId(info.getOrderId()).productId(info.getProductId()).optionItemId(
-                info.getOptionItemId()).state(info.getState()).settlePrice(info.getSettlePrice()).price(info.getPrice()).amount(
-                info.getAmount()).deliveryFee(info.getDeliveryFee()).cancelReasonContent(info.getCancelReasonContent()).cancelReason(
+                info.getOptionItemId()).optionItem(optionItem.convert2Dto()).state(info.getState()).settlePrice(info.getSettlePrice()).price(
+                info.getPrice()).amount(info.getAmount()).deliveryFee(info.getDeliveryFee()).cancelReasonContent(info.getCancelReasonContent()).cancelReason(
                 info.getCancelReason()).deliverCompanyCode(info.getDeliverCompanyCode()).invoiceCode(info.getInvoiceCode()).isSettled(
-                info.getIsSettled()).settledAt(info.getSettledAt()).product(productService.convert2ListDto(info.getProduct())).build();
+                info.getIsSettled()).settledAt(info.getSettledAt()).product(productService.convert2ListDto(info.getProduct())).order(
+                orderDto).settlementRate(storeInfo.getSettlementRate()).deliverFeeType(storeInfo.getDeliverFeeType()).deliverCompany(
+                deliveryCompany.map(DeliveryCompany::getName).orElse(null)).build();
     }
 
     public Integer calculateTotalPrice(OrderReq data) {
@@ -438,7 +457,7 @@ public class OrderService {
                 5).equals(orderDeliverPlace.getBcode().substring(0, 5)));
     }
 
-    public void processOrderZeroAmount(Orders order){
+    public void processOrderZeroAmount(Orders order) {
         List<OrderProductInfo> infos = selectOrderProductInfoListWithOrderId(order.getId());
         infos.forEach(info -> {
             if (!checkProductCanDeliver(order.getDeliverPlace(), info)) {
@@ -456,8 +475,7 @@ public class OrderService {
                         NotificationMessage.builder().productName(info.getProduct().getTitle()).build());
             } else {
                 OptionItem optionItem = productService.selectOptionItem(info.getOptionItemId());
-                if (optionItem.getAmount() != null)
-                    optionItem.setAmount(optionItem.getAmount() - info.getAmount());
+                if (optionItem.getAmount() != null) optionItem.setAmount(optionItem.getAmount() - info.getAmount());
                 productService.addOptionItem(optionItem);
                 info.setState(OrderProductState.PAYMENT_DONE);
                 notificationCommandService.sendFcmToUser(order.getUserId(),

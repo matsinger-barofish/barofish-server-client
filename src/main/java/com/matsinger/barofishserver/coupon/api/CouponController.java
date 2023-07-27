@@ -6,14 +6,18 @@ import com.matsinger.barofishserver.admin.log.domain.AdminLog;
 import com.matsinger.barofishserver.admin.log.domain.AdminLogType;
 import com.matsinger.barofishserver.coupon.application.CouponCommandService;
 import com.matsinger.barofishserver.coupon.application.CouponQueryService;
-import com.matsinger.barofishserver.coupon.domain.Coupon;
-import com.matsinger.barofishserver.coupon.domain.CouponOrderBy;
-import com.matsinger.barofishserver.coupon.domain.CouponState;
-import com.matsinger.barofishserver.coupon.domain.CouponType;
+import com.matsinger.barofishserver.coupon.domain.*;
 import com.matsinger.barofishserver.coupon.dto.CouponAddReq;
+import com.matsinger.barofishserver.coupon.dto.CouponDto;
+import com.matsinger.barofishserver.coupon.dto.UpdateSystemCoupon;
 import com.matsinger.barofishserver.jwt.JwtService;
 import com.matsinger.barofishserver.jwt.TokenAuthType;
 import com.matsinger.barofishserver.jwt.TokenInfo;
+import com.matsinger.barofishserver.user.application.UserCommandService;
+import com.matsinger.barofishserver.user.application.UserQueryService;
+import com.matsinger.barofishserver.user.domain.User;
+import com.matsinger.barofishserver.userinfo.domain.UserInfo;
+import com.matsinger.barofishserver.userinfo.dto.UserInfoDto;
 import com.matsinger.barofishserver.utils.Common;
 import com.matsinger.barofishserver.utils.CustomResponse;
 import jakarta.persistence.criteria.Predicate;
@@ -39,22 +43,23 @@ public class CouponController {
     private final CouponCommandService couponCommandService;
     private final AdminLogQueryService adminLogQueryService;
     private final AdminLogCommandService adminLogCommandService;
+    private final UserCommandService userCommandService;
     private final JwtService jwt;
     private final Common utils;
 
     @GetMapping("/management")
-    public ResponseEntity<CustomResponse<Page<Coupon>>> selectCouponListByAdmin(@RequestHeader(value = "Authorization", required = false) Optional<String> auth,
-                                                                                @RequestParam(value = "page", required = false, defaultValue = "0") Integer page,
-                                                                                @RequestParam(value = "take", required = false, defaultValue = "10") Integer take,
-                                                                                @RequestParam(value = "orderby", defaultValue = "id") CouponOrderBy orderBy,
-                                                                                @RequestParam(value = "orderType", defaultValue = "DESC") Sort.Direction sort,
-                                                                                @RequestParam(value = "title", required = false) String title,
-                                                                                @RequestParam(value = "type", required = false) String type,
-                                                                                @RequestParam(value = "startAtS", required = false) Timestamp startAtS,
-                                                                                @RequestParam(value = "startAtE", required = false) Timestamp startAtE,
-                                                                                @RequestParam(value = "endAtS", required = false) Timestamp endAtS,
-                                                                                @RequestParam(value = "endAtE", required = false) Timestamp endAtE) {
-        CustomResponse<Page<Coupon>> res = new CustomResponse<>();
+    public ResponseEntity<CustomResponse<Page<CouponDto>>> selectCouponListByAdmin(@RequestHeader(value = "Authorization", required = false) Optional<String> auth,
+                                                                                   @RequestParam(value = "page", required = false, defaultValue = "0") Integer page,
+                                                                                   @RequestParam(value = "take", required = false, defaultValue = "10") Integer take,
+                                                                                   @RequestParam(value = "orderby", defaultValue = "id") CouponOrderBy orderBy,
+                                                                                   @RequestParam(value = "orderType", defaultValue = "DESC") Sort.Direction sort,
+                                                                                   @RequestParam(value = "title", required = false) String title,
+                                                                                   @RequestParam(value = "type", required = false) String type,
+                                                                                   @RequestParam(value = "startAtS", required = false) Timestamp startAtS,
+                                                                                   @RequestParam(value = "startAtE", required = false) Timestamp startAtE,
+                                                                                   @RequestParam(value = "endAtS", required = false) Timestamp endAtS,
+                                                                                   @RequestParam(value = "endAtE", required = false) Timestamp endAtE) {
+        CustomResponse<Page<CouponDto>> res = new CustomResponse<>();
         Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
         if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
         try {
@@ -68,10 +73,19 @@ public class CouponController {
                 if (endAtS != null) predicates.add(builder.greaterThan(root.get("endAt"), endAtS));
                 if (endAtE != null) predicates.add(builder.lessThan(root.get("endAt"), endAtE));
                 predicates.add(builder.equal(root.get("state"), CouponState.ACTIVE));
+//                predicates.add(builder.notEqual(root.get("publicType"), CouponPublicType.PRIVATE));
                 return builder.and(predicates.toArray(new Predicate[0]));
             };
             PageRequest pageRequest = PageRequest.of(page, take, Sort.by(sort, orderBy.label));
-            Page<Coupon> coupons = couponQueryService.selectCouponListByAdmin(pageRequest, spec);
+            Page<CouponDto> coupons = couponQueryService.selectCouponListByAdmin(pageRequest, spec).map(v -> {
+                List<UserInfoDto> users = null;
+                if (v.getPublicType().equals(CouponPublicType.PRIVATE)) {
+                    List<Integer> userIds = couponQueryService.selectPublishedCouponUserIds(v.getId());
+                    users =
+                            userCommandService.selectUserInfoListWithIds(userIds).stream().map(UserInfo::convert2Dto).toList();
+                }
+                return v.convert2Dto(users);
+            });
             res.setData(Optional.ofNullable(coupons));
             return ResponseEntity.ok(res);
         } catch (Exception e) {
@@ -80,11 +94,17 @@ public class CouponController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<CustomResponse<Coupon>> selectCoupon(@PathVariable("id") Integer id) {
-        CustomResponse<Coupon> res = new CustomResponse<>();
+    public ResponseEntity<CustomResponse<CouponDto>> selectCoupon(@PathVariable("id") Integer id) {
+        CustomResponse<CouponDto> res = new CustomResponse<>();
         try {
             Coupon coupon = couponQueryService.selectCoupon(id);
-            res.setData(Optional.ofNullable(coupon));
+            List<UserInfoDto> users = null;
+            if (coupon.getPublicType().equals(CouponPublicType.PRIVATE)) {
+                List<Integer> userIds = couponQueryService.selectPublishedCouponUserIds(coupon.getId());
+                users =
+                        userCommandService.selectUserInfoListWithIds(userIds).stream().map(UserInfo::convert2Dto).toList();
+            }
+            res.setData(Optional.ofNullable(coupon.convert2Dto(users)));
             return ResponseEntity.ok(res);
         } catch (Exception e) {
             return res.defaultError(e);
@@ -151,7 +171,6 @@ public class CouponController {
     }
 
 
-
     @PostMapping("add")
     public ResponseEntity<CustomResponse<Coupon>> addCoupon(@RequestHeader(value = "Authorization") Optional<String> auth,
                                                             @RequestPart(value = "data") CouponAddReq data) {
@@ -171,12 +190,22 @@ public class CouponController {
             if (data.getAmount() < 0) return res.throwError("할인율을 확인해주세요.", "INPUT_CHECK_REQUIRED");
             if (data.getMinPrice() == null) data.setMinPrice(0);
             if (data.getStartAt() == null) return res.throwError("사용 가능 시작 기간을 입력해주세요.", " INPUT_CHECK_REQUIRED");
+            boolean isPublic = data.getUserIds() == null;
             Coupon
                     coupon =
                     Coupon.builder().title(title).type(data.getType()).amount(data.getAmount()).startAt(data.getStartAt()).endAt(
-                            data.getEndAt()).minPrice(data.getMinPrice()).state(CouponState.ACTIVE).build();
+                            data.getEndAt()).minPrice(data.getMinPrice()).state(CouponState.ACTIVE).publicType(isPublic ? CouponPublicType.PUBLIC : CouponPublicType.PRIVATE).build();
             coupon = couponCommandService.addCoupon(coupon);
-            couponCommandService.sendCouponCreateNotification(coupon);
+            if (!isPublic) {
+                List<User> users = userCommandService.selectUserListWithIds(data.getUserIds());
+                Coupon finalCoupon = coupon;
+                List<CouponUserMap>
+                        couponUserMaps =
+                        users.stream().map(v -> CouponUserMap.builder().couponId(finalCoupon.getId()).userId(v.getId()).isUsed(
+                                false).build()).toList();
+                couponCommandService.addCouponUserMapList(couponUserMaps);
+            }
+            couponCommandService.sendCouponCreateNotification(coupon, data.getUserIds());
             AdminLog
                     adminLog =
                     AdminLog.builder().id(adminLogQueryService.getAdminLogId()).adminId(adminId).type(AdminLogType.COUPON).targetId(
@@ -196,6 +225,8 @@ public class CouponController {
         if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
         try {
             Coupon coupon = couponQueryService.selectCoupon(id);
+            if (coupon.getPublicType().equals(CouponPublicType.SYSTEM))
+                return res.throwError("시스템 발행 쿠폰은 삭제 불가능합니다.", "NOT_ALLOWED");
             coupon.setState(CouponState.DELETED);
             couponCommandService.updateCoupon(coupon);
             res.setData(Optional.of(true));
@@ -205,4 +236,46 @@ public class CouponController {
         }
     }
 
+    // ------ 시스템 쿠폰 처리
+    @GetMapping("/system-coupon")
+    public ResponseEntity<CustomResponse<List<Coupon>>> selectSystemCoupon(@RequestHeader(value = "Authorization") Optional<String> auth) {
+        CustomResponse<List<Coupon>> res = new CustomResponse<>();
+        Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
+        if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
+        try {
+            List<Coupon> coupons = couponQueryService.selectCouponWithPublicType(CouponPublicType.SYSTEM);
+            res.setData(Optional.ofNullable(coupons));
+            return ResponseEntity.ok(res);
+        } catch (Exception e) {
+            return res.defaultError(e);
+        }
+    }
+
+    @PostMapping("/system-coupon/update")
+    public ResponseEntity<CustomResponse<List<Coupon>>> updateSystemCoupon(@RequestHeader(value = "Authorization") Optional<String> auth,
+                                                                           @RequestPart(value = "data") UpdateSystemCoupon data) {
+        CustomResponse<List<Coupon>> res = new CustomResponse<>();
+        Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
+        if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
+        try {
+            if (data.getOrder_1stAmount() != null) {
+                Coupon coupon = couponQueryService.selectCoupon(1);
+                coupon.setAmount(data.getOrder_1stAmount());
+                couponCommandService.updateCoupon(coupon);
+            }
+            if (data.getOrder_3rdAmount() != null) {
+                Coupon coupon = couponQueryService.selectCoupon(2);
+                coupon.setAmount(data.getOrder_3rdAmount());
+                couponCommandService.updateCoupon(coupon);
+            }
+            if (data.getOrder_5thAmount() != null) {
+                Coupon coupon = couponQueryService.selectCoupon(3);
+                coupon.setAmount(data.getOrder_5thAmount());
+                couponCommandService.updateCoupon(coupon);
+            }
+            return ResponseEntity.ok(res);
+        } catch (Exception e) {
+            return res.defaultError(e);
+        }
+    }
 }

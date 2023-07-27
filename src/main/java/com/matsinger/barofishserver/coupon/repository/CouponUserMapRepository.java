@@ -4,6 +4,8 @@ import com.matsinger.barofishserver.coupon.domain.CouponUserMapId;
 import com.matsinger.barofishserver.coupon.domain.CouponUserMap;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface CouponUserMapRepository extends JpaRepository<CouponUserMap, CouponUserMapId> {
+import java.util.List;
 
+public interface CouponUserMapRepository extends JpaRepository<CouponUserMap, CouponUserMapId> {
+    List<CouponUserMap> findAllByCouponId(Integer couponId);
 }

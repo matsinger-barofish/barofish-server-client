@@ -13,7 +13,6 @@ import com.matsinger.barofishserver.inquiry.application.InquiryCommandService;
 import com.matsinger.barofishserver.review.application.ReviewCommandService;
 import com.matsinger.barofishserver.user.deliverplace.DeliverPlace;
 import com.matsinger.barofishserver.user.deliverplace.repository.DeliverPlaceRepository;
-import com.matsinger.barofishserver.user.dto.SnsJoinLoginResponseDto;
 import com.matsinger.barofishserver.user.dto.UserJoinReq;
 import com.matsinger.barofishserver.user.repository.UserRepository;
 import com.matsinger.barofishserver.user.dto.SnsJoinReq;
@@ -59,23 +58,25 @@ public class UserCommandService {
     private final AdminLogCommandService adminLogCommandService;
     private final AdminLogQueryService adminLogQueryService;
 
-    @Transactional
-    public SnsJoinLoginResponseDto createSnsUserAndSave(SnsJoinReq request) throws MalformedURLException {
-
+    public int createSnsUserAndSave(SnsJoinReq request) throws MalformedURLException {
         userJoinValidator.nullCheck(request.getLoginType());
         userJoinValidator.nullCheck(request.getLoginId());
+
+        String loginId = request.getLoginId();
+
+        Optional<UserAuth> optionalUserAuth = userAuthRepository.findByLoginId(loginId);
+        if (optionalUserAuth.isPresent()) {
+            throw new IllegalArgumentException("중복된 아이디가 존재합니다.");
+        }
 
         User user = User.builder().joinAt(new Timestamp(System.currentTimeMillis())).state(UserState.ACTIVE).build();
         userRepository.save(user);
 
-        UserAuth createdUserAuth = userAuthCommandService.createUserAuth(request, user);
+        userAuthCommandService.createUserAuth(request, user);
         Grade grade = gradeRepository.findById(1).orElseThrow(() -> new IllegalStateException("등급 정보를 찾을 수 없습니다."));
         userInfoCommandService.createAndSaveUserInfo(user, request, "", grade);
 
-        return SnsJoinLoginResponseDto.builder()
-                .userId(user.getId())
-                .loginId(createdUserAuth.getLoginId())
-                .build();
+        return user.getId();
     }
 
     @Transactional
@@ -120,15 +121,15 @@ public class UserCommandService {
 
     @Transactional
     public void withdrawUser(int userId) {
-        User findUser = userRepository.findById(userId).orElseThrow(() -> {
-            throw new IllegalArgumentException("유저를 찾을 수 없습니다.");
-        });
-        UserInfo findUserInfo = userInfoRepository.findByUserId(userId).orElseThrow(() -> {
-            throw new IllegalArgumentException("유저를 찾을 수 없습니다.");
-        });
+        User
+                findUser =
+                userRepository.findById(userId).orElseThrow(() -> new IllegalArgumentException("유저를 찾을 수 없습니다."));
+        UserInfo
+                findUserInfo =
+                userInfoRepository.findByUserId(userId).orElseThrow(() -> new IllegalArgumentException("유저를 찾을 수 없습니다."));
         findUser.setState(UserState.DELETED);
-        findUserInfo.setNickname("탈퇴한 회원");
-        findUserInfo.setPhone(null);
+//        findUserInfo.setNickname("탈퇴한 회원");
+//        findUserInfo.setPhone(null);
         deleteUserAuth(userId);
 
         // 장바구니 제거
@@ -308,62 +309,15 @@ public class UserCommandService {
         });
     }
 
+    public List<UserInfo> selectUserInfoListWithIds(List<Integer> userIds) {
+        return userInfoRepository.findAllByUserIdIn(userIds);
+    }
+
     public Optional<UserInfo> selectOptionalUserInfo(int userId) {
         return userInfoRepository.findByUserId(userId);
     }
 
-    @Transactional
-    public void addUserAuthIfPhoneNumberExists(SnsJoinReq request) {
-
-        Optional<UserInfo> optionalUserInfo = userInfoRepository.findByPhone(request.getPhone().replace("-", ""));
-
-        boolean isUserInfoExists = optionalUserInfo.isPresent();
-
-        boolean isLoginTypeExists = false;
-        if (isUserInfoExists) {
-            UserInfo findUserInfo = optionalUserInfo.get();
-            List<UserAuth> existingUserAuth = findUserInfo.getUser().getUserAuth();
-
-            for (UserAuth userAuth : existingUserAuth) {
-                if (userAuth.getLoginType() == request.getLoginType()) {
-                    isLoginTypeExists = true;
-                }
-            }
-        }
-
-        if (isUserInfoExists && !isLoginTypeExists) {
-            UserAuth createdUserAuth = UserAuth.builder()
-                    .loginType(request.getLoginType())
-                    .loginId(request.getLoginId())
-                    .build();
-            User findUser = optionalUserInfo.get().getUser();
-            createdUserAuth.setUserId(findUser.getId());
-            createdUserAuth.setUser(findUser);
-
-            userAuthRepository.save(createdUserAuth);
-        }
-    }
-
-    @Transactional
-    public boolean addUserAuthIfPhoneNumberExists(UserJoinReq request) throws Exception {
-
-        Optional<UserInfo> optionalUserInfo = userInfoRepository.findByPhone(request.getPhone().replace("-", ""));
-
-        if (!optionalUserInfo.isPresent()) {
-            return false;
-        }
-
-        UserInfo findUserInfo = optionalUserInfo.get();
-        List<UserAuth> existingUserAuth = findUserInfo.getUser().getUserAuth();
-
-        for (UserAuth userAuth : existingUserAuth) {
-            if (userAuth.getLoginType() == LoginType.IDPW) {
-                throw new IllegalArgumentException("회원가입된 이력이 있습니다");
-            }
-        }
-
-        userAuthCommandService.createIdPwUserAuthAndSave(findUserInfo.getUser(), request);
-
-        return true;
+    public void updateUser(User user) {
+        userRepository.save(user);
     }
 }

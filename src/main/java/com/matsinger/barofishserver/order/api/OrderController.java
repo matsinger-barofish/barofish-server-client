@@ -1,5 +1,6 @@
 package com.matsinger.barofishserver.order.api;
 
+import com.matsinger.barofishserver.admin.domain.Admin;
 import com.matsinger.barofishserver.admin.log.application.AdminLogCommandService;
 import com.matsinger.barofishserver.admin.log.application.AdminLogQueryService;
 import com.matsinger.barofishserver.admin.log.domain.AdminLog;
@@ -15,23 +16,24 @@ import com.matsinger.barofishserver.notification.dto.NotificationMessage;
 import com.matsinger.barofishserver.notification.dto.NotificationMessageType;
 import com.matsinger.barofishserver.order.application.OrderService;
 import com.matsinger.barofishserver.order.domain.*;
-import com.matsinger.barofishserver.order.dto.OrderDto;
+import com.matsinger.barofishserver.order.dto.*;
 import com.matsinger.barofishserver.order.orderprductinfo.domain.OrderCancelReason;
 import com.matsinger.barofishserver.order.orderprductinfo.domain.OrderProductInfo;
 import com.matsinger.barofishserver.order.orderprductinfo.domain.OrderProductState;
 import com.matsinger.barofishserver.payment.application.PaymentService;
 import com.matsinger.barofishserver.payment.dto.KeyInPaymentReq;
 import com.matsinger.barofishserver.product.application.ProductService;
-import com.matsinger.barofishserver.product.domain.Product;
 import com.matsinger.barofishserver.product.domain.ProductState;
+import com.matsinger.barofishserver.product.optionitem.domain.OptionItem;
+import com.matsinger.barofishserver.product.domain.Product;
 import com.matsinger.barofishserver.product.dto.ProductListDto;
 import com.matsinger.barofishserver.siteInfo.application.SiteInfoQueryService;
 import com.matsinger.barofishserver.siteInfo.domain.SiteInformation;
-import com.matsinger.barofishserver.user.application.UserCommandService;
-import com.matsinger.barofishserver.user.deliverplace.DeliverPlace;
 import com.matsinger.barofishserver.user.paymentMethod.application.PaymentMethodService;
+import com.matsinger.barofishserver.user.deliverplace.DeliverPlace;
 import com.matsinger.barofishserver.user.paymentMethod.domain.PaymentMethod;
 import com.matsinger.barofishserver.userinfo.domain.UserInfo;
+import com.matsinger.barofishserver.user.application.UserCommandService;
 import com.matsinger.barofishserver.utils.Common;
 import com.matsinger.barofishserver.utils.CustomResponse;
 import jakarta.persistence.criteria.Join;
@@ -268,6 +270,7 @@ public class OrderController {
         }
     }
 
+
     @PostMapping("")
     public ResponseEntity<CustomResponse<OrderDto>> orderProduct(@RequestHeader(value = "Authorization") Optional<String> auth,
                                                                  @RequestBody OrderReq data) {
@@ -286,7 +289,7 @@ public class OrderController {
             if (data.getPoint() != null && userInfo.getPoint() < data.getPoint())
                 return res.throwError("보유한 적립금보다 많은 적립금입니다.", "INPUT_CHECK_REQUIRED");
             List<OrderProductInfo> infos = new ArrayList<>();
-            List<com.matsinger.barofishserver.product.optionitem.domain.OptionItem> optionItems = new ArrayList<>();
+            List<OptionItem> optionItems = new ArrayList<>();
             int taxFreeAmount = 0;
             for (OrderProductReq productReq : data.getProducts()) {
                 Product product = productService.selectProduct(productReq.getProductId());
@@ -299,7 +302,7 @@ public class OrderController {
                         return res.throwError("주문 불가능한 상품입니다.", "NOT_ALLOWED");
                 }
 
-                com.matsinger.barofishserver.product.optionitem.domain.OptionItem optionItem = productService.selectOptionItem(productReq.getOptionId());
+                OptionItem optionItem = productService.selectOptionItem(productReq.getOptionId());
                 if (optionItem.getDeliverBoxPerAmount() != null &&
                         optionItem.getMaxAvailableAmount() < productReq.getAmount())
                     return res.throwError("최대 주문 수량을 초과하였습니다.", "INPUT_CHECK_REQUIRED");
@@ -415,8 +418,9 @@ public class OrderController {
     }
 
     // 결제 취소
-    @PostMapping("/cancel/{orderProductInfoId}")
 
+
+    @PostMapping("/cancel/{orderProductInfoId}")
     public ResponseEntity<CustomResponse<Boolean>> cancelOrderByUser(@RequestHeader(value = "Authorization") Optional<String> auth,
                                                                      @PathVariable("orderProductInfoId") Integer orderProductInfoId,
                                                                      @RequestPart(value = "data") RequestCancelReq data) {
@@ -574,6 +578,8 @@ public class OrderController {
     }
 
     // 발송 처리
+
+
     @PostMapping("/process-deliver/{orderProductInfoId}")
     public ResponseEntity<CustomResponse<Boolean>> processDeliverStart(@RequestHeader(value = "Authorization") Optional<String> auth,
                                                                        @PathVariable("orderProductInfoId") Integer orderProductInfoId,
@@ -614,6 +620,8 @@ public class OrderController {
     }
 
     // 교환 신청
+
+
     @PostMapping("/change/{orderProductInfoId}")
     public ResponseEntity<CustomResponse<Boolean>> requestChangeProduct(@RequestHeader(value = "Authorization") Optional<String> auth,
                                                                         @PathVariable("orderProductInfoId") Integer orderProductInfoId,
@@ -732,6 +740,7 @@ public class OrderController {
             info.setState(OrderProductState.FINAL_CONFIRM);
             if (point != 0) userService.updateUserInfo(userInfo);
             orderService.updateOrderProductInfo(new ArrayList<>(List.of(info)));
+            couponCommandService.publishSystemCoupon(userInfo.getUserId());
             return ResponseEntity.ok(res);
         } catch (Exception e) {
             return res.defaultError(e);
@@ -861,65 +870,5 @@ public class OrderController {
         } catch (Exception e) {
             return res.defaultError(e);
         }
-    }
-
-    @Builder
-    @Getter
-    @Setter
-    @NoArgsConstructor
-    @AllArgsConstructor
-    private static class PointRuleRes {
-        Integer pointRate;
-        Integer maxReviewPoint;
-    }
-
-    @Getter
-    @NoArgsConstructor
-    @ToString
-    public static class OrderProductReq {
-        Integer productId;
-        Integer optionId;
-        Integer amount;
-        Integer deliveryFee;
-    }
-
-    @Getter
-    @NoArgsConstructor
-    public static class OrderReq {
-        private String name;
-        private String tel;
-        private Integer couponId;
-        private OrderPaymentWay paymentWay;
-        private Integer point;
-        private Integer totalPrice;
-        private Integer couponDiscountPrice;
-        private List<OrderProductReq> products;
-
-        private Integer deliverPlaceId;
-        private Integer paymentMethodId;
-    }
-
-    // 결제 취소
-    @Getter
-    @NoArgsConstructor
-    private static class RequestCancelReq {
-        private OrderCancelReason cancelReason;
-        private String content;
-    }
-
-    // 발송 처리
-    @Getter
-    @NoArgsConstructor
-    private static class ProcessDeliverStartReq {
-        private String deliverCompanyCode;
-        private String invoice;
-    }
-
-    // 교환 신청
-    @Getter
-    @NoArgsConstructor
-    private static class RequestChangeProduct {
-        private OrderCancelReason cancelReason;
-        private String reasonContent;
     }
 }

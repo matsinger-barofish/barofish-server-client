@@ -342,6 +342,7 @@ public interface ProductRepository extends JpaRepository<Product, Integer>, JpaS
             "product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
             "where (:#{#filterFieldIds==null ? null : #filterFieldIds.size() } is null or  ps.field_id in " +
             "(:filterFieldIds) ) )) \n" +
+            "and oi.origin_price != 0\n" +
             " ORDER BY IF( oi.origin_price != 0, oi.discount_price / oi.origin_price, 100 )", nativeQuery = true, countQuery =
             "select count(*) from product p " +
                     "join category c ON p.category_id = c.id " +
@@ -353,7 +354,8 @@ public interface ProductRepository extends JpaRepository<Product, Integer>, JpaS
                     "and (:#{#filterFieldIds==null ? null : #filterFieldIds.size() } is null or p.id in (select p1.id from " +
                     "product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
                     "where (:#{#filterFieldIds==null ? null : #filterFieldIds.size() } is null or  ps.field_id in " +
-                    "(:filterFieldIds) ) )) \n")
+                    "(:filterFieldIds) ) )) \n" +
+                    "and oi.origin_price != 0\n")
     Page<Product> findDiscountWithPagination(Pageable pageable,
                                              @Param("categoryIds") List<Integer> categoryIds,
                                              @Param("filterFieldIds") List<Integer> filterFieldIds,

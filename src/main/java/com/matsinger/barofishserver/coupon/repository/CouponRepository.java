@@ -1,6 +1,7 @@
 package com.matsinger.barofishserver.coupon.repository;
 
 import com.matsinger.barofishserver.coupon.domain.Coupon;
+import com.matsinger.barofishserver.coupon.domain.CouponPublicType;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
@@ -14,7 +15,9 @@ public interface CouponRepository extends JpaRepository<Coupon, Integer>, JpaSpe
 
     @Query(value = "SELECT *\n" +
             "FROM coupon c\n" +
-            "WHERE c.id NOT IN (SELECT coupon_id FROM coupon_user_map WHERE user_id = :userId) AND c.state = \'ACTIVE\'" +
+            "WHERE c.id NOT IN (SELECT coupon_id FROM coupon_user_map WHERE user_id = :userId) AND c.state = " +
+            "\'ACTIVE\'\n" +
+            " AND c.public_type = \'PUBLIC\'\n" +
             " AND c.start_at < NOW( )\n" +
             "  AND NOW( ) < c.end_at", nativeQuery = true)
     List<Coupon> selectNotDownloadCoupon(@Param("userId") Integer userId);
@@ -34,4 +37,5 @@ public interface CouponRepository extends JpaRepository<Coupon, Integer>, JpaSpe
             "  AND NOW( ) < c.end_at", nativeQuery = true)
     List<Coupon> selectCanUseCoupon(@Param("userId") Integer userId);
 
+    List<Coupon> findAllByPublicType(CouponPublicType type);
 }

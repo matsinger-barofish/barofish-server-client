@@ -23,6 +23,7 @@ public class OrderDto {
     OrderPaymentWay paymentWay;
     Integer totalAmount;
     Integer couponDiscount;
+    String couponName;
     Integer usePoint;
     Timestamp orderedAt;
     Boolean needTaxation;

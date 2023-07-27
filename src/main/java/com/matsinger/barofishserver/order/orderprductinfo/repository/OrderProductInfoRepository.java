@@ -47,4 +47,11 @@ public interface OrderProductInfoRepository extends JpaRepository<OrderProductIn
     List<Tuple> getProductOrderCountRank(@Param(value = "storeId") Integer storeId,
                                          @Param(value = "startAt") Timestamp startAt,
                                          @Param(value = "endAt") Timestamp endAt);
+
+    @Query(value = "SELECT COUNT( DISTINCT o.id ) AS count\n" +
+            "FROM order_product_info opi\n" +
+            "         JOIN barofish_dev.orders o ON o.id = opi.order_id\n" +
+            "WHERE opi.state = 'FINAL_CONFIRM'\n" +
+            "  AND o.user_id = :userId;", nativeQuery = true)
+    Tuple countFinalConfirmedOrderWithUserId(Integer userId);
 }
