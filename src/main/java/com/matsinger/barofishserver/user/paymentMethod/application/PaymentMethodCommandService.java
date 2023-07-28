@@ -32,6 +32,8 @@ public class PaymentMethodCommandService {
     private final RegexConstructor re;
     @Value("${iamport.credentials.mid}")
     public String mid;
+    @Value("${iamport.credentials.keyin-pg}")
+    public String keyinPg;
 
     public PaymentMethod addPaymentMethod(AddPaymentMethodReq request, int userId) throws Exception {
 
@@ -52,10 +54,11 @@ public class PaymentMethodCommandService {
         PaymentMethod
                 paymentMethod =
                 PaymentMethod.builder().name(name).cardNo(hashedCardNo).userId(userId).expiryAt(request.getExpiryAt()).birth(
-                        request.getBirth()).passwordTwoDigit(password2Digit).build();
-
+                        request.getBirth()).passwordTwoDigit(password2Digit).cardName("").customerUid("").build();
+        paymentMethod = paymentMethodRepository.save(paymentMethod);
         CheckValidCardRes validCardRes = checkValidCard(paymentMethod);
         if (validCardRes == null) {
+            paymentMethodRepository.deleteById(paymentMethod.getId());
             throw new IllegalArgumentException("유효하지 않은 카드입니다.");
         }
         paymentMethod.setCardName(validCardRes.getCardName());
@@ -99,7 +102,7 @@ public class PaymentMethodCommandService {
         String birth = paymentMethod.getBirth();
         BillingCustomerData billingCustomerData = new BillingCustomerData(customerUid, cardNo, expiry, birth);
         billingCustomerData.setPwd2Digit(aes256.decrypt(paymentMethod.getPasswordTwoDigit()));
-        billingCustomerData.setPg("settle");
+        billingCustomerData.setPg(keyinPg);
         IamportResponse<BillingCustomer>
                 billingCustomerRes =
                 iamportClient.postBillingCustomer(customerUid, billingCustomerData);
@@ -108,6 +111,7 @@ public class PaymentMethodCommandService {
             return null;
         }
         BillingCustomer billingCustomer = billingCustomerRes.getResponse();
+        if (billingCustomer.getCardName() == null) return null;
         return CheckValidCardRes.builder().cardName(billingCustomer.getCardName()).customerUid(billingCustomer.getCustomerUid()).build();
     }
 }

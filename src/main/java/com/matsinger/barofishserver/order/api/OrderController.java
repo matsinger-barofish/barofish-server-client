@@ -8,6 +8,8 @@ import com.matsinger.barofishserver.admin.log.domain.AdminLogType;
 import com.matsinger.barofishserver.coupon.application.CouponCommandService;
 import com.matsinger.barofishserver.coupon.application.CouponQueryService;
 import com.matsinger.barofishserver.coupon.domain.Coupon;
+import com.matsinger.barofishserver.deliver.application.DeliverService;
+import com.matsinger.barofishserver.deliver.domain.Deliver;
 import com.matsinger.barofishserver.jwt.JwtService;
 import com.matsinger.barofishserver.jwt.TokenAuthType;
 import com.matsinger.barofishserver.jwt.TokenInfo;
@@ -65,6 +67,7 @@ public class OrderController {
     private final PaymentMethodService paymentMethodService;
     private final AdminLogCommandService adminLogCommandService;
     private final AdminLogQueryService adminLogQueryService;
+    private final DeliverService deliverService;
     private final JwtService jwt;
     private final Common utils;
 
@@ -593,8 +596,15 @@ public class OrderController {
             Integer adminId = null;
             if (tokenInfo.get().getType().equals(TokenAuthType.ADMIN)) adminId = tokenInfo.get().getId();
             OrderProductInfo info = orderService.selectOrderProductInfo(orderProductInfoId);
+            if (!info.getState().equals(OrderProductState.DELIVERY_READY) &&
+                    !info.getState().equals(OrderProductState.ON_DELIVERY))
+                return res.throwError("변경 불가능한 상태입니다.", "NOT_ALLOWED");
             if (data.getDeliverCompanyCode() == null) return res.throwError("택배사 코드를 입력해주세요.", "INPUT_CHECK_REQUIRED");
             if (data.getInvoice() == null) return res.throwError("운송장 번호를 입력해주세요.", "INPUT_CHECK_REQUIRED");
+            Deliver.TrackingInfo
+                    trackingInfo =
+                    deliverService.selectTrackingInfo(data.getDeliverCompanyCode(), data.getInvoice());
+            if (trackingInfo == null) return res.throwError("유효하지 않은 운송장 번호입니다.", "NOT_ALLOWED");
             info.setDeliverCompanyCode(data.getDeliverCompanyCode());
             info.setInvoiceCode(data.getInvoice());
             info.setState(OrderProductState.ON_DELIVERY);
@@ -750,7 +760,8 @@ public class OrderController {
     // 반품 요청
     @PostMapping("/refund/{orderProductInfoId}/request")
     public ResponseEntity<CustomResponse<Boolean>> requestRefundOrderProduct(@RequestHeader(value = "Authorization") Optional<String> auth,
-                                                                             @PathVariable("orderProductInfoId") Integer orderProductInfoId) {
+                                                                             @PathVariable("orderProductInfoId") Integer orderProductInfoId,
+                                                                             @RequestPart(value = "data") RequestCancelReq data) {
         CustomResponse<Boolean> res = new CustomResponse<>();
         Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth);
         if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
@@ -759,6 +770,10 @@ public class OrderController {
             Orders order = orderService.selectOrder(info.getOrderId());
             if (tokenInfo.get().getId() != order.getUserId()) return res.throwError("타인의 주문 내역입니다.", "NOT_ALLOWED");
             info.setState(OrderProductState.REFUND_REQUEST);
+            if (data.getCancelReason() == null) return res.throwError("취소/환불 사유를 선택해주세요.", "INPUT_CHECK_REQUIRED");
+            String content = utils.validateString(data.getContent(), 1000L, "사유");
+            info.setCancelReason(data.getCancelReason());
+            info.setCancelReasonContent(content);
             orderService.updateOrderProductInfo(new ArrayList<>(List.of(info)));
             res.setData(Optional.of(true));
             return ResponseEntity.ok(res);

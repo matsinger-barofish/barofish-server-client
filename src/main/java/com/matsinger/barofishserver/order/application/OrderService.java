@@ -230,11 +230,11 @@ public class OrderService {
             case REFUND_REQUEST:
             case REFUND_ACCEPT:
             case REFUND_DONE:
-                throw new Error("취소 불가능한 상태입니다.");
+                throw new Exception("취소 불가능한 상태입니다.");
             case CANCEL_REQUEST:
-                throw new Error("이미 취소 요청된 상태입니다.");
+                throw new Exception("이미 취소 요청된 상태입니다.");
             case CANCELED:
-                throw new Error("취소 완료된 상태입니다.");
+                throw new Exception("취소 완료된 상태입니다.");
             case DELIVERY_READY:
             default:
                 info.setState(OrderProductState.CANCEL_REQUEST);
@@ -244,7 +244,11 @@ public class OrderService {
 
     public Integer calculateCancelOrderPrice(Integer orderProductInfoId) {
         OrderProductInfo info = infoRepository.findById(orderProductInfoId).orElseThrow(() -> {
-            throw new Error("주문 상품 정보를 찾을 수 없습니다.");
+            try {
+                throw new Exception("주문 상품 정보를 찾을 수 없습니다.");
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
         });
         Product product = productService.findById(info.getProductId());
         List<OrderProductInfo> infos = selectOrderProductInfoListWithOrderId(info.getOrderId()).stream().filter(v -> {

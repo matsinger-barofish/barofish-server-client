@@ -2,6 +2,7 @@ package com.matsinger.barofishserver.product.dto;
 
 import com.matsinger.barofishserver.product.domain.ProductState;
 import com.matsinger.barofishserver.product.productfilter.dto.ProductFilterValueDto;
+import com.matsinger.barofishserver.store.domain.StoreDeliverFeeType;
 import lombok.*;
 
 import javax.annotation.security.DenyAll;
@@ -24,6 +25,9 @@ public class ProductListDto {
     Boolean isLike;
     Integer storeId;
     String storeName;
+    Integer minOrderPrice;
+    String storeImage;
+    StoreDeliverFeeType deliverFeeType;
     Integer parentCategoryId;
     List<ProductFilterValueDto> filterValues;
 }

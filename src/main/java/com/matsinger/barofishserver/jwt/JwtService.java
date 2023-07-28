@@ -103,7 +103,7 @@ public class JwtService {
                 info.setType(TokenAuthType.ALLOW);
                 return Optional.of(info);
             }
-            info.setId(Integer.valueOf(jwtProvider.getIdFromToken(token)));
+            info.setId(jwtProvider.getIdFromToken(token));
             info.setType(jwtProvider.getTypeFromToken(token));
             return Optional.of(info);
         } else {

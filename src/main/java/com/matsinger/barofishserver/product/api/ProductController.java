@@ -77,13 +77,27 @@ public class ProductController {
         try {
             List<Integer> idList = utils.str2IntList(ids);
             List<Product> products = productService.selectProductListWithIds(idList);
-            res.setData(Optional.of(products.stream().map(Product::convert2ListDto).toList()));
+            res.setData(Optional.of(products.stream().map(productService::convert2ListDto).toList()));
 
 //            List<ProductListDto> productListDtos = new ArrayList<>();
 //            for (Integer id : idList) {
 //                productListDtos.add(productQueryService.createProductListDtos(id));
 //            }
 //            res.setData(Optional.of(productListDtos));
+            return ResponseEntity.ok(res);
+        } catch (Exception e) {
+            return res.defaultError(e);
+        }
+    }
+
+    @GetMapping("/list/ids")
+    public ResponseEntity<CustomResponse<List<ProductListDto>>> selectProductListWithIds(@RequestParam(value = "ids") String ids) {
+        CustomResponse<List<ProductListDto>> res = new CustomResponse<>();
+        try {
+            List<Integer> idList = utils.str2IntList(ids);
+            List<Product> products = productService.selectProductListWithIds(idList);
+            res.setData(Optional.of(products.stream().map(productService::convert2ListDto).toList()));
+
             return ResponseEntity.ok(res);
         } catch (Exception e) {
             return res.defaultError(e);

@@ -112,29 +112,6 @@ public class PaymentService {
                 certification.getPhone()).certified(certification.isCertified()).certifiedAt(certification.getCertifiedAt().toString()).build();
     }
 
-    public CheckValidCardRes checkValidCard(PaymentMethod paymentMethod) throws Exception {
-        IamportClient iamportClient = callbackService.getIamportClient();
-        String customerUid = "customer_" + paymentMethod.getUserId() + "_" + paymentMethod.getId();
-        String cardNo = aes256.decrypt(paymentMethod.getCardNo());
-        cardNo = cardNo.replaceAll(re.cardNo, "$1-$2-$3-$4");
-        String[] expiryAyData = paymentMethod.getExpiryAt().split("/");
-        String expiryMonth = expiryAyData[0];
-        String expiryYear = "20" + expiryAyData[1];
-        String expiry = expiryYear + "-" + expiryMonth;
-        String birth = paymentMethod.getBirth();
-        BillingCustomerData billingCustomerData = new BillingCustomerData(customerUid, cardNo, expiry, birth);
-        billingCustomerData.setPwd2Digit(aes256.decrypt(paymentMethod.getPasswordTwoDigit()));
-        IamportResponse<BillingCustomer>
-                billingCustomerRes =
-                iamportClient.postBillingCustomer(customerUid, billingCustomerData);
-        if (billingCustomerRes.getCode() != 0) {
-            System.out.println(billingCustomerRes.getCode() + ": " + billingCustomerRes.getMessage());
-            return null;
-        }
-        BillingCustomer billingCustomer = billingCustomerRes.getResponse();
-        return CheckValidCardRes.builder().cardName(billingCustomer.getCardName()).customerUid(billingCustomer.getCustomerUid()).build();
-    }
-
     public Boolean processKeyInPayment(KeyInPaymentReq data) throws Exception {
         IamportClient iamportClient = callbackService.getIamportClient();
         String cardNo = aes256.decrypt(data.getPaymentMethod().getCardNo());
@@ -145,12 +122,11 @@ public class PaymentService {
         String expiry = expiryYear + "-" + expiryMonth;
         String password2Digit = aes256.decrypt(data.getPaymentMethod().getPasswordTwoDigit());
         CardInfo cardInfo = new CardInfo(cardNo, expiry, data.getPaymentMethod().getBirth(), password2Digit);
-
-        OnetimePaymentData
-                onetimePaymentData =
-                new OnetimePaymentData(data.getOrderId(), BigDecimal.valueOf(data.getTotal_amount()), cardInfo);
-        onetimePaymentData.setPg("settle");
-        onetimePaymentData.setCustomer_uid(data.getPaymentMethod().getCustomerUid());
+//        OnetimePaymentData
+//                onetimePaymentData =
+//                new OnetimePaymentData(data.getOrderId(), BigDecimal.valueOf(data.getTotal_amount()), cardInfo);
+//        onetimePaymentData.setPg("settle");
+//        onetimePaymentData.setCustomer_uid(data.getPaymentMethod().getCustomerUid());
         AgainPaymentData
                 againPaymentData =
                 new AgainPaymentData(data.getPaymentMethod().getCustomerUid(),
@@ -160,8 +136,8 @@ public class PaymentService {
         againPaymentData.setNoticeUrl(webhookUrl);
 //        againPaymentData.set
 //        againPaymentData.setTaxFree();
-//        IamportResponse<Payment> paymentRes = iamportClient.againPayment(againPaymentData);
-        IamportResponse<Payment> paymentRes = iamportClient.onetimePayment(onetimePaymentData);
+        IamportResponse<Payment> paymentRes = iamportClient.againPayment(againPaymentData);
+//        IamportResponse<Payment> paymentRes = iamportClient.onetimePayment(onetimePaymentData);
         if (paymentRes.getCode() != 0) {
             System.out.println(paymentRes.getMessage());
             return false;

@@ -316,7 +316,8 @@ public class ProductService {
                         1).split(",")[0]).originPrice(optionItem.getOriginPrice()).isNeedTaxation(product.getNeedTaxation()).discountPrice(
                 optionItem.getDiscountPrice()).title(product.getTitle()).reviewCount(reviewCount).storeId(storeInfo.getStoreId()).storeName(
                 storeInfo.getName()).parentCategoryId(product.getCategory().getCategoryId()).filterValues(
-                productFilterService.selectProductFilterValueListWithProductId(product.getId())).build();
+                productFilterService.selectProductFilterValueListWithProductId(product.getId())).minOrderPrice(storeInfo.getMinOrderPrice()).deliverFeeType(
+                storeInfo.getDeliverFeeType()).storeImage(storeInfo.getProfileImage()).build();
     }
 
     public SimpleProductDto convert2SimpleDto(Product product, Integer userId) {
