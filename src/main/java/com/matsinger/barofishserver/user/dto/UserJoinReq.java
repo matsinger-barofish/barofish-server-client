@@ -18,7 +18,6 @@ public class UserJoinReq {
     private String phone;
     private Integer verificationId;
     private String impUid;
-    private String bcode;
     private String postalCode;
     private String address;
     private String addressDetail;

@@ -31,6 +31,8 @@ import com.matsinger.barofishserver.product.domain.Product;
 import com.matsinger.barofishserver.product.dto.ProductListDto;
 import com.matsinger.barofishserver.siteInfo.application.SiteInfoQueryService;
 import com.matsinger.barofishserver.siteInfo.domain.SiteInformation;
+import com.matsinger.barofishserver.store.application.StoreService;
+import com.matsinger.barofishserver.store.domain.StoreInfo;
 import com.matsinger.barofishserver.user.paymentMethod.application.PaymentMethodService;
 import com.matsinger.barofishserver.user.deliverplace.DeliverPlace;
 import com.matsinger.barofishserver.user.paymentMethod.domain.PaymentMethod;
@@ -68,6 +70,7 @@ public class OrderController {
     private final AdminLogCommandService adminLogCommandService;
     private final AdminLogQueryService adminLogQueryService;
     private final DeliverService deliverService;
+    private final StoreService storeService;
     private final JwtService jwt;
     private final Common utils;
 
@@ -296,6 +299,7 @@ public class OrderController {
             int taxFreeAmount = 0;
             for (OrderProductReq productReq : data.getProducts()) {
                 Product product = productService.selectProduct(productReq.getProductId());
+                StoreInfo storeInfo = storeService.selectStoreInfo(product.getStoreId());
                 if (!product.getState().equals(ProductState.ACTIVE)) {
                     if (product.getState().equals(ProductState.SOLD_OUT))
                         return res.throwError("품절된 상품입니다.", "NOT_ALLOWED");
@@ -319,8 +323,10 @@ public class OrderController {
                         orderService.getProductDeliveryFee(product, productReq.getOptionId(), productReq.getAmount());
                 optionItems.add(productService.selectOptionItem(productReq.getOptionId()));
                 infos.add(OrderProductInfo.builder().optionItemId(optionItem.getId()).orderId(orderId).productId(
-                        productReq.getProductId()).state(OrderProductState.WAIT_DEPOSIT).settlePrice(optionItem.getPurchasePrice()).price(
-                        price).amount(productReq.getAmount()).isSettled(false).deliveryFee(deliveryFee).build());
+                        productReq.getProductId()).state(OrderProductState.WAIT_DEPOSIT).settlePrice(storeInfo.getSettlementRate() !=
+                        null ? (int) ((storeInfo.getSettlementRate() / 100.) *
+                        optionItem.getPurchasePrice()) : optionItem.getPurchasePrice()).price(price).amount(productReq.getAmount()).isSettled(
+                        false).deliveryFee(deliveryFee).build());
             }
             if (coupon != null) {
                 if (data.getTotalPrice() < coupon.getMinPrice())
@@ -346,7 +352,9 @@ public class OrderController {
                             tel).build();
 
             Orders result = orderService.orderProduct(order, infos, orderDeliverPlace);
-            taxFreeAmount = taxFreeAmount - data.getCouponDiscountPrice() + data.getPoint();
+
+//            taxFreeAmount = taxFreeAmount - data.getCouponDiscountPrice() + data.getPoint();
+            taxFreeAmount = orderService.getTaxFreeAmount(result, null);
             if (data.getPaymentWay().equals(OrderPaymentWay.KEY_IN)) {
                 PaymentMethod paymentMethod = paymentMethodService.selectPaymentMethod(data.getPaymentMethodId());
                 Product product = productService.selectProduct(data.getProducts().get(0).getProductId());
@@ -748,6 +756,7 @@ public class OrderController {
             Integer point = (int) Math.floor(info.getPrice() * info.getAmount() * pointRate);
             userInfo.setPoint(userInfo.getPoint() + point);
             info.setState(OrderProductState.FINAL_CONFIRM);
+            info.setFinalConfirmedAt(utils.now());
             if (point != 0) userService.updateUserInfo(userInfo);
             orderService.updateOrderProductInfo(new ArrayList<>(List.of(info)));
             couponCommandService.publishSystemCoupon(userInfo.getUserId());

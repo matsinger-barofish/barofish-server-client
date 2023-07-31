@@ -73,6 +73,9 @@ public class OrderProductInfo {
     @Basic
     @Column(name = "settledAt", nullable = true)
     private Timestamp settledAt;
+    @Basic
+    @Column(name = "final_confirmed_at", nullable = true)
+    private Timestamp finalConfirmedAt;
 
     @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     @JsonBackReference

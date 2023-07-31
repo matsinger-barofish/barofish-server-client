@@ -33,6 +33,7 @@ public class OrderProductInfoDto {
     private String invoiceCode;
     private Boolean isSettled;
     private Timestamp settledAt;
+    private Timestamp finalConfirmedAt;
     ProductListDto product;
     private OrderDto order;
     private Integer settlementRate;

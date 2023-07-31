@@ -1,7 +1,10 @@
 package com.matsinger.barofishserver.user.api;
 
 
+import com.matsinger.barofishserver.grade.domain.Grade;
 import com.matsinger.barofishserver.jwt.*;
+import com.matsinger.barofishserver.siteInfo.application.SiteInfoQueryService;
+import com.matsinger.barofishserver.siteInfo.domain.SiteInformation;
 import com.matsinger.barofishserver.user.application.UserCommandService;
 import com.matsinger.barofishserver.user.application.UserQueryService;
 import com.matsinger.barofishserver.user.domain.User;
@@ -30,6 +33,7 @@ import com.matsinger.barofishserver.verification.Verification;
 import com.matsinger.barofishserver.verification.VerificationService;
 import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -62,38 +66,77 @@ public class UserController {
     private final JwtService jwt;
     private final SmsService smsService;
     private final FcmTokenRepository fcmTokenRepository;
+    private final SiteInfoQueryService siteInfoService;
     private final Common utils;
+    @Value("${cloud.aws.s3.imageUrl}")
+    private String s3Url;
 
     @PostMapping(value = "/join-sns")
-    public ResponseEntity<CustomResponse<Jwt>> joinSnsUser(@RequestPart(value = "data") SnsJoinReq request) {
-
+    public ResponseEntity<CustomResponse<Jwt>> joinSnsUser(@RequestPart(value = "data") SnsJoinReq data) {
         CustomResponse<Jwt> res = new CustomResponse<>();
-
-        String loginId;
         try {
-            userCommandService.addUserAuthIfPhoneNumberExists(request);
-
-            loginId = userQueryService.getExistingLoginId(request);
-
-            if (loginId == null) {
-                SnsJoinLoginResponseDto responseDto = userCommandService.createSnsUserAndSave(request);
-                loginId = responseDto.getLoginId();
-
-                String profileImage = "";
-                if (request.getProfileImage() != null) {
-                    profileImage =
-                            s3.upload(s3.extractBase64FromImageUrl(request.getProfileImage()),
-                                    new ArrayList<>(Arrays.asList("user", String.valueOf(responseDto.getUserId()))));
+            if (data.getLoginType() == null) return res.throwError("로그인 타입을 입력해주세요.", "INPUT_CHECK_REQUIRED");
+            if (data.getLoginId() == null) return res.throwError("로그인 아이디를 입력해주세요.", "INPUT_CHECK_REQUIRED");
+            Optional<UserAuth> userAuth = userCommandService.checkUserAuthExist(data.getLoginType(), data.getLoginId());
+            if (userAuth.isPresent()) {
+                User user = userCommandService.selectUser(userAuth.get().getUserId());
+                if (user.getState().equals(UserState.BANNED)) return res.throwError("정지된 사용자입니다.", "NOT_ALLOWED");
+                if (user.getState().equals(UserState.DELETED)) {
+//                    return res.throwError("삭제된 사용자입니다.", "NOT_ALLOWED");
+                    user.setState(UserState.ACTIVE);
+                    userCommandService.updateUser(user);
                 }
-                userInfoCommandService.setImageUrl(responseDto.getUserId(), profileImage);
+            } else {
+                Grade grade = userCommandService.selectGrade(1);
+                String profileImage = "";
+                String phone = null;
+                if (data.getPhone() != null && Pattern.matches(re.phone, data.getPhone())) {
+//                    if (!Pattern.matches(re.phone, data.getPhone()))
+//                        return res.throwError("휴대본 번호 형식을 확인해주세요.", "INPUT_CHECK_REQUIRED");
+                    phone = data.getPhone().replaceAll(re.getPhone(), "0$1$2$3");
+                    if (userCommandService.checkExistWithPhone(phone))
+                        return res.throwError("회원가입된 이력이 있습니다.", "NOT_ALLOWED");
+                }
+                SiteInformation siteInfo = siteInfoService.selectSiteInfo("INT_JOIN_POINT");
+                Integer point = Integer.parseInt(siteInfo.getContent());
+                User user = User.builder().joinAt(utils.now()).state(UserState.ACTIVE).build();
+                UserInfo
+                        userInfo =
+                        UserInfo.builder().userId(user.getId()).nickname(data.getNickname() !=
+                                null ? data.getNickname() : "").email(data.getEmail() !=
+                                null ? data.getEmail() : "").profileImage(s3Url +
+                                "/default_profile.png").name(data.getName() !=
+                                null ? data.getName() : "").grade(grade).phone(phone).point(point).isAgreeMarketing(
+                                false).build();
+                UserAuth
+                        newUserAuth =
+                        UserAuth.builder().userId(user.getId()).loginId(data.getLoginId()).loginType(data.getLoginType()).build();
+                UserInfo newUserInfo = userCommandService.addUser(user, newUserAuth, userInfo);
+                if (data.getProfileImage() != null) {
+                    profileImage =
+                            s3.upload(s3.extractBase64FromImageUrl(data.getProfileImage()),
+                                    new ArrayList<>(Arrays.asList("user", String.valueOf(user.getId()))));
+                    newUserInfo.setProfileImage(profileImage);
+                }
+                if (data.getProfileImage() != null) {
+                    profileImage =
+                            s3.upload(s3.extractBase64FromImageUrl(data.getProfileImage()),
+                                    new ArrayList<>(Arrays.asList("user", String.valueOf(user.getId()))));
+                    newUserInfo.setProfileImage(profileImage);
+                    userCommandService.addUserInfo(newUserInfo);
+                }
+                userAuth = Optional.ofNullable(newUserAuth);
             }
-            Integer userId = userCommandService.selectUserByLoginId(request.getLoginType(), loginId).getUserId();
-            String accessToken = jwtProvider.generateAccessToken(String.valueOf(userId), TokenAuthType.USER);
-            String refreshToken = jwtProvider.generateRefreshToken(String.valueOf(userId), TokenAuthType.USER);
+            User user = userCommandService.selectUser(userAuth.get().getUserId());
+            if (!user.getState().equals(UserState.ACTIVE)) {
+                if (user.getState().equals(UserState.BANNED)) return res.throwError("정지된 유저입니다..", "NOT_ALLOWED");
+                if (user.getState().equals(UserState.DELETED)) return res.throwError("삭제된 유저입니다.", "NOT_ALLOWED");
+            }
+            String accessToken = jwtProvider.generateAccessToken(String.valueOf(user.getId()), TokenAuthType.USER);
+            String refreshToken = jwtProvider.generateRefreshToken(String.valueOf(user.getId()), TokenAuthType.USER);
             Jwt token = new Jwt();
             token.setAccessToken(accessToken);
             token.setRefreshToken(refreshToken);
-
             res.setData(Optional.of(token));
             return ResponseEntity.ok(res);
         } catch (Exception e) {
@@ -108,28 +151,21 @@ public class UserController {
         try {
             verificationService.verifyPhoneVerification(request); // 휴대폰 번호 검증
 
-            boolean
-                    isUserAlreadyExists =
-                    userCommandService.addUserAuthIfPhoneNumberExists(request); // 유저가 이미 있으면 user_auth에 추가
+            int userId = userCommandService.createIdPwUserAndSave(request);
 
-            if (!isUserAlreadyExists) {
-                int userId = userCommandService.createIdPwUserAndSave(request);
-
-                ArrayList<String> directoryElement = new ArrayList<String>();
-                directoryElement.add("user");
-                directoryElement.add(String.valueOf(userId));
-                if (profileImage != null && !profileImage.isEmpty() && !s3.validateImageType(profileImage)) {
-                    return res.throwError("지원하지 않는 이미지 확장자입니다.", "INPUT_CHECK_REQUIRED");
-                }
-                String
-                        imageUrl =
-                        profileImage != null && !profileImage.isEmpty() ? s3.upload(profileImage,
-                                directoryElement) : String.join("/",
-                                Arrays.asList(s3.getS3Url(), "default_profile.png"));
-                userInfoCommandService.setImageUrl(userId, imageUrl);
-
-                res.setData(Optional.of(true));
+            ArrayList<String> directoryElement = new ArrayList<String>();
+            directoryElement.add("user");
+            directoryElement.add(String.valueOf(userId));
+            if (profileImage != null && !profileImage.isEmpty() && !s3.validateImageType(profileImage)) {
+                return res.throwError("지원하지 않는 이미지 확장자입니다.", "INPUT_CHECK_REQUIRED");
             }
+            String
+                    imageUrl =
+                    profileImage != null && !profileImage.isEmpty() ? s3.upload(profileImage,
+                            directoryElement) : String.join("/", Arrays.asList(s3.getS3Url(), "default_profile.png"));
+            userInfoCommandService.setImageUrl(userId, imageUrl);
+
+            res.setData(Optional.of(true));
             return ResponseEntity.ok(res);
         } catch (Exception e) {
             return res.defaultError(e);
@@ -302,8 +338,10 @@ public class UserController {
         Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
         if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
         try {
+            Integer adminId = tokenInfo.get().getId();
             if (data.getState() == null) return res.throwError("상태를 입력해주세요.", "INPUT_CHECK_REQUIRED");
-            userCommandService.updateUserState(data.getUserIds(), data.getState());
+            userCommandService.updateUserState(data.getUserIds(), data.getState(), adminId);
+
             res.setData(Optional.of(true));
             return ResponseEntity.ok(res);
         } catch (Exception e) {
@@ -480,6 +518,7 @@ public class UserController {
             if (paymentMethod.getUserId() != tokenInfo.get().getId())
                 return res.throwError("타계정의 결제수단입니다.", "NOT_ALLOWED");
             paymentMethodQueryService.deletePaymentMethod(id);
+            res.setData(Optional.of(true));
             return ResponseEntity.ok(res);
         } catch (Exception e) {
             return res.defaultError(e);

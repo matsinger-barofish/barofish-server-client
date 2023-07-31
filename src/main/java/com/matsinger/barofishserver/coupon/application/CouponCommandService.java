@@ -65,7 +65,13 @@ public class CouponCommandService {
             couponUserMap.setIsUsed(true);
             mapRepository.save(couponUserMap);
         });
-
+    }
+    public void unUseCoupon(Integer couponId, Integer userId) {
+        Optional<CouponUserMap> map = mapRepository.findById(new CouponUserMapId(userId, couponId));
+        map.ifPresent(couponUserMap -> {
+            couponUserMap.setIsUsed(false);
+            mapRepository.save(couponUserMap);
+        });
     }
 
     public void publishSystemCoupon(Integer userId) throws Exception {

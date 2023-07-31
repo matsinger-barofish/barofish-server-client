@@ -10,6 +10,8 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.sql.Timestamp;
+
 @Getter
 @Setter
 @Builder
@@ -29,7 +31,7 @@ public class OrderProductDto {
     private Integer amount;
     private String deliverCompany;
     private String invoiceCode;
-
+    private Timestamp finalConfirmedAt;
     //    private Integer deliveryFee;
     private OrderCancelReason cancelReason;
     private String cancelReasonContent;

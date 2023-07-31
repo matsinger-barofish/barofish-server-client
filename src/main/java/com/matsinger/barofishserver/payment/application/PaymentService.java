@@ -91,12 +91,14 @@ public class PaymentService {
                 payment.getVbankDate().toInstant()) : null).build();
     }
 
-    public void cancelPayment(String impUid, Integer amount) throws IamportResponseException, IOException {
+    public void cancelPayment(String impUid, Integer amount, Integer taxFreeAmount)
+            throws IamportResponseException, IOException {
         IamportClient iamportClient = callbackService.getIamportClient();
         CancelData
                 cancelData =
                 amount != null ? new CancelData(impUid, true, BigDecimal.valueOf(amount)) : new CancelData(impUid,
                         true);
+        cancelData.setTax_free(BigDecimal.valueOf(taxFreeAmount));
         iamportClient.cancelPaymentByImpUid(cancelData);
     }
 
@@ -132,6 +134,7 @@ public class PaymentService {
                 new AgainPaymentData(data.getPaymentMethod().getCustomerUid(),
                         data.getOrderId(),
                         BigDecimal.valueOf(data.getTotal_amount()));
+        againPaymentData.setTaxFree(BigDecimal.valueOf(data.getTaxFree()));
         againPaymentData.setName(data.getOrder_name());
         againPaymentData.setNoticeUrl(webhookUrl);
 //        againPaymentData.set

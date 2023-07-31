@@ -92,7 +92,8 @@ public class PortOneCallbackHandler {
                             }
                             System.out.println("callback cancel " + cancelPrice);
                             try {
-                                paymentService.cancelPayment(data.getImp_uid(), cancelPrice);
+                                int taxFreeAmount = orderService.getTaxFreeAmount(order, List.of(info));
+                                paymentService.cancelPayment(data.getImp_uid(), cancelPrice, taxFreeAmount);
                             } catch (IamportResponseException | IOException e) {
                                 throw new RuntimeException(e);
                             }
@@ -113,15 +114,21 @@ public class PortOneCallbackHandler {
                                     NotificationMessage.builder().productName(info.getProduct().getTitle()).build());
                         }
                     });
-                    order.setState(OrderState.PAYMENT_DONE);
-                    order.setImpUid(data.getImp_uid());
+                    boolean allCanceled = infos.stream().allMatch(v -> v.getState().equals(OrderProductState.CANCELED));
+                    if (!allCanceled) {
+                        order.setState(OrderState.PAYMENT_DONE);
+                        order.setImpUid(data.getImp_uid());
+                        UserInfo userInfo = userService.selectUserInfo(order.getUserId());
+                        userInfo.setPoint(userInfo.getPoint() - order.getUsePoint());
+                        userService.updateUserInfo(userInfo);
+                        couponCommandService.useCoupon(order.getCouponId(), order.getUserId());
+                    } else {
+                        order.setState(OrderState.PAYMENT_DONE);
+                        order.setImpUid(data.getImp_uid());
+                    }
                     orderService.updateOrderProductInfo(infos);
                     orderService.updateOrder(order);
                     paymentService.upsertPayments(paymentData);
-                    UserInfo userInfo = userService.selectUserInfo(order.getUserId());
-                    userInfo.setPoint(userInfo.getPoint() - order.getUsePoint());
-                    userService.updateUserInfo(userInfo);
-                    couponCommandService.useCoupon(order.getCouponId(), order.getUserId());
                 } else if (data.getStatus().equals("canceled")) {
                     Payments payment = paymentService.findPaymentByImpUid(data.getImp_uid());
                     payment.setStatus(PaymentState.CANCELED);

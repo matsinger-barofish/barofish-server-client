@@ -112,6 +112,7 @@ public class PaymentMethodCommandService {
         }
         BillingCustomer billingCustomer = billingCustomerRes.getResponse();
         if (billingCustomer.getCardName() == null) return null;
+
         return CheckValidCardRes.builder().cardName(billingCustomer.getCardName()).customerUid(billingCustomer.getCustomerUid()).build();
     }
 }

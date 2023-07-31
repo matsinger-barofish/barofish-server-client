@@ -328,6 +328,8 @@ public class StoreController {
             name = utils.validateString(name, 50L, "이름");
             location = utils.validateString(location, 50L, "위치");
             if (data.settlementRate == null) return res.throwError("정산 비율을 입력해주세요.", "INPUT_CHECK_REQUIRED");
+            if (data.getSettlementRate() > 100 || data.getSettlementRate() < 0)
+                return res.throwError("정산 비율을 확인해주세요.", "INPUT_CHECK_REQUIRED");
             String bankName = utils.validateString(data.bankName, 20L, "은행명");
             String bankHolder = utils.validateString(data.bankHolder, 50L, "예금주");
             String bankAccount = utils.validateString(data.bankAccount, 50L, "계좌번호");
@@ -529,6 +531,8 @@ public class StoreController {
             if (data != null) {
                 if (data.settlementRate != null) {
                     if (!isAdmin) return res.throwError("수정 불가능한 항목입니다.", "NOT_ALLOWED");
+                    if (data.getSettlementRate() > 100 || data.getSettlementRate() < 0)
+                        return res.throwError("정산 비율을 확인해주세요.", "INPUT_CHECK_REQUIRED");
                     storeInfo.setSettlementRate(data.settlementRate);
                 }
                 if (data.bankName != null) {

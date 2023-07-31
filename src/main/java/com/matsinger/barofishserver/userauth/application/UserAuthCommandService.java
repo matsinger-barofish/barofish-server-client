@@ -71,7 +71,6 @@ public class UserAuthCommandService {
                 .loginId(email)
                 .password(BCrypt.hashpw(password, BCrypt.gensalt()))
                 .build();
-        createdUserAuth.setUser(createdUser);
 
         return userAuthRepository.save(createdUserAuth);
     }

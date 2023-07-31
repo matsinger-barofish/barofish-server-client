@@ -22,7 +22,6 @@ public interface UserInfoRepository extends JpaRepository<UserInfo, Integer>, Jp
 
     Boolean existsByUserId(Integer userId);
     Page<UserInfo> findAll(Specification<UserInfo> spec, Pageable pageable);
-
-    Optional<UserInfo> findByUserId(int userId);
     List<UserInfo> findAllByUserIdIn(List<Integer> ids);
+    Optional<UserInfo> findByUserId(int userId);
 }

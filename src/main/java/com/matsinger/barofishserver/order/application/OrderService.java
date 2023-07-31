@@ -111,7 +111,8 @@ public class OrderService {
                     optionItem.getId(),
                     opi.getAmount())).deliverCompany(deliveryCompany.map(DeliveryCompany::getName).orElse(null)).invoiceCode(
                     opi.getInvoiceCode()).cancelReason(opi.getCancelReason()).cancelReasonContent(opi.getCancelReasonContent()).isReviewWritten(
-                    isWritten).deliverFeeType(storeInfo.getDeliverFeeType()).minOrderPrice(storeInfo.getMinOrderPrice()).build();
+                    isWritten).deliverFeeType(storeInfo.getDeliverFeeType()).minOrderPrice(storeInfo.getMinOrderPrice()).finalConfirmedAt(
+                    opi.getFinalConfirmedAt()).build();
         }).filter(Objects::nonNull).toList();
         String couponName = null;
         if (order.getCouponId() != null) {
@@ -307,10 +308,12 @@ public class OrderService {
 
 //        Integer price = (info.getPrice() + (option != null ? option.getPrice() : 0)) * info.getAmount() + deliveryFee;
         Integer price = getCancelPrice(order, List.of(info));
-        paymentService.cancelPayment(order.getImpUid(), price);
+        int taxFreeAmount = getTaxFreeAmount(order, List.of(info));
+        paymentService.cancelPayment(order.getImpUid(), price, taxFreeAmount);
         info.setState(OrderProductState.CANCELED);
         infoRepository.save(info);
         Integer returnPoint = checkReturnPoint(order);
+        returnCouponIfAllCanceled(order);
         if (returnPoint != null) returnPoint(order.getUserId(), returnPoint);
     }
 
@@ -347,10 +350,18 @@ public class OrderService {
     }
 
     public Integer checkReturnPoint(Orders order) {
-
         List<OrderProductInfo> infos = infoRepository.findAllByOrderId(order.getId());
         if (infos.stream().allMatch(v -> v.getState().equals(OrderProductState.CANCELED))) return order.getUsePoint();
         else return null;
+    }
+
+    public void returnCouponIfAllCanceled(Orders order) {
+        List<OrderProductInfo> infos = infoRepository.findAllByOrderId(order.getId());
+        boolean
+                allCanceled =
+                order.getCouponId() != null &&
+                        infos.stream().allMatch(v -> v.getState().equals(OrderProductState.CANCELED));
+        if (allCanceled) couponCommandService.unUseCoupon(order.getCouponId(), order.getUserId());
     }
 
     public void returnPoint(Integer userId, Integer returnPoint) {
@@ -495,4 +506,41 @@ public class OrderService {
         userService.updateUserInfo(userInfo);
         couponCommandService.useCoupon(order.getCouponId(), order.getUserId());
     }
+
+    public int getTaxFreeAmount(Orders order, List<OrderProductInfo> infos) {
+        infos = infos != null ? infos : selectOrderProductInfoListWithOrderId(order.getId());
+        int taxFreeAmount = 0;
+        int
+                discountAmount =
+                (order.getCouponDiscount() != null ? order.getCouponDiscount() : 0) +
+                        (order.getUsePoint() != null ? order.getUsePoint() : 0);
+        if (discountAmount != 0) {
+            int totalOriginPrice = infos.stream().mapToInt(OrderProductInfo::getPrice).sum();
+            List<Integer>
+                    discountedPrices =
+                    infos.stream().map(v -> (int) Math.round((v.getPrice() *
+                            (v.getPrice() / (float) totalOriginPrice)) / 10.0) * 10).toList();
+            if (discountedPrices.size() > 1) {
+                int sum = discountedPrices.subList(0, discountedPrices.size() - 2).stream().mapToInt(v -> v).sum();
+                discountedPrices.set(discountedPrices.size() - 1, totalOriginPrice - sum);
+            }
+            for (int i = 0; i < infos.size(); i++) {
+                Product product = productService.selectProduct(infos.get(i).getProductId());
+                if (!product.getNeedTaxation()) {
+                    taxFreeAmount += discountedPrices.get(i);
+                }
+            }
+            return taxFreeAmount;
+        } else {
+            taxFreeAmount = infos.stream().mapToInt(v -> {
+                Product product = productService.selectProduct(v.getProductId());
+                if (!product.getNeedTaxation()) {
+                    return v.getPrice();
+                }
+                return 0;
+            }).sum();
+            return taxFreeAmount;
+        }
+    }
 }
+
