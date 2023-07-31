@@ -81,8 +81,8 @@ public class UserController {
 
             userInfoCommandService.setImageUrl(responseDto.getUserId(), profileImage);
 
-            String accessToken = jwtProvider.generateAccessToken(String.valueOf(responseDto.getLoginId()), TokenAuthType.USER);
-            String refreshToken = jwtProvider.generateRefreshToken(String.valueOf(responseDto.getLoginId()), TokenAuthType.USER);
+            String accessToken = jwtProvider.generateAccessToken(String.valueOf(responseDto.getUserId()), TokenAuthType.USER);
+            String refreshToken = jwtProvider.generateRefreshToken(String.valueOf(responseDto.getUserId()), TokenAuthType.USER);
             Jwt token = new Jwt();
             token.setAccessToken(accessToken);
             token.setRefreshToken(refreshToken);
