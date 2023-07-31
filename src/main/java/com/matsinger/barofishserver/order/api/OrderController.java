@@ -239,8 +239,8 @@ public class OrderController {
             PageRequest pageRequest = PageRequest.of(page, take, Sort.by(Sort.Direction.DESC, "orderedAt"));
             List<OrderDto>
                     orders =
-                    orderService.selectOrderList(tokenInfo.get().getId(),
-                            pageRequest).stream().map(o -> orderService.convert2Dto(o, null, null)).toList();
+                    orderService.selectOrderList(tokenInfo.get().getId(), pageRequest)
+                            .stream().map(o -> orderService.convert2Dto(o, null, null)).toList();
 
             res.setData(Optional.of(orders));
             return ResponseEntity.ok(res);

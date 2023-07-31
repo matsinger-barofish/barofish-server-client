@@ -156,8 +156,10 @@ public class OrderService {
             predicates.add(builder.equal(root.get("userId"), userId));
             Join<Orders, OrderProductInfo> t = root.join("productInfos", JoinType.INNER);
             predicates.add(builder.isNotNull(t.get("id")));
-            predicates.add(builder.or(builder.notEqual(t.get("state"), OrderProductState.WAIT_DEPOSIT),
-                    builder.equal(root.get("paymentWay"), OrderPaymentWay.DEPOSIT)));
+            predicates.add(
+                    builder.or(
+                        builder.notEqual(t.get("state"), OrderProductState.WAIT_DEPOSIT),
+                        builder.equal(root.get("paymentWay"), OrderPaymentWay.DEPOSIT)));
             return builder.and(predicates.toArray(new Predicate[0]));
         };
 //        Page<Orders> orders = orderRepository.findAllByUserId(userId, pageRequest);
