@@ -51,10 +51,10 @@ public class PaymentMethodCommandService {
         }
         String password2Digit = aes256.encrypt(request.getPasswordTwoDigit());
 
-        PaymentMethod
-                paymentMethod =
-                PaymentMethod.builder().name(name).cardNo(hashedCardNo).userId(userId).expiryAt(request.getExpiryAt()).birth(
-                        request.getBirth()).passwordTwoDigit(password2Digit).cardName("").customerUid("").build();
+        PaymentMethod paymentMethod = PaymentMethod.builder().name(name).cardNo(hashedCardNo).userId(userId)
+                .expiryAt(request.getExpiryAt()).birth(
+                        request.getBirth())
+                .passwordTwoDigit(password2Digit).cardName("").customerUid("").build();
         paymentMethod = paymentMethodRepository.save(paymentMethod);
         CheckValidCardRes validCardRes = checkValidCard(paymentMethod);
         if (validCardRes == null) {
@@ -103,16 +103,17 @@ public class PaymentMethodCommandService {
         BillingCustomerData billingCustomerData = new BillingCustomerData(customerUid, cardNo, expiry, birth);
         billingCustomerData.setPwd2Digit(aes256.decrypt(paymentMethod.getPasswordTwoDigit()));
         billingCustomerData.setPg(keyinPg);
-        IamportResponse<BillingCustomer>
-                billingCustomerRes =
-                iamportClient.postBillingCustomer(customerUid, billingCustomerData);
+        IamportResponse<BillingCustomer> billingCustomerRes = iamportClient.postBillingCustomer(customerUid,
+                billingCustomerData);
         if (billingCustomerRes.getCode() != 0) {
             System.out.println(billingCustomerRes.getCode() + ": " + billingCustomerRes.getMessage());
             return null;
         }
         BillingCustomer billingCustomer = billingCustomerRes.getResponse();
-        if (billingCustomer.getCardName() == null) return null;
+        if (billingCustomer.getCardName() == null)
+            return null;
 
-        return CheckValidCardRes.builder().cardName(billingCustomer.getCardName()).customerUid(billingCustomer.getCustomerUid()).build();
+        return CheckValidCardRes.builder().cardName(billingCustomer.getCardName())
+                .customerUid(billingCustomer.getCustomerUid()).build();
     }
 }
