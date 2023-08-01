@@ -153,6 +153,7 @@ public class AdminController {
                     admin =
                     Admin.builder().loginId(data.getLoginId()).password(password).authority(AdminAuthority.MANAGER).state(
                             AdminState.ACTIVE).name(name).tel(tel).createdAt(utils.now()).build();
+            admin = adminCommandService.addAdmin(admin);
             AdminAuth
                     adminAuth =
                     AdminAuth.builder().adminId(admin.getId()).accessUser(data.getAccessUser() != null &&
@@ -163,7 +164,6 @@ public class AdminController {
                             data.getAccessBoard()).accessPromotion(data.getAccessPromotion() != null &&
                             data.getAccessPromotion()).accessSetting(data.getAccessSetting() != null &&
                             data.getAccessSetting()).build();
-            admin = adminCommandService.addAdmin(admin);
             adminAuth = adminCommandService.upsertAdminAuth(adminAuth);
             admin.setPassword(null);
             res.setData(Optional.of(admin));

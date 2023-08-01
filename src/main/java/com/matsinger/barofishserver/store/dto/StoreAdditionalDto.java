@@ -8,7 +8,7 @@ import lombok.Setter;
 @Setter
 @Builder
 public class StoreAdditionalDto {
-    Integer settlementRate;
+    Float settlementRate;
     String bankName;
     String bankHolder;
     String bankAccount;

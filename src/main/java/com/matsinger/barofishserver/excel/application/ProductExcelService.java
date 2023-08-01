@@ -14,6 +14,7 @@ import com.matsinger.barofishserver.store.domain.Store;
 import com.matsinger.barofishserver.utils.Common;
 import lombok.*;
 import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.springframework.beans.factory.annotation.Value;
@@ -97,8 +98,10 @@ public class ProductExcelService {
         // 11 매입가
         Cell purchasePriceCell = row.getCell(11);
         if (purchasePriceCell == null) throw new Exception(String.format("'%s' 의 매입가를 확인해주세요. ", productName));
+
         List<Integer>
-                purchasePriceList =
+                purchasePriceList = purchasePriceCell.getCellType().equals(CellType.NUMERIC) ?
+                List.of((int) purchasePriceCell.getNumericCellValue()):
                 Arrays.stream(purchasePriceCell.getStringCellValue().split("\n")).map(Integer::parseInt).toList();
         // 12 대표 옵션 번호
         Integer representOptionNo = row.getCell(12) != null ? (int) row.getCell(12).getNumericCellValue() : 0;
@@ -107,24 +110,32 @@ public class ProductExcelService {
         if (originPriceCell == null) throw new Exception(String.format("'%s' 의 옵션 정가를 확인해주세요. ", productName));
         List<Integer>
                 originPriceList =
+                originPriceCell.getCellType().equals(CellType.NUMERIC) ?
+                        List.of((int) originPriceCell.getNumericCellValue()):
                 Arrays.stream(originPriceCell.getStringCellValue().split("\n")).map(Integer::parseInt).toList();
         // 15 옵션 할인가
         Cell discountPriceCell = row.getCell(15);
         if (discountPriceCell == null) throw new Exception(String.format("'%s' 의 옵션 할인가 확인해주세요. ", productName));
         List<Integer>
                 discountPriceList =
+                discountPriceCell.getCellType().equals(CellType.NUMERIC) ?
+                        List.of((int) discountPriceCell.getNumericCellValue()):
                 Arrays.stream(discountPriceCell.getStringCellValue().split("\n")).map(Integer::parseInt).toList();
         // 16 최대 주문 수량
         Cell maxAvailableAmountCell = row.getCell(16);
         if (maxAvailableAmountCell == null) throw new Exception(String.format("'%s' 의 최대 주문 수량을 확인해주세요.", productName));
         List<Integer>
                 maxAvailableAmountList =
+                maxAvailableAmountCell.getCellType().equals(CellType.NUMERIC) ?
+                        List.of((int) maxAvailableAmountCell.getNumericCellValue()):
                 Arrays.stream(maxAvailableAmountCell.getStringCellValue().split("\n")).map(Integer::parseInt).toList();
         // 17 재고
         Cell amountCell = row.getCell(17);
         if (amountCell == null) throw new Exception(String.format("'%s' 의 재고를 확인해주세요.", productName));
         List<Integer>
                 amountList =
+                amountCell.getCellType().equals(CellType.NUMERIC) ?
+                        List.of((int) amountCell.getNumericCellValue()):
                 Arrays.stream(amountCell.getStringCellValue().split("\n")).map(Integer::parseInt).toList();
         // 18 적립금 지급
         Float pointRate = row.getCell(18) != null ? (float) row.getCell(18).getNumericCellValue() : null;

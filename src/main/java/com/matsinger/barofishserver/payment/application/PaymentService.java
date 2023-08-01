@@ -1,5 +1,6 @@
 package com.matsinger.barofishserver.payment.application;
 
+import com.matsinger.barofishserver.order.dto.VBankRefundInfo;
 import com.matsinger.barofishserver.payment.domain.PaymentState;
 import com.matsinger.barofishserver.payment.dto.CheckValidCardRes;
 import com.matsinger.barofishserver.payment.dto.GetVBankAccountReq;
@@ -91,7 +92,7 @@ public class PaymentService {
                 payment.getVbankDate().toInstant()) : null).build();
     }
 
-    public void cancelPayment(String impUid, Integer amount, Integer taxFreeAmount)
+    public void cancelPayment(String impUid, Integer amount, Integer taxFreeAmount, VBankRefundInfo vBankRefundInfo)
             throws IamportResponseException, IOException {
         IamportClient iamportClient = callbackService.getIamportClient();
         CancelData
@@ -99,7 +100,15 @@ public class PaymentService {
                 amount != null ? new CancelData(impUid, true, BigDecimal.valueOf(amount)) : new CancelData(impUid,
                         true);
         cancelData.setTax_free(BigDecimal.valueOf(taxFreeAmount));
-        iamportClient.cancelPaymentByImpUid(cancelData);
+        if (vBankRefundInfo != null) {
+            cancelData.setRefund_holder(vBankRefundInfo.getBankHolder());
+            cancelData.setRefund_bank(vBankRefundInfo.getBankCode());
+            cancelData.setRefund_account(vBankRefundInfo.getBankAccount());
+        }
+        IamportResponse<Payment> cancelResult = iamportClient.cancelPaymentByImpUid(cancelData);
+        if (cancelResult.getCode() != 0) {
+            System.out.println(cancelResult.getMessage());
+        }
     }
 
     public IamPortCertificationRes certificateWithImpUid(String impUid) throws Exception {

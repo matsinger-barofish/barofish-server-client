@@ -4,6 +4,8 @@ import com.matsinger.barofishserver.coupon.application.CouponCommandService;
 import com.matsinger.barofishserver.notification.application.NotificationCommandService;
 import com.matsinger.barofishserver.notification.dto.NotificationMessage;
 import com.matsinger.barofishserver.notification.dto.NotificationMessageType;
+import com.matsinger.barofishserver.order.domain.OrderPaymentWay;
+import com.matsinger.barofishserver.order.dto.VBankRefundInfo;
 import com.matsinger.barofishserver.order.orderprductinfo.domain.OrderCancelReason;
 import com.matsinger.barofishserver.order.orderprductinfo.domain.OrderProductInfo;
 import com.matsinger.barofishserver.order.orderprductinfo.domain.OrderProductState;
@@ -93,7 +95,15 @@ public class PortOneCallbackHandler {
                             System.out.println("callback cancel " + cancelPrice);
                             try {
                                 int taxFreeAmount = orderService.getTaxFreeAmount(order, List.of(info));
-                                paymentService.cancelPayment(data.getImp_uid(), cancelPrice, taxFreeAmount);
+                                VBankRefundInfo
+                                        vBankRefundInfo =
+                                        order.getPaymentWay().equals(OrderPaymentWay.VIRTUAL_ACCOUNT) ? VBankRefundInfo.builder().bankHolder(
+                                                order.getBankHolder()).bankCode(order.getBankCode()).bankName(order.getBankName()).bankAccount(
+                                                order.getBankAccount()).build() : null;
+                                paymentService.cancelPayment(data.getImp_uid(),
+                                        cancelPrice,
+                                        taxFreeAmount,
+                                        vBankRefundInfo);
                             } catch (IamportResponseException | IOException e) {
                                 throw new RuntimeException(e);
                             }

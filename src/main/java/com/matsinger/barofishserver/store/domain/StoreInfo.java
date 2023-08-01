@@ -71,7 +71,7 @@ public class StoreInfo {
     private Integer minOrderPrice;
     @Basic
     @Column(name = "settlement_rate", nullable = true)
-    Integer settlementRate;
+    Float settlementRate;
     @Basic
     @Column(name = "bank_name", nullable = true)
     String bankName;

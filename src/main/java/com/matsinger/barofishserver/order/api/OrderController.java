@@ -1,6 +1,5 @@
 package com.matsinger.barofishserver.order.api;
 
-import com.matsinger.barofishserver.admin.domain.Admin;
 import com.matsinger.barofishserver.admin.log.application.AdminLogCommandService;
 import com.matsinger.barofishserver.admin.log.application.AdminLogQueryService;
 import com.matsinger.barofishserver.admin.log.domain.AdminLog;
@@ -19,7 +18,6 @@ import com.matsinger.barofishserver.notification.dto.NotificationMessageType;
 import com.matsinger.barofishserver.order.application.OrderService;
 import com.matsinger.barofishserver.order.domain.*;
 import com.matsinger.barofishserver.order.dto.*;
-import com.matsinger.barofishserver.order.orderprductinfo.domain.OrderCancelReason;
 import com.matsinger.barofishserver.order.orderprductinfo.domain.OrderProductInfo;
 import com.matsinger.barofishserver.order.orderprductinfo.domain.OrderProductState;
 import com.matsinger.barofishserver.payment.application.PaymentService;
@@ -276,6 +274,18 @@ public class OrderController {
         }
     }
 
+    @GetMapping("/bank-code/list")
+    public ResponseEntity<CustomResponse<List<BankCode>>> selectBankCodeList() {
+        CustomResponse<List<BankCode>> res = new CustomResponse<>();
+        try {
+            List<BankCode> bankCodes = orderService.selectBankCodeList();
+            res.setData(Optional.ofNullable(bankCodes));
+            return ResponseEntity.ok(res);
+        } catch (Exception e) {
+            return res.defaultError(e);
+        }
+    }
+
 
     @PostMapping("")
     public ResponseEntity<CustomResponse<OrderDto>> orderProduct(@RequestHeader(value = "Authorization") Optional<String> auth,
@@ -289,7 +299,20 @@ public class OrderController {
             String name = utils.validateString(data.getName(), 20L, "주문자 이름");
             String tel = utils.validateString(data.getTel(), 11L, "주문자 연락처");
             UserInfo userInfo = userService.selectUserInfo(userId);
-
+            VBankRefundInfo vBankRefundInfo = null;
+            if (data.getPaymentWay().equals(OrderPaymentWay.VIRTUAL_ACCOUNT)) {
+                if (data.getVbankRefundInfo() == null)
+                    return res.throwError("가상계좌 환불 정보를 입력해주세요.", "INPUT_CHECK_REQUIRED");
+                if (data.getVbankRefundInfo().getBankCodeId() == null)
+                    return res.throwError("은행 코드 아이디를 입력해주세요.", "INPUT_CHECK_REQUIRED");
+                BankCode bankCode = orderService.selectBankCode(data.getVbankRefundInfo().getBankCodeId());
+                String bankHolder = utils.validateString(data.getVbankRefundInfo().getBankHolder(), 20L, "환불 예금주명");
+                String bankAccount = data.getVbankRefundInfo().getBankAccount().replaceAll("-", "");
+                bankAccount = utils.validateString(bankAccount, 30L, "환불 계좌번호");
+                vBankRefundInfo =
+                        VBankRefundInfo.builder().bankHolder(bankHolder).bankCode(bankCode.getCode()).bankName(bankCode.getName()).bankAccount(
+                                bankAccount).build();
+            }
             Coupon coupon = null;
             if (data.getCouponId() != null) coupon = couponQueryService.selectCoupon(data.getCouponId());
             if (data.getPoint() != null && userInfo.getPoint() < data.getPoint())
@@ -349,7 +372,10 @@ public class OrderController {
                     Orders.builder().id(orderId).userId(tokenInfo.get().getId()).paymentWay(data.getPaymentWay()).state(
                             OrderState.WAIT_DEPOSIT).couponId(data.getCouponId()).orderedAt(utils.now()).totalPrice(data.getTotalPrice()).usePoint(
                             data.getPoint()).couponDiscount(data.getCouponDiscountPrice()).ordererName(name).ordererTel(
-                            tel).build();
+                            tel).bankHolder(vBankRefundInfo != null ? vBankRefundInfo.getBankHolder() : null).bankCode(
+                            vBankRefundInfo != null ? vBankRefundInfo.getBankCode() : null).bankName(vBankRefundInfo !=
+                            null ? vBankRefundInfo.getBankName() : null).bankAccount(vBankRefundInfo !=
+                            null ? vBankRefundInfo.getBankAccount() : null).build();
 
             Orders result = orderService.orderProduct(order, infos, orderDeliverPlace);
 

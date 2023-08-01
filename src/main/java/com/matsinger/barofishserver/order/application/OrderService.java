@@ -9,19 +9,18 @@ import com.matsinger.barofishserver.notification.application.NotificationCommand
 import com.matsinger.barofishserver.notification.dto.NotificationMessage;
 import com.matsinger.barofishserver.notification.dto.NotificationMessageType;
 import com.matsinger.barofishserver.order.api.OrderController;
-import com.matsinger.barofishserver.order.domain.OrderDeliverPlace;
-import com.matsinger.barofishserver.order.domain.OrderPaymentWay;
-import com.matsinger.barofishserver.order.domain.OrderState;
-import com.matsinger.barofishserver.order.domain.Orders;
+import com.matsinger.barofishserver.order.domain.*;
 import com.matsinger.barofishserver.order.dto.OrderDto;
 import com.matsinger.barofishserver.order.dto.OrderProductReq;
 import com.matsinger.barofishserver.order.dto.OrderReq;
+import com.matsinger.barofishserver.order.dto.VBankRefundInfo;
 import com.matsinger.barofishserver.order.orderprductinfo.domain.OrderCancelReason;
 import com.matsinger.barofishserver.order.orderprductinfo.domain.OrderProductInfo;
 import com.matsinger.barofishserver.order.orderprductinfo.domain.OrderProductOption;
 import com.matsinger.barofishserver.order.orderprductinfo.domain.OrderProductState;
 import com.matsinger.barofishserver.order.orderprductinfo.dto.OrderProductDto;
 import com.matsinger.barofishserver.order.orderprductinfo.dto.OrderProductInfoDto;
+import com.matsinger.barofishserver.order.repository.BankCodeRepository;
 import com.matsinger.barofishserver.order.repository.OrderDeliverPlaceRepository;
 import com.matsinger.barofishserver.order.orderprductinfo.repository.OrderProductInfoRepository;
 import com.matsinger.barofishserver.order.orderprductinfo.repository.OrderProductOptionRepository;
@@ -78,6 +77,7 @@ public class OrderService {
     private final CouponQueryService couponQueryService;
     private final NotificationCommandService notificationCommandService;
     private final CouponCommandService couponCommandService;
+    private final BankCodeRepository bankCodeRepository;
 
     public OrderDto convert2Dto(Orders order, Integer storeId, Specification<OrderProductInfo> productSpec) {
         OrderDeliverPlace deliverPlace = selectDeliverPlace(order.getId());
@@ -123,7 +123,8 @@ public class OrderService {
         return OrderDto.builder().id(order.getId()).orderedAt(order.getOrderedAt()).user(userInfoDto).totalAmount(order.getTotalPrice()).deliverPlace(
                 deliverPlace.convert2Dto()).paymentWay(order.getPaymentWay()).productInfos(orderProductDtos).couponDiscount(
                 order.getCouponDiscount()).usePoint(order.getUsePoint()).ordererName(order.getOrdererName()).ordererTel(
-                order.getOrdererTel()).couponName(couponName).build();
+                order.getOrdererTel()).couponName(couponName).bankHolder(order.getBankHolder()).bankAccount(order.getBankAccount()).bankCode(
+                order.getBankCode()).bankName(order.getBankName()).build();
     }
 
     public OrderDeliverPlace selectDeliverPlace(String orderId) {
@@ -300,16 +301,14 @@ public class OrderService {
                 throw new RuntimeException(e);
             }
         });
-        int
-                deliveryFee =
-                info.getState().equals(OrderProductState.WAIT_DEPOSIT) ||
-                        info.getState().equals(OrderProductState.DELIVERY_READY) ||
-                        info.getState().equals(OrderProductState.PAYMENT_DONE) ? info.getDeliveryFee() : 0;
-
-//        Integer price = (info.getPrice() + (option != null ? option.getPrice() : 0)) * info.getAmount() + deliveryFee;
         Integer price = getCancelPrice(order, List.of(info));
         int taxFreeAmount = getTaxFreeAmount(order, List.of(info));
-        paymentService.cancelPayment(order.getImpUid(), price, taxFreeAmount);
+        VBankRefundInfo
+                vBankRefundInfo =
+                order.getPaymentWay().equals(OrderPaymentWay.VIRTUAL_ACCOUNT) ? VBankRefundInfo.builder().bankHolder(
+                        order.getBankHolder()).bankCode(order.getBankCode()).bankName(order.getBankName()).bankAccount(
+                        order.getBankAccount()).build() : null;
+        paymentService.cancelPayment(order.getImpUid(), price, taxFreeAmount, vBankRefundInfo);
         info.setState(OrderProductState.CANCELED);
         infoRepository.save(info);
         Integer returnPoint = checkReturnPoint(order);
@@ -336,16 +335,11 @@ public class OrderService {
                 v.setState(OrderProductState.CANCELED);
             }
         });
-//        System.out.println("orderPrice | " + orderedPrice);
-//        System.out.println("deliveryFee | " + deliveryFee);
-//        System.out.println("cancelPrice | " + cancelPrice.get());
         Coupon coupon = order.getCouponId() != null ? couponQueryService.selectCoupon(order.getCouponId()) : null;
         int couponDiscount = 0;
         if (coupon != null && coupon.getMinPrice() > orderedPrice - cancelPrice.get())
             couponDiscount = order.getCouponDiscount();
         Integer point = checkReturnPoint(order);
-//        System.out.println("point | " + point);
-//        System.out.println("couponDiscount | " + couponDiscount);
         return cancelPrice.get() + deliveryFee - couponDiscount - (point != null ? point : 0);
     }
 
@@ -541,6 +535,14 @@ public class OrderService {
             }).sum();
             return taxFreeAmount;
         }
+    }
+
+    public List<BankCode> selectBankCodeList() {
+        return bankCodeRepository.findAll();
+    }
+
+    public BankCode selectBankCode(Integer id) throws Exception {
+        return bankCodeRepository.findById(id).orElseThrow(() -> new Exception("잘못된 은행 코드 정보입니다."));
     }
 }
 

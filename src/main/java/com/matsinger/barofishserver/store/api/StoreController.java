@@ -279,7 +279,7 @@ public class StoreController {
     @Getter
     @NoArgsConstructor
     private static class AddStoreAdditionalReq {
-        Integer settlementRate;
+        Float settlementRate;
         String bankName;
         String bankHolder;
         String bankAccount;

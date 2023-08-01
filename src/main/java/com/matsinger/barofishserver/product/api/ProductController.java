@@ -351,7 +351,6 @@ public class ProductController {
             product.setNeedTaxation(data.getNeedTaxation() != null ? data.getNeedTaxation() : true);
             product.setDeliverBoxPerAmount(data.getDeliverBoxPerAmount());
             product.setDeliveryFee(data.getDeliveryFee() != null ? data.getDeliveryFee() : 0);
-            product.setState(!data.getIsActive() ? ProductState.INACTIVE : ProductState.ACTIVE);
             product.setCreatedAt(new Timestamp(System.currentTimeMillis()));
             Product result = productService.addProduct(product);
             OptionItem representOptionItem = null;

@@ -61,7 +61,18 @@ public class Orders {
     @Basic
     @Column(name = "use_point", nullable = true)
     private Integer usePoint;
-
+    @Basic
+    @Column(name = "bank_holder", nullable = true)
+    private String bankHolder;
+    @Basic
+    @Column(name = "bank_code", nullable = true)
+    private String bankCode;
+    @Basic
+    @Column(name = "bank_account", nullable = true)
+    private String bankAccount;
+    @Basic
+    @Column(name = "bank_name", nullable = true)
+    private String bankName;
 
     @Builder.Default
     @OneToMany(mappedBy = "order")

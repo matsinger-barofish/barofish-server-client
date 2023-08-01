@@ -36,5 +36,5 @@ public class OrderProductInfoDto {
     private Timestamp finalConfirmedAt;
     ProductListDto product;
     private OrderDto order;
-    private Integer settlementRate;
+    private Float settlementRate;
 }
