@@ -295,6 +295,12 @@ public class UserCommandService {
                 if (userAuth.getLoginType() == request.getLoginType()) {
                     isLoginTypeExists = true;
                 }
+                if (userAuth.getUser().getState() == UserState.DELETED) {
+                    throw new IllegalArgumentException("탈퇴한 유저입니다.");
+                }
+                if (userAuth.getUser().getState() == UserState.BANNED) {
+                    throw new IllegalArgumentException("운영 정책상 비활성된 유저입니다.");
+                }
             }
         }
 
@@ -326,6 +332,12 @@ public class UserCommandService {
         for (UserAuth userAuth : existingUserAuth) {
             if (userAuth.getLoginType() == LoginType.IDPW) {
                 throw new IllegalArgumentException("회원가입된 이력이 있습니다");
+            }
+            if (userAuth.getUser().getState() == UserState.DELETED) {
+                throw new IllegalArgumentException("탈퇴한 유저입니다.");
+            }
+            if (userAuth.getUser().getState() == UserState.BANNED) {
+                throw new IllegalArgumentException("운영 정책상 비활성된 유저입니다.");
             }
         }
 
