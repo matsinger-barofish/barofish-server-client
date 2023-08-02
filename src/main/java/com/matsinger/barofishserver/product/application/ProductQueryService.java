@@ -150,4 +150,5 @@ public class ProductQueryService {
                 .toList();
         productDto.setSearchFilterFields(searchFilterFieldDtos);
     }
+
 }

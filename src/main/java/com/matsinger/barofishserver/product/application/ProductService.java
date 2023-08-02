@@ -469,4 +469,8 @@ public class ProductService {
     public Optional<Product> findOptionalProductWithTitleAndStoreId(String title, Integer storeId) {
         return productRepository.findByTitleAndStoreId(title, storeId);
     }
+
+    public List<Product> selectProductListNotDelete() {
+        return productRepository.findAllByStateNot(ProductState.DELETED);
+    }
 }

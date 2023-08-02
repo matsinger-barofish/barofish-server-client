@@ -99,7 +99,7 @@ public class UserCommandService {
                 createdDeliver =
                 DeliverPlace.builder().userId(user.getId()).name(userInfo.getName()).receiverName(userInfo.getName()).tel(
                         userInfo.getPhone()).address(address).addressDetail(addressDetail).deliverMessage("").postalCode(
-                        request.getPostalCode()).isDefault(true).build();
+                        request.getPostalCode()).isDefault(true).bcode(request.getBcode()).build();
 
         return deliverPlaceRepository.save(createdDeliver);
     }
@@ -177,6 +177,10 @@ public class UserCommandService {
 
     public UserAuth selectUserAuth(Integer id) {
         return userAuthRepository.findFirstByUserId(id);
+    }
+
+    public Optional<UserAuth> findUserAuthWithIDPWType(Integer id) {
+        return userAuthRepository.findByLoginTypeAndUserId(LoginType.IDPW, id);
     }
 
     public List<User> selectUserList() {

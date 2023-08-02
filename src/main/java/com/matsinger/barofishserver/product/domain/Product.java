@@ -191,7 +191,7 @@ public class Product {
                 descriptionImages.substring(1,
                         descriptionImages.length() -
                                 1).split(",")).representOptionItemId(this.representOptionItemId).deliverBoxPerAmount(
-                this.getDeliverBoxPerAmount()).createdAt(this.getCreatedAt()).build();
+                this.getDeliverBoxPerAmount()).createdAt(this.getCreatedAt()).pointRate(this.getPointRate()).build();
     }
 
     @Override

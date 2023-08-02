@@ -195,8 +195,12 @@ public class OrderController {
             };
             Specification<OrderProductInfo> productSpec = (root, query, builder) -> {
                 List<Predicate> predicates = new ArrayList<>();
+                if (state != null) {
+                    predicates.add(root.get("state").in(Arrays.stream(state.split(",")).map(OrderProductState::valueOf).toList()));
+                }
                 if (tokenInfo.get().getType().equals(TokenAuthType.PARTNER))
                     predicates.add(builder.equal(root.get("product").get("storeId"), tokenInfo.get().getId()));
+
                 return builder.and(predicates.toArray(new Predicate[0]));
             };
             PageRequest pageRequest = PageRequest.of(page, take, Sort.by(sort, orderBy.label));
@@ -903,6 +907,7 @@ public class OrderController {
             Orders order = orderService.selectOrder(info.getOrderId());
             Product product = productService.findById(info.getProductId());
             info.setState(OrderProductState.REFUND_DONE);
+            orderService.cancelOrderedProduct(info.getId());
             orderService.updateOrderProductInfo(new ArrayList<>(List.of(info)));
             res.setData(Optional.of(true));
             notificationCommandService.sendFcmToUser(order.getUserId(),

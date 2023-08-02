@@ -37,6 +37,7 @@ public class SimpleProductDto {
     Timestamp createdAt;
     String description;
     Integer deliverBoxPerAmount;
+    Float pointRate;
 
     // 위는 product 자체의 정보, 아래는 주입받아야 하는 정보
     SimpleStore store;

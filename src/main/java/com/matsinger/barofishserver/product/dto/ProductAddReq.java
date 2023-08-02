@@ -23,6 +23,7 @@ public class ProductAddReq {
     private Integer deliverBoxPerAmount;
     private String descriptionContent;
     private Boolean needTaxation;
+    private Float pointRate;
     private List<Integer> difficultDeliverAddressIds;
     private List<Integer> searchFilterFieldIds;
     private List<ProductFilterValueReq> filterValues;

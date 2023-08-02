@@ -1,3 +1,4 @@
+#!/bin/bash
 git pull
 
 chmod +x gradlew

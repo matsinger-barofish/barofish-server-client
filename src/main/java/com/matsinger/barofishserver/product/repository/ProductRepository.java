@@ -15,6 +15,8 @@ import java.util.Optional;
 public interface ProductRepository extends JpaRepository<Product, Integer>, JpaSpecificationExecutor<Product> {
     List<Product> findAllByIdIn(List<Integer> ids);
 
+    List<Product> findAllByStateNot(ProductState state);
+
     List<Product> findByTitleContainsAndStateEquals(String title, ProductState state);
 
     List<Product> findByTitleContaining(String keyword);

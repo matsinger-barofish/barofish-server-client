@@ -29,8 +29,8 @@ public class BannerQueryService {
                 Arrays.asList(BannerType.NONE, BannerType.CATEGORY, BannerType.CURATION, BannerType.NOTICE));
     }
 
-    public Page<Banner> selectBannerListByAdmin(PageRequest pageRequest, Specification<Banner> spec) {
-        return bannerRepository.findAll(spec, pageRequest);
+    public List<Banner> selectBannerListByAdmin(Specification<Banner> spec) {
+        return bannerRepository.findAll(spec);
     }
 
     public List<Banner> selectBannerListWithSortNo() {

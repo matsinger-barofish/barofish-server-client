@@ -228,6 +228,29 @@ public class ProductController {
         }
     }
 
+    @GetMapping("/excel-list")
+    public ResponseEntity<CustomResponse<List<SimpleProductDto>>> selectProductListForExcel(@RequestHeader(value = "Authorization") Optional<String> auth,
+                                                                                            @RequestParam(value = "ids", required = false) String idsStr) {
+        CustomResponse<List<SimpleProductDto>> res = new CustomResponse<>();
+        Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
+        if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
+        try {
+            List<Integer> ids = null;
+            if (idsStr != null) ids = utils.str2IntList(idsStr);
+            List<Product> products = new ArrayList<>();
+            if (ids != null) products = productService.selectProductListWithIds(ids);
+            else products = productService.selectProductListNotDelete();
+            List<SimpleProductDto>
+                    productDtos =
+                    products.stream().map(v -> productService.convert2SimpleDto(v, null)).toList();
+            res.setData(Optional.of(productDtos));
+            return ResponseEntity.ok(res);
+        } catch (Exception e) {
+            return res.defaultError(e);
+        }
+    }
+
+
     @GetMapping("/{id}")
     public ResponseEntity<CustomResponse<SimpleProductDto>> selectProduct(@RequestHeader(value = "Authorization") Optional<String> auth,
                                                                           @PathVariable("id") Integer id) {
@@ -346,6 +369,7 @@ public class ProductController {
             product.setImages("");
             product.setPointRate(0.0F);
             product.setDescriptionImages("");
+            product.setPointRate(data.getPointRate());
             product.setState(adminId == null ? ProductState.INACTIVE_PARTNER : ProductState.ACTIVE);
             product.setRepresentOptionItemId(null);
             product.setNeedTaxation(data.getNeedTaxation() != null ? data.getNeedTaxation() : true);
@@ -455,7 +479,9 @@ public class ProductController {
             if (data.getDeliverBoxPerAmount() != null) {
                 product.setDeliverBoxPerAmount(data.getDeliverBoxPerAmount());
             }
-
+            if (data.getPointRate() != null) {
+                product.setPointRate(data.getPointRate());
+            }
             if (data.getDeliveryInfo() != null) {
                 String deliveryInfo = utils.validateString(data.getDeliveryInfo(), 500L, "배송 안내");
                 product.setDeliveryInfo(deliveryInfo);

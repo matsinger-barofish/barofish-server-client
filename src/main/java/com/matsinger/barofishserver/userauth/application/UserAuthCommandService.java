@@ -65,12 +65,11 @@ public class UserAuthCommandService {
 
         validate(email, password);
 
-        UserAuth createdUserAuth = UserAuth.builder()
-                .userId(createdUser.getId())
-                .loginType(LoginType.IDPW)
-                .loginId(email)
-                .password(BCrypt.hashpw(password, BCrypt.gensalt()))
-                .build();
+        UserAuth
+                createdUserAuth =
+                UserAuth.builder().userId(createdUser.getId()).loginType(LoginType.IDPW).loginId(email).password(BCrypt.hashpw(
+                        password,
+                        BCrypt.gensalt())).build();
         createdUserAuth.setUser(createdUser);
 
         return userAuthRepository.save(createdUserAuth);
@@ -109,8 +108,10 @@ public class UserAuthCommandService {
     }
 
     public String resetPassword(String phoneNumber) {
-        UserInfo findUserInfo = userInfoRepository.findByPhone(phoneNumber)
-                .orElseThrow(() -> new IllegalArgumentException("휴대폰 번호를 찾을 수 없습니다."));
+        UserInfo
+                findUserInfo =
+                userInfoRepository.findByPhone(phoneNumber).orElseThrow(() -> new IllegalArgumentException(
+                        "휴대폰 번호를 찾을 수 없습니다."));
 
         UserAuth findUserAuth = userAuthRepository.findFirstByUserId(findUserInfo.getUserId());
 
@@ -119,6 +120,7 @@ public class UserAuthCommandService {
         }
         String newPassword = generateRandomString(6);
         findUserAuth.setPassword(newPassword);
+        userAuthRepository.save(findUserAuth);
         return newPassword;
     }
 
