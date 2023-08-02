@@ -6,7 +6,7 @@ build/
 !**/src/test/**/build/
 
 src/main/resources/application.properties
-
+src/main/resources/firebase/barofish-firebase-adminsdk-rrdlz-906109ed4d.json
 ### STS ###
 .apt_generated
 .classpath
@@ -37,3 +37,9 @@ out/
 
 ### VS Code ###
 .vscode/
+
+
+## custom Settings ##
+*.properties
+*.yml
+*.sql
