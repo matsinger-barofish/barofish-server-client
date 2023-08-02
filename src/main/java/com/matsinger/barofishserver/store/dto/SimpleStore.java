@@ -16,6 +16,7 @@ import java.util.List;
 @AllArgsConstructor
 public class SimpleStore {
     private Integer storeId;
+    private String loginId;
     private String backgroundImage;
     private Boolean isReliable;
     private String profileImage;

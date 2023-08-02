@@ -14,6 +14,7 @@ import com.matsinger.barofishserver.inquiry.application.InquiryQueryService;
 import com.matsinger.barofishserver.inquiry.domain.Inquiry;
 import com.matsinger.barofishserver.product.difficultDeliverAddress.application.DifficultDeliverAddressQueryService;
 import com.matsinger.barofishserver.product.domain.*;
+import com.matsinger.barofishserver.product.dto.ExcelProductDto;
 import com.matsinger.barofishserver.product.dto.ProductListDto;
 import com.matsinger.barofishserver.product.optionitem.repository.OptionItemRepository;
 import com.matsinger.barofishserver.product.option.domain.Option;
@@ -35,6 +36,7 @@ import com.matsinger.barofishserver.searchFilter.domain.ProductSearchFilterMap;
 import com.matsinger.barofishserver.searchFilter.dto.SearchFilterFieldDto;
 import com.matsinger.barofishserver.searchFilter.repository.ProductSearchFilterMapRepository;
 import com.matsinger.barofishserver.store.application.StoreService;
+import com.matsinger.barofishserver.store.domain.Store;
 import com.matsinger.barofishserver.store.domain.StoreInfo;
 import com.matsinger.barofishserver.store.repository.StoreInfoRepository;
 import lombok.RequiredArgsConstructor;
@@ -472,5 +474,23 @@ public class ProductService {
 
     public List<Product> selectProductListNotDelete() {
         return productRepository.findAllByStateNot(ProductState.DELETED);
+    }
+
+    public ExcelProductDto convert2ExcelProductDto(Product product) {
+        Store store = storeService.selectStore(product.getStoreId());
+        Option option = optionRepository.findFirstByProductIdAndIsNeededTrue(product.getId());
+        List<OptionItem>
+                optionItems =
+                optionItemRepository.findAllByOptionIdAndState(option.getId(), OptionItemState.ACTIVE);
+
+        return ExcelProductDto.builder().storeLoginId(store.getLoginId()).firstCategoryName(product.getCategory().getParentCategory().getName()).secondCategoryName(
+                product.getCategory().getName()).productName(product.getTitle()).expectedDeliverDay(product.getExpectedDeliverDay()).deliveryInfo(
+                product.getDeliveryInfo()).deliverBoxPerAmount(product.getDeliverBoxPerAmount()).isActive(product.getState().equals(
+                ProductState.ACTIVE) ? "노출" : "미노출").needTaxation(product.getNeedTaxation() ? "과세" : "비과세").hasOption(
+                "있음").purchasePrices(optionItems.stream().map(OptionItem::getPurchasePrice).toList()).optionNames(
+                optionItems.stream().map(OptionItem::getName).toList()).optionOriginPrices(optionItems.stream().map(
+                OptionItem::getOriginPrice).toList()).optionDiscountPrices(optionItems.stream().map(OptionItem::getDiscountPrice).toList()).optionMaxOrderAmount(
+                optionItems.stream().map(OptionItem::getMaxAvailableAmount).toList()).optionAmounts(optionItems.stream().map(
+                OptionItem::getAmount).toList()).pointRate(product.getPointRate()).build();
     }
 }

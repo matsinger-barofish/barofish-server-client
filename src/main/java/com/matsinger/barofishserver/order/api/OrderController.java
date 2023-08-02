@@ -635,7 +635,8 @@ public class OrderController {
             if (tokenInfo.get().getType().equals(TokenAuthType.ADMIN)) adminId = tokenInfo.get().getId();
             OrderProductInfo info = orderService.selectOrderProductInfo(orderProductInfoId);
             if (!info.getState().equals(OrderProductState.DELIVERY_READY) &&
-                    !info.getState().equals(OrderProductState.ON_DELIVERY))
+                    !info.getState().equals(OrderProductState.ON_DELIVERY) &&
+                    !info.getState().equals(OrderProductState.EXCHANGE_ACCEPT))
                 return res.throwError("변경 불가능한 상태입니다.", "NOT_ALLOWED");
             if (data.getDeliverCompanyCode() == null) return res.throwError("택배사 코드를 입력해주세요.", "INPUT_CHECK_REQUIRED");
             if (data.getInvoice() == null) return res.throwError("운송장 번호를 입력해주세요.", "INPUT_CHECK_REQUIRED");
