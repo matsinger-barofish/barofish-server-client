@@ -46,7 +46,7 @@ public class GithubWebhook {
         if (jsonObject.get("ref").equals("refs/heads/" + githubBranch)) {
             System.out.println("running hook_github.sh");
             ShRunner shRunner = new ShRunner();
-            String cmds = "sh ~/barofish-server-client/hook_github.sh";
+            String cmds = "sh ~/server-update.sh";
             String[] callCmd = {"/bin/bash", "-c", cmds};
             Map map = shRunner.execCommand(callCmd);
             System.out.println(map);
