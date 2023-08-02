@@ -52,6 +52,6 @@ public interface OrderProductInfoRepository extends JpaRepository<OrderProductIn
             "FROM order_product_info opi\n" +
             "         JOIN barofish_dev.orders o ON o.id = opi.order_id\n" +
             "WHERE opi.state = 'FINAL_CONFIRM'\n" +
-            "  AND o.user_id = :userId;", nativeQuery = true)
+            "  AND o.user_id = :userId", nativeQuery = true)
     Tuple countFinalConfirmedOrderWithUserId(Integer userId);
 }
