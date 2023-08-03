@@ -112,7 +112,7 @@ public class UserCommandService {
             throw new IllegalArgumentException("유저를 찾을 수 없습니다.");
         });
         findUser.setState(UserState.DELETED);
-        findUserInfo.setNickname("탈퇴한 회원");
+//        findUserInfo.setNickname("탈퇴한 회원");
 
         // 장바구니 제거
         List<Integer>
