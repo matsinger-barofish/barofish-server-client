@@ -482,15 +482,18 @@ public class ProductService {
         List<OptionItem>
                 optionItems =
                 optionItemRepository.findAllByOptionIdAndState(option.getId(), OptionItemState.ACTIVE);
-
+        Integer representativeOptionNo = 1;
+        for (int i = 0; i < optionItems.size(); i++) {
+            if (optionItems.get(i).getId() == product.getRepresentOptionItemId()) representativeOptionNo = i + 1;
+        }
         return ExcelProductDto.builder().storeLoginId(store.getLoginId()).firstCategoryName(product.getCategory().getParentCategory().getName()).secondCategoryName(
                 product.getCategory().getName()).productName(product.getTitle()).expectedDeliverDay(product.getExpectedDeliverDay()).deliveryInfo(
-                product.getDeliveryInfo()).deliverBoxPerAmount(product.getDeliverBoxPerAmount()).isActive(product.getState().equals(
-                ProductState.ACTIVE) ? "노출" : "미노출").needTaxation(product.getNeedTaxation() ? "과세" : "비과세").hasOption(
-                "있음").purchasePrices(optionItems.stream().map(OptionItem::getPurchasePrice).toList()).optionNames(
-                optionItems.stream().map(OptionItem::getName).toList()).optionOriginPrices(optionItems.stream().map(
-                OptionItem::getOriginPrice).toList()).optionDiscountPrices(optionItems.stream().map(OptionItem::getDiscountPrice).toList()).optionMaxOrderAmount(
-                optionItems.stream().map(OptionItem::getMaxAvailableAmount).toList()).optionAmounts(optionItems.stream().map(
-                OptionItem::getAmount).toList()).pointRate(product.getPointRate()).build();
+                product.getDeliveryInfo()).deliveryFee(product.getDeliveryFee()).deliverBoxPerAmount(product.getDeliverBoxPerAmount()).isActive(
+                product.getState().equals(ProductState.ACTIVE) ? "노출" : "미노출").needTaxation(product.getNeedTaxation() ? "과세" : "비과세").hasOption(
+                "있음").purchasePrices(optionItems.stream().map(OptionItem::getPurchasePrice).toList()).representativeOptionNo(
+                representativeOptionNo).optionNames(optionItems.stream().map(OptionItem::getName).toList()).optionOriginPrices(
+                optionItems.stream().map(OptionItem::getOriginPrice).toList()).optionDiscountPrices(optionItems.stream().map(
+                OptionItem::getDiscountPrice).toList()).optionMaxOrderAmount(optionItems.stream().map(OptionItem::getMaxAvailableAmount).toList()).optionAmounts(
+                optionItems.stream().map(OptionItem::getAmount).toList()).pointRate(product.getPointRate()).build();
     }
 }
