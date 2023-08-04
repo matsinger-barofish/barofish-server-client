@@ -17,8 +17,14 @@ import com.matsinger.barofishserver.utils.Common;
 import jakarta.persistence.Tuple;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cglib.core.Local;
 import org.springframework.stereotype.Service;
 
+import java.sql.Time;
+import java.sql.Timestamp;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Optional;
 
@@ -34,7 +40,13 @@ public class CouponCommandService {
     private final Common utils;
 
     public void downloadCoupon(Integer userId, Integer couponId) {
-        mapRepository.save(CouponUserMap.builder().couponId(couponId).userId(userId).isUsed(false).build());
+        Coupon findCoupon = couponRepository.findById(couponId)
+                .orElseThrow(() -> new IllegalArgumentException("쿠폰을 찾을 수 없습니다."));
+
+        Integer expiryPeriod = findCoupon.getExpiryPeriod();
+        LocalDateTime couponExpiryDate = LocalDateTime.now().plus(expiryPeriod, ChronoUnit.DAYS);
+
+        mapRepository.save(CouponUserMap.builder().couponId(couponId).userId(userId).isUsed(false).expiryDate(Timestamp.valueOf(couponExpiryDate)).build());
     }
 
     public Coupon addCoupon(Coupon coupon) {

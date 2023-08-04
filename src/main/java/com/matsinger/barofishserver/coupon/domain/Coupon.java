@@ -47,12 +47,16 @@ public class Coupon {
 
     @Basic
     @Column(name = "end_at", nullable = true)
-    private Timestamp endAt;
+    private Timestamp endAt; // 쿠폰 자체의 만료기간
 
     @Basic
     @Builder.Default
     @Column(name = "min_price", nullable = false)
     private Integer minPrice = 0;
+
+    @Basic
+    @Column(name = "expiry_period")
+    private Integer expiryPeriod; // 쿠폰을 발급한 유저가 쿠폰을 쓰지 않으면 만료되는 기간
 
     public CouponDto convert2Dto(List<UserInfoDto> users) {
         return CouponDto.builder().id(this.getId()).title(this.getTitle()).state(this.getState()).publicType(this.getPublicType()).type(
