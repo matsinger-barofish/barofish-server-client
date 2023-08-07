@@ -88,31 +88,41 @@ public class OrderService {
                 return builder.and(predicates.toArray(new Predicate[0]));
             });
         }
-        List<OrderProductInfo>
-                infos =
-                productSpec == null ? selectOrderProductInfoListWithOrderId(order.getId()) : selectOrderProductInfoList(
+        List<OrderProductInfo> infos = productSpec == null ? selectOrderProductInfoListWithOrderId(order.getId())
+                : selectOrderProductInfoList(
                         productSpec);
         List<OrderProductDto> orderProductDtos = infos.stream().map(opi -> {
-//            OrderProductOption option = optionRepository.findFirstByOrderProductId(opi.getId());
+            // OrderProductOption option =
+            // optionRepository.findFirstByOrderProductId(opi.getId());
             Product product = productService.selectProduct(opi.getProductId());
             StoreInfo storeInfo = storeService.selectStoreInfo(product.getStoreId());
-            if (storeId != null && storeId != storeInfo.getStoreId()) return null;
+            if (storeId != null && storeId != storeInfo.getStoreId())
+                return null;
             OptionItem optionItem = productService.selectOptionItem(opi.getOptionItemId());
-            Optional<DeliveryCompany>
-                    deliveryCompany =
-                    opi.getDeliverCompanyCode() !=
-                            null ? deliveryCompanyRepository.findById(opi.getDeliverCompanyCode()) : Optional.empty();
+            Optional<DeliveryCompany> deliveryCompany = opi.getDeliverCompanyCode() != null
+                    ? deliveryCompanyRepository.findById(opi.getDeliverCompanyCode())
+                    : Optional.empty();
             Boolean isWritten = reviewQueryService.checkReviewWritten(order.getUserId(), product.getId(), opi.getId());
-            return OrderProductDto.builder().id(opi.getId()).storeId(storeInfo.getStoreId()).optionItem(optionItem.convert2Dto()).product(
-                    productService.convert2ListDto(productService.selectProduct(opi.getProductId()))).optionName(
-                    optionItem.getName()).amount(opi.getAmount()).state(opi.getState()).price(opi.getPrice()).storeName(
-                    storeInfo.getName()).storeProfile(storeInfo.getProfileImage()).deliverFee(getProductDeliveryFee(
-                    product,
-                    optionItem.getId(),
-                    opi.getAmount())).deliverCompany(deliveryCompany.map(DeliveryCompany::getName).orElse(null)).invoiceCode(
-                    opi.getInvoiceCode()).cancelReason(opi.getCancelReason()).cancelReasonContent(opi.getCancelReasonContent()).isReviewWritten(
-                    isWritten).deliverFeeType(storeInfo.getDeliverFeeType()).minOrderPrice(storeInfo.getMinOrderPrice()).finalConfirmedAt(
-                    opi.getFinalConfirmedAt()).build();
+            return OrderProductDto.builder().id(opi.getId()).storeId(storeInfo.getStoreId())
+                    .optionItem(optionItem.convert2Dto()).product(
+                            productService.convert2ListDto(productService.selectProduct(opi.getProductId())))
+                    .optionName(
+                            optionItem.getName())
+                    .amount(opi.getAmount()).state(opi.getState()).price(opi.getPrice()).storeName(
+                            storeInfo.getName())
+                    .storeProfile(storeInfo.getProfileImage()).deliverFee(getProductDeliveryFee(
+                            product,
+                            optionItem.getId(),
+                            opi.getAmount()))
+                    .deliverCompany(deliveryCompany.map(DeliveryCompany::getName).orElse(null)).invoiceCode(
+                            opi.getInvoiceCode())
+                    .cancelReason(opi.getCancelReason()).cancelReasonContent(opi.getCancelReasonContent())
+                    .isReviewWritten(
+                            isWritten)
+                    .deliverFeeType(storeInfo.getDeliverFeeType()).minOrderPrice(storeInfo.getMinOrderPrice())
+                    .finalConfirmedAt(
+                            opi.getFinalConfirmedAt())
+                    .needTaxation(product.getNeedTaxation()).build();
         }).filter(Objects::nonNull).toList();
         String couponName = null;
         if (order.getCouponId() != null) {
@@ -120,11 +130,16 @@ public class OrderService {
             couponName = coupon.getTitle();
         }
         UserInfoDto userInfoDto = userService.selectUserInfo(order.getUserId()).convert2Dto();
-        return OrderDto.builder().id(order.getId()).orderedAt(order.getOrderedAt()).user(userInfoDto).totalAmount(order.getTotalPrice()).deliverPlace(
-                deliverPlace.convert2Dto()).paymentWay(order.getPaymentWay()).productInfos(orderProductDtos).couponDiscount(
-                order.getCouponDiscount()).usePoint(order.getUsePoint()).ordererName(order.getOrdererName()).ordererTel(
-                order.getOrdererTel()).couponName(couponName).bankHolder(order.getBankHolder()).bankAccount(order.getBankAccount()).bankCode(
-                order.getBankCode()).bankName(order.getBankName()).build();
+        return OrderDto.builder().id(order.getId()).orderedAt(order.getOrderedAt()).user(userInfoDto)
+                .totalAmount(order.getTotalPrice()).deliverPlace(
+                        deliverPlace.convert2Dto())
+                .paymentWay(order.getPaymentWay()).productInfos(orderProductDtos).couponDiscount(
+                        order.getCouponDiscount())
+                .usePoint(order.getUsePoint()).ordererName(order.getOrdererName()).ordererTel(
+                        order.getOrdererTel())
+                .couponName(couponName).bankHolder(order.getBankHolder()).bankAccount(order.getBankAccount()).bankCode(
+                        order.getBankCode())
+                .bankName(order.getBankName()).build();
     }
 
     public OrderDeliverPlace selectDeliverPlace(String orderId) {
@@ -185,7 +200,7 @@ public class OrderService {
             predicates.add(builder.isNotNull(t.get("id")));
             return builder.and(predicates.toArray(new Predicate[0]));
         };
-//        Page<Orders> orders = orderRepository.findAllByUserId(userId, pageRequest);
+        // Page<Orders> orders = orderRepository.findAllByUserId(userId, pageRequest);
         return orderRepository.findAll(spec, Sort.by(Sort.Direction.DESC, "id"));
     }
 
@@ -279,11 +294,10 @@ public class OrderService {
                 }
             }
         }
-//                        .stream().filter(v -> {
-//                    if (v.getId() != info.getId()) return true;
-//                    return false;
-//                }).toList();
-
+        // .stream().filter(v -> {
+        // if (v.getId() != info.getId()) return true;
+        // return false;
+        // }).toList();
 
         return price;
     }
@@ -292,7 +306,8 @@ public class OrderService {
         OrderProductInfo info = infoRepository.findById(orderProductInfoId).orElseThrow(() -> {
             throw new Error("주문 상품 정보를 찾을 수 없습니다.");
         });
-        if (info.getState().equals(OrderProductState.CANCELED)) throw new Exception("이미 취소된 상품입니다.");
+        if (info.getState().equals(OrderProductState.CANCELED))
+            throw new Exception("이미 취소된 상품입니다.");
         OrderProductOption option = optionRepository.findFirstByOrderProductId(orderProductInfoId);
         Orders order = orderRepository.findById(info.getOrderId()).orElseThrow(() -> {
             try {
@@ -303,17 +318,19 @@ public class OrderService {
         });
         Integer price = getCancelPrice(order, List.of(info));
         int taxFreeAmount = getTaxFreeAmount(order, List.of(info));
-        VBankRefundInfo
-                vBankRefundInfo =
-                order.getPaymentWay().equals(OrderPaymentWay.VIRTUAL_ACCOUNT) ? VBankRefundInfo.builder().bankHolder(
+        VBankRefundInfo vBankRefundInfo = order.getPaymentWay().equals(OrderPaymentWay.VIRTUAL_ACCOUNT)
+                ? VBankRefundInfo.builder().bankHolder(
                         order.getBankHolder()).bankCode(order.getBankCode()).bankName(order.getBankName()).bankAccount(
-                        order.getBankAccount()).build() : null;
+                                order.getBankAccount())
+                        .build()
+                : null;
         paymentService.cancelPayment(order.getImpUid(), price, taxFreeAmount, vBankRefundInfo);
         info.setState(OrderProductState.CANCELED);
         infoRepository.save(info);
         Integer returnPoint = checkReturnPoint(order);
         returnCouponIfAllCanceled(order);
-        if (returnPoint != null) returnPoint(order.getUserId(), returnPoint);
+        if (returnPoint != null)
+            returnPoint(order.getUserId(), returnPoint);
     }
 
     public int getCancelPrice(Orders order, List<OrderProductInfo> infos) throws Exception {
@@ -321,13 +338,15 @@ public class OrderService {
         int deliveryFee = infos.stream().mapToInt(info -> {
             if (info.getState().equals(OrderProductState.WAIT_DEPOSIT) ||
                     info.getState().equals(OrderProductState.DELIVERY_READY) ||
-                    info.getState().equals(OrderProductState.PAYMENT_DONE)) return info.getDeliveryFee();
-            else return 0;
+                    info.getState().equals(OrderProductState.PAYMENT_DONE))
+                return info.getDeliveryFee();
+            else
+                return 0;
         }).sum();
-        int
-                orderedPrice =
-                orderProductInfos.stream().filter(v -> !v.getState().equals(OrderProductState.CANCELED)).mapToInt(
-                        OrderProductInfo::getPrice).sum();
+        int orderedPrice = orderProductInfos.stream().filter(v -> !v.getState().equals(OrderProductState.CANCELED))
+                .mapToInt(
+                        OrderProductInfo::getPrice)
+                .sum();
         AtomicInteger cancelPrice = new AtomicInteger();
         orderProductInfos.forEach(v -> {
             if (infos.stream().anyMatch(info -> info.getId() == v.getId())) {
@@ -345,17 +364,18 @@ public class OrderService {
 
     public Integer checkReturnPoint(Orders order) {
         List<OrderProductInfo> infos = infoRepository.findAllByOrderId(order.getId());
-        if (infos.stream().allMatch(v -> v.getState().equals(OrderProductState.CANCELED))) return order.getUsePoint();
-        else return null;
+        if (infos.stream().allMatch(v -> v.getState().equals(OrderProductState.CANCELED)))
+            return order.getUsePoint();
+        else
+            return null;
     }
 
     public void returnCouponIfAllCanceled(Orders order) {
         List<OrderProductInfo> infos = infoRepository.findAllByOrderId(order.getId());
-        boolean
-                allCanceled =
-                order.getCouponId() != null &&
-                        infos.stream().allMatch(v -> v.getState().equals(OrderProductState.CANCELED));
-        if (allCanceled) couponCommandService.unUseCoupon(order.getCouponId(), order.getUserId());
+        boolean allCanceled = order.getCouponId() != null &&
+                infos.stream().allMatch(v -> v.getState().equals(OrderProductState.CANCELED));
+        if (allCanceled)
+            couponCommandService.unUseCoupon(order.getCouponId(), order.getUserId());
     }
 
     public void returnPoint(Integer userId, Integer returnPoint) {
@@ -380,10 +400,13 @@ public class OrderService {
             return product.getDeliveryFee() * ((amount / product.getDeliverBoxPerAmount()) + 1);
         } else {
             StoreInfo storeInfo = storeService.selectStoreInfo(product.getStoreId());
-            if (storeInfo.getDeliverFeeType().equals(StoreDeliverFeeType.FREE)) return 0;
-            else if (storeInfo.getDeliverFeeType().equals(StoreDeliverFeeType.FIX)) return storeInfo.getDeliverFee();
-            else return optionItem.getDiscountPrice() * amount >
-                        storeInfo.getMinOrderPrice() ? 0 : storeInfo.getDeliverFee();
+            if (storeInfo.getDeliverFeeType().equals(StoreDeliverFeeType.FREE))
+                return 0;
+            else if (storeInfo.getDeliverFeeType().equals(StoreDeliverFeeType.FIX))
+                return storeInfo.getDeliverFee();
+            else
+                return optionItem.getDiscountPrice() * amount > storeInfo.getMinOrderPrice() ? 0
+                        : storeInfo.getDeliverFee();
         }
     }
 
@@ -406,18 +429,27 @@ public class OrderService {
         Product product = productService.selectProduct(info.getProductId());
         StoreInfo storeInfo = storeService.selectStoreInfo(product.getStoreId());
         OptionItem optionItem = productService.selectOptionItem(info.getOptionItemId());
-        Optional<DeliveryCompany>
-                deliveryCompany =
-                info.getDeliverCompanyCode() !=
-                        null ? deliveryCompanyRepository.findById(info.getDeliverCompanyCode()) : Optional.empty();
+        Optional<DeliveryCompany> deliveryCompany = info.getDeliverCompanyCode() != null
+                ? deliveryCompanyRepository.findById(info.getDeliverCompanyCode())
+                : Optional.empty();
 
-        return OrderProductInfoDto.builder().id(info.getId()).orderId(info.getOrderId()).productId(info.getProductId()).optionItemId(
-                info.getOptionItemId()).optionItem(optionItem.convert2Dto()).state(info.getState()).settlePrice(info.getSettlePrice()).price(
-                info.getPrice()).amount(info.getAmount()).deliveryFee(info.getDeliveryFee()).cancelReasonContent(info.getCancelReasonContent()).cancelReason(
-                info.getCancelReason()).deliverCompanyCode(info.getDeliverCompanyCode()).invoiceCode(info.getInvoiceCode()).isSettled(
-                info.getIsSettled()).settledAt(info.getSettledAt()).product(productService.convert2ListDto(info.getProduct())).order(
-                orderDto).settlementRate(storeInfo.getSettlementRate()).deliverFeeType(storeInfo.getDeliverFeeType()).deliverCompany(
-                deliveryCompany.map(DeliveryCompany::getName).orElse(null)).build();
+        return OrderProductInfoDto.builder().id(info.getId()).orderId(info.getOrderId()).productId(info.getProductId())
+                .optionItemId(
+                        info.getOptionItemId())
+                .optionItem(optionItem.convert2Dto()).state(info.getState()).settlePrice(info.getSettlePrice()).price(
+                        info.getPrice())
+                .amount(info.getAmount()).deliveryFee(info.getDeliveryFee())
+                .cancelReasonContent(info.getCancelReasonContent()).cancelReason(
+                        info.getCancelReason())
+                .deliverCompanyCode(info.getDeliverCompanyCode()).invoiceCode(info.getInvoiceCode()).isSettled(
+                        info.getIsSettled())
+                .settledAt(info.getSettledAt()).product(productService.convert2ListDto(info.getProduct())).order(
+                        orderDto)
+                .settlementRate(storeInfo.getSettlementRate()).deliverFeeType(storeInfo.getDeliverFeeType())
+                .needTaxation(product.getNeedTaxation())
+                .deliverCompany(
+                        deliveryCompany.map(DeliveryCompany::getName).orElse(null))
+                .build();
     }
 
     public Integer calculateTotalPrice(OrderReq data) {
@@ -453,15 +485,15 @@ public class OrderService {
     }
 
     public List<OrderProductInfo> selectOrderProductInfoListWithStoreIdAndIsSettled(Integer storeId,
-                                                                                    Boolean isSettled) {
+            Boolean isSettled) {
         return infoRepository.findAllByProduct_StoreIdAndIsSettled(storeId, isSettled);
     }
 
     public boolean checkProductCanDeliver(OrderDeliverPlace orderDeliverPlace, OrderProductInfo orderProductInfo) {
-        List<String>
-                difficultDeliverBcode =
-                difficultDeliverAddressQueryService.selectDifficultDeliverAddressWithProductId(orderProductInfo.getProductId()).stream().map(
-                        DifficultDeliverAddress::getBcode).toList();
+        List<String> difficultDeliverBcode = difficultDeliverAddressQueryService
+                .selectDifficultDeliverAddressWithProductId(orderProductInfo.getProductId()).stream().map(
+                        DifficultDeliverAddress::getBcode)
+                .toList();
         return difficultDeliverBcode.stream().noneMatch(v -> v.substring(0,
                 5).equals(orderDeliverPlace.getBcode().substring(0, 5)));
     }
@@ -484,7 +516,8 @@ public class OrderService {
                         NotificationMessage.builder().productName(info.getProduct().getTitle()).build());
             } else {
                 OptionItem optionItem = productService.selectOptionItem(info.getOptionItemId());
-                if (optionItem.getAmount() != null) optionItem.setAmount(optionItem.getAmount() - info.getAmount());
+                if (optionItem.getAmount() != null)
+                    optionItem.setAmount(optionItem.getAmount() - info.getAmount());
                 productService.addOptionItem(optionItem);
                 info.setState(OrderProductState.PAYMENT_DONE);
                 notificationCommandService.sendFcmToUser(order.getUserId(),
@@ -504,16 +537,12 @@ public class OrderService {
     public int getTaxFreeAmount(Orders order, List<OrderProductInfo> infos) {
         infos = infos != null ? infos : selectOrderProductInfoListWithOrderId(order.getId());
         int taxFreeAmount = 0;
-        int
-                discountAmount =
-                (order.getCouponDiscount() != null ? order.getCouponDiscount() : 0) +
-                        (order.getUsePoint() != null ? order.getUsePoint() : 0);
+        int discountAmount = (order.getCouponDiscount() != null ? order.getCouponDiscount() : 0) +
+                (order.getUsePoint() != null ? order.getUsePoint() : 0);
         if (discountAmount != 0) {
             int totalOriginPrice = infos.stream().mapToInt(OrderProductInfo::getPrice).sum();
-            List<Integer>
-                    discountedPrices =
-                    infos.stream().map(v -> (int) Math.round((v.getPrice() *
-                            (v.getPrice() / (float) totalOriginPrice)) / 10.0) * 10).toList();
+            List<Integer> discountedPrices = infos.stream().map(v -> (int) Math.round((v.getPrice() *
+                    (v.getPrice() / (float) totalOriginPrice)) / 10.0) * 10).toList();
             if (discountedPrices.size() > 1) {
                 int sum = discountedPrices.subList(0, discountedPrices.size() - 2).stream().mapToInt(v -> v).sum();
                 discountedPrices.set(discountedPrices.size() - 1, totalOriginPrice - sum);
@@ -545,4 +574,3 @@ public class OrderService {
         return bankCodeRepository.findById(id).orElseThrow(() -> new Exception("잘못된 은행 코드 정보입니다."));
     }
 }
-
