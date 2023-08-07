@@ -1,6 +1,5 @@
 package com.matsinger.barofishserver.order.orderprductinfo.dto;
 
-
 import com.matsinger.barofishserver.order.dto.OrderDto;
 import com.matsinger.barofishserver.order.orderprductinfo.domain.OrderProductState;
 import com.matsinger.barofishserver.order.orderprductinfo.domain.OrderCancelReason;
@@ -33,6 +32,7 @@ public class OrderProductInfoDto {
     private String invoiceCode;
     private Boolean isSettled;
     private Timestamp settledAt;
+    private Boolean needTaxation;
     private Timestamp finalConfirmedAt;
     ProductListDto product;
     private OrderDto order;

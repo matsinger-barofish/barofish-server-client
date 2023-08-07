@@ -32,7 +32,8 @@ public class OrderProductDto {
     private String deliverCompany;
     private String invoiceCode;
     private Timestamp finalConfirmedAt;
-    //    private Integer deliveryFee;
+    private Boolean needTaxation;
+    // private Integer deliveryFee;
     private OrderCancelReason cancelReason;
     private String cancelReasonContent;
     private Boolean isReviewWritten;

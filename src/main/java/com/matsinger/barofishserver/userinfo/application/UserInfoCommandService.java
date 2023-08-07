@@ -71,6 +71,7 @@ public class UserInfoCommandService {
             verifyPhoneNumberIsExists(fixedPhoneNumber);
         }
         UserInfo userInfo = request.toUserInfo(fixedPhoneNumber);
+        userInfo.setEmail(request.getEmail()); // 이메일 설정추가
         userInfo.setProfileImage(profileImage);
         userInfo.setGrade(grade);
         userInfo.setUserId(user.getId());

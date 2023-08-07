@@ -15,6 +15,7 @@ import com.matsinger.barofishserver.inquiry.domain.Inquiry;
 import com.matsinger.barofishserver.product.difficultDeliverAddress.application.DifficultDeliverAddressQueryService;
 import com.matsinger.barofishserver.product.domain.*;
 import com.matsinger.barofishserver.product.dto.ExcelProductDto;
+import com.matsinger.barofishserver.product.dto.ExcelProductDto2;
 import com.matsinger.barofishserver.product.dto.ProductListDto;
 import com.matsinger.barofishserver.product.optionitem.repository.OptionItemRepository;
 import com.matsinger.barofishserver.product.option.domain.Option;
@@ -478,6 +479,8 @@ public class ProductService {
 
     public ExcelProductDto convert2ExcelProductDto(Product product) {
         Store store = storeService.selectStore(product.getStoreId());
+        StoreInfo storeInfo = store.getStoreInfo();
+
         Option option = optionRepository.findFirstByProductIdAndIsNeededTrue(product.getId());
         List<OptionItem>
                 optionItems =
@@ -486,7 +489,7 @@ public class ProductService {
         for (int i = 0; i < optionItems.size(); i++) {
             if (optionItems.get(i).getId() == product.getRepresentOptionItemId()) representativeOptionNo = i + 1;
         }
-        return ExcelProductDto.builder().storeLoginId(store.getLoginId()).firstCategoryName(product.getCategory().getParentCategory().getName()).secondCategoryName(
+        return ExcelProductDto.builder().storeLoginId(store.getLoginId()).storeName(storeInfo.getName()).firstCategoryName(product.getCategory().getParentCategory().getName()).secondCategoryName(
                 product.getCategory().getName()).productName(product.getTitle()).expectedDeliverDay(product.getExpectedDeliverDay()).deliveryInfo(
                 product.getDeliveryInfo()).deliveryFee(product.getDeliveryFee()).deliverBoxPerAmount(product.getDeliverBoxPerAmount()).isActive(
                 product.getState().equals(ProductState.ACTIVE) ? "노출" : "미노출").needTaxation(product.getNeedTaxation() ? "과세" : "비과세").hasOption(
@@ -495,5 +498,47 @@ public class ProductService {
                 optionItems.stream().map(OptionItem::getOriginPrice).toList()).optionDiscountPrices(optionItems.stream().map(
                 OptionItem::getDiscountPrice).toList()).optionMaxOrderAmount(optionItems.stream().map(OptionItem::getMaxAvailableAmount).toList()).optionAmounts(
                 optionItems.stream().map(OptionItem::getAmount).toList()).pointRate(product.getPointRate()).build();
+    }
+
+    public List<ExcelProductDto2> convert2ExcelProductDto2(Product product) {
+        Store store = storeService.selectStore(product.getStoreId());
+        StoreInfo storeInfo = store.getStoreInfo();
+
+        Option option = optionRepository.findFirstByProductIdAndIsNeededTrue(product.getId());
+        List<OptionItem>
+                optionItems =
+                optionItemRepository.findAllByOptionIdAndState(option.getId(), OptionItemState.ACTIVE);
+        Integer representativeOptionNo = 1;
+        for (int i = 0; i < optionItems.size(); i++) {
+            if (optionItems.get(i).getId() == product.getRepresentOptionItemId()) representativeOptionNo = i + 1;
+        }
+
+        List<ExcelProductDto2> excelProductContents = new ArrayList<>();
+        for (OptionItem optionItem : optionItems) {
+            ExcelProductDto2 excelProductDto = ExcelProductDto2.builder()
+                    .storeLoginId(store.getLoginId())
+                    .storeName(storeInfo.getName())
+                    .firstCategoryName(product.getCategory().getParentCategory().getName())
+                    .secondCategoryName(product.getCategory().getName())
+                    .productName(product.getTitle())
+                    .expectedDeliverDay(product.getExpectedDeliverDay())
+                    .deliveryInfo(product.getDeliveryInfo())
+                    .deliveryFee(product.getDeliveryFee())
+                    .deliverBoxPerAmount(product.getDeliverBoxPerAmount())
+                    .isActive(product.getState().equals(ProductState.ACTIVE) ? "노출" : "미노출")
+                    .needTaxation(product.getNeedTaxation() ? "과세" : "비과세")
+                    .hasOption("있음")
+                    .purchasePrices(optionItem.getPurchasePrice())
+                    .representativeOptionNo(representativeOptionNo)
+                    .optionName(optionItem.getName())
+                    .optionOriginPrice(optionItem.getOriginPrice())
+                    .optionDiscountPrice(optionItem.getDiscountPrice())
+                    .optionMaxOrderAmount(optionItem.getMaxAvailableAmount())
+                    .optionAmount(optionItem.getAmount())
+                    .pointRate(product.getPointRate())
+                    .build();
+            excelProductContents.add(excelProductDto);
+        }
+        return excelProductContents;
     }
 }

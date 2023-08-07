@@ -28,7 +28,7 @@ public class OrderDto {
     String couponName;
     Integer usePoint;
     Timestamp orderedAt;
-    Boolean needTaxation;
+    // Boolean needTaxation;
     String bankHolder;
     String bankCode;
     String bankAccount;
