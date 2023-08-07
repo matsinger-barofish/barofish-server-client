@@ -3,6 +3,7 @@ package com.matsinger.barofishserver.coupon.application;
 import com.matsinger.barofishserver.coupon.domain.Coupon;
 import com.matsinger.barofishserver.coupon.domain.CouponUserMap;
 import com.matsinger.barofishserver.coupon.domain.CouponUserMapId;
+import com.matsinger.barofishserver.coupon.domain.UserCouponState;
 import com.matsinger.barofishserver.coupon.repository.CouponRepository;
 import com.matsinger.barofishserver.coupon.repository.CouponUserMapRepository;
 import com.matsinger.barofishserver.notification.application.NotificationCommandService;
@@ -46,7 +47,13 @@ public class CouponCommandService {
         Integer expiryPeriod = findCoupon.getExpiryPeriod();
         LocalDateTime couponExpiryDate = LocalDateTime.now().plus(expiryPeriod, ChronoUnit.DAYS);
 
-        mapRepository.save(CouponUserMap.builder().couponId(couponId).userId(userId).isUsed(false).expiryDate(Timestamp.valueOf(couponExpiryDate)).build());
+        mapRepository.save(CouponUserMap.builder()
+                .couponId(couponId)
+                .userId(userId)
+                .isUsed(false)
+                .expiryDate(Timestamp.valueOf(couponExpiryDate))
+                .userCouponState(UserCouponState.ACTIVE)
+                .build());
     }
 
     public Coupon addCoupon(Coupon coupon) {

@@ -67,13 +67,13 @@ public class OrderService {
     private final OrderRepository orderRepository;
     private final OrderProductInfoRepository infoRepository;
     private final OrderProductOptionRepository optionRepository;
+    private final OrderDeliverPlaceRepository deliverPlaceRepository;
+    private final DeliveryCompanyRepository deliveryCompanyRepository;
     private final ProductService productService;
     private final UserCommandService userService;
     private final StoreService storeService;
-    private final OrderDeliverPlaceRepository deliverPlaceRepository;
     private final ReviewQueryService reviewQueryService;
     private final PaymentService paymentService;
-    private final DeliveryCompanyRepository deliveryCompanyRepository;
     private final DifficultDeliverAddressQueryService difficultDeliverAddressQueryService;
     private final CouponQueryService couponQueryService;
     private final NotificationCommandService notificationCommandService;

@@ -17,5 +17,6 @@ public class CouponUserMapQueryService {
 
     public List<CouponUserMap> selectDownloadedUserCoupon(int userId) {
         couponUserMapRepository.selectDownloadedCoupon(userId);
+        return null;
     }
 }
