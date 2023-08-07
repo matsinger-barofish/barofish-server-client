@@ -229,9 +229,9 @@ public class ProductController {
     }
 
     @GetMapping("/excel-list")
-    public ResponseEntity<CustomResponse<List<ExcelProductDto>>> selectProductListForExcel(@RequestHeader(value = "Authorization") Optional<String> auth,
+    public ResponseEntity<CustomResponse<List<List<ExcelProductDto2>>>> selectProductListForExcel(@RequestHeader(value = "Authorization") Optional<String> auth,
                                                                                             @RequestParam(value = "ids", required = false) String idsStr) {
-        CustomResponse<List<ExcelProductDto>> res = new CustomResponse<>();
+        CustomResponse<List<List<ExcelProductDto2>>> res = new CustomResponse<>();
         Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
         if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
         try {
@@ -240,9 +240,9 @@ public class ProductController {
             List<Product> products = new ArrayList<>();
             if (ids != null) products = productService.selectProductListWithIds(ids);
             else products = productService.selectProductListNotDelete();
-            List<ExcelProductDto>
+            List<List<ExcelProductDto2>>
                     productDtos =
-                    products.stream().map(productService::convert2ExcelProductDto).toList();
+                    products.stream().map(productService::convert2ExcelProductDto2).toList();
             res.setData(Optional.of(productDtos));
             return ResponseEntity.ok(res);
         } catch (Exception e) {

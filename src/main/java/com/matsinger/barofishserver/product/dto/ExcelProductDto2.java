@@ -1,15 +1,18 @@
 package com.matsinger.barofishserver.product.dto;
 
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import java.util.List;
 
+@Getter
 @Builder
-@Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@Getter
-public class ExcelProductDto {
+public class ExcelProductDto2 {
+
     String storeLoginId;
     String storeName;
     String firstCategoryName;
@@ -22,12 +25,12 @@ public class ExcelProductDto {
     String isActive;
     String needTaxation;
     String hasOption;
-    List<Integer> purchasePrices;
+    Integer purchasePrices;
     Integer representativeOptionNo;
-    List<String> optionNames;
-    List<Integer> optionOriginPrices;
-    List<Integer> optionDiscountPrices;
-    List<Integer> optionMaxOrderAmount;
-    List<Integer> optionAmounts;
+    String optionName;
+    Integer optionOriginPrice;
+    Integer optionDiscountPrice;
+    Integer optionMaxOrderAmount;
+    Integer optionAmount;
     Float pointRate;
 }
