@@ -1,6 +1,5 @@
 package com.matsinger.barofishserver.product.application;
 
-
 import com.matsinger.barofishserver.address.application.AddressQueryService;
 import com.matsinger.barofishserver.address.domain.Address;
 import com.matsinger.barofishserver.basketProduct.repository.BasketProductOptionRepository;
@@ -86,7 +85,6 @@ public class ProductService {
     public List<Product> selectProductList() {
         return productRepository.findAll();
     }
-
 
     public List<Integer> testQuery(List<Integer> ids) {
         return productRepository.testQuery(ids);
@@ -365,7 +363,6 @@ public class ProductService {
 
     }
 
-
     public List<OptionDto> selectProductOption(Integer productId) {
         List<Option> options = optionRepository.findAllByProductIdAndState(productId, OptionState.ACTIVE);
 
@@ -461,10 +458,15 @@ public class ProductService {
 
     public OptionDto convert2OptionDto(Option option) {
         OptionDto optionDto = option.convert2Dto();
+        Product product = selectProduct(option.getProductId());
         List<OptionItem>
                 optionItems =
                 optionItemRepository.findAllByOptionIdAndState(option.getId(), OptionItemState.ACTIVE);
-        List<OptionItemDto> itemDtos = optionItems.stream().map(OptionItem::convert2Dto).toList();
+        List<OptionItemDto> itemDtos = optionItems.stream().map(v -> {
+            OptionItemDto optionItemDto = v.convert2Dto();
+            optionItemDto.setDeliverBoxPerAmount(product.getDeliverBoxPerAmount());
+            return optionItemDto;
+        }).toList();
         optionDto.setOptionItems(itemDtos);
         return optionDto;
     }
@@ -489,10 +491,11 @@ public class ProductService {
         for (int i = 0; i < optionItems.size(); i++) {
             if (optionItems.get(i).getId() == product.getRepresentOptionItemId()) representativeOptionNo = i + 1;
         }
-        return ExcelProductDto.builder().storeLoginId(store.getLoginId()).storeName(storeInfo.getName()).firstCategoryName(product.getCategory().getParentCategory().getName()).secondCategoryName(
-                product.getCategory().getName()).productName(product.getTitle()).expectedDeliverDay(product.getExpectedDeliverDay()).deliveryInfo(
-                product.getDeliveryInfo()).deliveryFee(product.getDeliveryFee()).deliverBoxPerAmount(product.getDeliverBoxPerAmount()).isActive(
-                product.getState().equals(ProductState.ACTIVE) ? "노출" : "미노출").needTaxation(product.getNeedTaxation() ? "과세" : "비과세").hasOption(
+        return ExcelProductDto.builder().storeLoginId(store.getLoginId()).storeName(storeInfo.getName()).firstCategoryName(
+                product.getCategory().getParentCategory().getName()).secondCategoryName(product.getCategory().getName()).productName(
+                product.getTitle()).expectedDeliverDay(product.getExpectedDeliverDay()).deliveryInfo(product.getDeliveryInfo()).deliveryFee(
+                product.getDeliveryFee()).deliverBoxPerAmount(product.getDeliverBoxPerAmount()).isActive(product.getState().equals(
+                ProductState.ACTIVE) ? "노출" : "미노출").needTaxation(product.getNeedTaxation() ? "과세" : "비과세").hasOption(
                 "있음").purchasePrices(optionItems.stream().map(OptionItem::getPurchasePrice).toList()).representativeOptionNo(
                 representativeOptionNo).optionNames(optionItems.stream().map(OptionItem::getName).toList()).optionOriginPrices(
                 optionItems.stream().map(OptionItem::getOriginPrice).toList()).optionDiscountPrices(optionItems.stream().map(
@@ -515,28 +518,17 @@ public class ProductService {
 
         List<ExcelProductDto2> excelProductContents = new ArrayList<>();
         for (OptionItem optionItem : optionItems) {
-            ExcelProductDto2 excelProductDto = ExcelProductDto2.builder()
-                    .storeLoginId(store.getLoginId())
-                    .storeName(storeInfo.getName())
-                    .firstCategoryName(product.getCategory().getParentCategory().getName())
-                    .secondCategoryName(product.getCategory().getName())
-                    .productName(product.getTitle())
-                    .expectedDeliverDay(product.getExpectedDeliverDay())
-                    .deliveryInfo(product.getDeliveryInfo())
-                    .deliveryFee(product.getDeliveryFee())
-                    .deliverBoxPerAmount(product.getDeliverBoxPerAmount())
-                    .isActive(product.getState().equals(ProductState.ACTIVE) ? "노출" : "미노출")
-                    .needTaxation(product.getNeedTaxation() ? "과세" : "비과세")
-                    .hasOption("있음")
-                    .purchasePrices(optionItem.getPurchasePrice())
-                    .representativeOptionNo(representativeOptionNo)
-                    .optionName(optionItem.getName())
-                    .optionOriginPrice(optionItem.getOriginPrice())
-                    .optionDiscountPrice(optionItem.getDiscountPrice())
-                    .optionMaxOrderAmount(optionItem.getMaxAvailableAmount())
-                    .optionAmount(optionItem.getAmount())
-                    .pointRate(product.getPointRate())
-                    .build();
+            ExcelProductDto2
+                    excelProductDto =
+                    ExcelProductDto2.builder().storeLoginId(store.getLoginId()).storeName(storeInfo.getName()).firstCategoryName(
+                            product.getCategory().getParentCategory().getName()).secondCategoryName(product.getCategory().getName()).productName(
+                            product.getTitle()).expectedDeliverDay(product.getExpectedDeliverDay()).deliveryInfo(product.getDeliveryInfo()).deliveryFee(
+                            product.getDeliveryFee()).deliverBoxPerAmount(product.getDeliverBoxPerAmount()).isActive(
+                            product.getState().equals(ProductState.ACTIVE) ? "노출" : "미노출").needTaxation(product.getNeedTaxation() ? "과세" : "비과세").hasOption(
+                            "있음").purchasePrices(optionItem.getPurchasePrice()).representativeOptionNo(
+                            representativeOptionNo).optionName(optionItem.getName()).optionOriginPrice(optionItem.getOriginPrice()).optionDiscountPrice(
+                            optionItem.getDiscountPrice()).optionMaxOrderAmount(optionItem.getMaxAvailableAmount()).optionAmount(
+                            optionItem.getAmount()).pointRate(product.getPointRate()).build();
             excelProductContents.add(excelProductDto);
         }
         return excelProductContents;
