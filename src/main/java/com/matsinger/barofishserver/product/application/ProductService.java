@@ -273,6 +273,9 @@ public class ProductService {
             throw new Error("상품 정보를 찾을 수 없습니다.");
         });
     }
+    public Optional<Product> selectOptioanlProduct(Integer id){
+        return productRepository.findById(id);
+    }
 
     public Option selectOption(Integer id) {
         return optionRepository.findById(id).orElseThrow(() -> {

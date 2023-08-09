@@ -92,6 +92,7 @@ public class StoreController {
                                                                                  @RequestParam(value = "location", required = false) String location,
                                                                                  @RequestParam(value = "keyword", required = false) String keyword,
                                                                                  @RequestParam(value = "state", required = false) String state,
+                                                                                 @RequestParam(value = "ids", required = false) String ids,
                                                                                  @RequestParam(value = "joinAtS", required = false) Timestamp joinAtS,
                                                                                  @RequestParam(value = "joinAtE", required = false) Timestamp joinAtE) {
         CustomResponse<Page<StoreDto>> res = new CustomResponse<>();
@@ -109,6 +110,7 @@ public class StoreController {
                 if (loginId != null) predicates.add(builder.like(root.get("loginId"), "%" + loginId + "%"));
                 if (location != null)
                     predicates.add(builder.like(root.get("storeInfo").get("location"), "%" + location + "%"));
+                if (ids != null) predicates.add(builder.and(root.get("id").in(utils.str2IntList(ids))));
                 if (state != null)
                     predicates.add(builder.and(root.get("state").in(Arrays.stream(state.split(",")).map(StoreState::valueOf).toList())));
                 if (joinAtS != null) predicates.add(builder.greaterThan(root.get("joinAt"), joinAtS));
@@ -427,6 +429,11 @@ public class StoreController {
             for (Integer storeId : data.getStoreIds()) {
                 Store store = storeService.selectStore(storeId);
                 store.setState(data.state);
+                if (data.state.equals(StoreState.BANNED)) {
+                    StoreInfo storeInfo = storeService.selectStoreInfo(storeId);
+                    storeInfo.setIsReliable(false);
+                    storeService.updateStoreInfo(storeInfo);
+                }
                 stores.add(store);
                 String
                         content =

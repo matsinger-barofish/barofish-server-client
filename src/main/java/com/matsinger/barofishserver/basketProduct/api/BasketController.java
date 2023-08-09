@@ -55,6 +55,19 @@ public class BasketController {
         }
     }
 
+    @GetMapping("/list/count")
+    public ResponseEntity<CustomResponse<Integer>> countBasket(@RequestHeader(value = "Authorization") Optional<String> auth) {
+        CustomResponse<Integer> res = new CustomResponse<>();
+        Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth);
+        if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
+        try {
+            Integer count = basketQueryService.countBasketList(tokenInfo.get().getId());
+            res.setData(Optional.ofNullable(count));
+            return ResponseEntity.ok(res);
+        } catch (Exception e) {
+            return res.defaultError(e);
+        }
+    }
 
     @PostMapping("/add")
     public ResponseEntity<CustomResponse<Boolean>> addBasket(@RequestHeader(value = "Authorization") Optional<String> auth,

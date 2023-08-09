@@ -473,7 +473,8 @@ public class OrderController {
             Orders order = orderService.selectOrder(info.getOrderId());
             if (tokenInfo.get().getId() != order.getUserId()) return res.throwError("타인의 주문 내역입니다.", "NOT_ALLOWED");
             if (data.getCancelReason() == null) return res.throwError("취소/환불 사유를 선택해주세요.", "INPUT_CHECK_REQUIRED");
-            String content = utils.validateString(data.getContent(), 1000L, "사유");
+            String content = null;
+            if (data.getContent() != null) content = utils.validateString(data.getContent(), 1000L, "사유");
             info.setCancelReason(data.getCancelReason());
             info.setCancelReasonContent(content);
             orderService.requestCancelOrderProduct(info.getId());
@@ -811,7 +812,8 @@ public class OrderController {
             if (tokenInfo.get().getId() != order.getUserId()) return res.throwError("타인의 주문 내역입니다.", "NOT_ALLOWED");
             info.setState(OrderProductState.REFUND_REQUEST);
             if (data.getCancelReason() == null) return res.throwError("취소/환불 사유를 선택해주세요.", "INPUT_CHECK_REQUIRED");
-            String content = utils.validateString(data.getContent(), 1000L, "사유");
+            String content = null;
+            if (data.getContent() != null) content = utils.validateString(data.getContent(), 1000L, "사유");
             info.setCancelReason(data.getCancelReason());
             info.setCancelReasonContent(content);
             orderService.updateOrderProductInfo(new ArrayList<>(List.of(info)));

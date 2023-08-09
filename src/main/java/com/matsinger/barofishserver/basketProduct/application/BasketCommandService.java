@@ -4,12 +4,15 @@ import com.matsinger.barofishserver.basketProduct.domain.BasketProductInfo;
 import com.matsinger.barofishserver.basketProduct.domain.BasketProductOption;
 import com.matsinger.barofishserver.basketProduct.repository.BasketProductInfoRepository;
 import com.matsinger.barofishserver.basketProduct.repository.BasketProductOptionRepository;
+import com.matsinger.barofishserver.order.domain.Orders;
+import com.matsinger.barofishserver.order.orderprductinfo.domain.OrderProductInfo;
 import com.matsinger.barofishserver.product.application.ProductService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @RequiredArgsConstructor
@@ -93,5 +96,24 @@ public class BasketCommandService {
             info = infoRepository.save(info);
             optionRepository.save(BasketProductOption.builder().orderProductId(info.getId()).optionId(optionId).build());
         }
+    }
+
+    @Transactional
+    public void deleteBasketAfterOrder(Orders order, List<OrderProductInfo> orderProductInfos) {
+        List<Integer> deleteBasketIds = new ArrayList<>();
+        orderProductInfos.forEach(v -> {
+            List<BasketProductInfo>
+                    infos =
+                    infoRepository.findByUserIdAndProductId(order.getUserId(), v.getProductId());
+            for (BasketProductInfo info : infos) {
+                List<BasketProductOption> options = optionRepository.findAllByOrderProductId(info.getId());
+                for (BasketProductOption option : options) {
+                    if (option.getOptionId() == v.getOptionItemId()) {
+                        deleteBasketIds.add(info.getId());
+                    }
+                }
+            }
+        });
+        deleteBasket(deleteBasketIds);
     }
 }

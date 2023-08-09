@@ -34,6 +34,10 @@ public class CompareItemQueryService {
     private final ProductService productService;
     private final RecommendCompareSetService recommendCompareSetService;
 
+    public Integer countSaveProductWithUserId(Integer userId) {
+        return saveProductRepository.countAllByUserId(userId);
+    }
+
     public List<CompareSetDto> selectPopularCompareSetList(Integer userId) {
         List<RecommendCompareSet>
                 recommendCompareSets =

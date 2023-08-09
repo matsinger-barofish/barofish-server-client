@@ -13,6 +13,9 @@ import com.matsinger.barofishserver.inquiry.domain.Inquiry;
 import com.matsinger.barofishserver.jwt.JwtService;
 import com.matsinger.barofishserver.jwt.TokenAuthType;
 import com.matsinger.barofishserver.jwt.TokenInfo;
+import com.matsinger.barofishserver.notification.application.NotificationCommandService;
+import com.matsinger.barofishserver.notification.dto.NotificationMessage;
+import com.matsinger.barofishserver.notification.dto.NotificationMessageType;
 import com.matsinger.barofishserver.product.application.ProductService;
 import com.matsinger.barofishserver.product.domain.Product;
 import com.matsinger.barofishserver.utils.Common;
@@ -40,6 +43,7 @@ public class InquiryController {
     private final ProductService productService;
     private final AdminLogCommandService adminLogCommandService;
     private final AdminLogQueryService adminLogQueryService;
+    private final NotificationCommandService notificationCommandService;
     private final JwtService jwt;
     private final Common utils;
 
@@ -100,6 +104,21 @@ public class InquiryController {
             Inquiry inquiry = inquiryQueryService.selectInquiry(id);
             InquiryDto inquiryDto = inquiryCommandService.convert2Dto(inquiry, null);
             res.setData(Optional.ofNullable(inquiryDto));
+            return ResponseEntity.ok(res);
+        } catch (Exception e) {
+            return res.defaultError(e);
+        }
+    }
+
+    @GetMapping("/user")
+    public ResponseEntity<CustomResponse<List<InquiryDto>>> selectInquiryListWithUserId(@RequestHeader(value = "Authorization") Optional<String> auth) {
+        CustomResponse<List<InquiryDto>> res = new CustomResponse<>();
+        Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth);
+        try {
+            Integer userId = tokenInfo.get().getId();
+            List<Inquiry> inquiries = inquiryQueryService.selectInquiryListWithUserId(userId);
+            res.setData(Optional.of(inquiries.stream().map(inquiry -> inquiryCommandService.convert2Dto(inquiry,
+                    userId)).toList()));
             return ResponseEntity.ok(res);
         } catch (Exception e) {
             return res.defaultError(e);
@@ -168,6 +187,9 @@ public class InquiryController {
             inquiry.setAnsweredAt(utils.now());
             Inquiry result = inquiryCommandService.updateInquiry(inquiry);
             res.setData(Optional.ofNullable(result.convert2Dto()));
+            notificationCommandService.sendFcmToUser(inquiry.getUserId(),
+                    NotificationMessageType.INQUIRY_ANSWER,
+                    NotificationMessage.builder().build());
             if (adminId != null) {
                 AdminLog
                         adminLog =

@@ -57,7 +57,7 @@ public class GradeController {
     @NoArgsConstructor
     private static class AddGradeReq {
         String name;
-        Integer pointRate;
+        Float pointRate;
         Integer minOrderPrice;
         Integer minOrderCount;
     }

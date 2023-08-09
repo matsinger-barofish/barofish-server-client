@@ -9,4 +9,5 @@ public interface BasketProductInfoRepository extends JpaRepository<BasketProduct
     List<BasketProductInfo> findAllByUserId(Integer userId);
     List<BasketProductInfo> findByUserIdAndProductId(Integer userId, Integer productId);
     void deleteAllByIdIn(List<Integer> ids);
+
 }

@@ -40,14 +40,20 @@ public class BasketQueryService {
 
     }
 
+    public Integer countBasketList(Integer userId) {
+        List<BasketProductInfo> infos = infoRepository.findAllByUserId(userId);
+        return infos.size();
+    }
+
     public List<BasketProductDto> selectBasketList(Integer userId) {
         List<BasketProductInfo> infos = infoRepository.findAllByUserId(userId);
         List<BasketProductDto> productDtos = new ArrayList<>();
         for (BasketProductInfo info : infos) {
 
             Product product = productService.selectProduct(info.getProductId());
-            SimpleStore store = storeService.convert2SimpleDto(storeService.selectStoreInfo(product.getStoreId()),
-                    userId);
+            SimpleStore
+                    store =
+                    storeService.convert2SimpleDto(storeService.selectStoreInfo(product.getStoreId()), userId);
 
             List<BasketProductOption> options = optionRepository.findAllByOrderProductId(info.getId());
             BasketProductOption option = options.size() == 0 ? null : options.get(0);
@@ -56,18 +62,19 @@ public class BasketQueryService {
             if (option == null) {
                 optionDto = null;
             } else {
-                com.matsinger.barofishserver.product.optionitem.domain.OptionItem optionItem = optionItemRepository
-                        .findById(option.getOptionId()).orElseThrow(() -> new IllegalArgumentException(
+                com.matsinger.barofishserver.product.optionitem.domain.OptionItem
+                        optionItem =
+                        optionItemRepository.findById(option.getOptionId()).orElseThrow(() -> new IllegalArgumentException(
                                 "옵션 아이템 정보를 찾을 수 없습니다."));
                 optionDto = optionItem.convert2Dto();
                 optionDto.setDeliverBoxPerAmount(product.getDeliverBoxPerAmount());
             }
 
             ProductListDto productListDto = createProductListDto(product);
-            BasketProductDto basketProductDto = BasketProductDto.builder().id(info.getId()).product(productListDto)
-                    .amount(info.getAmount()).deliveryFee(
-                            product.getDeliveryFee())
-                    .store(store).option(optionDto).build();
+            BasketProductDto
+                    basketProductDto =
+                    BasketProductDto.builder().id(info.getId()).product(productListDto).amount(info.getAmount()).deliveryFee(
+                            product.getDeliveryFee()).store(store).option(optionDto).build();
             productDtos.add(basketProductDto);
         }
         return productDtos;
@@ -76,20 +83,16 @@ public class BasketQueryService {
     private ProductListDto createProductListDto(Product product) {
         StoreInfo storeInfo = storeService.selectStoreInfo(product.getStoreId());
         Integer reviewCount = reviewRepository.countAllByProductId(product.getId());
-        com.matsinger.barofishserver.product.optionitem.domain.OptionItem optionItem = optionItemRepository
-                .findById(product.getRepresentOptionItemId()).orElseThrow(() -> new Error(
+        com.matsinger.barofishserver.product.optionitem.domain.OptionItem
+                optionItem =
+                optionItemRepository.findById(product.getRepresentOptionItemId()).orElseThrow(() -> new Error(
                         "옵션 아이템 정보를 찾을 수 없습니다."));
 
-        return ProductListDto.builder().id(product.getId()).state(product.getState())
-                .image(product.getImages().substring(
-                        1,
-                        product.getImages().length() - 1).split(",")[0])
-                .originPrice(optionItem.getOriginPrice()).discountPrice(
-                        optionItem.getDiscountPrice())
-                .title(product.getTitle()).reviewCount(reviewCount).storeId(storeInfo.getStoreId()).storeName(
-                        storeInfo.getName())
-                .parentCategoryId(product.getCategory().getCategoryId()).filterValues(
-                        productFilterService.selectProductFilterValueListWithProductId(product.getId()))
-                .build();
+        return ProductListDto.builder().id(product.getId()).state(product.getState()).image(product.getImages().substring(
+                1,
+                product.getImages().length() - 1).split(",")[0]).originPrice(optionItem.getOriginPrice()).discountPrice(
+                optionItem.getDiscountPrice()).title(product.getTitle()).reviewCount(reviewCount).storeId(storeInfo.getStoreId()).storeName(
+                storeInfo.getName()).parentCategoryId(product.getCategory().getCategoryId()).filterValues(
+                productFilterService.selectProductFilterValueListWithProductId(product.getId())).build();
     }
 }

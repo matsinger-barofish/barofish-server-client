@@ -11,6 +11,8 @@ import java.util.List;
 public interface InquiryRepository extends JpaRepository<Inquiry, Integer>, JpaSpecificationExecutor<Inquiry> {
     List<Inquiry> findAllByProductId(Integer productId);
 
+    List<Inquiry> findAllByUserId(Integer userId);
+
     Page<Inquiry> findAllByProduct_StoreId(Integer storeId, Pageable pageable);
 
     void deleteAllByUserId(Integer userId);
