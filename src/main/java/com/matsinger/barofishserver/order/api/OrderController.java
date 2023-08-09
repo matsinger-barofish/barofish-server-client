@@ -477,7 +477,11 @@ public class OrderController {
             if (data.getContent() != null) content = utils.validateString(data.getContent(), 1000L, "사유");
             info.setCancelReason(data.getCancelReason());
             info.setCancelReasonContent(content);
+            Product product = productService.selectProduct(info.getProductId());
             orderService.requestCancelOrderProduct(info.getId());
+            notificationCommandService.sendFcmToUser(tokenInfo.get().getId(),
+                    NotificationMessageType.ORDER_CANCEL,
+                    NotificationMessage.builder().productName(product.getTitle()).isCanceledByRegion(false).build());
             orderService.updateOrderProductInfo(new ArrayList<>(List.of(info)));
             res.setData(Optional.of(true));
             return ResponseEntity.ok(res);

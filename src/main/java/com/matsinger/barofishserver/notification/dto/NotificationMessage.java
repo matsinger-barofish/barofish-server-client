@@ -31,10 +31,9 @@ public class NotificationMessage {
                     String.format("주문하신 <strong>%s</strong> 상품의 배송이 시작되었습니다. 빠르고 신선하게 배송해드릴게요 :)", this.productName);
             case DELIVER_DONE ->
                     String.format("주문하신 <strong>%s</strong> 상품의 배송을 완료하였습니다. 이용해주셔서 감사합니다.", this.productName);
-            case ORDER_CANCEL ->
-                    this.isCanceledByRegion ? String.format("주문하신 <string>%s</strong> 상품이 주문 불가 지역이라 자동으로 " +
-                            "주문이 취소되었습니다.", this.productName) : String.format("주문하신 <strong>%s</strong> 상품이 취소되었습니다.",
-                            this.productName);
+            case ORDER_CANCEL -> this.isCanceledByRegion != null && this.isCanceledByRegion ? String.format(
+                    "주문하신 <string>%s</strong> 상품이 주문 불가 지역이라" + " 자동으로 " + "주문이 취소되었습니다.",
+                    this.productName) : String.format("주문하신 <strong>%s</strong> 상품이 취소되었습니다.", this.productName);
             case CANCEL_REJECT -> String.format("신청하신 <strong>%s</strong> 상품 취소건이 반려되었습니다.", this.productName);
             case EXCHANGE_REJECT -> String.format("신청하신 <strong>%s</strong> 상품 교환건이 반려되었습니다.", this.productName);
             case EXCHANGE_ACCEPT -> String.format("신청하신 <strong>%s</strong> 상품 교환건이 접수되었습니다.", this.productName);
