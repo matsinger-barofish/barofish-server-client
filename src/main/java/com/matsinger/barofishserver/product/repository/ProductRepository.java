@@ -60,7 +60,8 @@ public interface ProductRepository extends JpaRepository<Product, Integer>, JpaS
             "and (:#{#filterFieldIds==null ? null : #filterFieldIds.size() } is null or p.id in (select p1.id from " +
             "product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
             "where (:#{#filterFieldIds==null ? null : #filterFieldIds.size() } is null or  ps.field_id in " +
-            "(:filterFieldIds) ) )) \n" +
+            "(:filterFieldIds) ) GROUP BY p1.id HAVING COUNT(*) = :#{#filterFieldIds==null ? 0 : #filterFieldIds.size" +
+            "() } )) \n" +
             "group by p.id \n" +
             "order by COUNT (*) desc", nativeQuery = true, countQuery = "select count(*) from product p \n" +
             "join category c ON p.category_id = c.id \n" +
@@ -75,7 +76,8 @@ public interface ProductRepository extends JpaRepository<Product, Integer>, JpaS
             "and (:#{#filterFieldIds==null ? null : #filterFieldIds.size() } is null or p.id in (select p1.id from " +
             "product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
             "where (:#{#filterFieldIds==null ? null : #filterFieldIds.size() } is null or  ps.field_id in " +
-            "(:filterFieldIds) ) )) \n" +
+            "(:filterFieldIds) ) GROUP BY p1.id HAVING COUNT(*) = :#{#filterFieldIds==null ? 0 : #filterFieldIds.size" +
+            "() } )) \n" +
             "group by p.id \n")
     Page<Product> findWithPaginationSortByRecommend(Pageable pageable,
                                                     @Param("categoryIds") List<Integer> categoryIds,
@@ -96,7 +98,8 @@ public interface ProductRepository extends JpaRepository<Product, Integer>, JpaS
             "and (:#{#filterFieldIds==null ? null : #filterFieldIds.size() } is null or p.id in (select p1.id from " +
             "product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
             "where (:#{#filterFieldIds==null ? null : #filterFieldIds.size() } is null or  ps.field_id in " +
-            "(:filterFieldIds) ) )) \n" +
+            "(:filterFieldIds) ) GROUP BY p1.id HAVING COUNT(*) = :#{#filterFieldIds==null ? 0 : #filterFieldIds.size" +
+            "() } )) \n" +
             "group by p.id \n" +
             "order by p.created_at desc", nativeQuery = true, countQuery = "select count(*) from product p \n" +
             "join category c ON p.category_id = c.id \n" +
@@ -110,7 +113,8 @@ public interface ProductRepository extends JpaRepository<Product, Integer>, JpaS
             "and (:#{#filterFieldIds==null ? null : #filterFieldIds.size() } is null or p.id in (select p1.id from " +
             "product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
             "where (:#{#filterFieldIds==null ? null : #filterFieldIds.size() } is null or  ps.field_id in " +
-            "(:filterFieldIds) ) )) \n" +
+            "(:filterFieldIds) ) GROUP BY p1.id HAVING COUNT(*) = :#{#filterFieldIds==null ? 0 : #filterFieldIds.size" +
+            "() } )) \n" +
             "group by p.id \n")
     Page<Product> findWithPaginationSortByNewer(Pageable pageable,
                                                 @Param("categoryIds") List<Integer> categoryIds,
@@ -132,7 +136,8 @@ public interface ProductRepository extends JpaRepository<Product, Integer>, JpaS
             "and (:#{#filterFieldIds==null ? null : #filterFieldIds.size() } is null or p.id in (select p1.id from " +
             "product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
             "where (:#{#filterFieldIds==null ? null : #filterFieldIds.size() } is null or  ps.field_id in " +
-            "(:filterFieldIds) ) )) \n" +
+            "(:filterFieldIds) ) GROUP BY p1.id HAVING COUNT(*) = :#{#filterFieldIds==null ? 0 : #filterFieldIds.size" +
+            "() } )) \n" +
             "group by p.id \n" +
             "order by oi.discount_price asc", nativeQuery = true, countQuery = "select count(*) from product p \n" +
             "join category c ON p.category_id = c.id \n" +
@@ -146,7 +151,8 @@ public interface ProductRepository extends JpaRepository<Product, Integer>, JpaS
             "and (:#{#filterFieldIds==null ? null : #filterFieldIds.size() } is null or p.id in (select p1.id from " +
             "product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
             "where (:#{#filterFieldIds==null ? null : #filterFieldIds.size() } is null or  ps.field_id in " +
-            "(:filterFieldIds) ) )) \n" +
+            "(:filterFieldIds) ) GROUP BY p1.id HAVING COUNT(*) = :#{#filterFieldIds==null ? 0 : #filterFieldIds.size" +
+            "() } )) \n" +
             "group by p.id \n")
     Page<Product> findWithPaginationSortByLowPrice(Pageable pageable,
                                                    @Param("categoryIds") List<Integer> categoryIds,
@@ -168,7 +174,8 @@ public interface ProductRepository extends JpaRepository<Product, Integer>, JpaS
             "and (:#{#filterFieldIds==null ? null : #filterFieldIds.size() } is null or p.id in (select p1.id from " +
             "product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
             "where (:#{#filterFieldIds==null ? null : #filterFieldIds.size() } is null or  ps.field_id in " +
-            "(:filterFieldIds) ) )) \n" +
+            "(:filterFieldIds) ) GROUP BY p1.id HAVING COUNT(*) = :#{#filterFieldIds==null ? 0 : #filterFieldIds.size" +
+            "() } )) \n" +
             "group by p.id \n" +
             "order by oi.discount_price desc", nativeQuery = true, countQuery = "select count(*) from product p \n" +
             "join category c ON p.category_id = c.id \n" +
@@ -182,7 +189,8 @@ public interface ProductRepository extends JpaRepository<Product, Integer>, JpaS
             "and (:#{#filterFieldIds==null ? null : #filterFieldIds.size() } is null or p.id in (select p1.id from " +
             "product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
             "where (:#{#filterFieldIds==null ? null : #filterFieldIds.size() } is null or  ps.field_id in " +
-            "(:filterFieldIds) ) )) \n" +
+            "(:filterFieldIds) ) GROUP BY p1.id HAVING COUNT(*) = :#{#filterFieldIds==null ? 0 : #filterFieldIds.size" +
+            "() } )) \n" +
             "group by p.id \n")
     Page<Product> findWithPaginationSortByHighPrice(Pageable pageable,
                                                     @Param("categoryIds") List<Integer> categoryIds,
@@ -204,7 +212,8 @@ public interface ProductRepository extends JpaRepository<Product, Integer>, JpaS
             "and (:#{#filterFieldIds==null ? null : #filterFieldIds.size() } is null or p.id in (select p1.id from " +
             "product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
             "where (:#{#filterFieldIds==null ? null : #filterFieldIds.size() } is null or  ps.field_id in " +
-            "(:filterFieldIds) ) )) \n" +
+            "(:filterFieldIds) ) GROUP BY p1.id HAVING COUNT(*) = :#{#filterFieldIds==null ? 0 : #filterFieldIds.size" +
+            "() } )) \n" +
             "group by p.id \n" +
             "order by COUNT(*) desc", nativeQuery = true, countQuery = "select count(*) from product p \n" +
             "join category c ON p.category_id = c.id \n" +
@@ -219,7 +228,8 @@ public interface ProductRepository extends JpaRepository<Product, Integer>, JpaS
             "and (:#{#filterFieldIds==null ? null : #filterFieldIds.size() } is null or p.id in (select p1.id from " +
             "product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
             "where (:#{#filterFieldIds==null ? null : #filterFieldIds.size() } is null or  ps.field_id in " +
-            "(:filterFieldIds) ) )) \n" +
+            "(:filterFieldIds) ) GROUP BY p1.id HAVING COUNT(*) = :#{#filterFieldIds==null ? 0 : #filterFieldIds.size" +
+            "() } )) \n" +
             "group by p.id \n")
     Page<Product> findWithPaginationSortByLike(Pageable pageable,
                                                @Param("categoryIds") List<Integer> categoryIds,
@@ -241,7 +251,8 @@ public interface ProductRepository extends JpaRepository<Product, Integer>, JpaS
             "and (:#{#filterFieldIds==null ? null : #filterFieldIds.size() } is null or p.id in (select p1.id from " +
             "product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
             "where (:#{#filterFieldIds==null ? null : #filterFieldIds.size() } is null or  ps.field_id in " +
-            "(:filterFieldIds) ) )) \n" +
+            "(:filterFieldIds) ) GROUP BY p1.id HAVING COUNT(*) = :#{#filterFieldIds==null ? 0 : #filterFieldIds.size" +
+            "() } )) \n" +
             "group by p.id \n" +
             "order by COUNT(*) desc", nativeQuery = true, countQuery = "select count(*) from product p \n" +
             "join category c ON p.category_id = c.id \n" +
@@ -256,7 +267,8 @@ public interface ProductRepository extends JpaRepository<Product, Integer>, JpaS
             "and (:#{#filterFieldIds==null ? null : #filterFieldIds.size() } is null or p.id in (select p1.id from " +
             "product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
             "where (:#{#filterFieldIds==null ? null : #filterFieldIds.size() } is null or  ps.field_id in " +
-            "(:filterFieldIds) ) )) \n" +
+            "(:filterFieldIds) ) GROUP BY p1.id HAVING COUNT(*) = :#{#filterFieldIds==null ? 0 : #filterFieldIds.size" +
+            "() } )) \n" +
             "group by p.id \n")
     Page<Product> findWithPaginationSortByReview(Pageable pageable,
                                                  @Param("categoryIds") List<Integer> categoryIds,
@@ -278,7 +290,8 @@ public interface ProductRepository extends JpaRepository<Product, Integer>, JpaS
             "and (:#{#filterFieldIds==null ? null : #filterFieldIds.size() } is null or p.id in (select p1.id from " +
             "product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
             "where (:#{#filterFieldIds==null ? null : #filterFieldIds.size() } is null or  ps.field_id in " +
-            "(:filterFieldIds) ) )) \n" +
+            "(:filterFieldIds) ) GROUP BY p1.id HAVING COUNT(*) = :#{#filterFieldIds==null ? 0 : #filterFieldIds.size" +
+            "() } )) \n" +
             "group by p.id \n" +
             "order by COUNT( o.state not in (\'CANCELED\',\'WAIT_DEPOSIT\')) desc", nativeQuery = true, countQuery =
             "select count(*) from " +
@@ -296,7 +309,8 @@ public interface ProductRepository extends JpaRepository<Product, Integer>, JpaS
                     "and (:#{#filterFieldIds==null ? null : #filterFieldIds.size() } is null or p.id in (select p1.id from " +
                     "product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
                     "where (:#{#filterFieldIds==null ? null : #filterFieldIds.size() } is null or  ps.field_id in " +
-                    "(:filterFieldIds) ) )) \n" +
+                    "(:filterFieldIds) ) GROUP BY p1.id HAVING COUNT(*) = :#{#filterFieldIds==null ? 0 : #filterFieldIds.size" +
+                    "() } )) \n" +
                     "group by p.id \n")
     Page<Product> findWithPaginationSortByOrder(Pageable pageable,
                                                 @Param("categoryIds") List<Integer> categoryIds,
@@ -315,7 +329,8 @@ public interface ProductRepository extends JpaRepository<Product, Integer>, JpaS
             "and (:#{#filterFieldIds==null ? null : #filterFieldIds.size() } is null or p.id in (select p1.id from " +
             "product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
             "where (:#{#filterFieldIds==null ? null : #filterFieldIds.size() } is null or  ps.field_id in " +
-            "(:filterFieldIds) ) )) \n" +
+            "(:filterFieldIds) ) GROUP BY p1.id HAVING COUNT(*) = :#{#filterFieldIds==null ? 0 : #filterFieldIds.size" +
+            "() } )) \n" +
             "order by p.created_at desc", nativeQuery = true, countQuery = "select count(*) from product p " +
             "join category c ON p.category_id = c.id " +
             "where p.state = \'ACTIVE\' " +
@@ -326,7 +341,8 @@ public interface ProductRepository extends JpaRepository<Product, Integer>, JpaS
             "and (:#{#filterFieldIds==null ? null : #filterFieldIds.size() } is null or p.id in (select p1.id from " +
             "product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
             "where (:#{#filterFieldIds==null ? null : #filterFieldIds.size() } is null or  ps.field_id in " +
-            "(:filterFieldIds) ) )) \n")
+            "(:filterFieldIds) ) GROUP BY p1.id HAVING COUNT(*) = :#{#filterFieldIds==null ? 0 : #filterFieldIds.size" +
+            "() } )) \n")
     Page<Product> findNewerWithPagination(Pageable pageable,
                                           @Param("categoryIds") List<Integer> categoryIds,
                                           @Param("filterFieldIds") List<Integer> filterFieldIds,
@@ -343,7 +359,8 @@ public interface ProductRepository extends JpaRepository<Product, Integer>, JpaS
             "and (:#{#filterFieldIds==null ? null : #filterFieldIds.size() } is null or p.id in (select p1.id from " +
             "product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
             "where (:#{#filterFieldIds==null ? null : #filterFieldIds.size() } is null or  ps.field_id in " +
-            "(:filterFieldIds) ) )) \n" +
+            "(:filterFieldIds) ) GROUP BY p1.id HAVING COUNT(*) = :#{#filterFieldIds==null ? 0 : #filterFieldIds.size" +
+            "() } )) \n" +
             "and oi.origin_price != 0\n" +
             " ORDER BY IF( oi.origin_price != 0, oi.discount_price / oi.origin_price, 100 )", nativeQuery = true, countQuery =
             "select count(*) from product p " +
@@ -356,7 +373,8 @@ public interface ProductRepository extends JpaRepository<Product, Integer>, JpaS
                     "and (:#{#filterFieldIds==null ? null : #filterFieldIds.size() } is null or p.id in (select p1.id from " +
                     "product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
                     "where (:#{#filterFieldIds==null ? null : #filterFieldIds.size() } is null or  ps.field_id in " +
-                    "(:filterFieldIds) ) )) \n" +
+                    "(:filterFieldIds) ) GROUP BY p1.id HAVING COUNT(*) = :#{#filterFieldIds==null ? 0 : #filterFieldIds.size" +
+                    "() } )) \n" +
                     "and oi.origin_price != 0\n")
     Page<Product> findDiscountWithPagination(Pageable pageable,
                                              @Param("categoryIds") List<Integer> categoryIds,

@@ -22,12 +22,14 @@ public class InquiryQueryService {
     private final InquiryRepository inquiryRepository;
     private final ProductRepository productRepository;
     private final UserInfoRepository userInfoRepository;
+
     public Page<Inquiry> selectAllInquiryList(PageRequest pageRequest,
                                               Specification<com.matsinger.barofishserver.inquiry.domain.Inquiry> spec) {
         return inquiryRepository.findAll(spec, pageRequest);
     }
 
-    public org.springframework.data.domain.Page<Inquiry> selectStoreInquiryList(Integer storeId, PageRequest pageRequest) {
+    public org.springframework.data.domain.Page<Inquiry> selectStoreInquiryList(Integer storeId,
+                                                                                PageRequest pageRequest) {
         return inquiryRepository.findAllByProduct_StoreId(storeId, pageRequest);
     }
 
@@ -39,5 +41,9 @@ public class InquiryQueryService {
         return inquiryRepository.findById(inquiryId).orElseThrow(() -> {
             throw new Error("문의 내용을 찾을 수 없습니다.");
         });
+    }
+
+    public List<Inquiry> selectInquiryListWithUserId(Integer userId) {
+        return inquiryRepository.findAllByUserId(userId);
     }
 }

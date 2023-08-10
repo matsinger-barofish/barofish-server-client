@@ -24,7 +24,9 @@ public interface CouponRepository extends JpaRepository<Coupon, Integer>, JpaSpe
 
     @Query(value = "SELECT c.*\n" +
             "FROM coupon c \n" +
-            "WHERE c.id IN (SELECT coupon_id FROM coupon_user_map WHERE user_id = :userId) AND c.state = \'ACTIVE\' " +
+            "WHERE c.id IN (SELECT coupon_id FROM coupon_user_map WHERE user_id = :userId AND is_used = FALSE) AND c" +
+            ".state = " +
+            "\'ACTIVE\' " +
             "AND" +
             " c.start_at < NOW( )\n" +
             "  AND NOW( ) < c.end_at", nativeQuery = true)

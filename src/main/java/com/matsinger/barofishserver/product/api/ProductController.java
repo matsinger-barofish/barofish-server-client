@@ -2,6 +2,9 @@ package com.matsinger.barofishserver.product.api;
 
 import com.matsinger.barofishserver.address.application.AddressQueryService;
 import com.matsinger.barofishserver.address.domain.Address;
+import com.matsinger.barofishserver.admin.application.AdminCommandService;
+import com.matsinger.barofishserver.admin.application.AdminQueryService;
+import com.matsinger.barofishserver.admin.domain.Admin;
 import com.matsinger.barofishserver.admin.log.application.AdminLogCommandService;
 import com.matsinger.barofishserver.admin.log.application.AdminLogQueryService;
 import com.matsinger.barofishserver.admin.log.domain.AdminLog;
@@ -65,6 +68,7 @@ public class ProductController {
     private final DifficultDeliverAddressCommandService difficultDeliverAddressCommandService;
     private final AdminLogQueryService adminLogQueryService;
     private final AdminLogCommandService adminLogCommandService;
+    private final AdminQueryService adminQueryService;
     private final JwtService jwt;
 
     private final Common utils;
@@ -76,14 +80,16 @@ public class ProductController {
         CustomResponse<List<ProductListDto>> res = new CustomResponse<>();
         try {
             List<Integer> idList = utils.str2IntList(ids);
-            List<Product> products = productService.selectProductListWithIds(idList);
-            res.setData(Optional.of(products.stream().map(productService::convert2ListDto).toList()));
 
-//            List<ProductListDto> productListDtos = new ArrayList<>();
-//            for (Integer id : idList) {
-//                productListDtos.add(productQueryService.createProductListDtos(id));
-//            }
-//            res.setData(Optional.of(productListDtos));
+            List<ProductListDto> productListDtos = new ArrayList<>();
+            for (Integer id : idList) {
+                Optional<Product> product = productService.selectOptioanlProduct(id);
+                product.ifPresent(value -> {
+                    if (value.getState().equals(ProductState.ACTIVE))
+                        productListDtos.add(productService.convert2ListDto(value));
+                });
+            }
+            res.setData(Optional.of(productListDtos));
             return ResponseEntity.ok(res);
         } catch (Exception e) {
             return res.defaultError(e);
@@ -230,7 +236,7 @@ public class ProductController {
 
     @GetMapping("/excel-list")
     public ResponseEntity<CustomResponse<List<List<ExcelProductDto2>>>> selectProductListForExcel(@RequestHeader(value = "Authorization") Optional<String> auth,
-                                                                                            @RequestParam(value = "ids", required = false) String idsStr) {
+                                                                                                  @RequestParam(value = "ids", required = false) String idsStr) {
         CustomResponse<List<List<ExcelProductDto2>>> res = new CustomResponse<>();
         Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
         if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
@@ -668,14 +674,17 @@ public class ProductController {
                 productFilterService.deleteAllFilterValueWithProductId(product.getId());
                 productFilterService.addAllProductFilter(filterValues);
             }
-            if (adminId != null) {
-                String content = "상품 정보를 수정하였습니다.";
-                AdminLog
-                        adminLog =
-                        AdminLog.builder().id(adminLogQueryService.getAdminLogId()).adminId(adminId).type(AdminLogType.PARTNER).targetId(
-                                String.valueOf(product.getId())).content(content).createdAt(utils.now()).build();
-                adminLogCommandService.saveAdminLog(adminLog);
-            }
+            if (adminId == null) adminId = 1;
+            Admin admin = adminQueryService.selectAdmin(adminId);
+            String
+                    content =
+                    String.format("상품 정보를 수정하였습니다.[%s]",
+                            tokenInfo.get().getType().equals(TokenAuthType.PARTNER) ? "파트너" : admin.getName());
+            AdminLog
+                    adminLog =
+                    AdminLog.builder().id(adminLogQueryService.getAdminLogId()).adminId(adminId).type(AdminLogType.PARTNER).targetId(
+                            String.valueOf(product.getId())).content(content).createdAt(utils.now()).build();
+            adminLogCommandService.saveAdminLog(adminLog);
             res.setData(Optional.ofNullable(productService.convert2SimpleDto(result, null)));
             return ResponseEntity.ok(res);
         } catch (Exception e) {

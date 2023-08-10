@@ -1,5 +1,6 @@
 package com.matsinger.barofishserver.payment.portone.api;
 
+import com.matsinger.barofishserver.basketProduct.application.BasketCommandService;
 import com.matsinger.barofishserver.coupon.application.CouponCommandService;
 import com.matsinger.barofishserver.notification.application.NotificationCommandService;
 import com.matsinger.barofishserver.notification.dto.NotificationMessage;
@@ -48,6 +49,7 @@ public class PortOneCallbackHandler {
     private final CouponCommandService couponCommandService;
     private final SmsService sms;
     private final NotificationCommandService notificationCommandService;
+    private final BasketCommandService basketCommandService;
 
 
     @PostMapping("")
@@ -112,7 +114,8 @@ public class PortOneCallbackHandler {
                             info.setState(OrderProductState.CANCELED);
                             notificationCommandService.sendFcmToUser(order.getUserId(),
                                     NotificationMessageType.ORDER_CANCEL,
-                                    NotificationMessage.builder().productName(info.getProduct().getTitle()).build());
+                                    NotificationMessage.builder().productName(info.getProduct().getTitle()).isCanceledByRegion(
+                                            true).build());
                         } else {
                             OptionItem optionItem = productService.selectOptionItem(info.getOptionItemId());
                             if (optionItem.getAmount() != null)
@@ -136,6 +139,7 @@ public class PortOneCallbackHandler {
                         order.setState(OrderState.PAYMENT_DONE);
                         order.setImpUid(data.getImp_uid());
                     }
+                    basketCommandService.deleteBasketAfterOrder(order, infos);
                     orderService.updateOrderProductInfo(infos);
                     orderService.updateOrder(order);
                     paymentService.upsertPayments(paymentData);

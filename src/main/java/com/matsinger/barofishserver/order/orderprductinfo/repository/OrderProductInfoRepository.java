@@ -19,6 +19,7 @@ public interface OrderProductInfoRepository extends JpaRepository<OrderProductIn
 
     List<OrderProductInfo> findAllByIdIn(List<Integer> ids);
 
+    List<OrderProductInfo> findAllByDeliveryDoneAtBefore(Timestamp timestamp);
 
     List<OrderProductInfo> findAllByProduct_StoreIdAndIsSettled(Integer storeId, Boolean isSettled);
 
