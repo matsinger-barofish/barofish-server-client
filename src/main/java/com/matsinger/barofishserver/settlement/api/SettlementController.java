@@ -10,14 +10,11 @@ import com.matsinger.barofishserver.order.orderprductinfo.domain.OrderProductSta
 import com.matsinger.barofishserver.product.application.ProductService;
 import com.matsinger.barofishserver.settlement.application.SettlementCommandService;
 import com.matsinger.barofishserver.settlement.application.SettlementQueryService;
-import com.matsinger.barofishserver.settlement.dto.ProcessSettleReq;
-import com.matsinger.barofishserver.settlement.dto.SettlementAmountRes;
-import com.matsinger.barofishserver.settlement.dto.SettlementDto;
+import com.matsinger.barofishserver.settlement.dto.*;
 import com.matsinger.barofishserver.settlement.domain.SettlementOrderBy;
 import com.matsinger.barofishserver.settlement.domain.SettlementState;
 import com.matsinger.barofishserver.settlement.domain.OrderProductInfoOrderBy;
 import com.matsinger.barofishserver.settlement.domain.Settlement;
-import com.matsinger.barofishserver.settlement.dto.cancelSettleReq;
 import com.matsinger.barofishserver.store.application.StoreService;
 import com.matsinger.barofishserver.store.domain.StoreInfo;
 import com.matsinger.barofishserver.utils.Common;
@@ -27,6 +24,11 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.xssf.usermodel.XSSFSheet;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -35,6 +37,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import java.util.*;
 
 @RestController
@@ -100,6 +103,45 @@ public class SettlementController {
             PageRequest pageRequest = PageRequest.of(page, take, Sort.by(orderType, orderBy.label));
             Page<OrderProductInfo> infos = orderService.selectOrderProductInfoList(spec, pageRequest);
             Page<OrderProductInfoDto> result = infos.map(orderService::convert2InfoDto);
+            res.setData(Optional.of(result));
+            return ResponseEntity.ok(res);
+        } catch (Exception e) {
+            return res.defaultError(e);
+        }
+    }
+
+    @GetMapping("/order/list/download")
+    public ResponseEntity<CustomResponse<Page<OrderSettlementExcelDto>>> selectSettlementOrderListDownload(@RequestHeader(value = "Authorization") Optional<String> auth,
+                                                                                               @RequestParam(value = "page", required = false, defaultValue = "0") Integer page,
+                                                                                               @RequestParam(value = "take", required = false, defaultValue = "10") Integer take,
+                                                                                               @RequestParam(value = "orderby", required = false, defaultValue = "isSettled") OrderProductInfoOrderBy orderBy,
+                                                                                               @RequestParam(value = "orderType", required = false, defaultValue = "DESC") Sort.Direction orderType,
+                                                                                               @RequestParam(value = "isSettled", required = false) Boolean isSettled,
+                                                                                               @RequestParam(value = "storeId", required = false) Integer storeId,
+                                                                                               @RequestParam(value = "settledAtS", required = false) Timestamp settledAtS,
+                                                                                               @RequestParam(value = "settledAtE", required = false) Timestamp settledAtE) {
+        CustomResponse<Page<OrderSettlementExcelDto>> res = new CustomResponse<>();
+        Optional<TokenInfo>
+                tokenInfo =
+                jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN, TokenAuthType.PARTNER), auth);
+        if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
+        try {
+            Specification<OrderProductInfo> spec = (root, query, builder) -> {
+                List<Predicate> predicates = new ArrayList<>();
+                if (storeId != null) predicates.add(builder.equal(root.get("product").get("storeId"), storeId));
+                if (isSettled != null) predicates.add(builder.equal(root.get("isSettled"), isSettled));
+                if (settledAtS != null) predicates.add(builder.greaterThan(root.get("settledAt"), settledAtS));
+                if (settledAtE != null) predicates.add(builder.lessThan(root.get("settledAt"), settledAtE));
+                if (tokenInfo.get().getType().equals(TokenAuthType.PARTNER))
+                    predicates.add(builder.equal(root.get("product").get("storeId"), tokenInfo.get().getId()));
+                predicates.add(builder.equal(root.get("state"), OrderProductState.FINAL_CONFIRM));
+                return builder.and(predicates.toArray(new Predicate[0]));
+            };
+            PageRequest pageRequest = PageRequest.of(page, take, Sort.by(orderType, orderBy.label));
+
+            Page<OrderProductInfo> infos = orderService.selectOrderProductInfoList(spec, pageRequest);
+
+            Page<OrderSettlementExcelDto> result = settlementQueryService.createOrderSettlementResponse(infos);
             res.setData(Optional.of(result));
             return ResponseEntity.ok(res);
         } catch (Exception e) {

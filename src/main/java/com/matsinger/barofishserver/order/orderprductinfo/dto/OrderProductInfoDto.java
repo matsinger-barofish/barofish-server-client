@@ -6,6 +6,7 @@ import com.matsinger.barofishserver.order.orderprductinfo.domain.OrderProductSta
 import com.matsinger.barofishserver.order.orderprductinfo.domain.OrderCancelReason;
 import com.matsinger.barofishserver.product.dto.ProductListDto;
 
+import com.matsinger.barofishserver.product.optionitem.dto.OptionItemDto;
 import com.matsinger.barofishserver.store.domain.StoreDeliverFeeType;
 import lombok.Builder;
 import lombok.Getter;
@@ -19,7 +20,7 @@ public class OrderProductInfoDto {
     private String orderId;
     private int productId;
     private int optionItemId;
-    private com.matsinger.barofishserver.product.optionitem.dto.OptionItemDto optionItem;
+    private OptionItemDto optionItem;
     private OrderProductState state;
     private Integer settlePrice;
     private int price;

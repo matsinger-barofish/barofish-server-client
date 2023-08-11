@@ -8,7 +8,6 @@ import com.matsinger.barofishserver.deliver.repository.DeliveryCompanyRepository
 import com.matsinger.barofishserver.notification.application.NotificationCommandService;
 import com.matsinger.barofishserver.notification.dto.NotificationMessage;
 import com.matsinger.barofishserver.notification.dto.NotificationMessageType;
-import com.matsinger.barofishserver.order.api.OrderController;
 import com.matsinger.barofishserver.order.domain.OrderDeliverPlace;
 import com.matsinger.barofishserver.order.domain.OrderPaymentWay;
 import com.matsinger.barofishserver.order.domain.OrderState;
@@ -27,7 +26,6 @@ import com.matsinger.barofishserver.order.orderprductinfo.repository.OrderProduc
 import com.matsinger.barofishserver.order.orderprductinfo.repository.OrderProductOptionRepository;
 import com.matsinger.barofishserver.order.repository.OrderRepository;
 import com.matsinger.barofishserver.payment.application.PaymentService;
-import com.matsinger.barofishserver.payment.domain.Payments;
 import com.matsinger.barofishserver.product.application.ProductService;
 import com.matsinger.barofishserver.product.difficultDeliverAddress.application.DifficultDeliverAddressQueryService;
 import com.matsinger.barofishserver.product.difficultDeliverAddress.domain.DifficultDeliverAddress;
@@ -40,8 +38,6 @@ import com.matsinger.barofishserver.store.domain.StoreInfo;
 import com.matsinger.barofishserver.user.application.UserCommandService;
 import com.matsinger.barofishserver.userinfo.domain.UserInfo;
 import com.matsinger.barofishserver.userinfo.dto.UserInfoDto;
-import com.siot.IamportRestClient.exception.IamportResponseException;
-import jakarta.persistence.Tuple;
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.JoinType;
 import jakarta.persistence.criteria.Predicate;
@@ -52,10 +48,8 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
-import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Service;
 
-import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -431,7 +425,7 @@ public class OrderService {
         Integer totalPrice = data.getProducts().stream().mapToInt(v -> {
             Product product = productService.findById(v.getProductId());
             products.add(product);
-            return getProductPrice(product, v.getOptionId(), v.getAmount());
+            return getProductPrice(product, v.getOptionItemId(), v.getAmount());
         }).sum();
 
         Integer deliverFee = products.stream().map(Product::getStoreId).distinct().mapToInt(v -> {
@@ -440,7 +434,7 @@ public class OrderService {
                 for (OrderProductReq d : data.getProducts()) {
                     if (d.getProductId() == v1.getId()) {
                         Product product = productService.selectProduct(d.getProductId());
-                        return getProductPrice(v1, d.getOptionId(), d.getAmount());
+                        return getProductPrice(v1, d.getOptionItemId(), d.getAmount());
                     }
                 }
                 return 0;

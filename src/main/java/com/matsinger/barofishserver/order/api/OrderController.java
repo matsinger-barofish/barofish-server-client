@@ -1,6 +1,5 @@
 package com.matsinger.barofishserver.order.api;
 
-import com.matsinger.barofishserver.admin.domain.Admin;
 import com.matsinger.barofishserver.admin.log.application.AdminLogCommandService;
 import com.matsinger.barofishserver.admin.log.application.AdminLogQueryService;
 import com.matsinger.barofishserver.admin.log.domain.AdminLog;
@@ -19,7 +18,6 @@ import com.matsinger.barofishserver.notification.dto.NotificationMessageType;
 import com.matsinger.barofishserver.order.application.OrderService;
 import com.matsinger.barofishserver.order.domain.*;
 import com.matsinger.barofishserver.order.dto.*;
-import com.matsinger.barofishserver.order.orderprductinfo.domain.OrderCancelReason;
 import com.matsinger.barofishserver.order.orderprductinfo.domain.OrderProductInfo;
 import com.matsinger.barofishserver.order.orderprductinfo.domain.OrderProductState;
 import com.matsinger.barofishserver.payment.application.PaymentService;
@@ -309,19 +307,19 @@ public class OrderController {
                         return res.throwError("주문 불가능한 상품입니다.", "NOT_ALLOWED");
                 }
 
-                OptionItem optionItem = productService.selectOptionItem(productReq.getOptionId());
+                OptionItem optionItem = productService.selectOptionItem(productReq.getOptionItemId());
                 if (optionItem.getDeliverBoxPerAmount() != null &&
                         optionItem.getMaxAvailableAmount() < productReq.getAmount())
                     return res.throwError("최대 주문 수량을 초과하였습니다.", "INPUT_CHECK_REQUIRED");
                 optionItem.reduceAmount(productReq.getAmount());
-                int price = orderService.getProductPrice(product, productReq.getOptionId(), productReq.getAmount());
+                int price = orderService.getProductPrice(product, productReq.getOptionItemId(), productReq.getAmount());
                 if (!product.getNeedTaxation()) {
                     taxFreeAmount += price;
                 }
                 Integer
                         deliveryFee =
-                        orderService.getProductDeliveryFee(product, productReq.getOptionId(), productReq.getAmount());
-                optionItems.add(productService.selectOptionItem(productReq.getOptionId()));
+                        orderService.getProductDeliveryFee(product, productReq.getOptionItemId(), productReq.getAmount());
+                optionItems.add(productService.selectOptionItem(productReq.getOptionItemId()));
                 infos.add(OrderProductInfo.builder().optionItemId(optionItem.getId()).orderId(orderId).productId(
                         productReq.getProductId()).state(OrderProductState.WAIT_DEPOSIT).settlePrice(storeInfo.getSettlementRate() !=
                         null ? (int) ((storeInfo.getSettlementRate() / 100.) *
