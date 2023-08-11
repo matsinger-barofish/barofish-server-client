@@ -497,7 +497,7 @@ public class ProductService {
         return ExcelProductDto.builder().storeLoginId(store.getLoginId()).storeName(storeInfo.getName()).firstCategoryName(
                 product.getCategory().getParentCategory().getName()).secondCategoryName(product.getCategory().getName()).productName(
                 product.getTitle()).expectedDeliverDay(product.getExpectedDeliverDay()).deliveryInfo(product.getDeliveryInfo()).deliveryFee(
-                product.getDeliveryFee()).deliverBoxPerAmount(product.getDeliverBoxPerAmount()).isActive(product.getState().equals(
+                storeInfo.getDeliverFee()).deliverBoxPerAmount(product.getDeliverBoxPerAmount()).isActive(product.getState().equals(
                 ProductState.ACTIVE) ? "노출" : "미노출").needTaxation(product.getNeedTaxation() ? "과세" : "비과세").hasOption(
                 "있음").purchasePrices(optionItems.stream().map(OptionItem::getPurchasePrice).toList()).representativeOptionNo(
                 representativeOptionNo).optionNames(optionItems.stream().map(OptionItem::getName).toList()).optionOriginPrices(
@@ -526,7 +526,7 @@ public class ProductService {
                     ExcelProductDto2.builder().storeLoginId(store.getLoginId()).storeName(storeInfo.getName()).firstCategoryName(
                             product.getCategory().getParentCategory().getName()).secondCategoryName(product.getCategory().getName()).productName(
                             product.getTitle()).expectedDeliverDay(product.getExpectedDeliverDay()).deliveryInfo(product.getDeliveryInfo()).deliveryFee(
-                            product.getDeliveryFee()).deliverBoxPerAmount(product.getDeliverBoxPerAmount()).isActive(
+                            storeInfo.getDeliverFee()).deliverBoxPerAmount(product.getDeliverBoxPerAmount()).isActive(
                             product.getState().equals(ProductState.ACTIVE) ? "노출" : "미노출").needTaxation(product.getNeedTaxation() ? "과세" : "비과세").hasOption(
                             "있음").purchasePrices(optionItem.getPurchasePrice()).representativeOptionNo(
                             representativeOptionNo).optionName(optionItem.getName()).optionOriginPrice(optionItem.getOriginPrice()).optionDiscountPrice(

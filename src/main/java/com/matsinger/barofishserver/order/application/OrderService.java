@@ -114,13 +114,11 @@ public class OrderService {
             return OrderProductDto.builder().id(opi.getId()).storeId(storeInfo.getStoreId()).optionItem(optionItem.convert2Dto()).product(
                     productService.convert2ListDto(productService.selectProduct(opi.getProductId()))).optionName(
                     optionItem.getName()).amount(opi.getAmount()).state(opi.getState()).price(opi.getPrice()).storeName(
-                    storeInfo.getName()).storeProfile(storeInfo.getProfileImage()).deliverFee(getProductDeliveryFee(
-                    product,
-                    optionItem.getId(),
-                    opi.getAmount())).deliverCompany(deliveryCompany.map(DeliveryCompany::getName).orElse(null)).invoiceCode(
-                    opi.getInvoiceCode()).cancelReason(opi.getCancelReason()).cancelReasonContent(opi.getCancelReasonContent()).isReviewWritten(
-                    isWritten).deliverFeeType(storeInfo.getDeliverFeeType()).minOrderPrice(storeInfo.getMinOrderPrice()).finalConfirmedAt(
-                    opi.getFinalConfirmedAt()).needTaxation(product.getNeedTaxation()).build();
+                    storeInfo.getName()).storeProfile(storeInfo.getProfileImage()).deliverFee(opi.getDeliveryFee()).deliverCompany(
+                    deliveryCompany.map(DeliveryCompany::getName).orElse(null)).invoiceCode(opi.getInvoiceCode()).cancelReason(
+                    opi.getCancelReason()).cancelReasonContent(opi.getCancelReasonContent()).isReviewWritten(isWritten).deliverFeeType(
+                    storeInfo.getDeliverFeeType()).minOrderPrice(storeInfo.getMinOrderPrice()).finalConfirmedAt(opi.getFinalConfirmedAt()).needTaxation(
+                    product.getNeedTaxation()).build();
         }).filter(Objects::nonNull).toList();
         String couponName = null;
         if (order.getCouponId() != null) {
@@ -383,15 +381,13 @@ public class OrderService {
 
     public Integer getProductDeliveryFee(Product product, Integer OptionItemId, Integer amount) {
         OptionItem optionItem = productService.selectOptionItem(OptionItemId);
-        if (product.getDeliverBoxPerAmount() != null && product.getDeliverBoxPerAmount() != 0) {
-            return product.getDeliveryFee() * ((amount / product.getDeliverBoxPerAmount()) + 1);
-        } else {
-            StoreInfo storeInfo = storeService.selectStoreInfo(product.getStoreId());
-            if (storeInfo.getDeliverFeeType().equals(StoreDeliverFeeType.FREE)) return 0;
-            else if (storeInfo.getDeliverFeeType().equals(StoreDeliverFeeType.FIX)) return storeInfo.getDeliverFee();
-            else return optionItem.getDiscountPrice() * amount >
-                        storeInfo.getMinOrderPrice() ? 0 : storeInfo.getDeliverFee();
-        }
+        StoreInfo storeInfo = storeService.selectStoreInfo(product.getStoreId());
+        if (storeInfo.getDeliverFeeType().equals(StoreDeliverFeeType.FREE)) return 0;
+        else if (storeInfo.getDeliverFeeType().equals(StoreDeliverFeeType.FIX)) return storeInfo.getDeliverFee();
+        else return storeInfo.getDeliverFee() *
+                    (product.getDeliverBoxPerAmount() == null ||
+                            product.getDeliverBoxPerAmount() == 0 ? 1 : ((int) Math.ceil((double) amount /
+                            product.getDeliverBoxPerAmount())));
     }
 
     public List<OrderProductInfo> selectOrderProductInfoWithIds(List<Integer> ids) {
@@ -575,7 +571,7 @@ public class OrderService {
         Timestamp ts = utils.now();
         Calendar cal = Calendar.getInstance();
         cal.setTime(ts);
-        
+
         cal.add(Calendar.DATE, -5);
         List<OrderProductInfo>
                 orderProductInfoIds =

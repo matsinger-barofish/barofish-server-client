@@ -52,7 +52,8 @@ public class StoreService {
                 storeInfo.getBackgroudImage()).profileImage(storeInfo.getProfileImage()).name(storeInfo.getName()).isReliable(
                 storeInfo.getIsReliable()).location(storeInfo.getLocation()).visitNote(storeInfo.getVisitNote()).deliverFeeType(
                 storeInfo.getDeliverFeeType()).deliverFee(storeInfo.getDeliverFee()).minOrderPrice(storeInfo.getMinOrderPrice()).keyword(
-                storeInfo.getKeyword().split(",")).oneLineDescription(storeInfo.getOneLineDescription()).additionalData(
+                storeInfo.getKeyword().split(",")).oneLineDescription(storeInfo.getOneLineDescription()).refundDeliverFee(
+                storeInfo.getRefundDeliverFee()).additionalData(
                 additionalDto).build();
     }
 
@@ -75,7 +76,7 @@ public class StoreService {
                         storeInfo.getBackgroudImage()).profileImage(storeInfo.getProfileImage()).name(storeInfo.getName()).location(
                         storeInfo.getLocation()).isReliable(storeInfo.getIsReliable()).keyword(storeInfo.getKeyword().split(
                         ",")).visitNote(storeInfo.getVisitNote()).deliverFeeType(storeInfo.getDeliverFeeType()).deliverFee(
-                        storeInfo.getDeliverFee()).minOrderPrice(storeInfo.getMinOrderPrice()).oneLineDescription(
+                        storeInfo.getDeliverFee()).refundDeliverFee(storeInfo.getRefundDeliverFee()).minOrderPrice(storeInfo.getMinOrderPrice()).oneLineDescription(
                         storeInfo.getOneLineDescription()).isLike(isLike).reviewStatistic(reviewStatistics).reviews(
                         reviewDtos).reviewCount(reviewCount).productCount(productCount).build();
         return simpleStore;

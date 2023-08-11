@@ -380,7 +380,7 @@ public class ProductController {
             product.setRepresentOptionItemId(null);
             product.setNeedTaxation(data.getNeedTaxation() != null ? data.getNeedTaxation() : true);
             product.setDeliverBoxPerAmount(data.getDeliverBoxPerAmount());
-            product.setDeliveryFee(data.getDeliveryFee() != null ? data.getDeliveryFee() : 0);
+//            product.setDeliveryFee(data.getDeliveryFee() != null ? data.getDeliveryFee() : 0);
             product.setCreatedAt(new Timestamp(System.currentTimeMillis()));
             Product result = productService.addProduct(product);
             OptionItem representOptionItem = null;
@@ -494,7 +494,7 @@ public class ProductController {
             }
             if (data.getDeliveryFee() != null) {
                 if (data.getDeliveryFee() < 0) return res.throwError("배달료를 확인해주세요.", "INPUT_CHECK_REQUIRED");
-                product.setDeliveryFee(data.getDeliveryFee());
+//                product.setDeliveryFee(data.getDeliveryFee());
             }
             if (data.getExpectedDeliverDay() != null) {
                 if (data.getExpectedDeliverDay() < 0) return res.throwError("예상 도착일을 입력해주세요.", "INPUT_CHECK_REQUIRED");

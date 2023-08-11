@@ -15,6 +15,8 @@ import com.matsinger.barofishserver.jwt.TokenInfo;
 import com.matsinger.barofishserver.product.application.ProductService;
 import com.matsinger.barofishserver.product.optionitem.dto.OptionItemDto;
 import com.matsinger.barofishserver.product.domain.Product;
+import com.matsinger.barofishserver.store.application.StoreService;
+import com.matsinger.barofishserver.store.domain.StoreInfo;
 import com.matsinger.barofishserver.utils.Common;
 import com.matsinger.barofishserver.utils.CustomResponse;
 import lombok.Getter;
@@ -36,6 +38,7 @@ public class BasketController {
     private final BasketQueryService basketQueryService;
     private final BasketCommandService basketCommandService;
     private final ProductService productService;
+    private final StoreService storeService;
     private final Common utils;
     private final JwtService jwt;
     private final BasketProductOptionRepository optionRepository;
@@ -109,6 +112,7 @@ public class BasketController {
             if (tokenInfo.get().getId() != info.getUserId()) return res.throwError("타인의 장바구니 정보입니다.", "NOT_ALLOWED");
             basketCommandService.updateAmountBasket(info.getId(), amount);
             Product product = productService.findById(info.getProductId());
+            StoreInfo storeInfo = storeService.selectStoreInfo(product.getStoreId());
             BasketProductOption
                     option =
                     optionRepository.findAllByOrderProductId(info.getId()).size() !=
@@ -118,8 +122,8 @@ public class BasketController {
                     option != null ? productService.selectOptionItem(option.getOptionId()).convert2Dto() : null;
             BasketProductDto
                     dto =
-                    BasketProductDto.builder().product(product.convert2ListDto()).amount(amount).deliveryFee(product.getDeliveryFee()).option(
-                            optionDto).build();
+                    BasketProductDto.builder().product(product.convert2ListDto()).amount(amount).deliveryFee(storeInfo.getDeliverFee()).deliverFeeType(
+                            storeInfo.getDeliverFeeType()).minOrderPrice(storeInfo.getMinOrderPrice()).option(optionDto).build();
             res.setData(Optional.ofNullable(dto));
             return ResponseEntity.ok(res);
         } catch (Exception e) {

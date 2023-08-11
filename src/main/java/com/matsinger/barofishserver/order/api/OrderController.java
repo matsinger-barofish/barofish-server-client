@@ -30,6 +30,7 @@ import com.matsinger.barofishserver.product.dto.ProductListDto;
 import com.matsinger.barofishserver.siteInfo.application.SiteInfoQueryService;
 import com.matsinger.barofishserver.siteInfo.domain.SiteInformation;
 import com.matsinger.barofishserver.store.application.StoreService;
+import com.matsinger.barofishserver.store.domain.StoreDeliverFeeType;
 import com.matsinger.barofishserver.store.domain.StoreInfo;
 import com.matsinger.barofishserver.user.paymentMethod.application.PaymentMethodService;
 import com.matsinger.barofishserver.user.deliverplace.DeliverPlace;
@@ -355,6 +356,19 @@ public class OrderController {
                         optionItem.getPurchasePrice()) : optionItem.getPurchasePrice()).price(price).amount(productReq.getAmount()).isSettled(
                         false).deliveryFee(deliveryFee).build());
             }
+            infos.forEach(i -> {
+                int storeTotalPrice = infos.stream().filter(v -> {
+                    Product productA = productService.selectProduct(v.getProductId());
+                    Product productB = productService.selectProduct(i.getProductId());
+                    return productA.getStoreId() == productB.getStoreId();
+                }).mapToInt(OrderProductInfo::getPrice).sum();
+                Product p = productService.selectProduct(i.getProductId());
+                StoreInfo storeInfo = storeService.selectStoreInfo(p.getStoreId());
+                if (storeInfo.getDeliverFeeType().equals(StoreDeliverFeeType.FREE_IF_OVER) &&
+                        storeTotalPrice > (storeInfo.getMinOrderPrice() != null ? storeInfo.getMinOrderPrice() : 0)) {
+                    i.setDeliveryFee(0);
+                }
+            });
             if (coupon != null) {
                 if (data.getTotalPrice() < coupon.getMinPrice())
                     return res.throwError("쿠폰 최소 금액에 맞지 않습니다.", "INPUT_CHECK_REQUIRED");

@@ -9,6 +9,7 @@ import com.matsinger.barofishserver.product.dto.ProductListDto;
 import com.matsinger.barofishserver.review.dto.ReviewDto;
 import com.matsinger.barofishserver.review.dto.ReviewTotalStatistic;
 import com.matsinger.barofishserver.searchFilter.dto.SearchFilterFieldDto;
+import com.matsinger.barofishserver.store.domain.StoreDeliverFeeType;
 import com.matsinger.barofishserver.store.dto.SimpleStore;
 import lombok.*;
 
@@ -31,6 +32,8 @@ public class SimpleProductDto {
     Integer originPrice;
     String deliveryInfo;
     Integer deliveryFee;
+    StoreDeliverFeeType deliverFeeType;
+    Integer minOrderPrice;
     String[] descriptionImages;
     Integer representOptionItemId;
     Boolean needTaxation;
