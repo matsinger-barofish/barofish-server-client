@@ -17,12 +17,12 @@ import lombok.NoArgsConstructor;
 public class AgriculturalAndLivestockProductsInfo {
 
     @Id
-    @Column(name = "product_id", nullable = false)
-    private int product_id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id", nullable = false)
+    private int id;
 
     @OneToOne
     @JoinColumn(name = "product_id", nullable = false)
-    @MapsId
     private Product product;
 
     @Column(name = "name_of_product", nullable = false)
@@ -34,7 +34,7 @@ public class AgriculturalAndLivestockProductsInfo {
     @Column(name = "producer", nullable = false)
     private String producer;
 
-    @Column(name = "originCountry", nullable = false)
+    @Column(name = "origin_country", nullable = false)
     private String originCountry;
 
     @Column(name = "quality_maintenance_deadline", nullable = false)
@@ -58,7 +58,7 @@ public class AgriculturalAndLivestockProductsInfo {
     @Column(name = "phone_number", nullable = false)
     private String phoneNumber;
 
-    @Column(name = "cautionGuidelines", nullable = false)
+    @Column(name = "caution_guidelines", nullable = false)
     private String cautionGuidelines;
 
     public static AgriculturalAndLivestockProductsInfoDto getForm() {

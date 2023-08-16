@@ -14,10 +14,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class ProcessedFoodInfoDto implements ProductInformation {
 
-    @Id
-    @Column(name = "product_id", nullable = false)
-
-    private int product_id;
+    private int productId;
     private String nameOfProduct;                   // 식품의 유형
     private String producer;                        // 생산자 및 소재지 (수입품의 경우 생산자, 수입자 및 제조국)
     private String qualityMaintenanceDeadline;      // 제조연월일, 소비기한 또는 품질유지기한
@@ -28,4 +25,20 @@ public class ProcessedFoodInfoDto implements ProductInformation {
     private String importedPhrase;                  // 수입식품의 경우 “수입식품안전관리 특별법에 따른 수입신고를 필함”의 문구
     private String phoneNumber;                     // 소비자상담관련 전화번호
     private String cautionGuidelines;               // 소비자안전을 위한 주의사항
+
+//    @Override
+//    public ProcessedFoodInfoDto getProductInformation() {
+//        return ProcessedFoodInfoDto.builder()
+//                .nameOfProduct(null)
+//                .producer(null)
+//                .qualityMaintenanceDeadline(null)
+//                .volume(null)
+//                .rawMaterialInfo(null)
+//                .nutritionalIngredients(null)
+//                .geneticallyModifiedInfo(null)
+//                .importedPhrase(null)
+//                .phoneNumber(null)
+//                .cautionGuidelines(null)
+//                .build();
+//    }
 }

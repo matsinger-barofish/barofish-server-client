@@ -14,7 +14,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class AgriculturalAndLivestockProductsInfoDto implements ProductInformation {
 
-    private int product_id;
+    private int productId;
     private String nameOfProduct;                   // 품목 또는 명칭
     private String volume;                          // 포장단위별 내용물의 용량(중량), 수량, 크기
     private String producer;                        // 생산자,수입품의 경우 수입자를 함께 표기
@@ -27,4 +27,22 @@ public class AgriculturalAndLivestockProductsInfoDto implements ProductInformati
     private String howToKeep;                       // 보관방법 또는 취급방법
     private String phoneNumber;                     // 소비자상담관련 전화번호
     private String cautionGuidelines;               // 소비자안전을 위한 주의사항
+
+//    @Override
+//    public AgriculturalAndLivestockProductsInfoDto getProductInformation() {
+//        return AgriculturalAndLivestockProductsInfoDto.builder()
+//                .nameOfProduct(null)
+//                .volume(null)
+//                .producer(null)
+//                .originCountry(null)
+//                .qualityMaintenanceDeadline(null)
+//                .geneticallyModifiedInfo(null)
+//                .productGrade(null)
+//                .importInformation(null)
+//                .contentsOfProduct(null)
+//                .howToKeep(null)
+//                .phoneNumber(null)
+//                .cautionGuidelines(null)
+//                .build();
+//    }
 }

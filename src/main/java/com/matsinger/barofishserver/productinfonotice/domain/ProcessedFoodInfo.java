@@ -17,16 +17,19 @@ import lombok.NoArgsConstructor;
 public class ProcessedFoodInfo {
 
     @Id
-    @Column(name = "product_id", nullable = false)
-    private int product_id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id", nullable = false)
+    private int id;
 
     @OneToOne
     @JoinColumn(name = "product_id", nullable = false)
-    @MapsId
     private Product product;
 
     @Column(name = "name_of_product", nullable = false)
     private String nameOfProduct;
+
+    @Column(name = "types_of_food", nullable = false)
+    private String typesOfFood;
 
     @Column(name = "producer", nullable = false)
     private String producer;
@@ -52,7 +55,7 @@ public class ProcessedFoodInfo {
     @Column(name = "phone_number", nullable = false)
     private String phoneNumber;
 
-    @Column(name = "cautionGuidelines", nullable = false)
+    @Column(name = "caution_guidelines", nullable = false)
     private String cautionGuidelines;
 
     public static ProcessedFoodInfoDto getForm() {
