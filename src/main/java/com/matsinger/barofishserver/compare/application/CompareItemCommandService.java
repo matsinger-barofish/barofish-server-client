@@ -97,7 +97,8 @@ public class CompareItemCommandService {
         return CompareProductDto.builder().id(product.getId()).image(product.getImages().substring(1,
                 product.getImages().length() -
                         1).split(",")[0]).title(product.getTitle()).originPrice(optionItem.getOriginPrice()).storeName(
-                storeInfo.getName()).discountPrice(optionItem.getDiscountPrice()).deliveryFee(product.getDeliveryFee()).compareFilters(
+                storeInfo.getName()).discountPrice(optionItem.getDiscountPrice()).deliveryFee(storeInfo.getDeliverFee()).deliverFeeType(
+                storeInfo.getDeliverFeeType()).minOrderPrice(storeInfo.getMinOrderPrice()).compareFilters(
                 compareFilterDtos).filterValues(filterValues).build();
     }
 }

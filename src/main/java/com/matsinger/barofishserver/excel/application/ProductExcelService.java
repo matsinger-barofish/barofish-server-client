@@ -152,7 +152,7 @@ public class ProductExcelService {
             product.get().setCategory(category.get());
             product.get().setExpectedDeliverDay(expectedDeliverDay);
             product.get().setDeliveryInfo(deliveryInfo);
-            product.get().setDeliveryFee(deliveryFee);
+//            product.get().setDeliveryFee(deliveryFee);
             product.get().setDeliverBoxPerAmount(deliverBoxPerAmount);
             product.get().setState(product.get().getState().equals(ProductState.DELETED) ? ProductState.DELETED : state);
             product.get().setNeedTaxation(needTaxation);

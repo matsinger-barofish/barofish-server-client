@@ -127,7 +127,8 @@ public class UserController {
                                 directoryElement) : String.join("/",
                                 Arrays.asList(s3.getS3Url(), "default_profile.png"));
                 userInfoCommandService.setImageUrl(userId, imageUrl);
-
+                Verification verification = verificationService.selectVerificationById(request.getVerificationId());
+                if (verification != null) verificationService.deleteVerification(verification.getId());
                 res.setData(Optional.of(true));
             }
             return ResponseEntity.ok(res);

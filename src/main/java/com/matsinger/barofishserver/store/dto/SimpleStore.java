@@ -26,6 +26,7 @@ public class SimpleStore {
     private String visitNote;
     private StoreDeliverFeeType deliverFeeType;
     private Integer deliverFee;
+    private Integer refundDeliverFee;
     private Integer minOrderPrice;
     private String oneLineDescription;
 

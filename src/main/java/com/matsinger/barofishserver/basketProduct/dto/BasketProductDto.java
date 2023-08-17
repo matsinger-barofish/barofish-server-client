@@ -2,6 +2,7 @@ package com.matsinger.barofishserver.basketProduct.dto;
 
 import com.matsinger.barofishserver.product.optionitem.dto.OptionItemDto;
 import com.matsinger.barofishserver.product.dto.ProductListDto;
+import com.matsinger.barofishserver.store.domain.StoreDeliverFeeType;
 import com.matsinger.barofishserver.store.dto.SimpleStore;
 import lombok.*;
 
@@ -16,5 +17,7 @@ public class BasketProductDto {
     ProductListDto product;
     Integer amount;
     Integer deliveryFee;
+    StoreDeliverFeeType deliverFeeType;
+    Integer minOrderPrice;
     OptionItemDto option;
 }
