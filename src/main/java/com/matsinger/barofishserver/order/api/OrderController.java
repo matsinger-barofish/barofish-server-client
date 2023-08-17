@@ -182,8 +182,8 @@ public class OrderController {
                     Join<Orders, OrderProductInfo> t = root.join("productInfos", JoinType.INNER);
                     predicates.add(builder.isNotNull(t.get("id")));
                     predicates.add(builder.or(builder.notEqual(t.get("state"), OrderProductState.WAIT_DEPOSIT),
-                            builder.equal(root.get("paymentWay"), OrderPaymentWay.DEPOSIT)));
-
+                            builder.and(root.get("paymentWay").in(List.of(OrderPaymentWay.DEPOSIT,
+                                    OrderPaymentWay.VIRTUAL_ACCOUNT)))));
                     if (tokenInfo.get().getType().equals(TokenAuthType.PARTNER)) {
                         predicates.add(builder.equal(t.get("product").get("storeId"), tokenInfo.get().getId()));
                     }

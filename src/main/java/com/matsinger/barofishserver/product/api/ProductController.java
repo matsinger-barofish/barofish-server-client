@@ -683,7 +683,19 @@ public class ProductController {
             AdminLog
                     adminLog =
                     AdminLog.builder().id(adminLogQueryService.getAdminLogId()).adminId(adminId).type(AdminLogType.PARTNER).targetId(
-                            String.valueOf(product.getId())).content(content).createdAt(utils.now()).build();
+                            String.valueOf(result.getId())).content(content).createdAt(utils.now()).build();
+            if (data.getIsActive() != null) {
+                String
+                        contentState =
+                        String.format("%s -> %s 상태 변경하였습니다.",
+                                data.getIsActive() ? "미노출" : "노출",
+                                data.getIsActive() ? "노출" : "미노출");
+                AdminLog
+                        stateAdminLog =
+                        AdminLog.builder().id(adminLogQueryService.getAdminLogId()).adminId(adminId).type(AdminLogType.PRODUCT).targetId(
+                                String.valueOf(result.getId())).createdAt(utils.now()).content(contentState).build();
+                adminLogCommandService.saveAdminLog(stateAdminLog);
+            }
             adminLogCommandService.saveAdminLog(adminLog);
             res.setData(Optional.ofNullable(productService.convert2SimpleDto(result, null)));
             return ResponseEntity.ok(res);
@@ -705,12 +717,12 @@ public class ProductController {
             if (data.getIsActive() == null) return res.throwError("노출 여부를 입력해주세요.", "INPUT_CHECK_REQUIRED");
             List<Product> products = productService.selectProductListWithIds(data.getProductIds());
             products.forEach(v -> {
-                v.setState(data.getIsActive() ? ProductState.ACTIVE : ProductState.INACTIVE);
                 String
                         content =
                         String.format("%s -> %s 상태 변경하였습니다.",
                                 v.getState().equals(ProductState.ACTIVE) ? "노출" : "미노출",
                                 data.getIsActive() ? "노출" : "미노출");
+                v.setState(data.getIsActive() ? ProductState.ACTIVE : ProductState.INACTIVE);
                 AdminLog
                         adminLog =
                         AdminLog.builder().id(adminLogQueryService.getAdminLogId()).adminId(adminId).type(AdminLogType.PRODUCT).targetId(

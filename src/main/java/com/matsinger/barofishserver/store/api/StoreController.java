@@ -214,6 +214,22 @@ public class StoreController {
         }
     }
 
+    @GetMapping(value = {"/is-active"})
+    public ResponseEntity<CustomResponse<Boolean>> checkStoreIsActive(@RequestHeader(value = "Authorization") Optional<String> auth) {
+        CustomResponse<Boolean> res = new CustomResponse<>();
+        Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.PARTNER), auth);
+        if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
+        try {
+
+            Integer storeId = tokenInfo.get().getId();
+            Store store = storeService.selectStore(storeId);
+            res.setData(Optional.ofNullable(store.getState().equals(StoreState.ACTIVE)));
+            return ResponseEntity.ok(res);
+        } catch (Exception e) {
+            return res.defaultError(e);
+        }
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<CustomResponse<SimpleStore>> selectStore(@PathVariable("id") Integer id,
                                                                    @RequestHeader(value = "Authorization") Optional<String> auth) {
@@ -538,7 +554,7 @@ public class StoreController {
                 if (deliverFee != null) storeInfo.setDeliverFee(deliverFee);
                 storeInfo.setMinOrderPrice(minOrderPrice);
             }
-            if(refundDeliverFee!=null){
+            if (refundDeliverFee != null) {
                 storeInfo.setRefundDeliverFee(refundDeliverFee);
             }
             if (data != null) {

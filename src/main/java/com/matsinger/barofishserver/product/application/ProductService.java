@@ -273,7 +273,8 @@ public class ProductService {
             throw new Error("상품 정보를 찾을 수 없습니다.");
         });
     }
-    public Optional<Product> selectOptioanlProduct(Integer id){
+
+    public Optional<Product> selectOptioanlProduct(Integer id) {
         return productRepository.findById(id);
     }
 
@@ -350,6 +351,9 @@ public class ProductService {
         OptionItem optionItem = selectOptionItem(product.getRepresentOptionItemId());
         productDto.setIsLike(userId != null &&
                 saveProductRepository.existsById(new SaveProductId(userId, product.getId())));
+        productDto.setDeliverFeeType(store.getDeliverFeeType());
+        productDto.setMinOrderPrice(store.getMinOrderPrice());
+        productDto.setDeliveryFee(store.getDeliverFee());
         productDto.setDifficultDeliverAddresses(addresses);
         productDto.setSearchFilterFields(searchFilterFields);
         productDto.setOriginPrice(optionItem.getOriginPrice());

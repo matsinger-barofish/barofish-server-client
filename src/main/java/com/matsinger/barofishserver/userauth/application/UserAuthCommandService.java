@@ -119,7 +119,7 @@ public class UserAuthCommandService {
             new IllegalArgumentException("소셜 로그인 유저입니다.");
         }
         String newPassword = generateRandomString(6);
-        findUserAuth.setPassword(newPassword);
+        findUserAuth.setPassword(BCrypt.hashpw(newPassword, BCrypt.gensalt()));
         userAuthRepository.save(findUserAuth);
         return newPassword;
     }
