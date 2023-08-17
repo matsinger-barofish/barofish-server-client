@@ -3,6 +3,7 @@ package com.matsinger.barofishserver.product.domain;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.matsinger.barofishserver.category.domain.Category;
 import com.matsinger.barofishserver.product.dto.ProductListDto;
+import com.matsinger.barofishserver.product.option.domain.Option;
 import com.matsinger.barofishserver.productinfonotice.domain.ProductInformation;
 import com.matsinger.barofishserver.review.domain.Review;
 import com.matsinger.barofishserver.store.domain.Store;

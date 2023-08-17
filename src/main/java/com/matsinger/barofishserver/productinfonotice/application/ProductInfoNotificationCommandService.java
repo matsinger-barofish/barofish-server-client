@@ -10,6 +10,7 @@ import com.matsinger.barofishserver.productinfonotice.repository.AgriculturalAnd
 import com.matsinger.barofishserver.productinfonotice.repository.ProcessedFoodInfoRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
 
@@ -23,9 +24,15 @@ public class ProductInfoNotificationCommandService {
     private final AgriculturalAndLivestockProductsInfoRepository agriculturalAndLivestockProductsInfoRepository;
     private final ProcessedFoodInfoRepository processedFoodInfoRepository;
 
+    @Transactional
     public void addProductInfoNotification(ProductInformation request) {
         Product findProduct = productQueryService.findById(request.getProductId());
-        verifyIfProductInfoNotificationAlreadyExists(findProduct);
+
+        Optional<String> optionalItemCode = Optional.ofNullable(findProduct.getItemCode());
+        if (optionalItemCode.isPresent() && !optionalItemCode.get().equals(request.getItemCode())) {
+            throw new IllegalArgumentException("삼품의 품목 아이디가 일치하지 않습니다.");
+        }
+
         findProduct.setItemCode(request.getItemCode());
 
         if (request.getItemCode().equals(LIVESTOCK.getItemCode())) {
@@ -38,26 +45,5 @@ public class ProductInfoNotificationCommandService {
         }
 
         throw new IllegalArgumentException("올바르지 않은 품목 코드입니다.");
-    }
-
-    private void verifyIfProductInfoNotificationAlreadyExists(Product findProduct) {
-
-        Optional<String> optionalItemCode = Optional.ofNullable(findProduct.getItemCode());
-        if (optionalItemCode.isEmpty()) {
-            return;
-        }
-
-        String itemCode = optionalItemCode.get();
-
-        if (itemCode.equals(LIVESTOCK.getItemCode())) {
-            if (agriculturalAndLivestockProductsInfoRepository.findByProductId(findProduct.getId()).isPresent()) {
-                throw new IllegalArgumentException("이미 상품 품목 코드가 존재합니다.");
-            }
-        }
-        if (itemCode.equals(PROCESSED.getItemCode())) {
-            if (processedFoodInfoRepository.findByProductId(findProduct.getId()).isPresent()) {
-                throw new IllegalArgumentException("이미 상품 품목 코드가 존재합니다.");
-            }
-        }
     }
 }
