@@ -1,6 +1,8 @@
 package com.matsinger.barofishserver.productinfonotice.dto;
 
+import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.matsinger.barofishserver.product.domain.Product;
+import com.matsinger.barofishserver.productinfonotice.domain.ProcessedFoodInfo;
 import com.matsinger.barofishserver.productinfonotice.domain.ProductInformation;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -12,10 +14,13 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@JsonTypeName("20")
 public class ProcessedFoodInfoDto implements ProductInformation {
 
-    private int productId;
-    private String nameOfProduct;                   // 식품의 유형
+    private final String itemCode = "20";
+    private Integer productId;
+    private String nameOfProduct;                   // 제품명
+    private String typesOfFood;                     // 식품의 유형
     private String producer;                        // 생산자 및 소재지 (수입품의 경우 생산자, 수입자 및 제조국)
     private String qualityMaintenanceDeadline;      // 제조연월일, 소비기한 또는 품질유지기한
     private String volume;                          // 포장단위별 내용물의 용량(중량), 수량
@@ -26,19 +31,20 @@ public class ProcessedFoodInfoDto implements ProductInformation {
     private String phoneNumber;                     // 소비자상담관련 전화번호
     private String cautionGuidelines;               // 소비자안전을 위한 주의사항
 
-//    @Override
-//    public ProcessedFoodInfoDto getProductInformation() {
-//        return ProcessedFoodInfoDto.builder()
-//                .nameOfProduct(null)
-//                .producer(null)
-//                .qualityMaintenanceDeadline(null)
-//                .volume(null)
-//                .rawMaterialInfo(null)
-//                .nutritionalIngredients(null)
-//                .geneticallyModifiedInfo(null)
-//                .importedPhrase(null)
-//                .phoneNumber(null)
-//                .cautionGuidelines(null)
-//                .build();
-//    }
+    public ProcessedFoodInfo toEntity(Product product) {
+        return ProcessedFoodInfo.builder()
+                .product(product)
+                .nameOfProduct(this.nameOfProduct)
+                .typesOfFood(this.typesOfFood)
+                .producer(this.producer)
+                .qualityMaintenanceDeadline(this.qualityMaintenanceDeadline)
+                .volume(this.volume)
+                .rawMaterialInfo(this.rawMaterialInfo)
+                .nutritionalIngredients(this.nutritionalIngredients)
+                .geneticallyModifiedInfo(this.geneticallyModifiedInfo)
+                .importedPhrase(this.importedPhrase)
+                .phoneNumber(this.phoneNumber)
+                .cautionGuidelines(this.cautionGuidelines)
+                .build();
+    }
 }

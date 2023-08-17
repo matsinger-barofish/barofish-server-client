@@ -93,6 +93,9 @@ public class Product {
     @Column(name = "delivery_fee", nullable = true)
     private int deliveryFee;
 
+    @Column(name = "item_code")
+    private String itemCode;
+
     public int getId() {
         return id;
     }
