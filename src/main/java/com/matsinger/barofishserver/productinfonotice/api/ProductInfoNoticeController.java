@@ -125,7 +125,7 @@ public class ProductInfoNoticeController {
         CustomResponse<Object> res = new CustomResponse<>();
         Set<TokenAuthType> permission = Set.of(TokenAuthType.ADMIN, TokenAuthType.PARTNER);
         Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(permission, auth);
-        if (tokenInfo == null)료 {
+        if (tokenInfo == null) {
             return res.throwError("인증이 필요합니다.", "FORBIDDEN");
         }
 

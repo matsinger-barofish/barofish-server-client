@@ -84,6 +84,10 @@ public class ProductInfoNotificationCommandService {
     public void deleteProductInfoNotification(int productId) {
         Product findProduct = productQueryService.findById(productId);
 
+        if (Optional.ofNullable(findProduct.getItemCode()).isEmpty()) {
+            throw new IllegalArgumentException("상품 고시 정보가 존재하지 않습니다.");
+        }
+
         if (findProduct.getItemCode().equals(LIVESTOCK.getItemCode())) {
             agriculturalAndLivestockProductsInfoRepository.deleteByProductId(productId);
             findProduct.setItemCode(null);
