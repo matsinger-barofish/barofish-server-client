@@ -77,4 +77,37 @@ public class AgriculturalAndLivestockProductsInfo {
                 .cautionGuidelines(null)
                 .build();
     }
+
+    public AgriculturalAndLivestockProductsInfoDto toDto() {
+        return AgriculturalAndLivestockProductsInfoDto.builder()
+                .productId(product.getId())
+                .nameOfProduct(this.nameOfProduct)
+                .volume(this.volume)
+                .producer(this.producer)
+                .originCountry(this.originCountry)
+                .qualityMaintenanceDeadline(this.qualityMaintenanceDeadline)
+                .geneticallyModifiedInfo(this.geneticallyModifiedInfo)
+                .productGrade(this.productGrade)
+                .importInformation(this.importInformation)
+                .contentsOfProduct(this.contentsOfProduct)
+                .howToKeep(this.howToKeep)
+                .phoneNumber(this.phoneNumber)
+                .cautionGuidelines(this.cautionGuidelines)
+                .build();
+    }
+
+    public void update(AgriculturalAndLivestockProductsInfoDto dto) {
+        this.nameOfProduct = dto.getNameOfProduct();
+        this.volume = dto.getVolume();
+        this.producer = dto.getProducer();
+        this.originCountry = dto.getOriginCountry();
+        this.qualityMaintenanceDeadline = dto.getQualityMaintenanceDeadline();
+        this.geneticallyModifiedInfo = dto.getGeneticallyModifiedInfo();
+        this.productGrade = dto.getProductGrade();
+        this.importInformation = dto.getImportInformation();
+        this.contentsOfProduct = dto.getContentsOfProduct();
+        this.howToKeep = dto.getHowToKeep();
+        this.phoneNumber = dto.getPhoneNumber();
+        this.cautionGuidelines = dto.getCautionGuidelines();
+    }
 }

@@ -72,4 +72,33 @@ public class ProcessedFoodInfo {
                 .cautionGuidelines(null)
                 .build();
     }
+
+    public ProcessedFoodInfoDto toDto() {
+        return ProcessedFoodInfoDto.builder()
+                .productId(product.getId())
+                .nameOfProduct(this.nameOfProduct)
+                .producer(this.producer)
+                .qualityMaintenanceDeadline(this.qualityMaintenanceDeadline)
+                .volume(this.volume)
+                .rawMaterialInfo(this.rawMaterialInfo)
+                .nutritionalIngredients(this.nutritionalIngredients)
+                .geneticallyModifiedInfo(this.geneticallyModifiedInfo)
+                .importedPhrase(this.importedPhrase)
+                .phoneNumber(this.phoneNumber)
+                .cautionGuidelines(this.cautionGuidelines)
+                .build();
+    }
+
+    public void update (ProcessedFoodInfoDto dto) {
+        this.nameOfProduct = dto.getNameOfProduct();
+        this.producer = dto.getProducer();
+        this.qualityMaintenanceDeadline = dto.getQualityMaintenanceDeadline();
+        this.volume = dto.getVolume();
+        this.rawMaterialInfo = dto.getRawMaterialInfo();
+        this.nutritionalIngredients = dto.getNutritionalIngredients();
+        this.geneticallyModifiedInfo = dto.getGeneticallyModifiedInfo();
+        this.importedPhrase = dto.getImportedPhrase();
+        this.phoneNumber = dto.getPhoneNumber();
+        this.cautionGuidelines = dto.getCautionGuidelines();
+    }
 }

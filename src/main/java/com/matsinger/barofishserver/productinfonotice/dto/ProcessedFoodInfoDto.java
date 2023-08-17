@@ -18,6 +18,7 @@ import lombok.NoArgsConstructor;
 public class ProcessedFoodInfoDto implements ProductInformation {
 
     private final String itemCode = "20";
+
     private Integer productId;
     private String nameOfProduct;                   // 제품명
     private String typesOfFood;                     // 식품의 유형

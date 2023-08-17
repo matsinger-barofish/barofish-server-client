@@ -38,7 +38,7 @@ public class ProductInfoNoticeController {
             return res.throwError("상품이 속한 품목의 코드를 입력해주세요.", "INVALID");
         }
         try {
-            ProductInformation productInformation = productInfoNotificationQueryService.getProductInfoNotificationKeys(itemCode);
+            ProductInformation productInformation = productInfoNotificationQueryService.getProductInfoNotificationForm(itemCode);
             res.setData(Optional.ofNullable(productInformation));
             return ResponseEntity.ok(res);
         } catch (Exception e) {
@@ -57,7 +57,7 @@ public class ProductInfoNoticeController {
         }
 
         if (request.getItemCode() == null) {
-            return res.throwError("상품이 속한 품목의 코드를 입력해주세요.", "INVALID");
+            return res.throwError("상품정보제공고시 품목 코드를 입력해주세요.", "INVALID");
         }
 
         if (request.getProductId() == null) {
@@ -65,6 +65,53 @@ public class ProductInfoNoticeController {
         }
         try {
             productInfoNotificationCommandService.addProductInfoNotification(request);
+            return ResponseEntity.ok(res);
+        } catch (Exception e) {
+            return res.defaultError(e);
+        }
+    }
+
+    @PostMapping("/update")
+    public ResponseEntity<CustomResponse<Object>> update(@RequestHeader(value = "Authorization") Optional<String> auth,
+                                                         @RequestBody ProductInformation request) {
+        CustomResponse<Object> res = new CustomResponse<>();
+        Set<TokenAuthType> permission = Set.of(TokenAuthType.ADMIN, TokenAuthType.PARTNER);
+        Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(permission, auth);
+        if (tokenInfo == null) {
+            return res.throwError("인증이 필요합니다.", "FORBIDDEN");
+        }
+
+        if (request.getItemCode() == null) {
+            return res.throwError("상품정보제공고시 품목 코드를 입력해주세요.", "INVALID");
+        }
+
+        if (request.getProductId() == null) {
+            return res.throwError("상품의 아이디를 입력해주세요.", "INVALID");
+        }
+
+        try {
+            productInfoNotificationCommandService.updateProductInfoNotification(request);
+
+            return ResponseEntity.ok(res);
+        } catch (Exception e) {
+            return res.defaultError(e);
+        }
+    }
+
+    @GetMapping("/get/{productId}")
+    public ResponseEntity<CustomResponse<Object>> get(@RequestHeader(value = "Authorization") Optional<String> auth,
+                                                      @PathVariable int productId) {
+        CustomResponse<Object> res = new CustomResponse<>();
+        Set<TokenAuthType> permission = Set.of(TokenAuthType.ADMIN, TokenAuthType.PARTNER);
+        Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(permission, auth);
+        if (tokenInfo == null) {
+            return res.throwError("인증이 필요합니다.", "FORBIDDEN");
+        }
+
+        try {
+            ProductInformation productInfoNotification = productInfoNotificationQueryService.getProductInfoNotification(productId);
+            res.setData(Optional.ofNullable(productInfoNotification));
+
             return ResponseEntity.ok(res);
         } catch (Exception e) {
             return res.defaultError(e);
