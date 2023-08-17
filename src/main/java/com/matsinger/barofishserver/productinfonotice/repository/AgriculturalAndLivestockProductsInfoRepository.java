@@ -7,4 +7,6 @@ import java.util.Optional;
 
 public interface AgriculturalAndLivestockProductsInfoRepository extends JpaRepository<AgriculturalAndLivestockProductsInfo, Integer> {
     Optional<AgriculturalAndLivestockProductsInfo> findByProductId(int productId);
+
+    int deleteByProductId(int productId);
 }

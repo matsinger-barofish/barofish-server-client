@@ -7,4 +7,6 @@ import java.util.Optional;
 
 public interface ProcessedFoodInfoRepository extends JpaRepository<ProcessedFoodInfo, Integer> {
     Optional<ProcessedFoodInfo> findByProductId(int productId);
+
+    int deleteByProductId(int productId);
 }

@@ -10,6 +10,7 @@ import com.matsinger.barofishserver.utils.CustomResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import retrofit2.http.Path;
 
 import java.util.Optional;
 import java.util.Set;
@@ -100,7 +101,7 @@ public class ProductInfoNoticeController {
 
     @GetMapping("/get/{productId}")
     public ResponseEntity<CustomResponse<Object>> get(@RequestHeader(value = "Authorization") Optional<String> auth,
-                                                      @PathVariable int productId) {
+                                                      @PathVariable("productId") int productId) {
         CustomResponse<Object> res = new CustomResponse<>();
         Set<TokenAuthType> permission = Set.of(TokenAuthType.ADMIN, TokenAuthType.PARTNER);
         Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(permission, auth);
@@ -111,6 +112,25 @@ public class ProductInfoNoticeController {
         try {
             ProductInformation productInfoNotification = productInfoNotificationQueryService.getProductInfoNotification(productId);
             res.setData(Optional.ofNullable(productInfoNotification));
+
+            return ResponseEntity.ok(res);
+        } catch (Exception e) {
+            return res.defaultError(e);
+        }
+    }
+
+    @DeleteMapping("/delete/{productId}")
+    public ResponseEntity<CustomResponse<Object>> delete(@RequestHeader(value = "Authorization") Optional<String> auth,
+                                                         @PathVariable("productId") int productId) {
+        CustomResponse<Object> res = new CustomResponse<>();
+        Set<TokenAuthType> permission = Set.of(TokenAuthType.ADMIN, TokenAuthType.PARTNER);
+        Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(permission, auth);
+        if (tokenInfo == null)료 {
+            return res.throwError("인증이 필요합니다.", "FORBIDDEN");
+        }
+
+        try {
+            productInfoNotificationCommandService.deleteProductInfoNotification(productId);
 
             return ResponseEntity.ok(res);
         } catch (Exception e) {

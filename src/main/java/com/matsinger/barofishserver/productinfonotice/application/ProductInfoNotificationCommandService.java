@@ -79,4 +79,22 @@ public class ProductInfoNotificationCommandService {
             return;
         }
     }
+
+    @Transactional
+    public void deleteProductInfoNotification(int productId) {
+        Product findProduct = productQueryService.findById(productId);
+
+        if (findProduct.getItemCode().equals(LIVESTOCK.getItemCode())) {
+            agriculturalAndLivestockProductsInfoRepository.deleteByProductId(productId);
+            findProduct.setItemCode(null);
+            return;
+        }
+        if (findProduct.getItemCode().equals(PROCESSED.getItemCode())) {
+            processedFoodInfoRepository.deleteByProductId(productId);
+            findProduct.setItemCode(null);
+            return;
+        }
+
+        throw new IllegalArgumentException("상품 고시 정보를 찾을 수 없습니다.");
+    }
 }
