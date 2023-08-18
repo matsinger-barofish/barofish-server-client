@@ -5,8 +5,13 @@ plugins {
 }
 
 group = 'com.matsinger'
-version = '0.0.1-SNAPSHOT'
+version = '1.0.0-SNAPSHOT'
 sourceCompatibility = '17'
+
+// custom config - plain 파일 생기지 않게 하는 옵션인듯
+jar {
+    enabled = false
+}
 
 configurations {
     compileOnly {
