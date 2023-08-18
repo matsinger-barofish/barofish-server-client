@@ -2,7 +2,6 @@ package com.matsinger.barofishserver.order.orderprductinfo.domain;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 
-import com.matsinger.barofishserver.deliver.domain.DeliveryCompany;
 import com.matsinger.barofishserver.order.domain.Orders;
 import com.matsinger.barofishserver.product.domain.Product;
 

@@ -98,9 +98,4 @@ public class UserQueryService {
         }
         return null;
     }
-
-    public User findById(int userId) {
-        return userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("유저 정보를 찾을 수 없습니다."));
-    }
 }
