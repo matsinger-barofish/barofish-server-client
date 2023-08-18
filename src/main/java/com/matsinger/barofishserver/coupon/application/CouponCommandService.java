@@ -98,8 +98,8 @@ public class CouponCommandService {
         int count = Integer.parseInt(countData.get("count").toString());
         Integer couponId = null;
         if (count == 1) couponId = 1;
-        else if (count == 3) couponId = 2;
-        else if (count == 5) couponId = 3;
+        else if (count == 2) couponId = 2;
+        else if (count == 3) couponId = 3;
         if (couponId != null) {
             Coupon coupon = couponRepository.findById(couponId).orElseThrow(() -> new Exception("쿠폰 정보를 찾을 수 없습니다."));
             CouponUserMap

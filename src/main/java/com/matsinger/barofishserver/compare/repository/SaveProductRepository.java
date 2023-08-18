@@ -9,5 +9,5 @@ import java.util.List;
 public interface SaveProductRepository extends JpaRepository<SaveProduct, SaveProductId> {
     public List<SaveProduct> findAllByUserId(Integer userId);
 
-
+    Integer countAllByUserId(Integer userId);
 }

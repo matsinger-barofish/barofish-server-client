@@ -1,9 +1,12 @@
 package com.matsinger.barofishserver.payment.portone.api;
 
+import com.matsinger.barofishserver.basketProduct.application.BasketCommandService;
 import com.matsinger.barofishserver.coupon.application.CouponCommandService;
 import com.matsinger.barofishserver.notification.application.NotificationCommandService;
 import com.matsinger.barofishserver.notification.dto.NotificationMessage;
 import com.matsinger.barofishserver.notification.dto.NotificationMessageType;
+import com.matsinger.barofishserver.order.domain.OrderPaymentWay;
+import com.matsinger.barofishserver.order.dto.VBankRefundInfo;
 import com.matsinger.barofishserver.order.orderprductinfo.domain.OrderCancelReason;
 import com.matsinger.barofishserver.order.orderprductinfo.domain.OrderProductInfo;
 import com.matsinger.barofishserver.order.orderprductinfo.domain.OrderProductState;
@@ -46,6 +49,7 @@ public class PortOneCallbackHandler {
     private final CouponCommandService couponCommandService;
     private final SmsService sms;
     private final NotificationCommandService notificationCommandService;
+    private final BasketCommandService basketCommandService;
 
 
     @PostMapping("")
@@ -93,7 +97,15 @@ public class PortOneCallbackHandler {
                             System.out.println("callback cancel " + cancelPrice);
                             try {
                                 int taxFreeAmount = orderService.getTaxFreeAmount(order, List.of(info));
-                                paymentService.cancelPayment(data.getImp_uid(), cancelPrice, taxFreeAmount);
+                                VBankRefundInfo
+                                        vBankRefundInfo =
+                                        order.getPaymentWay().equals(OrderPaymentWay.VIRTUAL_ACCOUNT) ? VBankRefundInfo.builder().bankHolder(
+                                                order.getBankHolder()).bankCode(order.getBankCode()).bankName(order.getBankName()).bankAccount(
+                                                order.getBankAccount()).build() : null;
+                                paymentService.cancelPayment(data.getImp_uid(),
+                                        cancelPrice,
+                                        taxFreeAmount,
+                                        vBankRefundInfo);
                             } catch (IamportResponseException | IOException e) {
                                 throw new RuntimeException(e);
                             }
@@ -102,7 +114,8 @@ public class PortOneCallbackHandler {
                             info.setState(OrderProductState.CANCELED);
                             notificationCommandService.sendFcmToUser(order.getUserId(),
                                     NotificationMessageType.ORDER_CANCEL,
-                                    NotificationMessage.builder().productName(info.getProduct().getTitle()).build());
+                                    NotificationMessage.builder().productName(info.getProduct().getTitle()).isCanceledByRegion(
+                                            true).build());
                         } else {
                             OptionItem optionItem = productService.selectOptionItem(info.getOptionItemId());
                             if (optionItem.getAmount() != null)
@@ -126,6 +139,7 @@ public class PortOneCallbackHandler {
                         order.setState(OrderState.PAYMENT_DONE);
                         order.setImpUid(data.getImp_uid());
                     }
+                    basketCommandService.deleteBasketAfterOrder(order, infos);
                     orderService.updateOrderProductInfo(infos);
                     orderService.updateOrder(order);
                     paymentService.upsertPayments(paymentData);

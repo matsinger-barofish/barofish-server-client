@@ -32,11 +32,17 @@ public class BasketQueryService {
     private final StoreService storeService;
     private final ProductFilterService productFilterService;
     private final ProductService productService;
+
     public BasketProductInfo selectBasket(Integer id) {
         return infoRepository.findById(id).orElseThrow(() -> {
             throw new Error("장바구니 상품 정보를 찾을 수 없습니다.");
         });
 
+    }
+
+    public Integer countBasketList(Integer userId) {
+        List<BasketProductInfo> infos = infoRepository.findAllByUserId(userId);
+        return infos.size();
     }
 
     public List<BasketProductDto> selectBasketList(Integer userId) {
@@ -45,9 +51,8 @@ public class BasketQueryService {
         for (BasketProductInfo info : infos) {
 
             Product product = productService.selectProduct(info.getProductId());
-            SimpleStore
-                    store =
-                    storeService.convert2SimpleDto(storeService.selectStoreInfo(product.getStoreId()), userId);
+            StoreInfo storeInfo = storeService.selectStoreInfo(product.getStoreId());
+            SimpleStore store = storeService.convert2SimpleDto(storeInfo, userId);
 
             List<BasketProductOption> options = optionRepository.findAllByOrderProductId(info.getId());
             BasketProductOption option = options.size() == 0 ? null : options.get(0);
@@ -61,17 +66,20 @@ public class BasketQueryService {
                         optionItemRepository.findById(option.getOptionId()).orElseThrow(() -> new IllegalArgumentException(
                                 "옵션 아이템 정보를 찾을 수 없습니다."));
                 optionDto = optionItem.convert2Dto();
+                optionDto.setDeliverBoxPerAmount(product.getDeliverBoxPerAmount());
             }
 
             ProductListDto productListDto = createProductListDto(product);
             BasketProductDto
                     basketProductDto =
                     BasketProductDto.builder().id(info.getId()).product(productListDto).amount(info.getAmount()).deliveryFee(
-                            product.getDeliveryFee()).store(store).option(optionDto).build();
+                            storeInfo.getDeliverFee()).deliverFeeType(storeInfo.getDeliverFeeType()).minOrderPrice(store.getMinOrderPrice()).store(
+                            store).option(optionDto).build();
             productDtos.add(basketProductDto);
         }
         return productDtos;
     }
+
     private ProductListDto createProductListDto(Product product) {
         StoreInfo storeInfo = storeService.selectStoreInfo(product.getStoreId());
         Integer reviewCount = reviewRepository.countAllByProductId(product.getId());

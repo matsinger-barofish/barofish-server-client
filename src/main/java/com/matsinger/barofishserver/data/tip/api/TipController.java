@@ -157,8 +157,7 @@ public class TipController {
         Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
         if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
         try {
-            Tip tip = new Tip();
-            tipQueryService.selectTip(id);
+            Tip tip = tipQueryService.selectTip(id);
             if (data.getTitle() != null) {
                 String title = utils.validateString(data.getTitle(), 100L, "제목");
                 tip.setTitle(title);

@@ -22,9 +22,9 @@ public class VerificationService {
             throw new IllegalArgumentException("인증을 먼저 진행해주세요.");
         } else if (request.getVerificationId() != null) {
             verification = selectVerificationById(request.getVerificationId());
-            if (verification.getExpiredAt() != null) throw new IllegalArgumentException("인증을 먼저 진행해주세요.");
+            if (verification == null || verification.getExpiredAt() != null)
+                throw new IllegalArgumentException("인증을 먼저 진행해주세요.");
         }
-        if (verification != null) deleteVerification(verification.getId());
     }
 
     public Verification selectVerificationById(Integer id) {
@@ -37,11 +37,11 @@ public class VerificationService {
         }
     }
 
-    public Verification selectVerificationByImpUid(String impUid){
+    public Verification selectVerificationByImpUid(String impUid) {
         return verificationRepository.findFirstByTargetEqualsOrderByCreateAtDesc(impUid);
     }
 
-    public  String generateVerificationCode(int length) {
+    public String generateVerificationCode(int length) {
         StringBuilder code = new StringBuilder();
         Random random = new Random();
 
@@ -55,7 +55,8 @@ public class VerificationService {
 
     public Verification selectVerification(String target, String verificationNumber) {
         try {
-            return verificationRepository.findFirstByTargetEqualsAndVerificationNumberEqualsOrderByIdDesc(target, verificationNumber);
+            return verificationRepository.findFirstByTargetEqualsAndVerificationNumberEqualsOrderByIdDesc(target,
+                    verificationNumber);
         } catch (Exception e) {
             System.out.println(e);
             return null;

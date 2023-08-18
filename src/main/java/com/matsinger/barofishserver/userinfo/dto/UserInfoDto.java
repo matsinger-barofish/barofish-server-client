@@ -28,4 +28,5 @@ public class UserInfoDto {
     private List<DeliverPlace> deliverPlaces;
     private Integer reviewCount;
     private Integer notificationCount;
+    private Integer saveProductCount;
 }

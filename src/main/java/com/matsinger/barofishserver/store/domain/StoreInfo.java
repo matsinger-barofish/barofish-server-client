@@ -66,13 +66,15 @@ public class StoreInfo {
     @ColumnDefault("0")
     @Column(name = "deliver_fee", nullable = false)
     private Integer deliverFee;
-
+    @Basic
+    @Column(name = "refund_deliver_fee", nullable = true)
+    private Integer refundDeliverFee;
     @Basic
     @Column(name = "min_order_price", nullable = true)
     private Integer minOrderPrice;
     @Basic
     @Column(name = "settlement_rate", nullable = true)
-    Integer settlementRate;
+    Float settlementRate;
     @Basic
     @Column(name = "bank_name", nullable = true)
     String bankName;
@@ -177,7 +179,7 @@ public class StoreInfo {
     public SimpleStore convert2Dto() {
         return SimpleStore.builder().storeId(this.store.getId()).backgroundImage(backgroudImage).profileImage(
                 profileImage).name(name).location(location).keyword(keyword.split(",")).visitNote(this.getVisitNote()).deliverFee(
-                this.deliverFee).minOrderPrice(this.minOrderPrice).oneLineDescription(this.oneLineDescription).build();
+                this.deliverFee).minOrderPrice(this.minOrderPrice).refundDeliverFee(this.refundDeliverFee).oneLineDescription(this.oneLineDescription).build();
     }
 
     @Override

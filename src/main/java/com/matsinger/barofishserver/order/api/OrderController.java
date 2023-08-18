@@ -30,6 +30,7 @@ import com.matsinger.barofishserver.product.dto.ProductListDto;
 import com.matsinger.barofishserver.siteInfo.application.SiteInfoQueryService;
 import com.matsinger.barofishserver.siteInfo.domain.SiteInformation;
 import com.matsinger.barofishserver.store.application.StoreService;
+import com.matsinger.barofishserver.store.domain.StoreDeliverFeeType;
 import com.matsinger.barofishserver.store.domain.StoreInfo;
 import com.matsinger.barofishserver.user.paymentMethod.application.PaymentMethodService;
 import com.matsinger.barofishserver.user.deliverplace.DeliverPlace;
@@ -181,8 +182,8 @@ public class OrderController {
                     Join<Orders, OrderProductInfo> t = root.join("productInfos", JoinType.INNER);
                     predicates.add(builder.isNotNull(t.get("id")));
                     predicates.add(builder.or(builder.notEqual(t.get("state"), OrderProductState.WAIT_DEPOSIT),
-                            builder.equal(root.get("paymentWay"), OrderPaymentWay.DEPOSIT)));
-
+                            builder.and(root.get("paymentWay").in(List.of(OrderPaymentWay.DEPOSIT,
+                                    OrderPaymentWay.VIRTUAL_ACCOUNT)))));
                     if (tokenInfo.get().getType().equals(TokenAuthType.PARTNER)) {
                         predicates.add(builder.equal(t.get("product").get("storeId"), tokenInfo.get().getId()));
                     }
@@ -195,8 +196,12 @@ public class OrderController {
             };
             Specification<OrderProductInfo> productSpec = (root, query, builder) -> {
                 List<Predicate> predicates = new ArrayList<>();
+                if (state != null) {
+                    predicates.add(root.get("state").in(Arrays.stream(state.split(",")).map(OrderProductState::valueOf).toList()));
+                }
                 if (tokenInfo.get().getType().equals(TokenAuthType.PARTNER))
                     predicates.add(builder.equal(root.get("product").get("storeId"), tokenInfo.get().getId()));
+
                 return builder.and(predicates.toArray(new Predicate[0]));
             };
             PageRequest pageRequest = PageRequest.of(page, take, Sort.by(sort, orderBy.label));
@@ -274,6 +279,18 @@ public class OrderController {
         }
     }
 
+    @GetMapping("/bank-code/list")
+    public ResponseEntity<CustomResponse<List<BankCode>>> selectBankCodeList() {
+        CustomResponse<List<BankCode>> res = new CustomResponse<>();
+        try {
+            List<BankCode> bankCodes = orderService.selectBankCodeList();
+            res.setData(Optional.ofNullable(bankCodes));
+            return ResponseEntity.ok(res);
+        } catch (Exception e) {
+            return res.defaultError(e);
+        }
+    }
+
 
     @PostMapping("")
     public ResponseEntity<CustomResponse<OrderDto>> orderProduct(@RequestHeader(value = "Authorization") Optional<String> auth,
@@ -287,7 +304,20 @@ public class OrderController {
             String name = utils.validateString(data.getName(), 20L, "주문자 이름");
             String tel = utils.validateString(data.getTel(), 11L, "주문자 연락처");
             UserInfo userInfo = userService.selectUserInfo(userId);
-
+            VBankRefundInfo vBankRefundInfo = null;
+            if (data.getPaymentWay().equals(OrderPaymentWay.VIRTUAL_ACCOUNT)) {
+                if (data.getVbankRefundInfo() == null)
+                    return res.throwError("가상계좌 환불 정보를 입력해주세요.", "INPUT_CHECK_REQUIRED");
+                if (data.getVbankRefundInfo().getBankCodeId() == null)
+                    return res.throwError("은행 코드 아이디를 입력해주세요.", "INPUT_CHECK_REQUIRED");
+                BankCode bankCode = orderService.selectBankCode(data.getVbankRefundInfo().getBankCodeId());
+                String bankHolder = utils.validateString(data.getVbankRefundInfo().getBankHolder(), 20L, "환불 예금주명");
+                String bankAccount = data.getVbankRefundInfo().getBankAccount().replaceAll("-", "");
+                bankAccount = utils.validateString(bankAccount, 30L, "환불 계좌번호");
+                vBankRefundInfo =
+                        VBankRefundInfo.builder().bankHolder(bankHolder).bankCode(bankCode.getCode()).bankName(bankCode.getName()).bankAccount(
+                                bankAccount).build();
+            }
             Coupon coupon = null;
             if (data.getCouponId() != null) coupon = couponQueryService.selectCoupon(data.getCouponId());
             if (data.getPoint() != null && userInfo.getPoint() < data.getPoint())
@@ -326,6 +356,19 @@ public class OrderController {
                         optionItem.getPurchasePrice()) : optionItem.getPurchasePrice()).price(price).amount(productReq.getAmount()).isSettled(
                         false).deliveryFee(deliveryFee).build());
             }
+            infos.forEach(i -> {
+                int storeTotalPrice = infos.stream().filter(v -> {
+                    Product productA = productService.selectProduct(v.getProductId());
+                    Product productB = productService.selectProduct(i.getProductId());
+                    return productA.getStoreId() == productB.getStoreId();
+                }).mapToInt(OrderProductInfo::getPrice).sum();
+                Product p = productService.selectProduct(i.getProductId());
+                StoreInfo storeInfo = storeService.selectStoreInfo(p.getStoreId());
+                if (storeInfo.getDeliverFeeType().equals(StoreDeliverFeeType.FREE_IF_OVER) &&
+                        storeTotalPrice > (storeInfo.getMinOrderPrice() != null ? storeInfo.getMinOrderPrice() : 0)) {
+                    i.setDeliveryFee(0);
+                }
+            });
             if (coupon != null) {
                 if (data.getTotalPrice() < coupon.getMinPrice())
                     return res.throwError("쿠폰 최소 금액에 맞지 않습니다.", "INPUT_CHECK_REQUIRED");
@@ -347,7 +390,10 @@ public class OrderController {
                     Orders.builder().id(orderId).userId(tokenInfo.get().getId()).paymentWay(data.getPaymentWay()).state(
                             OrderState.WAIT_DEPOSIT).couponId(data.getCouponId()).orderedAt(utils.now()).totalPrice(data.getTotalPrice()).usePoint(
                             data.getPoint()).couponDiscount(data.getCouponDiscountPrice()).ordererName(name).ordererTel(
-                            tel).build();
+                            tel).bankHolder(vBankRefundInfo != null ? vBankRefundInfo.getBankHolder() : null).bankCode(
+                            vBankRefundInfo != null ? vBankRefundInfo.getBankCode() : null).bankName(vBankRefundInfo !=
+                            null ? vBankRefundInfo.getBankName() : null).bankAccount(vBankRefundInfo !=
+                            null ? vBankRefundInfo.getBankAccount() : null).build();
 
             Orders result = orderService.orderProduct(order, infos, orderDeliverPlace);
 
@@ -441,10 +487,15 @@ public class OrderController {
             Orders order = orderService.selectOrder(info.getOrderId());
             if (tokenInfo.get().getId() != order.getUserId()) return res.throwError("타인의 주문 내역입니다.", "NOT_ALLOWED");
             if (data.getCancelReason() == null) return res.throwError("취소/환불 사유를 선택해주세요.", "INPUT_CHECK_REQUIRED");
-            String content = utils.validateString(data.getContent(), 1000L, "사유");
+            String content = null;
+            if (data.getContent() != null) content = utils.validateString(data.getContent(), 1000L, "사유");
             info.setCancelReason(data.getCancelReason());
             info.setCancelReasonContent(content);
+            Product product = productService.selectProduct(info.getProductId());
             orderService.requestCancelOrderProduct(info.getId());
+            notificationCommandService.sendFcmToUser(tokenInfo.get().getId(),
+                    NotificationMessageType.ORDER_CANCEL,
+                    NotificationMessage.builder().productName(product.getTitle()).isCanceledByRegion(false).build());
             orderService.updateOrderProductInfo(new ArrayList<>(List.of(info)));
             res.setData(Optional.of(true));
             return ResponseEntity.ok(res);
@@ -603,7 +654,8 @@ public class OrderController {
             if (tokenInfo.get().getType().equals(TokenAuthType.ADMIN)) adminId = tokenInfo.get().getId();
             OrderProductInfo info = orderService.selectOrderProductInfo(orderProductInfoId);
             if (!info.getState().equals(OrderProductState.DELIVERY_READY) &&
-                    !info.getState().equals(OrderProductState.ON_DELIVERY))
+                    !info.getState().equals(OrderProductState.ON_DELIVERY) &&
+                    !info.getState().equals(OrderProductState.EXCHANGE_ACCEPT))
                 return res.throwError("변경 불가능한 상태입니다.", "NOT_ALLOWED");
             if (data.getDeliverCompanyCode() == null) return res.throwError("택배사 코드를 입력해주세요.", "INPUT_CHECK_REQUIRED");
             if (data.getInvoice() == null) return res.throwError("운송장 번호를 입력해주세요.", "INPUT_CHECK_REQUIRED");
@@ -778,7 +830,8 @@ public class OrderController {
             if (tokenInfo.get().getId() != order.getUserId()) return res.throwError("타인의 주문 내역입니다.", "NOT_ALLOWED");
             info.setState(OrderProductState.REFUND_REQUEST);
             if (data.getCancelReason() == null) return res.throwError("취소/환불 사유를 선택해주세요.", "INPUT_CHECK_REQUIRED");
-            String content = utils.validateString(data.getContent(), 1000L, "사유");
+            String content = null;
+            if (data.getContent() != null) content = utils.validateString(data.getContent(), 1000L, "사유");
             info.setCancelReason(data.getCancelReason());
             info.setCancelReasonContent(content);
             orderService.updateOrderProductInfo(new ArrayList<>(List.of(info)));
@@ -875,6 +928,7 @@ public class OrderController {
             Orders order = orderService.selectOrder(info.getOrderId());
             Product product = productService.findById(info.getProductId());
             info.setState(OrderProductState.REFUND_DONE);
+            orderService.cancelOrderedProduct(info.getId());
             orderService.updateOrderProductInfo(new ArrayList<>(List.of(info)));
             res.setData(Optional.of(true));
             notificationCommandService.sendFcmToUser(order.getUserId(),

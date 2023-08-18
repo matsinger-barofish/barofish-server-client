@@ -75,7 +75,7 @@ public class Inquiry {
     public InquiryDto convert2Dto() {
         return InquiryDto.builder().id(this.getId()).type(this.getType()).isSecret(this.getIsSecret()).productId(this.getProductId()).content(
                 this.getContent()).createdAt(this.getCreatedAt()).answeredAt(this.getAnsweredAt()).answer(this.getAnswer()).user(
-                user.getUserInfo().convert2Dto()).build();
+                user.getUserInfo() != null ? user.getUserInfo().convert2Dto() : null).build();
     }
 
 }

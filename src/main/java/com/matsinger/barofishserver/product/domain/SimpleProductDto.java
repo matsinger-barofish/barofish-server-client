@@ -9,6 +9,7 @@ import com.matsinger.barofishserver.product.dto.ProductListDto;
 import com.matsinger.barofishserver.review.dto.ReviewDto;
 import com.matsinger.barofishserver.review.dto.ReviewTotalStatistic;
 import com.matsinger.barofishserver.searchFilter.dto.SearchFilterFieldDto;
+import com.matsinger.barofishserver.store.domain.StoreDeliverFeeType;
 import com.matsinger.barofishserver.store.dto.SimpleStore;
 import lombok.*;
 
@@ -31,12 +32,15 @@ public class SimpleProductDto {
     Integer originPrice;
     String deliveryInfo;
     Integer deliveryFee;
+    StoreDeliverFeeType deliverFeeType;
+    Integer minOrderPrice;
     String[] descriptionImages;
     Integer representOptionItemId;
     Boolean needTaxation;
     Timestamp createdAt;
     String description;
     Integer deliverBoxPerAmount;
+    Float pointRate;
 
     // 위는 product 자체의 정보, 아래는 주입받아야 하는 정보
     SimpleStore store;

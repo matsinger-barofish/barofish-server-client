@@ -11,10 +11,13 @@ public interface UserAuthRepository extends JpaRepository<UserAuth, UserAuthId> 
 
     Optional<UserAuth> findByLoginTypeAndLoginId(LoginType loginType, String userId);
 
+    Optional<UserAuth> findByLoginTypeAndUserId(LoginType loginType, Integer id);
+
     Optional<UserAuth> findByLoginId(String loginId);
 
     Optional<UserAuth> findByLoginIdAndLoginType(String loginId, LoginType loginType);
 
     UserAuth findFirstByUserId(Integer userId);
+
     void deleteAllByUserId(Integer userId);
 }

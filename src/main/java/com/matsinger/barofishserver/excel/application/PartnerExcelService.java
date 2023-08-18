@@ -67,7 +67,7 @@ public class PartnerExcelService {
         String settlementRateStr = row.getCell(9).getStringCellValue();
         if (settlementRateStr.equals("공급가")) settlementRateStr = "100";
         settlementRateStr = settlementRateStr.replaceAll("[^\\d]", "");
-        Integer settlementRate = Integer.parseInt(settlementRateStr);
+        Float settlementRate = Float.valueOf(settlementRateStr);
         // 은행명 10
         String bankName = row.getCell(10) == null ? null : row.getCell(10).getStringCellValue();
         // 예금주 11

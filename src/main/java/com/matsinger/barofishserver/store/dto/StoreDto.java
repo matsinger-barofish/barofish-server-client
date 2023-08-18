@@ -26,6 +26,7 @@ public class StoreDto {
     String visitNote;
     StoreDeliverFeeType deliverFeeType;
     Integer deliverFee;
+    Integer refundDeliverFee;
     Integer minOrderPrice;
     String oneLineDescription;
     StoreAdditionalDto additionalData;

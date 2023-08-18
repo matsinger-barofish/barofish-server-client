@@ -1,5 +1,6 @@
 package com.matsinger.barofishserver.userinfo.application;
 
+import com.matsinger.barofishserver.compare.application.CompareItemQueryService;
 import com.matsinger.barofishserver.notification.repository.NotificationRepository;
 import com.matsinger.barofishserver.review.repository.ReviewRepository;
 import com.matsinger.barofishserver.user.deliverplace.repository.DeliverPlaceRepository;
@@ -22,6 +23,7 @@ public class UserInfoQueryService {
     private final DeliverPlaceRepository deliverPlaceRepository;
     private final ReviewRepository reviewRepository;
     private final NotificationRepository notificationRepository;
+    private final CompareItemQueryService compareItemQueryService;
 
     public UserInfoDto showMyPage(Integer userId) {
 
@@ -33,7 +35,7 @@ public class UserInfoQueryService {
         List<DeliverPlace> deliverPlaces = deliverPlaceRepository.findAllByUserId(userId);
         Integer reviewCount = reviewRepository.countAllByUserId(userId);
         Integer notificationCount = notificationRepository.countAllByUserId(userId);
-
+        Integer saveProductCount = compareItemQueryService.countSaveProductWithUserId(userId);
         return UserInfoDto.builder()
                 .userId(userId)
                 .profileImage(findUserInfo.getProfileImage())
@@ -47,6 +49,7 @@ public class UserInfoQueryService {
                 .notificationCount(notificationCount)
                 .deliverPlaces(deliverPlaces)
                 .point(findUserInfo.getPoint())
+                .saveProductCount(saveProductCount)
                 .build();
     }
 }

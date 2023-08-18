@@ -1,6 +1,7 @@
 package com.matsinger.barofishserver;
 
 import com.google.gson.JsonObject;
+import com.matsinger.barofishserver.utils.ShRunner;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.codec.binary.Hex;
@@ -20,6 +21,7 @@ import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
+import java.util.Map;
 
 @RestController
 @RequiredArgsConstructor
@@ -30,35 +32,11 @@ public class GithubWebhook {
     @Value("${github.webhook.branch}")
     private String githubBranch;
 
-    private static String bytesToHex(byte[] bytes) {
-        StringBuilder hexString = new StringBuilder();
-        for (byte b : bytes) {
-            String hex = Integer.toHexString(0xFF & b);
-            if (hex.length() == 1) {
-                hexString.append('0');
-            }
-            hexString.append(hex);
-        }
-        return hexString.toString();
-    }
-
-    public String HMAC_SHA256_encode(String key, String message) throws NoSuchAlgorithmException, InvalidKeyException {
-        SecretKeySpec keySpec = new SecretKeySpec(key.getBytes(), "HmacSHA256");
-
-        Mac mac = Mac.getInstance("HmacSHA256");
-        mac.init(keySpec);
-        byte[] rawHmac = mac.doFinal(message.getBytes());
-
-        return Hex.encodeHexString(rawHmac);
-    }
-
     @PostMapping(value = "")
-    ResponseEntity<Boolean> githubWebhookCallback(
-            @RequestHeader(value = "x-hub-signature-256", required = false) String signature,
-            @RequestBody String payload)
+    ResponseEntity<Boolean> githubWebhookCallback(@RequestHeader(value = "x-hub-signature-256", required = false) String signature,
+                                                  @RequestBody String payload)
             throws NoSuchAlgorithmException, InvalidKeyException, IOException {
-        if (githubBranch.equals("none"))
-            return ResponseEntity.status(400).body(false);
+        if (githubBranch.equals("none")) return ResponseEntity.status(400).body(false);
         System.out.println("Github Webhook Request received");
         JSONObject jsonObject = new JSONObject(payload);
         String hash = String.format("sha256=%s", HmacUtils.hmacSha256Hex(githubWebhookSecret, payload));
@@ -67,15 +45,11 @@ public class GithubWebhook {
         }
         if (jsonObject.get("ref").equals("refs/heads/" + githubBranch)) {
             System.out.println("running hook_github.sh");
-            Process process = Runtime.getRuntime().exec("~/barofish-server-client/hook_github.sh");
-            // Read output
-            StringBuilder output = new StringBuilder();
-            BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
-
-            String line;
-            while ((line = reader.readLine()) != null) {
-                output.append(line);
-            }
+            ShRunner shRunner = new ShRunner();
+            String cmds = "sh ~/server-update.sh";
+            String[] callCmd = {"/bin/bash", "-c", cmds};
+            Map map = shRunner.execCommand(callCmd);
+            System.out.println(map);
         }
         return ResponseEntity.ok(true);
     }

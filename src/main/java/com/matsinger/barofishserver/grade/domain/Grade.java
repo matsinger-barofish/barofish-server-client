@@ -22,7 +22,7 @@ public class Grade {
 
     @Basic
     @Column(name = "point_rate")
-    private int pointRate;
+    private float pointRate;
     @Basic
     @Column(name = "min_order_price", nullable = false)
     private Integer minOrderPrice;

@@ -92,6 +92,7 @@ public class StoreController {
                                                                                  @RequestParam(value = "location", required = false) String location,
                                                                                  @RequestParam(value = "keyword", required = false) String keyword,
                                                                                  @RequestParam(value = "state", required = false) String state,
+                                                                                 @RequestParam(value = "ids", required = false) String ids,
                                                                                  @RequestParam(value = "joinAtS", required = false) Timestamp joinAtS,
                                                                                  @RequestParam(value = "joinAtE", required = false) Timestamp joinAtE) {
         CustomResponse<Page<StoreDto>> res = new CustomResponse<>();
@@ -109,6 +110,7 @@ public class StoreController {
                 if (loginId != null) predicates.add(builder.like(root.get("loginId"), "%" + loginId + "%"));
                 if (location != null)
                     predicates.add(builder.like(root.get("storeInfo").get("location"), "%" + location + "%"));
+                if (ids != null) predicates.add(builder.and(root.get("id").in(utils.str2IntList(ids))));
                 if (state != null)
                     predicates.add(builder.and(root.get("state").in(Arrays.stream(state.split(",")).map(StoreState::valueOf).toList())));
                 if (joinAtS != null) predicates.add(builder.greaterThan(root.get("joinAt"), joinAtS));
@@ -212,6 +214,22 @@ public class StoreController {
         }
     }
 
+    @GetMapping(value = {"/is-active"})
+    public ResponseEntity<CustomResponse<Boolean>> checkStoreIsActive(@RequestHeader(value = "Authorization") Optional<String> auth) {
+        CustomResponse<Boolean> res = new CustomResponse<>();
+        Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.PARTNER), auth);
+        if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
+        try {
+
+            Integer storeId = tokenInfo.get().getId();
+            Store store = storeService.selectStore(storeId);
+            res.setData(Optional.ofNullable(store.getState().equals(StoreState.ACTIVE)));
+            return ResponseEntity.ok(res);
+        } catch (Exception e) {
+            return res.defaultError(e);
+        }
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<CustomResponse<SimpleStore>> selectStore(@PathVariable("id") Integer id,
                                                                    @RequestHeader(value = "Authorization") Optional<String> auth) {
@@ -279,7 +297,7 @@ public class StoreController {
     @Getter
     @NoArgsConstructor
     private static class AddStoreAdditionalReq {
-        Integer settlementRate;
+        Float settlementRate;
         String bankName;
         String bankHolder;
         String bankAccount;
@@ -309,6 +327,7 @@ public class StoreController {
                                                              @RequestPart(value = "visitNote", required = false) String visitNote,
                                                              @RequestPart(value = "deliverFeeType", required = false) StoreDeliverFeeType deliverFeeType,
                                                              @RequestPart(value = "deliverFee", required = false) Integer deliverFee,
+                                                             @RequestPart(value = "refundDeliverFee", required = false) Integer refundDeliverFee,
                                                              @RequestPart(value = "minOrderPrice", required = false) Integer minOrderPrice,
                                                              @RequestPart(value = "oneLineDescription", required = false) String oneLineDescription,
                                                              @RequestPart(value = "additionalData") AddStoreAdditionalReq data,
@@ -355,12 +374,13 @@ public class StoreController {
             StoreInfo
                     storeInfoData =
                     StoreInfo.builder().name(name).location(location).keyword(keyword).visitNote("").deliverFeeType(
-                            deliverFeeType).deliverFee(deliverFee).oneLineDescription(oneLineDescriptionData).settlementRate(
-                            data.settlementRate).bankName(bankName).bankHolder(bankHolder).bankAccount(bankAccount).representativeName(
-                            representativeName).companyId(companyId).businessType(businessType).mosRegistrationNumber(
-                            mosRegistrationNumber).businessAddress(businessAddress).postalCode(postalCode).lotNumberAddress(
-                            lotNumberAddress).streetNameAddress(streetNameAddress).addressDetail(addressDetail).tel(tel).email(
-                            email).faxNumber(faxNumber).isReliable(false).build();
+                            deliverFeeType).deliverFee(deliverFee).refundDeliverFee(refundDeliverFee).oneLineDescription(
+                            oneLineDescriptionData).settlementRate(data.settlementRate).bankName(bankName).bankHolder(
+                            bankHolder).bankAccount(bankAccount).representativeName(representativeName).companyId(
+                            companyId).businessType(businessType).mosRegistrationNumber(mosRegistrationNumber).businessAddress(
+                            businessAddress).postalCode(postalCode).lotNumberAddress(lotNumberAddress).streetNameAddress(
+                            streetNameAddress).addressDetail(addressDetail).tel(tel).email(email).faxNumber(faxNumber).isReliable(
+                            false).build();
             if (deliverFeeType != null) storeInfoData.setDeliverFeeType(storeInfoData.getDeliverFeeType());
             if (deliverFeeType != null && deliverFeeType.equals(StoreDeliverFeeType.FREE_IF_OVER) && deliverFee == null)
                 return res.throwError("무료 배송 최소 주문 금액을 입력해주세요.", "INPUT_CHECK_REQUIRED");
@@ -427,6 +447,11 @@ public class StoreController {
             for (Integer storeId : data.getStoreIds()) {
                 Store store = storeService.selectStore(storeId);
                 store.setState(data.state);
+                if (data.state.equals(StoreState.BANNED)) {
+                    StoreInfo storeInfo = storeService.selectStoreInfo(storeId);
+                    storeInfo.setIsReliable(false);
+                    storeService.updateStoreInfo(storeInfo);
+                }
                 stores.add(store);
                 String
                         content =
@@ -459,6 +484,7 @@ public class StoreController {
                                                                     @RequestPart(value = "visitNote", required = false) String visitNote,
                                                                     @RequestPart(value = "deliverFeeType", required = false) StoreDeliverFeeType deliverFeeType,
                                                                     @RequestPart(value = "deliverFee", required = false) Integer deliverFee,
+                                                                    @RequestPart(value = "refundDeliverFee", required = false) Integer refundDeliverFee,
                                                                     @RequestPart(value = "minOrderPrice", required = false) Integer minOrderPrice,
                                                                     @RequestPart(value = "oneLineDescription", required = false) String oneLineDescription,
                                                                     @RequestPart(value = "additionalData", required = false) AddStoreAdditionalReq data,
@@ -527,6 +553,9 @@ public class StoreController {
                 storeInfo.setDeliverFeeType(StoreDeliverFeeType.FREE_IF_OVER);
                 if (deliverFee != null) storeInfo.setDeliverFee(deliverFee);
                 storeInfo.setMinOrderPrice(minOrderPrice);
+            }
+            if (refundDeliverFee != null) {
+                storeInfo.setRefundDeliverFee(refundDeliverFee);
             }
             if (data != null) {
                 if (data.settlementRate != null) {

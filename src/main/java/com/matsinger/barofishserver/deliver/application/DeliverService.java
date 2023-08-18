@@ -113,6 +113,7 @@ public class DeliverService {
             Deliver.TrackingInfo trackingInfo = selectTrackingInfo(info.getDeliverCompanyCode(), info.getInvoiceCode());
             if (trackingInfo != null && trackingInfo.getLevel() == 6) {
                 info.setState(OrderProductState.DELIVERY_DONE);
+                info.setDeliveryDoneAt(util.now());
                 orderService.updateOrderProductInfo(new ArrayList<>(List.of(info)));
             }
         }
@@ -127,17 +128,11 @@ public class DeliverService {
             throw new IllegalArgumentException("우편 번호를 입력해주세요.");
         }
 
-        DeliverPlace createdDeliver = DeliverPlace.builder()
-                .userId(user.getId())
-                .name(userInfo.getName())
-                .receiverName(userInfo.getName())
-                .tel(userInfo.getPhone())
-                .address(address)
-                .addressDetail(addressDetail)
-                .deliverMessage("")
-                .postalCode(request.getPostalCode())
-                .isDefault(true)
-                .build();
+        DeliverPlace
+                createdDeliver =
+                DeliverPlace.builder().userId(user.getId()).name(userInfo.getName()).receiverName(userInfo.getName()).tel(
+                        userInfo.getPhone()).address(address).addressDetail(addressDetail).deliverMessage("").postalCode(
+                        request.getPostalCode()).isDefault(true).build();
 
         return deliverPlaceRepository.save(createdDeliver);
     }

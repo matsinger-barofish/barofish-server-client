@@ -75,6 +75,9 @@ public class OrderProductInfo {
     @Column(name = "settledAt", nullable = true)
     private Timestamp settledAt;
     @Basic
+    @Column(name = "delivery_done_at")
+    private Timestamp deliveryDoneAt;
+    @Basic
     @Column(name = "final_confirmed_at", nullable = true)
     private Timestamp finalConfirmedAt;
 

@@ -127,7 +127,8 @@ public class UserController {
                                 directoryElement) : String.join("/",
                                 Arrays.asList(s3.getS3Url(), "default_profile.png"));
                 userInfoCommandService.setImageUrl(userId, imageUrl);
-
+                Verification verification = verificationService.selectVerificationById(request.getVerificationId());
+                if (verification != null) verificationService.deleteVerification(verification.getId());
                 res.setData(Optional.of(true));
             }
             return ResponseEntity.ok(res);
@@ -170,16 +171,15 @@ public class UserController {
             }
             if (data.getNewPassword() != null) {
                 if (data.getOldPassword() == null) return res.throwError("변경 전 비밀번호를 입력해주세요.", "INPUT_CHECK_REQUIRED");
-                UserAuth userAuth = userCommandService.selectUserAuth(userId);
-                if (!userAuth.getLoginType().equals(LoginType.IDPW))
-                    return res.throwError("소셜 로그인 유저입니다.", "NOT_ALLOWED");
-                if (!BCrypt.checkpw(data.getOldPassword(), userAuth.getPassword()))
+                Optional<UserAuth> userAuth = userCommandService.findUserAuthWithIDPWType(userId);
+                if (userAuth.isEmpty()) return res.throwError("소셜 로그인 유저입니다.", "NOT_ALLOWED");
+                if (!BCrypt.checkpw(data.getOldPassword(), userAuth.get().getPassword()))
                     return res.throwError("이전 비밀번호와 일치하지 않습니다.", "NOT_ALLOWED");
                 if (!Pattern.matches(re.password, data.getNewPassword()))
                     return res.throwError("비밀번호 형식을 확인해주세요.", "INPUT_CHECK_REQUIRED");
                 String password = BCrypt.hashpw(data.getNewPassword(), BCrypt.gensalt());
-                userAuth.setPassword(password);
-                userCommandService.updateUserPassword(userAuth);
+                userAuth.get().setPassword(password);
+                userCommandService.updateUserPassword(userAuth.get());
             }
             if (data.getPhone() != null) {
                 if (data.getVerificationId() == null) return res.throwError("인증 먼저 진행해주세요.", "INPUT_CHECK_REQUIRED");

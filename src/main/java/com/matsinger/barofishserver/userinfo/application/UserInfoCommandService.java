@@ -7,6 +7,7 @@ import com.matsinger.barofishserver.user.dto.SnsJoinReq;
 import com.matsinger.barofishserver.user.dto.UserJoinReq;
 import com.matsinger.barofishserver.user.dto.UserUpdateReq;
 import com.matsinger.barofishserver.user.domain.User;
+import com.matsinger.barofishserver.userauth.domain.LoginType;
 import com.matsinger.barofishserver.userinfo.domain.UserInfo;
 import com.matsinger.barofishserver.userinfo.repository.UserInfoRepository;
 import com.matsinger.barofishserver.utils.Common;
@@ -31,14 +32,12 @@ public class UserInfoCommandService {
 
     public UserInfo updateUserInfo(Integer userId, UserUpdateReq request, String imageUrl) throws Exception {
 
-        User findUser = userRepository.findById(userId)
-                .orElseThrow(() -> {
-                    throw new IllegalStateException("유저 정보를 찾을 수 없습니다.");
-                });
-        UserInfo findUserInfo = userInfoRepository.findByUserId(findUser.getId())
-                .orElseThrow(() -> {
-                    throw new IllegalArgumentException("유저 정보를 찾을 수 없습니다.");
-                });
+        User findUser = userRepository.findById(userId).orElseThrow(() -> {
+            throw new IllegalStateException("유저 정보를 찾을 수 없습니다.");
+        });
+        UserInfo findUserInfo = userInfoRepository.findByUserId(findUser.getId()).orElseThrow(() -> {
+            throw new IllegalArgumentException("유저 정보를 찾을 수 없습니다.");
+        });
 
         if (imageUrl != null) {
             findUserInfo.setProfileImage(imageUrl);
@@ -64,14 +63,15 @@ public class UserInfoCommandService {
 
     public UserInfo createAndSaveUserInfo(User user, SnsJoinReq request, String profileImage, Grade grade)
             throws MalformedURLException {
-        String phoneNumber = request.getPhone();
-
-        verifyPhoneNumberFormat(phoneNumber);
-
-        String fixedPhoneNumber = phoneNumber.replaceAll(re.getPhone(), "0$1$2$3");
-        verifyPhoneNumberIsExists(fixedPhoneNumber);
-
+        String fixedPhoneNumber = null;
+        if (!request.getLoginType().equals(LoginType.APPLE)) {
+            String phoneNumber = request.getPhone();
+            verifyPhoneNumberFormat(phoneNumber);
+            fixedPhoneNumber = phoneNumber.replaceAll(re.getPhone(), "0$1$2$3");
+            verifyPhoneNumberIsExists(fixedPhoneNumber);
+        }
         UserInfo userInfo = request.toUserInfo(fixedPhoneNumber);
+        userInfo.setEmail(request.getEmail()); // 이메일 설정추가
         userInfo.setProfileImage(profileImage);
         userInfo.setGrade(grade);
         userInfo.setUserId(user.getId());
@@ -91,33 +91,26 @@ public class UserInfoCommandService {
 
         String name = util.validateString(request.getName(), 20L, "이름");
 
-        Boolean isAgreeMarketing = request.getIsAgreeMarketing() == null
-                ? false
-                : request.getIsAgreeMarketing();
+        Boolean isAgreeMarketing = request.getIsAgreeMarketing() == null ? false : request.getIsAgreeMarketing();
 
         String nickname = util.validateString(request.getNickname(), 50L, "닉네임");
         if (userInfoRepository.findByNickname(nickname).isPresent()) {
             throw new IllegalArgumentException("중복된 닉네임입니다.");
         }
 
-        UserInfo userInfo = UserInfo.builder()
-                .userId(user.getId())
-                .phone(fixedPhoneNumber)
-                .nickname(nickname)
-                .profileImage("")
-                .email(request.getEmail())
-                .name(name)
-                .point(0)
-                .isAgreeMarketing(isAgreeMarketing)
-                .grade(grade)
-                .build();
+        UserInfo
+                userInfo =
+                UserInfo.builder().userId(user.getId()).phone(fixedPhoneNumber).nickname(nickname).profileImage("").email(
+                        request.getEmail()).name(name).point(0).isAgreeMarketing(isAgreeMarketing).grade(grade).build();
         userInfo.setUser(user);
         return userInfoRepository.save(userInfo);
     }
 
     public void setImageUrl(int userId, String imageUrl) {
-        UserInfo findUserInfo = userInfoRepository.findByUserId(userId)
-                .orElseThrow(() -> new IllegalArgumentException("유저 정보를 찾을 수 없습니다"));
+        UserInfo
+                findUserInfo =
+                userInfoRepository.findByUserId(userId).orElseThrow(() -> new IllegalArgumentException(
+                        "유저 정보를 찾을 수 없습니다"));
         findUserInfo.setProfileImage(imageUrl);
     }
 
@@ -128,7 +121,7 @@ public class UserInfoCommandService {
     }
 
     private void verifyPhoneNumberFormat(String phoneNumber) {
-        if (!Pattern.matches(re.phone, phoneNumber) || phoneNumber.length() != 13) {
+        if (!Pattern.matches(re.phone, phoneNumber)) {
             throw new IllegalArgumentException("휴대폰 번호 형식을 확인해주세요.");
             // customResponse.throwError("휴대폰 번호 형식을 확인해주세요.", "INPUT_CHECK_REQUIRED");
         }

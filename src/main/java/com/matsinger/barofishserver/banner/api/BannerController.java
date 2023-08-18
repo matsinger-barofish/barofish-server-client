@@ -88,24 +88,25 @@ public class BannerController {
     }
 
     @GetMapping("/management")
-    public ResponseEntity<CustomResponse<Page<BannerDto>>> selectBannerListByAdmin(@RequestHeader(value = "Authorization") Optional<String> auth,
+    public ResponseEntity<CustomResponse<List<BannerDto>>> selectBannerListByAdmin(@RequestHeader(value =
+            "Authorization") Optional<String> auth,
                                                                                    @RequestParam(value = "page", required = false, defaultValue = "0") Integer page,
                                                                                    @RequestParam(value = "take", required = false, defaultValue = "10") Integer take,
                                                                                    @RequestParam(value = "types", required = false) String types,
                                                                                    @RequestParam(value = "orderby", defaultValue = "id") BannerOrderBy orderBy,
                                                                                    @RequestParam(value = "orderType", defaultValue = "DESC") Sort.Direction sort) {
-        CustomResponse<Page<BannerDto>> res = new CustomResponse<>();
+        CustomResponse<List<BannerDto>> res = new CustomResponse<>();
         Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
         if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
         try {
-            PageRequest pageRequest = PageRequest.of(page, take, Sort.by(sort, orderBy.label));
             Specification<Banner> spec = (root, query, builder) -> {
                 List<Predicate> predicates = new ArrayList<>();
                 if (types != null)
                     predicates.add(builder.and(root.get("type").in(Arrays.stream(types.split(",")).map(BannerType::valueOf).toList())));
                 return builder.and(predicates.toArray(new Predicate[0]));
             };
-            Page<BannerDto> banners = bannerQueryService.selectBannerListByAdmin(pageRequest, spec).map(Banner::convert2Dto);
+            List<BannerDto> banners =
+                    bannerQueryService.selectBannerListByAdmin(spec).stream().map(Banner::convert2Dto).toList();
             res.setData(Optional.of(banners));
             return ResponseEntity.ok(res);
         } catch (Exception e) {

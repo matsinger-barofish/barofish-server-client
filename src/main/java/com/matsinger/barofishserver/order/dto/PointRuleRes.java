@@ -8,6 +8,6 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 public class PointRuleRes {
-    Integer pointRate;
+    Float pointRate;
     Integer maxReviewPoint;
 }

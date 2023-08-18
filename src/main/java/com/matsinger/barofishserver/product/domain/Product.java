@@ -91,8 +91,8 @@ public class Product {
     @JsonBackReference
     @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL, mappedBy = "product")
     private List<Review> reviews = new ArrayList<>();
-    @Column(name = "delivery_fee", nullable = true)
-    private int deliveryFee;
+//    @Column(name = "delivery_fee", nullable = true)
+//    private int deliveryFee;
 
     @Column(name = "item_code")
     private String itemCode;
@@ -193,11 +193,10 @@ public class Product {
                 this.images.substring(1,
                         images.length() -
                                 1).split(",")).title(title).state(this.getState()).originPrice(originPrice).deliveryInfo(
-                deliveryInfo).deliveryFee(deliveryFee).description(descriptionImages).descriptionImages(
-                descriptionImages.substring(1,
-                        descriptionImages.length() -
-                                1).split(",")).representOptionItemId(this.representOptionItemId).deliverBoxPerAmount(
-                this.getDeliverBoxPerAmount()).createdAt(this.getCreatedAt()).build();
+                deliveryInfo).description(descriptionImages).descriptionImages(descriptionImages.substring(1,
+                descriptionImages.length() -
+                        1).split(",")).representOptionItemId(this.representOptionItemId).deliverBoxPerAmount(this.getDeliverBoxPerAmount()).createdAt(
+                this.getCreatedAt()).pointRate(this.getPointRate()).build();
     }
 
     @Override

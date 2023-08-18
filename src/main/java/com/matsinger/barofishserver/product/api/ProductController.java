@@ -2,6 +2,9 @@ package com.matsinger.barofishserver.product.api;
 
 import com.matsinger.barofishserver.address.application.AddressQueryService;
 import com.matsinger.barofishserver.address.domain.Address;
+import com.matsinger.barofishserver.admin.application.AdminCommandService;
+import com.matsinger.barofishserver.admin.application.AdminQueryService;
+import com.matsinger.barofishserver.admin.domain.Admin;
 import com.matsinger.barofishserver.admin.log.application.AdminLogCommandService;
 import com.matsinger.barofishserver.admin.log.application.AdminLogQueryService;
 import com.matsinger.barofishserver.admin.log.domain.AdminLog;
@@ -65,6 +68,7 @@ public class ProductController {
     private final DifficultDeliverAddressCommandService difficultDeliverAddressCommandService;
     private final AdminLogQueryService adminLogQueryService;
     private final AdminLogCommandService adminLogCommandService;
+    private final AdminQueryService adminQueryService;
     private final JwtService jwt;
 
     private final Common utils;
@@ -76,14 +80,16 @@ public class ProductController {
         CustomResponse<List<ProductListDto>> res = new CustomResponse<>();
         try {
             List<Integer> idList = utils.str2IntList(ids);
-            List<Product> products = productService.selectProductListWithIds(idList);
-            res.setData(Optional.of(products.stream().map(productService::convert2ListDto).toList()));
 
-//            List<ProductListDto> productListDtos = new ArrayList<>();
-//            for (Integer id : idList) {
-//                productListDtos.add(productQueryService.createProductListDtos(id));
-//            }
-//            res.setData(Optional.of(productListDtos));
+            List<ProductListDto> productListDtos = new ArrayList<>();
+            for (Integer id : idList) {
+                Optional<Product> product = productService.selectOptioanlProduct(id);
+                product.ifPresent(value -> {
+                    if (value.getState().equals(ProductState.ACTIVE))
+                        productListDtos.add(productService.convert2ListDto(value));
+                });
+            }
+            res.setData(Optional.of(productListDtos));
             return ResponseEntity.ok(res);
         } catch (Exception e) {
             return res.defaultError(e);
@@ -228,6 +234,29 @@ public class ProductController {
         }
     }
 
+    @GetMapping("/excel-list")
+    public ResponseEntity<CustomResponse<List<List<ExcelProductDto2>>>> selectProductListForExcel(@RequestHeader(value = "Authorization") Optional<String> auth,
+                                                                                                  @RequestParam(value = "ids", required = false) String idsStr) {
+        CustomResponse<List<List<ExcelProductDto2>>> res = new CustomResponse<>();
+        Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
+        if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
+        try {
+            List<Integer> ids = null;
+            if (idsStr != null) ids = utils.str2IntList(idsStr);
+            List<Product> products = new ArrayList<>();
+            if (ids != null) products = productService.selectProductListWithIds(ids);
+            else products = productService.selectProductListNotDelete();
+            List<List<ExcelProductDto2>>
+                    productDtos =
+                    products.stream().map(productService::convert2ExcelProductDto2).toList();
+            res.setData(Optional.of(productDtos));
+            return ResponseEntity.ok(res);
+        } catch (Exception e) {
+            return res.defaultError(e);
+        }
+    }
+
+
     @GetMapping("/{id}")
     public ResponseEntity<CustomResponse<SimpleProductDto>> selectProduct(@RequestHeader(value = "Authorization") Optional<String> auth,
                                                                           @PathVariable("id") Integer id) {
@@ -346,12 +375,12 @@ public class ProductController {
             product.setImages("");
             product.setPointRate(0.0F);
             product.setDescriptionImages("");
+            product.setPointRate(data.getPointRate());
             product.setState(adminId == null ? ProductState.INACTIVE_PARTNER : ProductState.ACTIVE);
             product.setRepresentOptionItemId(null);
             product.setNeedTaxation(data.getNeedTaxation() != null ? data.getNeedTaxation() : true);
             product.setDeliverBoxPerAmount(data.getDeliverBoxPerAmount());
-            product.setDeliveryFee(data.getDeliveryFee() != null ? data.getDeliveryFee() : 0);
-            product.setState(!data.getIsActive() ? ProductState.INACTIVE : ProductState.ACTIVE);
+//            product.setDeliveryFee(data.getDeliveryFee() != null ? data.getDeliveryFee() : 0);
             product.setCreatedAt(new Timestamp(System.currentTimeMillis()));
             Product result = productService.addProduct(product);
             OptionItem representOptionItem = null;
@@ -456,14 +485,16 @@ public class ProductController {
             if (data.getDeliverBoxPerAmount() != null) {
                 product.setDeliverBoxPerAmount(data.getDeliverBoxPerAmount());
             }
-
+            if (data.getPointRate() != null) {
+                product.setPointRate(data.getPointRate());
+            }
             if (data.getDeliveryInfo() != null) {
                 String deliveryInfo = utils.validateString(data.getDeliveryInfo(), 500L, "배송 안내");
                 product.setDeliveryInfo(deliveryInfo);
             }
             if (data.getDeliveryFee() != null) {
                 if (data.getDeliveryFee() < 0) return res.throwError("배달료를 확인해주세요.", "INPUT_CHECK_REQUIRED");
-                product.setDeliveryFee(data.getDeliveryFee());
+//                product.setDeliveryFee(data.getDeliveryFee());
             }
             if (data.getExpectedDeliverDay() != null) {
                 if (data.getExpectedDeliverDay() < 0) return res.throwError("예상 도착일을 입력해주세요.", "INPUT_CHECK_REQUIRED");
@@ -643,14 +674,29 @@ public class ProductController {
                 productFilterService.deleteAllFilterValueWithProductId(product.getId());
                 productFilterService.addAllProductFilter(filterValues);
             }
-            if (adminId != null) {
-                String content = "상품 정보를 수정하였습니다.";
+            if (adminId == null) adminId = 1;
+            Admin admin = adminQueryService.selectAdmin(adminId);
+            String
+                    content =
+                    String.format("상품 정보를 수정하였습니다.[%s]",
+                            tokenInfo.get().getType().equals(TokenAuthType.PARTNER) ? "파트너" : admin.getName());
+            AdminLog
+                    adminLog =
+                    AdminLog.builder().id(adminLogQueryService.getAdminLogId()).adminId(adminId).type(AdminLogType.PARTNER).targetId(
+                            String.valueOf(result.getId())).content(content).createdAt(utils.now()).build();
+            if (data.getIsActive() != null) {
+                String
+                        contentState =
+                        String.format("%s -> %s 상태 변경하였습니다.",
+                                data.getIsActive() ? "미노출" : "노출",
+                                data.getIsActive() ? "노출" : "미노출");
                 AdminLog
-                        adminLog =
-                        AdminLog.builder().id(adminLogQueryService.getAdminLogId()).adminId(adminId).type(AdminLogType.PARTNER).targetId(
-                                String.valueOf(product.getId())).content(content).createdAt(utils.now()).build();
-                adminLogCommandService.saveAdminLog(adminLog);
+                        stateAdminLog =
+                        AdminLog.builder().id(adminLogQueryService.getAdminLogId()).adminId(adminId).type(AdminLogType.PRODUCT).targetId(
+                                String.valueOf(result.getId())).createdAt(utils.now()).content(contentState).build();
+                adminLogCommandService.saveAdminLog(stateAdminLog);
             }
+            adminLogCommandService.saveAdminLog(adminLog);
             res.setData(Optional.ofNullable(productService.convert2SimpleDto(result, null)));
             return ResponseEntity.ok(res);
         } catch (Exception e) {
@@ -671,12 +717,12 @@ public class ProductController {
             if (data.getIsActive() == null) return res.throwError("노출 여부를 입력해주세요.", "INPUT_CHECK_REQUIRED");
             List<Product> products = productService.selectProductListWithIds(data.getProductIds());
             products.forEach(v -> {
-                v.setState(data.getIsActive() ? ProductState.ACTIVE : ProductState.INACTIVE);
                 String
                         content =
                         String.format("%s -> %s 상태 변경하였습니다.",
                                 v.getState().equals(ProductState.ACTIVE) ? "노출" : "미노출",
                                 data.getIsActive() ? "노출" : "미노출");
+                v.setState(data.getIsActive() ? ProductState.ACTIVE : ProductState.INACTIVE);
                 AdminLog
                         adminLog =
                         AdminLog.builder().id(adminLogQueryService.getAdminLogId()).adminId(adminId).type(AdminLogType.PRODUCT).targetId(

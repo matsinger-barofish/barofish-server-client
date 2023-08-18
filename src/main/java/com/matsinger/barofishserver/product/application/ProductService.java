@@ -1,6 +1,5 @@
 package com.matsinger.barofishserver.product.application;
 
-
 import com.matsinger.barofishserver.address.application.AddressQueryService;
 import com.matsinger.barofishserver.address.domain.Address;
 import com.matsinger.barofishserver.basketProduct.repository.BasketProductOptionRepository;
@@ -14,6 +13,8 @@ import com.matsinger.barofishserver.inquiry.application.InquiryQueryService;
 import com.matsinger.barofishserver.inquiry.domain.Inquiry;
 import com.matsinger.barofishserver.product.difficultDeliverAddress.application.DifficultDeliverAddressQueryService;
 import com.matsinger.barofishserver.product.domain.*;
+import com.matsinger.barofishserver.product.dto.ExcelProductDto;
+import com.matsinger.barofishserver.product.dto.ExcelProductDto2;
 import com.matsinger.barofishserver.product.dto.ProductListDto;
 import com.matsinger.barofishserver.product.optionitem.repository.OptionItemRepository;
 import com.matsinger.barofishserver.product.option.domain.Option;
@@ -35,6 +36,7 @@ import com.matsinger.barofishserver.searchFilter.domain.ProductSearchFilterMap;
 import com.matsinger.barofishserver.searchFilter.dto.SearchFilterFieldDto;
 import com.matsinger.barofishserver.searchFilter.repository.ProductSearchFilterMapRepository;
 import com.matsinger.barofishserver.store.application.StoreService;
+import com.matsinger.barofishserver.store.domain.Store;
 import com.matsinger.barofishserver.store.domain.StoreInfo;
 import com.matsinger.barofishserver.store.repository.StoreInfoRepository;
 import lombok.RequiredArgsConstructor;
@@ -83,7 +85,6 @@ public class ProductService {
     public List<Product> selectProductList() {
         return productRepository.findAll();
     }
-
 
     public List<Integer> testQuery(List<Integer> ids) {
         return productRepository.testQuery(ids);
@@ -273,6 +274,10 @@ public class ProductService {
         });
     }
 
+    public Optional<Product> selectOptioanlProduct(Integer id) {
+        return productRepository.findById(id);
+    }
+
     public Option selectOption(Integer id) {
         return optionRepository.findById(id).orElseThrow(() -> {
             throw new Error("상품 옵션 정보를 찾을 수 없습니다.");
@@ -346,6 +351,9 @@ public class ProductService {
         OptionItem optionItem = selectOptionItem(product.getRepresentOptionItemId());
         productDto.setIsLike(userId != null &&
                 saveProductRepository.existsById(new SaveProductId(userId, product.getId())));
+        productDto.setDeliverFeeType(store.getDeliverFeeType());
+        productDto.setMinOrderPrice(store.getMinOrderPrice());
+        productDto.setDeliveryFee(store.getDeliverFee());
         productDto.setDifficultDeliverAddresses(addresses);
         productDto.setSearchFilterFields(searchFilterFields);
         productDto.setOriginPrice(optionItem.getOriginPrice());
@@ -361,7 +369,6 @@ public class ProductService {
         return productDto;
 
     }
-
 
     public List<OptionDto> selectProductOption(Integer productId) {
         List<Option> options = optionRepository.findAllByProductIdAndState(productId, OptionState.ACTIVE);
@@ -458,15 +465,79 @@ public class ProductService {
 
     public OptionDto convert2OptionDto(Option option) {
         OptionDto optionDto = option.convert2Dto();
+        Product product = selectProduct(option.getProductId());
         List<OptionItem>
                 optionItems =
                 optionItemRepository.findAllByOptionIdAndState(option.getId(), OptionItemState.ACTIVE);
-        List<OptionItemDto> itemDtos = optionItems.stream().map(OptionItem::convert2Dto).toList();
+        List<OptionItemDto> itemDtos = optionItems.stream().map(v -> {
+            OptionItemDto optionItemDto = v.convert2Dto();
+            optionItemDto.setDeliverBoxPerAmount(product.getDeliverBoxPerAmount());
+            return optionItemDto;
+        }).toList();
         optionDto.setOptionItems(itemDtos);
         return optionDto;
     }
 
     public Optional<Product> findOptionalProductWithTitleAndStoreId(String title, Integer storeId) {
         return productRepository.findByTitleAndStoreId(title, storeId);
+    }
+
+    public List<Product> selectProductListNotDelete() {
+        return productRepository.findAllByStateNot(ProductState.DELETED);
+    }
+
+    public ExcelProductDto convert2ExcelProductDto(Product product) {
+        Store store = storeService.selectStore(product.getStoreId());
+        StoreInfo storeInfo = store.getStoreInfo();
+
+        Option option = optionRepository.findFirstByProductIdAndIsNeededTrue(product.getId());
+        List<OptionItem>
+                optionItems =
+                optionItemRepository.findAllByOptionIdAndState(option.getId(), OptionItemState.ACTIVE);
+        Integer representativeOptionNo = 1;
+        for (int i = 0; i < optionItems.size(); i++) {
+            if (optionItems.get(i).getId() == product.getRepresentOptionItemId()) representativeOptionNo = i + 1;
+        }
+        return ExcelProductDto.builder().storeLoginId(store.getLoginId()).storeName(storeInfo.getName()).firstCategoryName(
+                product.getCategory().getParentCategory().getName()).secondCategoryName(product.getCategory().getName()).productName(
+                product.getTitle()).expectedDeliverDay(product.getExpectedDeliverDay()).deliveryInfo(product.getDeliveryInfo()).deliveryFee(
+                storeInfo.getDeliverFee()).deliverBoxPerAmount(product.getDeliverBoxPerAmount()).isActive(product.getState().equals(
+                ProductState.ACTIVE) ? "노출" : "미노출").needTaxation(product.getNeedTaxation() ? "과세" : "비과세").hasOption(
+                "있음").purchasePrices(optionItems.stream().map(OptionItem::getPurchasePrice).toList()).representativeOptionNo(
+                representativeOptionNo).optionNames(optionItems.stream().map(OptionItem::getName).toList()).optionOriginPrices(
+                optionItems.stream().map(OptionItem::getOriginPrice).toList()).optionDiscountPrices(optionItems.stream().map(
+                OptionItem::getDiscountPrice).toList()).optionMaxOrderAmount(optionItems.stream().map(OptionItem::getMaxAvailableAmount).toList()).optionAmounts(
+                optionItems.stream().map(OptionItem::getAmount).toList()).pointRate(product.getPointRate()).build();
+    }
+
+    public List<ExcelProductDto2> convert2ExcelProductDto2(Product product) {
+        Store store = storeService.selectStore(product.getStoreId());
+        StoreInfo storeInfo = store.getStoreInfo();
+
+        Option option = optionRepository.findFirstByProductIdAndIsNeededTrue(product.getId());
+        List<OptionItem>
+                optionItems =
+                optionItemRepository.findAllByOptionIdAndState(option.getId(), OptionItemState.ACTIVE);
+        Integer representativeOptionNo = 1;
+        for (int i = 0; i < optionItems.size(); i++) {
+            if (optionItems.get(i).getId() == product.getRepresentOptionItemId()) representativeOptionNo = i + 1;
+        }
+
+        List<ExcelProductDto2> excelProductContents = new ArrayList<>();
+        for (OptionItem optionItem : optionItems) {
+            ExcelProductDto2
+                    excelProductDto =
+                    ExcelProductDto2.builder().storeLoginId(store.getLoginId()).storeName(storeInfo.getName()).firstCategoryName(
+                            product.getCategory().getParentCategory().getName()).secondCategoryName(product.getCategory().getName()).productName(
+                            product.getTitle()).expectedDeliverDay(product.getExpectedDeliverDay()).deliveryInfo(product.getDeliveryInfo()).deliveryFee(
+                            storeInfo.getDeliverFee()).deliverBoxPerAmount(product.getDeliverBoxPerAmount()).isActive(
+                            product.getState().equals(ProductState.ACTIVE) ? "노출" : "미노출").needTaxation(product.getNeedTaxation() ? "과세" : "비과세").hasOption(
+                            "있음").purchasePrices(optionItem.getPurchasePrice()).representativeOptionNo(
+                            representativeOptionNo).optionName(optionItem.getName()).optionOriginPrice(optionItem.getOriginPrice()).optionDiscountPrice(
+                            optionItem.getDiscountPrice()).optionMaxOrderAmount(optionItem.getMaxAvailableAmount()).optionAmount(
+                            optionItem.getAmount()).pointRate(product.getPointRate()).build();
+            excelProductContents.add(excelProductDto);
+        }
+        return excelProductContents;
     }
 }

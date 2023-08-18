@@ -12,9 +12,15 @@ import static org.junit.jupiter.api.Assertions.*;
 @SpringBootTest
 class AdminServiceTest {
 
-    @DisplayName("관리자 비밀번호 생성용")
+    @DisplayName("비밀번호 생성용")
     @Test
     void test() {
-        System.out.println(BCrypt.hashpw("qwer123$", BCrypt.gensalt()));
+        // givend
+        String password = "qwer123$";
+        String hashedPassword = BCrypt.hashpw(password, BCrypt.gensalt());
+        // when
+
+        // then
+        System.out.println("hashedPassword = " + hashedPassword);
     }
 }

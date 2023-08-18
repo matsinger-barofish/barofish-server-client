@@ -1,6 +1,7 @@
 package com.matsinger.barofishserver.order.dto;
 
 import com.matsinger.barofishserver.order.domain.OrderPaymentWay;
+import com.matsinger.barofishserver.order.dto.request.VBankRefundInfoReq;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -20,4 +21,5 @@ public class OrderReq {
     private Integer taxFreeAmount;
     private Integer deliverPlaceId;
     private Integer paymentMethodId;
+    private VBankRefundInfoReq vbankRefundInfo;
 }

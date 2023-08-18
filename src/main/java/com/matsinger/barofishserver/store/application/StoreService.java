@@ -52,7 +52,8 @@ public class StoreService {
                 storeInfo.getBackgroudImage()).profileImage(storeInfo.getProfileImage()).name(storeInfo.getName()).isReliable(
                 storeInfo.getIsReliable()).location(storeInfo.getLocation()).visitNote(storeInfo.getVisitNote()).deliverFeeType(
                 storeInfo.getDeliverFeeType()).deliverFee(storeInfo.getDeliverFee()).minOrderPrice(storeInfo.getMinOrderPrice()).keyword(
-                storeInfo.getKeyword().split(",")).oneLineDescription(storeInfo.getOneLineDescription()).additionalData(
+                storeInfo.getKeyword().split(",")).oneLineDescription(storeInfo.getOneLineDescription()).refundDeliverFee(
+                storeInfo.getRefundDeliverFee()).additionalData(
                 additionalDto).build();
     }
 
@@ -68,12 +69,14 @@ public class StoreService {
                         PageRequest.of(0, 20)).getContent().stream().map(Review::convert2Dto).toList();
         Integer reviewCount = reviewRepository.countAllByStoreId(storeInfo.getStoreId());
         Integer productCount = productRepository.countAllByStoreId(storeInfo.getStoreId());
+        Store store = selectStore(storeInfo.getStoreId());
         SimpleStore
                 simpleStore =
-                SimpleStore.builder().storeId(storeInfo.getStoreId()).backgroundImage(storeInfo.getBackgroudImage()).profileImage(
-                        storeInfo.getProfileImage()).name(storeInfo.getName()).location(storeInfo.getLocation()).isReliable(
-                        storeInfo.getIsReliable()).keyword(storeInfo.getKeyword().split(",")).visitNote(storeInfo.getVisitNote()).deliverFeeType(
-                        storeInfo.getDeliverFeeType()).deliverFee(storeInfo.getDeliverFee()).minOrderPrice(storeInfo.getMinOrderPrice()).oneLineDescription(
+                SimpleStore.builder().loginId(store.getLoginId()).storeId(storeInfo.getStoreId()).backgroundImage(
+                        storeInfo.getBackgroudImage()).profileImage(storeInfo.getProfileImage()).name(storeInfo.getName()).location(
+                        storeInfo.getLocation()).isReliable(storeInfo.getIsReliable()).keyword(storeInfo.getKeyword().split(
+                        ",")).visitNote(storeInfo.getVisitNote()).deliverFeeType(storeInfo.getDeliverFeeType()).deliverFee(
+                        storeInfo.getDeliverFee()).refundDeliverFee(storeInfo.getRefundDeliverFee()).minOrderPrice(storeInfo.getMinOrderPrice()).oneLineDescription(
                         storeInfo.getOneLineDescription()).isLike(isLike).reviewStatistic(reviewStatistics).reviews(
                         reviewDtos).reviewCount(reviewCount).productCount(productCount).build();
         return simpleStore;

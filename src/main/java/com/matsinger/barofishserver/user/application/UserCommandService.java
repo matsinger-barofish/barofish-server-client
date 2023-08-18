@@ -66,10 +66,7 @@ public class UserCommandService {
         Grade grade = gradeRepository.findById(1).orElseThrow(() -> new IllegalStateException("등급 정보를 찾을 수 없습니다."));
         userInfoCommandService.createAndSaveUserInfo(user, request, "", grade);
 
-        return SnsJoinLoginResponseDto.builder()
-                .userId(user.getId())
-                .loginId(createdUserAuth.getLoginId())
-                .build();
+        return SnsJoinLoginResponseDto.builder().userId(user.getId()).loginId(createdUserAuth.getLoginId()).build();
     }
 
     @Transactional
@@ -102,7 +99,7 @@ public class UserCommandService {
                 createdDeliver =
                 DeliverPlace.builder().userId(user.getId()).name(userInfo.getName()).receiverName(userInfo.getName()).tel(
                         userInfo.getPhone()).address(address).addressDetail(addressDetail).deliverMessage("").postalCode(
-                        request.getPostalCode()).isDefault(true).build();
+                        request.getPostalCode()).isDefault(true).bcode(request.getBcode()).build();
 
         return deliverPlaceRepository.save(createdDeliver);
     }
@@ -180,6 +177,10 @@ public class UserCommandService {
 
     public UserAuth selectUserAuth(Integer id) {
         return userAuthRepository.findFirstByUserId(id);
+    }
+
+    public Optional<UserAuth> findUserAuthWithIDPWType(Integer id) {
+        return userAuthRepository.findByLoginTypeAndUserId(LoginType.IDPW, id);
     }
 
     public List<User> selectUserList() {
@@ -281,6 +282,7 @@ public class UserCommandService {
 
     @Transactional
     public void addUserAuthIfPhoneNumberExists(SnsJoinReq request) {
+        if (request.getLoginType().equals(LoginType.APPLE)) return;
 
         Optional<UserInfo> optionalUserInfo = userInfoRepository.findByPhone(request.getPhone().replace("-", ""));
 
@@ -306,10 +308,9 @@ public class UserCommandService {
         }
 
         if (isUserInfoExists && !isLoginTypeExists) {
-            UserAuth createdUserAuth = UserAuth.builder()
-                    .loginType(request.getLoginType())
-                    .loginId(request.getLoginId())
-                    .build();
+            UserAuth
+                    createdUserAuth =
+                    UserAuth.builder().loginType(request.getLoginType()).loginId(request.getLoginId()).build();
             User findUser = optionalUserInfo.get().getUser();
             createdUserAuth.setUserId(findUser.getId());
             createdUserAuth.setUser(findUser);
@@ -347,6 +348,7 @@ public class UserCommandService {
 
         return true;
     }
+
     public List<UserInfo> selectUserInfoListWithIds(List<Integer> userIds) {
         return userInfoRepository.findAllByUserIdIn(userIds);
     }

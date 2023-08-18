@@ -22,9 +22,9 @@ public class SnsJoinReq {
 
     public UserInfo toUserInfo(String phoneNumber) {
         return UserInfo.builder()
-                .nickname(nickname)
-                .email(email)
-                .name(name)
+                .nickname(nickname!=null ? nickname : "")
+                .email(email!=null ? email : "")
+                .name(name!=null ? name : "")
                 .phone(phoneNumber)
                 .point(0)
                 .build();

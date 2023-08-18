@@ -74,7 +74,7 @@ public class SettlementQueryService {
         int totalPrice = 0;
         if (infos != null && infos.size() != 0) {
             StoreInfo storeInfo = storeService.selectStoreInfo(storeId);
-            Integer
+            Float
                     settlementRate =
                     storeInfo.getSettlementRate() == null ||
                             storeInfo.getSettlementRate() == 100 ? null : storeInfo.getSettlementRate();

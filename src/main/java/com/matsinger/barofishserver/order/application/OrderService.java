@@ -1,5 +1,7 @@
 package com.matsinger.barofishserver.order.application;
 
+import com.matsinger.barofishserver.basketProduct.application.BasketCommandService;
+import com.matsinger.barofishserver.basketProduct.application.BasketQueryService;
 import com.matsinger.barofishserver.coupon.application.CouponCommandService;
 import com.matsinger.barofishserver.coupon.application.CouponQueryService;
 import com.matsinger.barofishserver.coupon.domain.Coupon;
@@ -8,6 +10,8 @@ import com.matsinger.barofishserver.deliver.repository.DeliveryCompanyRepository
 import com.matsinger.barofishserver.notification.application.NotificationCommandService;
 import com.matsinger.barofishserver.notification.dto.NotificationMessage;
 import com.matsinger.barofishserver.notification.dto.NotificationMessageType;
+import com.matsinger.barofishserver.order.api.OrderController;
+import com.matsinger.barofishserver.order.domain.*;
 import com.matsinger.barofishserver.order.domain.OrderDeliverPlace;
 import com.matsinger.barofishserver.order.domain.OrderPaymentWay;
 import com.matsinger.barofishserver.order.domain.OrderState;
@@ -15,12 +19,14 @@ import com.matsinger.barofishserver.order.domain.Orders;
 import com.matsinger.barofishserver.order.dto.OrderDto;
 import com.matsinger.barofishserver.order.dto.OrderProductReq;
 import com.matsinger.barofishserver.order.dto.OrderReq;
+import com.matsinger.barofishserver.order.dto.VBankRefundInfo;
 import com.matsinger.barofishserver.order.orderprductinfo.domain.OrderCancelReason;
 import com.matsinger.barofishserver.order.orderprductinfo.domain.OrderProductInfo;
 import com.matsinger.barofishserver.order.orderprductinfo.domain.OrderProductOption;
 import com.matsinger.barofishserver.order.orderprductinfo.domain.OrderProductState;
 import com.matsinger.barofishserver.order.orderprductinfo.dto.OrderProductDto;
 import com.matsinger.barofishserver.order.orderprductinfo.dto.OrderProductInfoDto;
+import com.matsinger.barofishserver.order.repository.BankCodeRepository;
 import com.matsinger.barofishserver.order.repository.OrderDeliverPlaceRepository;
 import com.matsinger.barofishserver.order.orderprductinfo.repository.OrderProductInfoRepository;
 import com.matsinger.barofishserver.order.orderprductinfo.repository.OrderProductOptionRepository;
@@ -38,6 +44,9 @@ import com.matsinger.barofishserver.store.domain.StoreInfo;
 import com.matsinger.barofishserver.user.application.UserCommandService;
 import com.matsinger.barofishserver.userinfo.domain.UserInfo;
 import com.matsinger.barofishserver.userinfo.dto.UserInfoDto;
+import com.matsinger.barofishserver.utils.Common;
+import com.siot.IamportRestClient.exception.IamportResponseException;
+import jakarta.persistence.Tuple;
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.JoinType;
 import jakarta.persistence.criteria.Predicate;
@@ -48,8 +57,11 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
+import java.sql.Timestamp;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -72,6 +84,10 @@ public class OrderService {
     private final CouponQueryService couponQueryService;
     private final NotificationCommandService notificationCommandService;
     private final CouponCommandService couponCommandService;
+    private final BankCodeRepository bankCodeRepository;
+    private final BasketCommandService basketCommandService;
+    private final BasketQueryService basketQueryService;
+    private final Common utils;
 
     public OrderDto convert2Dto(Orders order, Integer storeId, Specification<OrderProductInfo> productSpec) {
         OrderDeliverPlace deliverPlace = selectDeliverPlace(order.getId());
@@ -87,7 +103,8 @@ public class OrderService {
                 productSpec == null ? selectOrderProductInfoListWithOrderId(order.getId()) : selectOrderProductInfoList(
                         productSpec);
         List<OrderProductDto> orderProductDtos = infos.stream().map(opi -> {
-//            OrderProductOption option = optionRepository.findFirstByOrderProductId(opi.getId());
+            // OrderProductOption option =
+            // optionRepository.findFirstByOrderProductId(opi.getId());
             Product product = productService.selectProduct(opi.getProductId());
             StoreInfo storeInfo = storeService.selectStoreInfo(product.getStoreId());
             if (storeId != null && storeId != storeInfo.getStoreId()) return null;
@@ -100,13 +117,11 @@ public class OrderService {
             return OrderProductDto.builder().id(opi.getId()).storeId(storeInfo.getStoreId()).optionItem(optionItem.convert2Dto()).product(
                     productService.convert2ListDto(productService.selectProduct(opi.getProductId()))).optionName(
                     optionItem.getName()).amount(opi.getAmount()).state(opi.getState()).price(opi.getPrice()).storeName(
-                    storeInfo.getName()).storeProfile(storeInfo.getProfileImage()).deliverFee(getProductDeliveryFee(
-                    product,
-                    optionItem.getId(),
-                    opi.getAmount())).deliverCompany(deliveryCompany.map(DeliveryCompany::getName).orElse(null)).invoiceCode(
-                    opi.getInvoiceCode()).cancelReason(opi.getCancelReason()).cancelReasonContent(opi.getCancelReasonContent()).isReviewWritten(
-                    isWritten).deliverFeeType(storeInfo.getDeliverFeeType()).minOrderPrice(storeInfo.getMinOrderPrice()).finalConfirmedAt(
-                    opi.getFinalConfirmedAt()).build();
+                    storeInfo.getName()).storeProfile(storeInfo.getProfileImage()).deliverFee(opi.getDeliveryFee()).deliverCompany(
+                    deliveryCompany.map(DeliveryCompany::getName).orElse(null)).invoiceCode(opi.getInvoiceCode()).cancelReason(
+                    opi.getCancelReason()).cancelReasonContent(opi.getCancelReasonContent()).isReviewWritten(isWritten).deliverFeeType(
+                    storeInfo.getDeliverFeeType()).minOrderPrice(storeInfo.getMinOrderPrice()).finalConfirmedAt(opi.getFinalConfirmedAt()).needTaxation(
+                    product.getNeedTaxation()).build();
         }).filter(Objects::nonNull).toList();
         String couponName = null;
         if (order.getCouponId() != null) {
@@ -117,7 +132,8 @@ public class OrderService {
         return OrderDto.builder().id(order.getId()).orderedAt(order.getOrderedAt()).user(userInfoDto).totalAmount(order.getTotalPrice()).deliverPlace(
                 deliverPlace.convert2Dto()).paymentWay(order.getPaymentWay()).productInfos(orderProductDtos).couponDiscount(
                 order.getCouponDiscount()).usePoint(order.getUsePoint()).ordererName(order.getOrdererName()).ordererTel(
-                order.getOrdererTel()).couponName(couponName).build();
+                order.getOrdererTel()).couponName(couponName).bankHolder(order.getBankHolder()).bankAccount(order.getBankAccount()).bankCode(
+                order.getBankCode()).bankName(order.getBankName()).build();
     }
 
     public OrderDeliverPlace selectDeliverPlace(String orderId) {
@@ -158,10 +174,10 @@ public class OrderService {
             Join<Orders, OrderProductInfo> t = root.join("productInfos", JoinType.INNER);
             predicates.add(builder.isNotNull(t.get("id")));
             predicates.add(builder.or(builder.notEqual(t.get("state"), OrderProductState.WAIT_DEPOSIT),
-                    builder.equal(root.get("paymentWay"), OrderPaymentWay.DEPOSIT)));
+                    builder.and(root.get("paymentWay").in(List.of(OrderPaymentWay.DEPOSIT,
+                            OrderPaymentWay.VIRTUAL_ACCOUNT)))));
             return builder.and(predicates.toArray(new Predicate[0]));
         };
-//        Page<Orders> orders = orderRepository.findAllByUserId(userId, pageRequest);
         return orderRepository.findAll(spec, pageRequest);
     }
 
@@ -178,7 +194,7 @@ public class OrderService {
             predicates.add(builder.isNotNull(t.get("id")));
             return builder.and(predicates.toArray(new Predicate[0]));
         };
-//        Page<Orders> orders = orderRepository.findAllByUserId(userId, pageRequest);
+        // Page<Orders> orders = orderRepository.findAllByUserId(userId, pageRequest);
         return orderRepository.findAll(spec, Sort.by(Sort.Direction.DESC, "id"));
     }
 
@@ -272,11 +288,10 @@ public class OrderService {
                 }
             }
         }
-//                        .stream().filter(v -> {
-//                    if (v.getId() != info.getId()) return true;
-//                    return false;
-//                }).toList();
-
+        // .stream().filter(v -> {
+        // if (v.getId() != info.getId()) return true;
+        // return false;
+        // }).toList();
 
         return price;
     }
@@ -294,16 +309,14 @@ public class OrderService {
                 throw new RuntimeException(e);
             }
         });
-        int
-                deliveryFee =
-                info.getState().equals(OrderProductState.WAIT_DEPOSIT) ||
-                        info.getState().equals(OrderProductState.DELIVERY_READY) ||
-                        info.getState().equals(OrderProductState.PAYMENT_DONE) ? info.getDeliveryFee() : 0;
-
-//        Integer price = (info.getPrice() + (option != null ? option.getPrice() : 0)) * info.getAmount() + deliveryFee;
         Integer price = getCancelPrice(order, List.of(info));
         int taxFreeAmount = getTaxFreeAmount(order, List.of(info));
-        paymentService.cancelPayment(order.getImpUid(), price, taxFreeAmount);
+        VBankRefundInfo
+                vBankRefundInfo =
+                order.getPaymentWay().equals(OrderPaymentWay.VIRTUAL_ACCOUNT) ? VBankRefundInfo.builder().bankHolder(
+                        order.getBankHolder()).bankCode(order.getBankCode()).bankName(order.getBankName()).bankAccount(
+                        order.getBankAccount()).build() : null;
+        paymentService.cancelPayment(order.getImpUid(), price, taxFreeAmount, vBankRefundInfo);
         info.setState(OrderProductState.CANCELED);
         infoRepository.save(info);
         Integer returnPoint = checkReturnPoint(order);
@@ -330,16 +343,11 @@ public class OrderService {
                 v.setState(OrderProductState.CANCELED);
             }
         });
-//        System.out.println("orderPrice | " + orderedPrice);
-//        System.out.println("deliveryFee | " + deliveryFee);
-//        System.out.println("cancelPrice | " + cancelPrice.get());
         Coupon coupon = order.getCouponId() != null ? couponQueryService.selectCoupon(order.getCouponId()) : null;
         int couponDiscount = 0;
         if (coupon != null && coupon.getMinPrice() > orderedPrice - cancelPrice.get())
             couponDiscount = order.getCouponDiscount();
         Integer point = checkReturnPoint(order);
-//        System.out.println("point | " + point);
-//        System.out.println("couponDiscount | " + couponDiscount);
         return cancelPrice.get() + deliveryFee - couponDiscount - (point != null ? point : 0);
     }
 
@@ -376,15 +384,13 @@ public class OrderService {
 
     public Integer getProductDeliveryFee(Product product, Integer OptionItemId, Integer amount) {
         OptionItem optionItem = productService.selectOptionItem(OptionItemId);
-        if (product.getDeliverBoxPerAmount() != null && product.getDeliverBoxPerAmount() != 0) {
-            return product.getDeliveryFee() * ((amount / product.getDeliverBoxPerAmount()) + 1);
-        } else {
-            StoreInfo storeInfo = storeService.selectStoreInfo(product.getStoreId());
-            if (storeInfo.getDeliverFeeType().equals(StoreDeliverFeeType.FREE)) return 0;
-            else if (storeInfo.getDeliverFeeType().equals(StoreDeliverFeeType.FIX)) return storeInfo.getDeliverFee();
-            else return optionItem.getDiscountPrice() * amount >
-                        storeInfo.getMinOrderPrice() ? 0 : storeInfo.getDeliverFee();
-        }
+        StoreInfo storeInfo = storeService.selectStoreInfo(product.getStoreId());
+        if (storeInfo.getDeliverFeeType().equals(StoreDeliverFeeType.FREE)) return 0;
+        else if (storeInfo.getDeliverFeeType().equals(StoreDeliverFeeType.FIX)) return storeInfo.getDeliverFee();
+        else return storeInfo.getDeliverFee() *
+                    (product.getDeliverBoxPerAmount() == null ||
+                            product.getDeliverBoxPerAmount() == 0 ? 1 : ((int) Math.ceil((double) amount /
+                            product.getDeliverBoxPerAmount())));
     }
 
     public List<OrderProductInfo> selectOrderProductInfoWithIds(List<Integer> ids) {
@@ -416,8 +422,8 @@ public class OrderService {
                 info.getPrice()).amount(info.getAmount()).deliveryFee(info.getDeliveryFee()).cancelReasonContent(info.getCancelReasonContent()).cancelReason(
                 info.getCancelReason()).deliverCompanyCode(info.getDeliverCompanyCode()).invoiceCode(info.getInvoiceCode()).isSettled(
                 info.getIsSettled()).settledAt(info.getSettledAt()).product(productService.convert2ListDto(info.getProduct())).order(
-                orderDto).settlementRate(storeInfo.getSettlementRate()).deliverFeeType(storeInfo.getDeliverFeeType()).deliverCompany(
-                deliveryCompany.map(DeliveryCompany::getName).orElse(null)).build();
+                orderDto).settlementRate(storeInfo.getSettlementRate()).deliverFeeType(storeInfo.getDeliverFeeType()).needTaxation(
+                product.getNeedTaxation()).deliverCompany(deliveryCompany.map(DeliveryCompany::getName).orElse(null)).build();
     }
 
     public Integer calculateTotalPrice(OrderReq data) {
@@ -425,7 +431,7 @@ public class OrderService {
         Integer totalPrice = data.getProducts().stream().mapToInt(v -> {
             Product product = productService.findById(v.getProductId());
             products.add(product);
-            return getProductPrice(product, v.getOptionItemId(), v.getAmount());
+            return getProductPrice(product, v.getOptionId(), v.getAmount());
         }).sum();
 
         Integer deliverFee = products.stream().map(Product::getStoreId).distinct().mapToInt(v -> {
@@ -434,7 +440,7 @@ public class OrderService {
                 for (OrderProductReq d : data.getProducts()) {
                     if (d.getProductId() == v1.getId()) {
                         Product product = productService.selectProduct(d.getProductId());
-                        return getProductPrice(v1, d.getOptionItemId(), d.getAmount());
+                        return getProductPrice(v1, d.getOptionId(), d.getAmount());
                     }
                 }
                 return 0;
@@ -536,5 +542,43 @@ public class OrderService {
             return taxFreeAmount;
         }
     }
-}
 
+    public List<BankCode> selectBankCodeList() {
+        return bankCodeRepository.findAll();
+    }
+
+    public BankCode selectBankCode(Integer id) throws Exception {
+        return bankCodeRepository.findById(id).orElseThrow(() -> new Exception("잘못된 은행 코드 정보입니다."));
+    }
+
+    public void finalConfirmOrderProduct(OrderProductInfo info) {
+        Orders order = selectOrder(info.getOrderId());
+        if (info.getState().equals(OrderProductState.DELIVERY_DONE)) {
+            UserInfo userInfo = userService.selectUserInfo(order.getUserId());
+            Product product = productService.selectProduct(info.getProductId());
+            float pointRate = product.getPointRate() != null ? product.getPointRate() : 0;
+            Integer point = (int) Math.floor(info.getPrice() * info.getAmount() * pointRate);
+            userInfo.setPoint(userInfo.getPoint() + point);
+            info.setState(OrderProductState.FINAL_CONFIRM);
+            info.setFinalConfirmedAt(utils.now());
+            if (point != 0) userService.updateUserInfo(userInfo);
+            updateOrderProductInfo(new ArrayList<>(List.of(info)));
+            try {
+                couponCommandService.publishSystemCoupon(userInfo.getUserId());
+            } catch (Exception e) {
+            }
+        }
+    }
+
+    public void automaticFinalConfirm() {
+        Timestamp ts = utils.now();
+        Calendar cal = Calendar.getInstance();
+        cal.setTime(ts);
+
+        cal.add(Calendar.DATE, -5);
+        List<OrderProductInfo>
+                orderProductInfoIds =
+                infoRepository.findAllByDeliveryDoneAtBefore(new Timestamp(cal.getTime().getTime()));
+        orderProductInfoIds.forEach(this::finalConfirmOrderProduct);
+    }
+}
