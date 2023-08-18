@@ -1,11 +1,9 @@
 package com.matsinger.barofishserver.productinfonotice.application;
 
-import com.matsinger.barofishserver.category.application.CategoryQueryService;
 import com.matsinger.barofishserver.product.application.ProductQueryService;
 import com.matsinger.barofishserver.product.domain.Product;
 import com.matsinger.barofishserver.productinfonotice.domain.AgriculturalAndLivestockProductsInfo;
 import com.matsinger.barofishserver.productinfonotice.domain.ProcessedFoodInfo;
-import com.matsinger.barofishserver.productinfonotice.domain.ProductInfoNoticeManager;
 import com.matsinger.barofishserver.productinfonotice.domain.ProductInformation;
 import com.matsinger.barofishserver.productinfonotice.repository.AgriculturalAndLivestockProductsInfoRepository;
 import com.matsinger.barofishserver.productinfonotice.repository.ProcessedFoodInfoRepository;
@@ -13,7 +11,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import static com.matsinger.barofishserver.productinfonotice.domain.ProductInfoNoticeManager.*;
+import static com.matsinger.barofishserver.productinfonotice.domain.ProductInfoNoticeForm.*;
 
 @Service
 @Transactional(readOnly = true)

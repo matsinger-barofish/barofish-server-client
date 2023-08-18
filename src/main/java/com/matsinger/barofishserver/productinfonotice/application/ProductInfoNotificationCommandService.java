@@ -2,7 +2,6 @@ package com.matsinger.barofishserver.productinfonotice.application;
 
 import com.matsinger.barofishserver.product.application.ProductQueryService;
 import com.matsinger.barofishserver.product.domain.Product;
-import com.matsinger.barofishserver.product.option.domain.Option;
 import com.matsinger.barofishserver.productinfonotice.domain.AgriculturalAndLivestockProductsInfo;
 import com.matsinger.barofishserver.productinfonotice.domain.ProcessedFoodInfo;
 import com.matsinger.barofishserver.productinfonotice.domain.ProductInformation;
@@ -16,16 +15,16 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
 
-import static com.matsinger.barofishserver.productinfonotice.domain.ProductInfoNoticeManager.LIVESTOCK;
-import static com.matsinger.barofishserver.productinfonotice.domain.ProductInfoNoticeManager.PROCESSED;
+import static com.matsinger.barofishserver.productinfonotice.domain.ProductInfoNoticeForm.LIVESTOCK;
+import static com.matsinger.barofishserver.productinfonotice.domain.ProductInfoNoticeForm.PROCESSED;
 
 @Service
 @RequiredArgsConstructor
 public class ProductInfoNotificationCommandService {
     private final ProductQueryService productQueryService;
+    private final ProductInfoNotificationQueryService productInfoNotificationQueryService;
     private final AgriculturalAndLivestockProductsInfoRepository agriculturalAndLivestockProductsInfoRepository;
     private final ProcessedFoodInfoRepository processedFoodInfoRepository;
-    private final ProductInfoNotificationQueryService productInfoNotificationQueryService;
 
     @Transactional
     public void addProductInfoNotification(ProductInformation request) {
