@@ -337,19 +337,19 @@ public class OrderController {
                         return res.throwError("주문 불가능한 상품입니다.", "NOT_ALLOWED");
                 }
 
-                OptionItem optionItem = productService.selectOptionItem(productReq.getOptionItemId());
+                OptionItem optionItem = productService.selectOptionItem(productReq.getOptionId());
                 if (optionItem.getDeliverBoxPerAmount() != null &&
                         optionItem.getMaxAvailableAmount() < productReq.getAmount())
                     return res.throwError("최대 주문 수량을 초과하였습니다.", "INPUT_CHECK_REQUIRED");
                 optionItem.reduceAmount(productReq.getAmount());
-                int price = orderService.getProductPrice(product, productReq.getOptionItemId(), productReq.getAmount());
+                int price = orderService.getProductPrice(product, productReq.getOptionId(), productReq.getAmount());
                 if (!product.getNeedTaxation()) {
                     taxFreeAmount += price;
                 }
                 Integer
                         deliveryFee =
-                        orderService.getProductDeliveryFee(product, productReq.getOptionItemId(), productReq.getAmount());
-                optionItems.add(productService.selectOptionItem(productReq.getOptionItemId()));
+                        orderService.getProductDeliveryFee(product, productReq.getOptionId(), productReq.getAmount());
+                optionItems.add(productService.selectOptionItem(productReq.getOptionId()));
                 infos.add(OrderProductInfo.builder().optionItemId(optionItem.getId()).orderId(orderId).productId(
                         productReq.getProductId()).state(OrderProductState.WAIT_DEPOSIT).settlePrice(storeInfo.getSettlementRate() !=
                         null ? (int) ((storeInfo.getSettlementRate() / 100.) *

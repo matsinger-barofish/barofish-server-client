@@ -9,7 +9,7 @@ import lombok.ToString;
 @ToString
 public class OrderProductReq {
     Integer productId;
-    Integer optionItemId;
+    Integer optionId;
     Integer amount;
     Boolean needTaxation;
     Integer deliveryFee;
