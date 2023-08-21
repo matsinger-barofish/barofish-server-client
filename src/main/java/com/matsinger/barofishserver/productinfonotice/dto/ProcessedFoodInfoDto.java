@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.matsinger.barofishserver.product.domain.Product;
 import com.matsinger.barofishserver.productinfonotice.domain.ProcessedFoodInfo;
 import com.matsinger.barofishserver.productinfonotice.domain.ProductInformation;
-import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
