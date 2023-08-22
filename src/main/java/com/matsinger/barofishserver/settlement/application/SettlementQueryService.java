@@ -64,4 +64,65 @@ public class SettlementQueryService {
         }
         return totalPrice;
     }
+
+    public Page<OrderSettlementExcelDto> createOrderSettlementResponse(Page<OrderProductInfo> request) {
+
+        return  request.map(productInfo -> {
+            Orders findOrder = orderQueryService.findById(productInfo.getOrderId());
+            OptionItem findOptionItem = optionItemQueryService.findById(productInfo.getOptionItemId());
+            Option findOption = optionQueryService.findById(findOptionItem.getOptionId());
+            Product findProduct = productInfo.getProduct();
+            StoreInfo findStoreInfo = findProduct.getStore().getStoreInfo();
+            Coupon findCoupon = couponQueryService.findById(findOrder.getCouponId());
+            OrderDeliverPlace findDeliverPlace = findOrder.getDeliverPlace();
+            User findUser = userQueryService.findById(findOrder.getUserId());
+            UserInfo findUserInfo = findUser.getUserInfo();
+
+            int discountPrice = findOptionItem.getDiscountPrice();
+            int quantity = productInfo.getAmount();
+            int deliveryFee = productInfo.getDeliveryFee();
+
+            int orderAmount = discountPrice * quantity + deliveryFee;
+
+            int couponDiscount = findOrder.getCouponDiscount();
+            Integer usePoint = findOrder.getUsePoint();
+//            int finalSettlementAmount = orderAmount - couponDiscount - usePoint;
+            double settlementRate = (double) findStoreInfo.getSettlementRate() / 100;
+
+            double settlementAmount = (double) (discountPrice * quantity) * (1 - settlementRate);
+
+            return OrderSettlementExcelDto.builder()
+                    .productId(productInfo.getProductId())
+                    .orderId(findOrder.getId())
+                    .orderProductState(productInfo.getState())
+                    .orderAt(findOrder.getOrderedAt())
+                    .storeName(findProduct.getStore().getName())
+                    .productName(findProduct.getTitle())
+                    .optionName(findOptionItem.getName())
+                    .needTaxation(findProduct.getNeedTaxation())
+                    .purchasePrice(findOptionItem.getPurchasePrice())
+                    .originPrice(findOptionItem.getOriginPrice())
+                    .discountPrice(discountPrice)
+                    .deliveryFee(deliveryFee)
+                    .quantity(quantity)
+                    .orderAmount(discountPrice * quantity + deliveryFee)
+//                    .finalPaymentAmount(finalSettlementAmount)
+                    .paymentMethod(findOrder.getPaymentWay())
+                    .settlementRatio(settlementRate)
+                    .couponName(findCoupon.getTitle())
+                    .couponDiscount(findCoupon.getAmount())
+                    .usePoint(findOrder.getUsePoint())
+                    .settlementAmount(settlementAmount)
+                    .finalSettlementAmount(settlementAmount + deliveryFee)
+                    .settledAt(productInfo.getSettledAt())
+                    .customerName(findDeliverPlace.getReceiverName())
+                    .customerPhoneNumber(findDeliverPlace.getTel())
+                    .customerEmail(findUserInfo.getEmail())
+                    .customerAddress(findDeliverPlace.getAddress())
+                    .deliveryMessage(findDeliverPlace.getDeliverMessage())
+                    .deliveryCompany(findStoreInfo.getDeliveryCompany().getName())
+                    .trackingNumber(productInfo.getInvoiceCode())
+                    .build();
+        });
+    }
 }
