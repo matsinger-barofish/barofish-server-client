@@ -1,13 +1,32 @@
 package com.matsinger.barofishserver.settlement.application;
 
+import com.matsinger.barofishserver.coupon.application.CouponQueryService;
+import com.matsinger.barofishserver.coupon.domain.Coupon;
+import com.matsinger.barofishserver.deliver.application.DeliveryQueryService;
+import com.matsinger.barofishserver.deliver.domain.DeliveryCompany;
+import com.matsinger.barofishserver.deliver.repository.DeliveryCompanyRepository;
+import com.matsinger.barofishserver.order.application.OrderQueryService;
 import com.matsinger.barofishserver.order.application.OrderService;
+import com.matsinger.barofishserver.order.domain.OrderDeliverPlace;
+import com.matsinger.barofishserver.order.domain.Orders;
 import com.matsinger.barofishserver.order.orderprductinfo.domain.OrderProductInfo;
-import com.matsinger.barofishserver.product.application.ProductService;
+import com.matsinger.barofishserver.order.orderprductinfo.repository.OrderProductInfoRepository;
+import com.matsinger.barofishserver.order.repository.OrderRepository;
+import com.matsinger.barofishserver.product.domain.Product;
+import com.matsinger.barofishserver.product.option.application.OptionQueryService;
+import com.matsinger.barofishserver.product.option.domain.Option;
+import com.matsinger.barofishserver.product.optionitem.application.OptionItemQueryService;
+import com.matsinger.barofishserver.product.optionitem.domain.OptionItem;
+import com.matsinger.barofishserver.product.optionitem.repository.OptionItemRepository;
 import com.matsinger.barofishserver.settlement.domain.Settlement;
 import com.matsinger.barofishserver.settlement.domain.SettlementState;
+import com.matsinger.barofishserver.settlement.dto.OrderSettlementExcelDto;
 import com.matsinger.barofishserver.settlement.repository.SettlementRepository;
 import com.matsinger.barofishserver.store.application.StoreService;
 import com.matsinger.barofishserver.store.domain.StoreInfo;
+import com.matsinger.barofishserver.user.application.UserQueryService;
+import com.matsinger.barofishserver.user.domain.User;
+import com.matsinger.barofishserver.userinfo.domain.UserInfo;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -24,6 +43,12 @@ public class SettlementQueryService {
     private final SettlementRepository settlementRepository;
     private final StoreService storeService;
     private final OrderService orderService;
+    private final OrderQueryService orderQueryService;
+    private final OptionItemQueryService optionItemQueryService;
+    private final OptionQueryService optionQueryService;
+    private final CouponQueryService couponQueryService;
+    private final UserQueryService userQueryService;
+    private final DeliveryQueryService deliveryQueryService;
 
     public Settlement selectSettlement(Integer id) {
         return settlementRepository.findById(id).orElseThrow(() -> {

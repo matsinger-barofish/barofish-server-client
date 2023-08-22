@@ -84,4 +84,9 @@ public class CouponQueryService {
     public List<Integer> selectPublishedCouponUserIds(Integer couponId) {
         return mapRepository.findAllByCouponId(couponId).stream().map(CouponUserMap::getUserId).toList();
     }
+
+    public Coupon findById(Integer couponId) {
+        return couponRepository.findById(couponId)
+                .orElseThrow(() -> new IllegalArgumentException("쿠폰 정보를 찾을 수 없습니다."));
+    }
 }
