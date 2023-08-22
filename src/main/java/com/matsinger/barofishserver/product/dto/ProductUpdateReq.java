@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.sql.Timestamp;
 import java.util.List;
 
 @Getter
@@ -24,6 +25,8 @@ public class ProductUpdateReq {
     private String descriptionContent;
     private Boolean needTaxation;
     private Float pointRate;
+    private Timestamp promotionStartAt;
+    private Timestamp promotionEndAt;
     private List<Integer> difficultDeliverAddressIds;
     private List<Integer> searchFilterFieldIds;
     private List<ProductFilterValueReq> filterValues;

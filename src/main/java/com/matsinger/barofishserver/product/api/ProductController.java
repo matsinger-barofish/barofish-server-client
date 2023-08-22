@@ -5,6 +5,7 @@ import com.matsinger.barofishserver.address.domain.Address;
 import com.matsinger.barofishserver.admin.application.AdminCommandService;
 import com.matsinger.barofishserver.admin.application.AdminQueryService;
 import com.matsinger.barofishserver.admin.domain.Admin;
+import com.matsinger.barofishserver.admin.domain.AdminAuthority;
 import com.matsinger.barofishserver.admin.log.application.AdminLogCommandService;
 import com.matsinger.barofishserver.admin.log.application.AdminLogQueryService;
 import com.matsinger.barofishserver.admin.log.domain.AdminLog;
@@ -192,7 +193,8 @@ public class ProductController {
                             utils.str2IntList(filterFieldIds),
                             curationId,
                             keyword,
-                            storeId);
+                            storeId,
+                            null);
             res.setData(Optional.of(result.getTotalElements()));
             return ResponseEntity.ok(res);
         } catch (Exception e) {
@@ -201,7 +203,8 @@ public class ProductController {
     }
 
     @GetMapping("/list")
-    public ResponseEntity<CustomResponse<Page<ProductListDto>>> selectProductListByUser(@RequestParam(value = "page", defaultValue = "1") Integer page,
+    public ResponseEntity<CustomResponse<Page<ProductListDto>>> selectProductListByUser(@RequestHeader(value = "Authorization", required = false) Optional<String> auth,
+                                                                                        @RequestParam(value = "page", defaultValue = "1") Integer page,
                                                                                         @RequestParam(value = "take", defaultValue = "10") Integer take,
                                                                                         @RequestParam(value = "sortby", defaultValue = "RECOMMEND", required = false) ProductSortBy sortBy,
                                                                                         @RequestParam(value = "categoryIds", required = false) String categoryIds,
@@ -215,7 +218,11 @@ public class ProductController {
                                                                                         @RequestParam(value = "keyword", required = false, defaultValue = "") String keyword,
                                                                                         @RequestParam(value = "storeId", required = false) Integer storeId) {
         CustomResponse<Page<ProductListDto>> res = new CustomResponse<>();
+        Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ALLOW), auth);
         try {
+            Integer userId = null;
+            if (tokenInfo != null && tokenInfo.isPresent() && tokenInfo.get().getType().equals(TokenAuthType.USER))
+                userId = tokenInfo.get().getId();
             Page<ProductListDto>
                     result =
                     productService.selectProductListWithPagination(page - 1,
@@ -225,7 +232,8 @@ public class ProductController {
                             utils.str2IntList(filterFieldIds),
                             curationId,
                             keyword,
-                            storeId);
+                            storeId,
+                            userId);
             if (keyword != null && keyword.length() != 0) searchKeywordQueryService.searchKeyword(keyword);
             res.setData(Optional.ofNullable(result));
             return ResponseEntity.ok(res);
@@ -380,6 +388,8 @@ public class ProductController {
             product.setRepresentOptionItemId(null);
             product.setNeedTaxation(data.getNeedTaxation() != null ? data.getNeedTaxation() : true);
             product.setDeliverBoxPerAmount(data.getDeliverBoxPerAmount());
+            product.setPromotionStartAt(data.getPromotionStartAt());
+            product.setPromotionEndAt(data.getPromotionEndAt());
 //            product.setDeliveryFee(data.getDeliveryFee() != null ? data.getDeliveryFee() : 0);
             product.setCreatedAt(new Timestamp(System.currentTimeMillis()));
             Product result = productService.addProduct(product);
@@ -499,6 +509,12 @@ public class ProductController {
             if (data.getExpectedDeliverDay() != null) {
                 if (data.getExpectedDeliverDay() < 0) return res.throwError("예상 도착일을 입력해주세요.", "INPUT_CHECK_REQUIRED");
                 product.setExpectedDeliverDay(data.getExpectedDeliverDay());
+            }
+            if (data.getPromotionStartAt() != null) {
+                product.setPromotionStartAt(data.getPromotionStartAt());
+            }
+            if (data.getPromotionEndAt() != null) {
+                product.setPromotionEndAt(data.getPromotionEndAt());
             }
             if (data.getSearchFilterFieldIds() != null)
                 data.getSearchFilterFieldIds().forEach(searchFilterQueryService::selectSearchFilterField);
@@ -687,9 +703,10 @@ public class ProductController {
             if (data.getIsActive() != null) {
                 String
                         contentState =
-                        String.format("%s -> %s 상태 변경하였습니다.",
+                        String.format("%s -> %s 상태 변경하였습니다.[%s]",
                                 data.getIsActive() ? "미노출" : "노출",
-                                data.getIsActive() ? "노출" : "미노출");
+                                data.getIsActive() ? "노출" : "미노출",
+                                admin.getAuthority().equals(AdminAuthority.MASTER)? "관리자": "서브관리자");
                 AdminLog
                         stateAdminLog =
                         AdminLog.builder().id(adminLogQueryService.getAdminLogId()).adminId(adminId).type(AdminLogType.PRODUCT).targetId(
@@ -716,12 +733,14 @@ public class ProductController {
                 return res.throwError("상품 아이디를 입력해주세요", "INPUT_CHECK_REQUIRED");
             if (data.getIsActive() == null) return res.throwError("노출 여부를 입력해주세요.", "INPUT_CHECK_REQUIRED");
             List<Product> products = productService.selectProductListWithIds(data.getProductIds());
+            Admin admin = adminQueryService.selectAdmin(adminId);
             products.forEach(v -> {
                 String
                         content =
-                        String.format("%s -> %s 상태 변경하였습니다.",
+                        String.format("%s -> %s 상태 변경하였습니다.[%s]",
                                 v.getState().equals(ProductState.ACTIVE) ? "노출" : "미노출",
-                                data.getIsActive() ? "노출" : "미노출");
+                                data.getIsActive() ? "노출" : "미노출",
+                                admin.getAuthority().equals(AdminAuthority.MASTER) ? "관리자" : "서브관리자");
                 v.setState(data.getIsActive() ? ProductState.ACTIVE : ProductState.INACTIVE);
                 AdminLog
                         adminLog =

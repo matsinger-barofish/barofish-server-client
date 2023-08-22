@@ -57,6 +57,13 @@ public class BasketCommandService {
         infoRepository.deleteAllByIdIn(basketIds);
     }
 
+    @Transactional
+    public void deleteBasket(Integer productId, Integer userId) {
+        List<BasketProductInfo> infos = infoRepository.findByUserIdAndProductId(userId, productId);
+        List<Integer> basketIds = infos.stream().map(BasketProductInfo::getId).toList();
+        optionRepository.deleteAllByOrderProductIdIn(basketIds);
+        infoRepository.deleteAllByIdIn(basketIds);
+    }
 
     public void processBasketProductAdd(Integer userId, Integer productId, Integer optionId, Integer amount)
             throws Exception {

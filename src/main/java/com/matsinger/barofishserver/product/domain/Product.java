@@ -3,8 +3,6 @@ package com.matsinger.barofishserver.product.domain;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.matsinger.barofishserver.category.domain.Category;
 import com.matsinger.barofishserver.product.dto.ProductListDto;
-import com.matsinger.barofishserver.product.option.domain.Option;
-import com.matsinger.barofishserver.productinfonotice.domain.ProductInformation;
 import com.matsinger.barofishserver.review.domain.Review;
 import com.matsinger.barofishserver.store.domain.Store;
 import jakarta.persistence.*;
@@ -14,7 +12,6 @@ import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
 
 @Entity
 @AllArgsConstructor
@@ -87,15 +84,20 @@ public class Product {
     @Column(name = "created_at", nullable = false)
     private Timestamp createdAt;
 
+    @Basic
+    @Column(name = "promotion_start_at", nullable = true)
+    private Timestamp promotionStartAt;
+
+    @Basic
+    @Column(name = "promotion_end_at", nullable = true)
+    private Timestamp promotionEndAt;
+
     @Builder.Default
     @JsonBackReference
     @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL, mappedBy = "product")
     private List<Review> reviews = new ArrayList<>();
 //    @Column(name = "delivery_fee", nullable = true)
 //    private int deliveryFee;
-
-    @Column(name = "item_code")
-    private String itemCode;
 
     public int getId() {
         return id;
@@ -196,7 +198,8 @@ public class Product {
                 deliveryInfo).description(descriptionImages).descriptionImages(descriptionImages.substring(1,
                 descriptionImages.length() -
                         1).split(",")).representOptionItemId(this.representOptionItemId).deliverBoxPerAmount(this.getDeliverBoxPerAmount()).createdAt(
-                this.getCreatedAt()).pointRate(this.getPointRate()).build();
+                this.getCreatedAt()).pointRate(this.getPointRate()).promotionStartAt(this.promotionStartAt).promotionEndAt(
+                this.promotionEndAt).build();
     }
 
     @Override
