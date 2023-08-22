@@ -90,7 +90,6 @@ public class UserController {
             Integer userId = userCommandService.selectUserByLoginId(request.getLoginType(), loginId).getUserId();
             String accessToken = jwtProvider.generateAccessToken(String.valueOf(userId), TokenAuthType.USER);
             String refreshToken = jwtProvider.generateRefreshToken(String.valueOf(userId), TokenAuthType.USER);
-
             Jwt token = new Jwt();
             token.setAccessToken(accessToken);
             token.setRefreshToken(refreshToken);
