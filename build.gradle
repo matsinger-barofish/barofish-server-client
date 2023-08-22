@@ -8,16 +8,6 @@ group = 'com.matsinger'
 version = '0.0.1-SNAPSHOT'
 sourceCompatibility = '17'
 
-// custom config - plain 파일 생기지 않게 하는 옵션인듯
-jar {
-    enabled = false
-}
-
-// 테스트 코드를 제외한 빌드 수행
-tasks.withType(Test) {
-    enabled = false
-}
-
 configurations {
     compileOnly {
         extendsFrom annotationProcessor

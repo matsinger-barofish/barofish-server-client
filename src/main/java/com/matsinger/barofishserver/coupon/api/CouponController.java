@@ -6,23 +6,25 @@ import com.matsinger.barofishserver.admin.log.domain.AdminLog;
 import com.matsinger.barofishserver.admin.log.domain.AdminLogType;
 import com.matsinger.barofishserver.coupon.application.CouponCommandService;
 import com.matsinger.barofishserver.coupon.application.CouponQueryService;
-import com.matsinger.barofishserver.coupon.application.CouponUserMapQueryService;
 import com.matsinger.barofishserver.coupon.domain.*;
 import com.matsinger.barofishserver.coupon.dto.CouponAddReq;
 import com.matsinger.barofishserver.coupon.dto.CouponDto;
 import com.matsinger.barofishserver.coupon.dto.UpdateSystemCoupon;
-import com.matsinger.barofishserver.coupon.repository.CouponUserMapRepository;
 import com.matsinger.barofishserver.jwt.JwtService;
 import com.matsinger.barofishserver.jwt.TokenAuthType;
 import com.matsinger.barofishserver.jwt.TokenInfo;
 import com.matsinger.barofishserver.user.application.UserCommandService;
+import com.matsinger.barofishserver.user.application.UserQueryService;
 import com.matsinger.barofishserver.user.domain.User;
 import com.matsinger.barofishserver.userinfo.domain.UserInfo;
 import com.matsinger.barofishserver.userinfo.dto.UserInfoDto;
 import com.matsinger.barofishserver.utils.Common;
 import com.matsinger.barofishserver.utils.CustomResponse;
 import jakarta.persistence.criteria.Predicate;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
+import lombok.Setter;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -44,7 +46,6 @@ public class CouponController {
     private final UserCommandService userCommandService;
     private final JwtService jwt;
     private final Common utils;
-    private final CouponUserMapQueryService couponUserMapQueryService;
 
     @GetMapping("/management")
     public ResponseEntity<CustomResponse<Page<CouponDto>>> selectCouponListByAdmin(@RequestHeader(value = "Authorization", required = false) Optional<String> auth,
@@ -139,12 +140,12 @@ public class CouponController {
     }
 
     @GetMapping("/downloaded")
-    public ResponseEntity<CustomResponse<List<CouponUserMap>>> selectDownloadedCoupon(@RequestHeader(value = "Authorization") Optional<String> auth) {
-        CustomResponse<List<CouponUserMap>> res = new CustomResponse<>();
+    public ResponseEntity<CustomResponse<List<Coupon>>> selectDownloadedCoupon(@RequestHeader(value = "Authorization") Optional<String> auth) {
+        CustomResponse<List<Coupon>> res = new CustomResponse<>();
         Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth);
         if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
         try {
-            List<CouponUserMap> coupons = couponUserMapQueryService.selectDownloadedUserCoupon(tokenInfo.get().getId());
+            List<Coupon> coupons = couponQueryService.selectDownloadedCoupon(tokenInfo.get().getId());
             res.setData(Optional.ofNullable(coupons));
             return ResponseEntity.ok(res);
         } catch (Exception e) {
@@ -188,17 +189,12 @@ public class CouponController {
             }
             if (data.getAmount() < 0) return res.throwError("할인율을 확인해주세요.", "INPUT_CHECK_REQUIRED");
             if (data.getMinPrice() == null) data.setMinPrice(0);
-            if (data.getStartAt() == null) return res.throwError("사용 가능 시작 기간을 입력해주세요.", "INPUT_CHECK_REQUIRED");
-
-            if (data.getExpiryPeriod() <= 0) {
-                return res.throwError("유져가 쿠폰을 발급한 이후의 만료기간은 1일 이상이어야 합니다.", "INPUT_CHECK_REQUIRED");
-            }
-
+            if (data.getStartAt() == null) return res.throwError("사용 가능 시작 기간을 입력해주세요.", " INPUT_CHECK_REQUIRED");
             boolean isPublic = data.getUserIds() == null;
             Coupon
                     coupon =
                     Coupon.builder().title(title).type(data.getType()).amount(data.getAmount()).startAt(data.getStartAt()).endAt(
-                            data.getEndAt()).minPrice(data.getMinPrice()).state(CouponState.ACTIVE).publicType(isPublic ? CouponPublicType.PUBLIC : CouponPublicType.PRIVATE).expiryPeriod(data.getExpiryPeriod()).build();
+                            data.getEndAt()).minPrice(data.getMinPrice()).state(CouponState.ACTIVE).publicType(isPublic ? CouponPublicType.PUBLIC : CouponPublicType.PRIVATE).build();
             coupon = couponCommandService.addCoupon(coupon);
             if (!isPublic) {
                 List<User> users = userCommandService.selectUserListWithIds(data.getUserIds());

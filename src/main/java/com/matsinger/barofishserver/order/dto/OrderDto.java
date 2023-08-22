@@ -1,9 +1,11 @@
 package com.matsinger.barofishserver.order.dto;
 
 import com.matsinger.barofishserver.order.domain.OrderPaymentWay;
-import com.matsinger.barofishserver.order.domain.OrderState;
 import com.matsinger.barofishserver.order.orderprductinfo.dto.OrderProductDto;
+import com.matsinger.barofishserver.order.domain.OrderState;
 import com.matsinger.barofishserver.userinfo.dto.UserInfoDto;
+import jakarta.persistence.Basic;
+import jakarta.persistence.Column;
 import lombok.*;
 
 import java.sql.Timestamp;

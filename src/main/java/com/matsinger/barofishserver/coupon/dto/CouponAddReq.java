@@ -19,5 +19,4 @@ public class CouponAddReq {
     Timestamp startAt;
     Timestamp endAt;
     Integer minPrice;
-    Integer expiryPeriod;
 }
