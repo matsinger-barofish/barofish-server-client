@@ -130,6 +130,10 @@ public class StoreInfo {
     @Column(name = "bank_account_copy", nullable = true)
     String bankAccountCopy;
 
+    @Basic
+    @Column(name = "deliver_company", nullable = true)
+    String deliverCompany;
+
 
     public String getBackgroudImage() {
         return backgroudImage;
@@ -174,7 +178,8 @@ public class StoreInfo {
     public SimpleStore convert2Dto() {
         return SimpleStore.builder().storeId(this.store.getId()).backgroundImage(backgroudImage).profileImage(
                 profileImage).name(name).location(location).keyword(keyword.split(",")).visitNote(this.getVisitNote()).deliverFee(
-                this.deliverFee).minOrderPrice(this.minOrderPrice).refundDeliverFee(this.refundDeliverFee).oneLineDescription(this.oneLineDescription).build();
+                this.deliverFee).minOrderPrice(this.minOrderPrice).refundDeliverFee(this.refundDeliverFee).oneLineDescription(
+                this.oneLineDescription).build();
     }
 
     @Override

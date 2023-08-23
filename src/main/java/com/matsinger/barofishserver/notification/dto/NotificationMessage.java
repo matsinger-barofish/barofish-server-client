@@ -18,6 +18,7 @@ public class NotificationMessage {
     private String couponName;
     private String customContent;
     private Boolean isCanceledByRegion;
+    private String storeName;
 
     private String convertTimestamp2Str(Timestamp time) {
         return "";
@@ -49,7 +50,7 @@ public class NotificationMessage {
                     this.userName,
                     this.couponName);
             case ADMIN -> this.customContent;
-            case INQUIRY_ANSWER -> String.format("문의하신 내용에 답변이 작성되었습니다.");
+            case INQUIRY_ANSWER -> String.format("%s 업체에 문의하신 내용에 답변이 작성되었습니다.", storeName);
         };
     }
 

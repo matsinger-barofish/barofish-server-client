@@ -18,6 +18,9 @@ import com.matsinger.barofishserver.notification.dto.NotificationMessage;
 import com.matsinger.barofishserver.notification.dto.NotificationMessageType;
 import com.matsinger.barofishserver.product.application.ProductService;
 import com.matsinger.barofishserver.product.domain.Product;
+import com.matsinger.barofishserver.store.application.StoreService;
+import com.matsinger.barofishserver.store.domain.Store;
+import com.matsinger.barofishserver.store.domain.StoreInfo;
 import com.matsinger.barofishserver.utils.Common;
 import com.matsinger.barofishserver.utils.CustomResponse;
 import jakarta.persistence.criteria.Predicate;
@@ -44,6 +47,7 @@ public class InquiryController {
     private final AdminLogCommandService adminLogCommandService;
     private final AdminLogQueryService adminLogQueryService;
     private final NotificationCommandService notificationCommandService;
+    private final StoreService storeService;
     private final JwtService jwt;
     private final Common utils;
 
@@ -185,11 +189,13 @@ public class InquiryController {
             String content = utils.validateString(data.getContent(), 500L, "내용");
             inquiry.setAnswer(content);
             inquiry.setAnsweredAt(utils.now());
+            Store store = storeService.selectStore(inquiry.getProduct().getStoreId());
+
             Inquiry result = inquiryCommandService.updateInquiry(inquiry);
             res.setData(Optional.ofNullable(result.convert2Dto()));
             notificationCommandService.sendFcmToUser(inquiry.getUserId(),
                     NotificationMessageType.INQUIRY_ANSWER,
-                    NotificationMessage.builder().build());
+                    NotificationMessage.builder().storeName(store.getName()).build());
             if (adminId != null) {
                 AdminLog
                         adminLog =

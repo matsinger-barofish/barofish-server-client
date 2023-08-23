@@ -144,7 +144,8 @@ public class ProductService {
                                                                 List<Integer> filterFieldIds,
                                                                 Integer curationId,
                                                                 String keyword,
-                                                                Integer storeId) {
+                                                                Integer storeId,
+                                                                Integer userId) {
         Page<Product> products;
         switch (sortBy) {
             case REVIEW:
@@ -212,7 +213,7 @@ public class ProductService {
                 break;
         }
 
-        return products.map(this::convert2ListDto);
+        return products.map(v -> convert2ListDto(v, userId));
     }
 
     public Option addOption(Option option) {
@@ -273,7 +274,8 @@ public class ProductService {
             throw new Error("상품 정보를 찾을 수 없습니다.");
         });
     }
-    public Optional<Product> selectOptioanlProduct(Integer id){
+
+    public Optional<Product> selectOptioanlProduct(Integer id) {
         return productRepository.findById(id);
     }
 
@@ -308,6 +310,24 @@ public class ProductService {
 
     public List<Product> selectComparedProductList(Integer productId) {
         return productRepository.selectComparedProductList(productId);
+    }
+
+    public ProductListDto convert2ListDto(Product product, Integer userId) {
+        StoreInfo storeInfo = storeService.selectStoreInfo(product.getStoreId());
+        Integer reviewCount = reviewQueryService.countReviewWithProductId(product.getId());
+        OptionItem optionItem = selectOptionItem(product.getRepresentOptionItemId());
+        Boolean
+                isLike =
+                userId != null ? saveProductRepository.existsById(SaveProductId.builder().userId(userId).productId(
+                        product.getId()).build()) : null;
+        return ProductListDto.builder().id(product.getId()).state(product.getState()).image(product.getImages().substring(
+                1,
+                product.getImages().length() -
+                        1).split(",")[0]).originPrice(optionItem.getOriginPrice()).isNeedTaxation(product.getNeedTaxation()).discountPrice(
+                optionItem.getDiscountPrice()).title(product.getTitle()).reviewCount(reviewCount).storeId(storeInfo.getStoreId()).storeName(
+                storeInfo.getName()).parentCategoryId(product.getCategory().getCategoryId()).filterValues(
+                productFilterService.selectProductFilterValueListWithProductId(product.getId())).minOrderPrice(storeInfo.getMinOrderPrice()).deliverFeeType(
+                storeInfo.getDeliverFeeType()).storeImage(storeInfo.getProfileImage()).isLike(isLike).build();
     }
 
     public ProductListDto convert2ListDto(Product product) {
@@ -350,6 +370,9 @@ public class ProductService {
         OptionItem optionItem = selectOptionItem(product.getRepresentOptionItemId());
         productDto.setIsLike(userId != null &&
                 saveProductRepository.existsById(new SaveProductId(userId, product.getId())));
+        productDto.setDeliverFeeType(store.getDeliverFeeType());
+        productDto.setMinOrderPrice(store.getMinOrderPrice());
+        productDto.setDeliveryFee(store.getDeliverFee());
         productDto.setDifficultDeliverAddresses(addresses);
         productDto.setSearchFilterFields(searchFilterFields);
         productDto.setOriginPrice(optionItem.getOriginPrice());

@@ -38,6 +38,8 @@ public class SimpleProductDto {
     Integer representOptionItemId;
     Boolean needTaxation;
     Timestamp createdAt;
+    Timestamp promotionStartAt;
+    Timestamp promotionEndAt;
     String description;
     Integer deliverBoxPerAmount;
     Float pointRate;

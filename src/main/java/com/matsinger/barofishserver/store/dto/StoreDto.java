@@ -29,5 +29,6 @@ public class StoreDto {
     Integer refundDeliverFee;
     Integer minOrderPrice;
     String oneLineDescription;
+    String deliverCompany;
     StoreAdditionalDto additionalData;
 }
