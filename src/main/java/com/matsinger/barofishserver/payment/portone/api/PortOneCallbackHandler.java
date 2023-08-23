@@ -80,7 +80,10 @@ public class PortOneCallbackHandler {
                                         String.format("결제 금액: %d원\n", paymentData.getPaidAmount()) +
                                         String.format("가상계좌은행: %s\n", paymentData.getVbankName()) +
                                         String.format("가상계좌번호: %s\n",
-                                                paymentData.getVbankNum().replaceAll("[^\\d]", ""));
+                                                paymentData.getVbankNum().replaceAll("[^\\d]", "") +
+                                                        String.format("가상계좌 예금주명: %s\n", paymentData.getVbankHolder()) +
+                                                        String.format("입금 마감기한: %s",paymentData.getVbankDate() ));
+
                         sms.sendSms(paymentData.getBuyerTel(), smsContent, "가상 계좌 결제 요청");
                     }
                 } else if (data.getStatus().equals("paid")) {
@@ -153,7 +156,6 @@ public class PortOneCallbackHandler {
             }
         } catch (Exception e) {
             log.info(e.getMessage());
-        }
-        return ResponseEntity.ok(null);
+        } return ResponseEntity.ok(null);
     }
 }

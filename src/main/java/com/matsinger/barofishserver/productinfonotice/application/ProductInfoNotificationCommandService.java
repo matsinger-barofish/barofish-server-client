@@ -31,9 +31,9 @@ public class ProductInfoNotificationCommandService {
         Product findProduct = productQueryService.findById(request.getProductId());
 
         Optional<String> optionalItemCode = Optional.ofNullable(findProduct.getItemCode());
-//        if (optionalItemCode.isPresent() && !optionalItemCode.get().equals(request.getItemCode())) {
-//            throw new IllegalArgumentException("상품의 품목 아이디가 일치하지 않습니다.");
-//        }
+        if (optionalItemCode.isPresent() && !optionalItemCode.get().equals(request.getItemCode())) {
+            throw new IllegalArgumentException("상품의 품목 아이디가 일치하지 않습니다.");
+        }
 
         if (optionalItemCode.isPresent()) {
             throw new IllegalArgumentException("상품 고시 정보가 이미 존재합니다.");

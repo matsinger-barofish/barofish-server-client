@@ -29,6 +29,7 @@ public class SimpleStore {
     private Integer refundDeliverFee;
     private Integer minOrderPrice;
     private String oneLineDescription;
+    private String deliverCompany;
 
     private Boolean isLike;
 

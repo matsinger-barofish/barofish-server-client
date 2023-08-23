@@ -20,4 +20,6 @@ public interface UserAuthRepository extends JpaRepository<UserAuth, UserAuthId> 
     UserAuth findFirstByUserId(Integer userId);
 
     void deleteAllByUserId(Integer userId);
+
+    boolean existsByLoginIdAndLoginType(String loginId, LoginType loginType);
 }

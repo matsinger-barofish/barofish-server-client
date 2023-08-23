@@ -87,6 +87,14 @@ public class Product {
     @Column(name = "created_at", nullable = false)
     private Timestamp createdAt;
 
+    @Basic
+    @Column(name = "promotion_start_at", nullable = true)
+    private Timestamp promotionStartAt;
+
+    @Basic
+    @Column(name = "promotion_end_at", nullable = true)
+    private Timestamp promotionEndAt;
+
     @Builder.Default
     @JsonBackReference
     @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL, mappedBy = "product")
@@ -196,7 +204,8 @@ public class Product {
                 deliveryInfo).description(descriptionImages).descriptionImages(descriptionImages.substring(1,
                 descriptionImages.length() -
                         1).split(",")).representOptionItemId(this.representOptionItemId).deliverBoxPerAmount(this.getDeliverBoxPerAmount()).createdAt(
-                this.getCreatedAt()).pointRate(this.getPointRate()).build();
+                this.getCreatedAt()).pointRate(this.getPointRate()).promotionStartAt(this.promotionStartAt).promotionEndAt(
+                this.promotionEndAt).build();
     }
 
     @Override
