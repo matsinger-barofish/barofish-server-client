@@ -1,5 +1,6 @@
 package com.matsinger.barofishserver.store.domain;
 
+import com.matsinger.barofishserver.deliver.domain.DeliveryCompany;
 import com.matsinger.barofishserver.store.dto.SimpleStore;
 import jakarta.persistence.*;
 import lombok.*;
@@ -29,7 +30,7 @@ public class StoreInfo {
     }
 
     @Basic
-    @Column(name = "backgroud_image", nullable = false, length = -1)
+    @Column(name = "background_image", nullable = false, length = -1)
     private String backgroudImage;
     @Basic
     @Column(name = "profile_image", nullable = false, length = -1)
@@ -133,6 +134,10 @@ public class StoreInfo {
     @Basic
     @Column(name = "deliver_company", nullable = true)
     String deliverCompany;
+
+    @ManyToOne
+    @JoinColumn(name = "delivery_company_code", nullable = true) // 추후 nullable = false로 바꿀 것
+    private DeliveryCompany deliveryCompany;
 
 
     public String getBackgroudImage() {
