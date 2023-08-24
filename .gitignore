@@ -43,3 +43,4 @@ out/
 *.properties
 *.yml
 *.sql
+http/
