@@ -135,11 +135,6 @@ public class StoreInfo {
     @Column(name = "deliver_company", nullable = true)
     String deliverCompany;
 
-    @ManyToOne
-    @JoinColumn(name = "delivery_company_code", nullable = true) // 추후 nullable = false로 바꿀 것
-    private DeliveryCompany deliveryCompany;
-
-
     public String getBackgroudImage() {
         return backgroudImage;
     }

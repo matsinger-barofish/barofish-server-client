@@ -27,6 +27,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.data.web.SortDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCrypt;
 import org.springframework.web.bind.annotation.*;
@@ -118,6 +119,11 @@ public class StoreController {
                 return builder.and(predicates.toArray(new Predicate[0]));
             };
             PageRequest pageRequest = PageRequest.of(page, take, Sort.by(sort, orderBy.label));
+
+            if (orderBy.label.equals("state")) {
+//                pageRequest = PageRequest.of(page, take, Sort.by(sort, "joinAt").and(Sort.by(sort, orderBy.label)));
+                pageRequest = PageRequest.of(page, take, Sort.by(sort, orderBy.label).and(Sort.by(sort, "joinAt")));
+            }
             Page<StoreDto>
                     stores =
                     storeService.selectStoreList(true, pageRequest, spec).map(store -> storeService.convert2Dto(store,

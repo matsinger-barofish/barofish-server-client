@@ -145,7 +145,7 @@ public class SettlementQueryService {
                     .customerEmail(findUserInfo.getEmail())
                     .customerAddress(findDeliverPlace.getAddress())
                     .deliveryMessage(findDeliverPlace.getDeliverMessage())
-                    .deliveryCompany(findStoreInfo.getDeliveryCompany().getName())
+                    .deliveryCompany(findStoreInfo.getDeliverCompany())
                     .trackingNumber(productInfo.getInvoiceCode())
                     .build();
         });
