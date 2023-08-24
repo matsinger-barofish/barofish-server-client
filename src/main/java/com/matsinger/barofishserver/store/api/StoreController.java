@@ -83,9 +83,6 @@ public class StoreController {
     }
 
     @GetMapping("/management/list")
-//    @SortDefault.SortDefaults({
-//            @SortDefault(sort = "join")
-//    })
     public ResponseEntity<CustomResponse<Page<StoreDto>>> selectStoreListByAdmin(@RequestHeader(value = "Authorization", required = false) Optional<String> auth,
                                                                                  @RequestParam(value = "page", required = false, defaultValue = "0") Integer page,
                                                                                  @RequestParam(value = "take", required = false, defaultValue = "10") Integer take,
