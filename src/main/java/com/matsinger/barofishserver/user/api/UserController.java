@@ -165,8 +165,8 @@ public class UserController {
             String phone = request.getPhone().replaceAll("-", "");
 
             int appleUserId = userInfoQueryService.getAppleUserId(phone);
-            if (appleUserId != -1) {
 
+            if (appleUserId != -1) { // 애플 유저 아이디가 있는 경우
                 CustomResponse<Object> customResponse = generateAndSetTokens(appleUserId, res);
                 return ResponseEntity.ok(customResponse);
             }
@@ -174,7 +174,6 @@ public class UserController {
             int userId = userCommandService.addAppleUser(request, phone, profileImage);
 
             CustomResponse<Object> customResponse = generateAndSetTokens(userId, res);
-
             return ResponseEntity.ok(customResponse);
         } catch (Exception e) {
             return res.defaultError(e);
