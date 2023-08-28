@@ -154,7 +154,7 @@ public class UserController {
     public ResponseEntity<CustomResponse<Object>> joinAppleSns(@RequestPart(value = "data") AppleJoinReq request,
                                                                 @RequestPart(value = "profileImage", required = false) MultipartFile profileImage) throws IOException {
         CustomResponse<Object> res = new CustomResponse<>();
-//        verificationService.verifyPhoneVerification(request.getVerificationId()); // 휴대폰 번호 검증
+        verificationService.verifyPhoneVerification(request.getVerificationId()); // 휴대폰 번호 검증
 
         if (profileImage != null && !profileImage.isEmpty()) {
             if (!s3.validateImageType(profileImage))
