@@ -66,9 +66,14 @@ public class MainController {
     }
 
     @GetMapping("/curation")
-    public ResponseEntity<CustomResponse<List<CurationDto>>> selectMainCurationList() {
+    public ResponseEntity<CustomResponse<List<CurationDto>>> selectMainCurationList(@RequestHeader(value = "Authorization", required = false) Optional<String> auth) {
         CustomResponse<List<CurationDto>> res = new CustomResponse<>();
+        Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ALLOW), auth);
         try {
+            Integer userId;
+            if (tokenInfo != null && tokenInfo.isPresent() && tokenInfo.get().getType().equals(TokenAuthType.USER))
+                userId = tokenInfo.get().getId();
+            else {userId = null;}
             List<Curation> curations = curationQueryService.selectCurations();
             List<CurationDto> curationDtos = new ArrayList<>();
             for (Curation curation : curations) {
@@ -76,7 +81,7 @@ public class MainController {
                         products =
                         curationQueryService.selectCurationProducts(curation.getId(), PageRequest.of(0, 10));
                 CurationDto curationDto = curation.convert2Dto();
-                curationDto.setProducts(products.stream().map(productService::convert2ListDto).toList());
+                curationDto.setProducts(products.stream().map(v -> productService.convert2ListDto(v, userId)).toList());
                 curationDtos.add(curationDto);
             }
             res.setData(Optional.of(curationDtos));

@@ -14,7 +14,7 @@ import java.util.Optional;
 
 public interface ProductRepository extends JpaRepository<Product, Integer>, JpaSpecificationExecutor<Product> {
     List<Product> findAllByIdIn(List<Integer> ids);
-
+    List<Product> findAllByCategory_Id(Integer Integer);
     List<Product> findAllByStateNot(ProductState state);
 
     List<Product> findByTitleContainsAndStateEquals(String title, ProductState state);
@@ -53,6 +53,8 @@ public interface ProductRepository extends JpaRepository<Product, Integer>, JpaS
             "where p.state = \'ACTIVE\' \n" +
             "and (:curationId is null or p.id in (select cpm.product_id from curation_product_map cpm " +
             "WHERE cpm.curation_id=:curationId)) \n" +
+            "AND (p.promotion_start_at IS NULL OR p.promotion_start_at < NOW( ))\n" +
+            "  AND (p.promotion_end_at IS NULL OR NOW( ) < p.promotion_end_at)\n" +
             "and (:storeId is null or p.store_id = :storeId) \n" +
             "and (:keyword is null or p.title like concat('%', :keyword, '%') ) \n" +
             "and ( (:#{#categoryIds==null ? null : #categoryIds.size()} is null or c.parent_category_id in (:categoryIds)) \n" +
@@ -60,8 +62,9 @@ public interface ProductRepository extends JpaRepository<Product, Integer>, JpaS
             "and (:#{#filterFieldIds==null ? null : #filterFieldIds.size() } is null or p.id in (select p1.id from " +
             "product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
             "where (:#{#filterFieldIds==null ? null : #filterFieldIds.size() } is null or  ps.field_id in " +
-            "(:filterFieldIds) ) GROUP BY p1.id HAVING COUNT(*) = :#{#filterFieldIds==null ? 0 : #filterFieldIds.size" +
-            "() } )) \n" +
+            "(:filterFieldIds) ))) " +
+//            "GROUP BY p1.id HAVING COUNT(*) = :#{#filterFieldIds==null ? 0 : #filterFieldIds.size" +
+//            "() } )) \n" +
             "group by p.id \n" +
             "order by COUNT (*) desc", nativeQuery = true, countQuery = "select count(*) from product p \n" +
             "join category c ON p.category_id = c.id \n" +
@@ -69,6 +72,8 @@ public interface ProductRepository extends JpaRepository<Product, Integer>, JpaS
             "where p.state = \'ACTIVE\' \n" +
             "and (:curationId is null or p.id in (select cpm.product_id from curation_product_map cpm " +
             "WHERE cpm.curation_id=:curationId)) \n" +
+            "AND (p.promotion_start_at IS NULL OR p.promotion_start_at < NOW( ))\n" +
+            "  AND (p.promotion_end_at IS NULL OR NOW( ) < p.promotion_end_at)\n" +
             "and (:storeId is null or p.store_id = :storeId) \n" +
             "and (:keyword is null or p.title like concat('%', :keyword, '%') ) \n" +
             "and ( (:#{#categoryIds==null ? null : #categoryIds.size()} is null or c.parent_category_id in (:categoryIds)) \n" +
@@ -76,8 +81,9 @@ public interface ProductRepository extends JpaRepository<Product, Integer>, JpaS
             "and (:#{#filterFieldIds==null ? null : #filterFieldIds.size() } is null or p.id in (select p1.id from " +
             "product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
             "where (:#{#filterFieldIds==null ? null : #filterFieldIds.size() } is null or  ps.field_id in " +
-            "(:filterFieldIds) ) GROUP BY p1.id HAVING COUNT(*) = :#{#filterFieldIds==null ? 0 : #filterFieldIds.size" +
-            "() } )) \n" +
+            "(:filterFieldIds) ))) " +
+//            "GROUP BY p1.id HAVING COUNT(*) = :#{#filterFieldIds==null ? 0 : #filterFieldIds.size" +
+//            "() } )) \n" +
             "group by p.id \n")
     Page<Product> findWithPaginationSortByRecommend(Pageable pageable,
                                                     @Param("categoryIds") List<Integer> categoryIds,
@@ -91,6 +97,8 @@ public interface ProductRepository extends JpaRepository<Product, Integer>, JpaS
             "where p.state = \'ACTIVE\' \n" +
             "and (:curationId is null or p.id in (select cpm.product_id from curation_product_map cpm " +
             "WHERE cpm.curation_id=:curationId)) \n" +
+            "AND (p.promotion_start_at IS NULL OR p.promotion_start_at < NOW( ))\n" +
+            "  AND (p.promotion_end_at IS NULL OR NOW( ) < p.promotion_end_at)\n" +
             "and (:storeId is null or p.store_id = :storeId) \n" +
             "and (:keyword is null or p.title like concat('%', :keyword, '%') ) \n" +
             "and ( (:#{#categoryIds==null ? null : #categoryIds.size()} is null or c.parent_category_id in (:categoryIds)) \n" +
@@ -98,14 +106,17 @@ public interface ProductRepository extends JpaRepository<Product, Integer>, JpaS
             "and (:#{#filterFieldIds==null ? null : #filterFieldIds.size() } is null or p.id in (select p1.id from " +
             "product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
             "where (:#{#filterFieldIds==null ? null : #filterFieldIds.size() } is null or  ps.field_id in " +
-            "(:filterFieldIds) ) GROUP BY p1.id HAVING COUNT(*) = :#{#filterFieldIds==null ? 0 : #filterFieldIds.size" +
-            "() } )) \n" +
+            "(:filterFieldIds) ))) " +
+//            "GROUP BY p1.id HAVING COUNT(*) = :#{#filterFieldIds==null ? 0 : #filterFieldIds.size" +
+//            "() } )) \n" +
             "group by p.id \n" +
             "order by p.created_at desc", nativeQuery = true, countQuery = "select count(*) from product p \n" +
             "join category c ON p.category_id = c.id \n" +
             "where p.state = \'ACTIVE\' \n" +
             "and (:curationId is null or p.id in (select cpm.product_id from curation_product_map cpm " +
             "WHERE cpm.curation_id=:curationId)) \n" +
+            "AND (p.promotion_start_at IS NULL OR p.promotion_start_at < NOW( ))\n" +
+            "  AND (p.promotion_end_at IS NULL OR NOW( ) < p.promotion_end_at)\n" +
             "and (:storeId is null or p.store_id = :storeId) \n" +
             "and (:keyword is null or p.title like concat('%', :keyword, '%') ) \n" +
             "and ( (:#{#categoryIds==null ? null : #categoryIds.size()} is null or c.parent_category_id in (:categoryIds)) \n" +
@@ -113,8 +124,9 @@ public interface ProductRepository extends JpaRepository<Product, Integer>, JpaS
             "and (:#{#filterFieldIds==null ? null : #filterFieldIds.size() } is null or p.id in (select p1.id from " +
             "product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
             "where (:#{#filterFieldIds==null ? null : #filterFieldIds.size() } is null or  ps.field_id in " +
-            "(:filterFieldIds) ) GROUP BY p1.id HAVING COUNT(*) = :#{#filterFieldIds==null ? 0 : #filterFieldIds.size" +
-            "() } )) \n" +
+            "(:filterFieldIds) ))) " +
+//            "GROUP BY p1.id HAVING COUNT(*) = :#{#filterFieldIds==null ? 0 : #filterFieldIds.size" +
+//            "() } )) \n" +
             "group by p.id \n")
     Page<Product> findWithPaginationSortByNewer(Pageable pageable,
                                                 @Param("categoryIds") List<Integer> categoryIds,
@@ -129,6 +141,8 @@ public interface ProductRepository extends JpaRepository<Product, Integer>, JpaS
             "where p.state = \'ACTIVE\' \n" +
             "and (:curationId is null or p.id in (select cpm.product_id from curation_product_map cpm " +
             "WHERE cpm.curation_id=:curationId)) \n" +
+            "AND (p.promotion_start_at IS NULL OR p.promotion_start_at < NOW( ))\n" +
+            "  AND (p.promotion_end_at IS NULL OR NOW( ) < p.promotion_end_at)\n" +
             "and (:storeId is null or p.store_id = :storeId) \n" +
             "and (:keyword is null or p.title like concat('%', :keyword, '%') ) \n" +
             "and ( (:#{#categoryIds==null ? null : #categoryIds.size()} is null or c.parent_category_id in (:categoryIds)) \n" +
@@ -136,14 +150,17 @@ public interface ProductRepository extends JpaRepository<Product, Integer>, JpaS
             "and (:#{#filterFieldIds==null ? null : #filterFieldIds.size() } is null or p.id in (select p1.id from " +
             "product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
             "where (:#{#filterFieldIds==null ? null : #filterFieldIds.size() } is null or  ps.field_id in " +
-            "(:filterFieldIds) ) GROUP BY p1.id HAVING COUNT(*) = :#{#filterFieldIds==null ? 0 : #filterFieldIds.size" +
-            "() } )) \n" +
+            "(:filterFieldIds) ))) " +
+//            "GROUP BY p1.id HAVING COUNT(*) = :#{#filterFieldIds==null ? 0 : #filterFieldIds.size" +
+//            "() } )) \n" +
             "group by p.id \n" +
             "order by oi.discount_price asc", nativeQuery = true, countQuery = "select count(*) from product p \n" +
             "join category c ON p.category_id = c.id \n" +
             "where p.state = \'ACTIVE\' \n" +
             "and (:curationId is null or p.id in (select cpm.product_id from curation_product_map cpm " +
             "WHERE cpm.curation_id=:curationId)) \n" +
+            "AND (p.promotion_start_at IS NULL OR p.promotion_start_at < NOW( ))\n" +
+            "  AND (p.promotion_end_at IS NULL OR NOW( ) < p.promotion_end_at)\n" +
             "and (:storeId is null or p.store_id = :storeId) \n" +
             "and (:keyword is null or p.title like concat('%', :keyword, '%') ) \n" +
             "and ( (:#{#categoryIds==null ? null : #categoryIds.size()} is null or c.parent_category_id in (:categoryIds)) \n" +
@@ -151,8 +168,9 @@ public interface ProductRepository extends JpaRepository<Product, Integer>, JpaS
             "and (:#{#filterFieldIds==null ? null : #filterFieldIds.size() } is null or p.id in (select p1.id from " +
             "product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
             "where (:#{#filterFieldIds==null ? null : #filterFieldIds.size() } is null or  ps.field_id in " +
-            "(:filterFieldIds) ) GROUP BY p1.id HAVING COUNT(*) = :#{#filterFieldIds==null ? 0 : #filterFieldIds.size" +
-            "() } )) \n" +
+            "(:filterFieldIds) ))) " +
+//            "GROUP BY p1.id HAVING COUNT(*) = :#{#filterFieldIds==null ? 0 : #filterFieldIds.size" +
+//            "() } )) \n" +
             "group by p.id \n")
     Page<Product> findWithPaginationSortByLowPrice(Pageable pageable,
                                                    @Param("categoryIds") List<Integer> categoryIds,
@@ -167,6 +185,8 @@ public interface ProductRepository extends JpaRepository<Product, Integer>, JpaS
             "where p.state = \'ACTIVE\' \n" +
             "and (:curationId is null or p.id in (select cpm.product_id from curation_product_map cpm " +
             "WHERE cpm.curation_id=:curationId)) \n" +
+            "AND (p.promotion_start_at IS NULL OR p.promotion_start_at < NOW( ))\n" +
+            "  AND (p.promotion_end_at IS NULL OR NOW( ) < p.promotion_end_at)\n" +
             "and (:storeId is null or p.store_id = :storeId) \n" +
             "and (:keyword is null or p.title like concat('%', :keyword, '%') ) \n" +
             "and ( (:#{#categoryIds==null ? null : #categoryIds.size()} is null or c.parent_category_id in (:categoryIds)) \n" +
@@ -174,14 +194,17 @@ public interface ProductRepository extends JpaRepository<Product, Integer>, JpaS
             "and (:#{#filterFieldIds==null ? null : #filterFieldIds.size() } is null or p.id in (select p1.id from " +
             "product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
             "where (:#{#filterFieldIds==null ? null : #filterFieldIds.size() } is null or  ps.field_id in " +
-            "(:filterFieldIds) ) GROUP BY p1.id HAVING COUNT(*) = :#{#filterFieldIds==null ? 0 : #filterFieldIds.size" +
-            "() } )) \n" +
+            "(:filterFieldIds) ))) " +
+//            "GROUP BY p1.id HAVING COUNT(*) = :#{#filterFieldIds==null ? 0 : #filterFieldIds.size" +
+//            "() } )) \n" +
             "group by p.id \n" +
             "order by oi.discount_price desc", nativeQuery = true, countQuery = "select count(*) from product p \n" +
             "join category c ON p.category_id = c.id \n" +
             "where p.state = \'ACTIVE\' \n" +
             "and (:curationId is null or p.id in (select cpm.product_id from curation_product_map cpm " +
             "WHERE cpm.curation_id=:curationId)) \n" +
+            "AND (p.promotion_start_at IS NULL OR p.promotion_start_at < NOW( ))\n" +
+            "  AND (p.promotion_end_at IS NULL OR NOW( ) < p.promotion_end_at)\n" +
             "and (:storeId is null or p.store_id = :storeId) \n" +
             "and (:keyword is null or p.title like concat('%', :keyword, '%') ) \n" +
             "and ( (:#{#categoryIds==null ? null : #categoryIds.size()} is null or c.parent_category_id in (:categoryIds)) \n" +
@@ -189,8 +212,9 @@ public interface ProductRepository extends JpaRepository<Product, Integer>, JpaS
             "and (:#{#filterFieldIds==null ? null : #filterFieldIds.size() } is null or p.id in (select p1.id from " +
             "product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
             "where (:#{#filterFieldIds==null ? null : #filterFieldIds.size() } is null or  ps.field_id in " +
-            "(:filterFieldIds) ) GROUP BY p1.id HAVING COUNT(*) = :#{#filterFieldIds==null ? 0 : #filterFieldIds.size" +
-            "() } )) \n" +
+            "(:filterFieldIds) ))) " +
+//            "GROUP BY p1.id HAVING COUNT(*) = :#{#filterFieldIds==null ? 0 : #filterFieldIds.size" +
+//            "() } )) \n" +
             "group by p.id \n")
     Page<Product> findWithPaginationSortByHighPrice(Pageable pageable,
                                                     @Param("categoryIds") List<Integer> categoryIds,
@@ -205,6 +229,8 @@ public interface ProductRepository extends JpaRepository<Product, Integer>, JpaS
             "where p.state = \'ACTIVE\' \n" +
             "and (:curationId is null or p.id in (select cpm.product_id from curation_product_map cpm " +
             "WHERE cpm.curation_id=:curationId)) \n" +
+            "AND (p.promotion_start_at IS NULL OR p.promotion_start_at < NOW( ))\n" +
+            "  AND (p.promotion_end_at IS NULL OR NOW( ) < p.promotion_end_at)\n" +
             "and (:storeId is null or p.store_id = :storeId) \n" +
             "and (:keyword is null or p.title like concat('%', :keyword, '%') ) \n" +
             "and ( (:#{#categoryIds==null ? null : #categoryIds.size()} is null or c.parent_category_id in (:categoryIds)) \n" +
@@ -212,8 +238,9 @@ public interface ProductRepository extends JpaRepository<Product, Integer>, JpaS
             "and (:#{#filterFieldIds==null ? null : #filterFieldIds.size() } is null or p.id in (select p1.id from " +
             "product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
             "where (:#{#filterFieldIds==null ? null : #filterFieldIds.size() } is null or  ps.field_id in " +
-            "(:filterFieldIds) ) GROUP BY p1.id HAVING COUNT(*) = :#{#filterFieldIds==null ? 0 : #filterFieldIds.size" +
-            "() } )) \n" +
+            "(:filterFieldIds) ))) " +
+//            "GROUP BY p1.id HAVING COUNT(*) = :#{#filterFieldIds==null ? 0 : #filterFieldIds.size" +
+//            "() } )) \n" +
             "group by p.id \n" +
             "order by COUNT(*) desc", nativeQuery = true, countQuery = "select count(*) from product p \n" +
             "join category c ON p.category_id = c.id \n" +
@@ -221,6 +248,8 @@ public interface ProductRepository extends JpaRepository<Product, Integer>, JpaS
             "where p.state = \'ACTIVE\' \n" +
             "and (:curationId is null or p.id in (select cpm.product_id from curation_product_map cpm " +
             "WHERE cpm.curation_id=:curationId)) \n" +
+            "AND (p.promotion_start_at IS NULL OR p.promotion_start_at < NOW( ))\n" +
+            "  AND (p.promotion_end_at IS NULL OR NOW( ) < p.promotion_end_at)\n" +
             "and (:storeId is null or p.store_id = :storeId) \n" +
             "and (:keyword is null or p.title like concat('%', :keyword, '%') ) \n" +
             "and ( (:#{#categoryIds==null ? null : #categoryIds.size()} is null or c.parent_category_id in (:categoryIds)) \n" +
@@ -228,8 +257,9 @@ public interface ProductRepository extends JpaRepository<Product, Integer>, JpaS
             "and (:#{#filterFieldIds==null ? null : #filterFieldIds.size() } is null or p.id in (select p1.id from " +
             "product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
             "where (:#{#filterFieldIds==null ? null : #filterFieldIds.size() } is null or  ps.field_id in " +
-            "(:filterFieldIds) ) GROUP BY p1.id HAVING COUNT(*) = :#{#filterFieldIds==null ? 0 : #filterFieldIds.size" +
-            "() } )) \n" +
+            "(:filterFieldIds) ))) " +
+//            "GROUP BY p1.id HAVING COUNT(*) = :#{#filterFieldIds==null ? 0 : #filterFieldIds.size" +
+//            "() } )) \n" +
             "group by p.id \n")
     Page<Product> findWithPaginationSortByLike(Pageable pageable,
                                                @Param("categoryIds") List<Integer> categoryIds,
@@ -244,6 +274,8 @@ public interface ProductRepository extends JpaRepository<Product, Integer>, JpaS
             "where p.state = \'ACTIVE\' \n" +
             "and (:curationId is null or p.id in (select cpm.product_id from curation_product_map cpm " +
             "WHERE cpm.curation_id=:curationId)) \n" +
+            "AND (p.promotion_start_at IS NULL OR p.promotion_start_at < NOW( ))\n" +
+            "  AND (p.promotion_end_at IS NULL OR NOW( ) < p.promotion_end_at)\n" +
             "and (:storeId is null or p.store_id = :storeId) \n" +
             "and (:keyword is null or p.title like concat('%', :keyword, '%') ) \n" +
             "and ( (:#{#categoryIds==null ? null : #categoryIds.size()} is null or c.parent_category_id in (:categoryIds)) \n" +
@@ -251,8 +283,9 @@ public interface ProductRepository extends JpaRepository<Product, Integer>, JpaS
             "and (:#{#filterFieldIds==null ? null : #filterFieldIds.size() } is null or p.id in (select p1.id from " +
             "product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
             "where (:#{#filterFieldIds==null ? null : #filterFieldIds.size() } is null or  ps.field_id in " +
-            "(:filterFieldIds) ) GROUP BY p1.id HAVING COUNT(*) = :#{#filterFieldIds==null ? 0 : #filterFieldIds.size" +
-            "() } )) \n" +
+            "(:filterFieldIds) ))) " +
+//            "GROUP BY p1.id HAVING COUNT(*) = :#{#filterFieldIds==null ? 0 : #filterFieldIds.size" +
+//            "() } )) \n" +
             "group by p.id \n" +
             "order by COUNT(*) desc", nativeQuery = true, countQuery = "select count(*) from product p \n" +
             "join category c ON p.category_id = c.id \n" +
@@ -260,6 +293,8 @@ public interface ProductRepository extends JpaRepository<Product, Integer>, JpaS
             "where p.state = \'ACTIVE\' \n" +
             "and (:curationId is null or p.id in (select cpm.product_id from curation_product_map cpm " +
             "WHERE cpm.curation_id=:curationId)) \n" +
+            "AND (p.promotion_start_at IS NULL OR p.promotion_start_at < NOW( ))\n" +
+            "  AND (p.promotion_end_at IS NULL OR NOW( ) < p.promotion_end_at)\n" +
             "and (:storeId is null or p.store_id = :storeId) \n" +
             "and (:keyword is null or p.title like concat('%', :keyword, '%') ) \n" +
             "and ( (:#{#categoryIds==null ? null : #categoryIds.size()} is null or c.parent_category_id in (:categoryIds)) \n" +
@@ -267,8 +302,9 @@ public interface ProductRepository extends JpaRepository<Product, Integer>, JpaS
             "and (:#{#filterFieldIds==null ? null : #filterFieldIds.size() } is null or p.id in (select p1.id from " +
             "product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
             "where (:#{#filterFieldIds==null ? null : #filterFieldIds.size() } is null or  ps.field_id in " +
-            "(:filterFieldIds) ) GROUP BY p1.id HAVING COUNT(*) = :#{#filterFieldIds==null ? 0 : #filterFieldIds.size" +
-            "() } )) \n" +
+            "(:filterFieldIds) ))) " +
+//            "GROUP BY p1.id HAVING COUNT(*) = :#{#filterFieldIds==null ? 0 : #filterFieldIds.size" +
+//            "() } )) \n" +
             "group by p.id \n")
     Page<Product> findWithPaginationSortByReview(Pageable pageable,
                                                  @Param("categoryIds") List<Integer> categoryIds,
@@ -283,6 +319,8 @@ public interface ProductRepository extends JpaRepository<Product, Integer>, JpaS
             "where p.state = \'ACTIVE\' \n" +
             "and (:curationId is null or p.id in (select cpm.product_id from curation_product_map cpm " +
             "WHERE cpm.curation_id=:curationId)) \n" +
+            "AND (p.promotion_start_at IS NULL OR p.promotion_start_at < NOW( ))\n" +
+            "  AND (p.promotion_end_at IS NULL OR NOW( ) < p.promotion_end_at)\n" +
             "and (:storeId is null or p.store_id = :storeId) \n" +
             "and (:keyword is null or p.title like concat('%', :keyword, '%') ) \n" +
             "and ( (:#{#categoryIds==null ? null : #categoryIds.size()} is null or c.parent_category_id in (:categoryIds)) \n" +
@@ -290,8 +328,9 @@ public interface ProductRepository extends JpaRepository<Product, Integer>, JpaS
             "and (:#{#filterFieldIds==null ? null : #filterFieldIds.size() } is null or p.id in (select p1.id from " +
             "product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
             "where (:#{#filterFieldIds==null ? null : #filterFieldIds.size() } is null or  ps.field_id in " +
-            "(:filterFieldIds) ) GROUP BY p1.id HAVING COUNT(*) = :#{#filterFieldIds==null ? 0 : #filterFieldIds.size" +
-            "() } )) \n" +
+            "(:filterFieldIds) ))) " +
+//            "GROUP BY p1.id HAVING COUNT(*) = :#{#filterFieldIds==null ? 0 : #filterFieldIds.size" +
+//            "() } )) \n" +
             "group by p.id \n" +
             "order by COUNT( o.state not in (\'CANCELED\',\'WAIT_DEPOSIT\')) desc", nativeQuery = true, countQuery =
             "select count(*) from " +
@@ -302,6 +341,8 @@ public interface ProductRepository extends JpaRepository<Product, Integer>, JpaS
                     "where p.state = \'ACTIVE\' \n" +
                     "and (:curationId is null or p.id in (select cpm.product_id from curation_product_map cpm " +
                     "WHERE cpm.curation_id=:curationId)) \n" +
+                    "AND (p.promotion_start_at IS NULL OR p.promotion_start_at < NOW( ))\n" +
+                    "  AND (p.promotion_end_at IS NULL OR NOW( ) < p.promotion_end_at)\n" +
                     "and (:storeId is null or p.store_id = :storeId) \n" +
                     "and (:keyword is null or p.title like concat('%', :keyword, '%') ) \n" +
                     "and ( (:#{#categoryIds==null ? null : #categoryIds.size()} is null or c.parent_category_id in (:categoryIds)) \n" +
@@ -309,8 +350,9 @@ public interface ProductRepository extends JpaRepository<Product, Integer>, JpaS
                     "and (:#{#filterFieldIds==null ? null : #filterFieldIds.size() } is null or p.id in (select p1.id from " +
                     "product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
                     "where (:#{#filterFieldIds==null ? null : #filterFieldIds.size() } is null or  ps.field_id in " +
-                    "(:filterFieldIds) ) GROUP BY p1.id HAVING COUNT(*) = :#{#filterFieldIds==null ? 0 : #filterFieldIds.size" +
-                    "() } )) \n" +
+                    "(:filterFieldIds) ))) " +
+//                    "GROUP BY p1.id HAVING COUNT(*) = :#{#filterFieldIds==null ? 0 : #filterFieldIds.size" +
+//                    "() } )) \n" +
                     "group by p.id \n")
     Page<Product> findWithPaginationSortByOrder(Pageable pageable,
                                                 @Param("categoryIds") List<Integer> categoryIds,
@@ -324,25 +366,32 @@ public interface ProductRepository extends JpaRepository<Product, Integer>, JpaS
             "where p.state = \'ACTIVE\' " +
             "and (:curationId is null or p.id in (select cpm.product_id from curation_product_map cpm " +
             "WHERE cpm.curation_id=:curationId)) \n" +
+            "AND (p.promotion_start_at IS NULL OR p.promotion_start_at < NOW( ))\n" +
+            "  AND (p.promotion_end_at IS NULL OR NOW( ) < p.promotion_end_at)\n" +
             "and ( (:#{#categoryIds==null ? null : #categoryIds.size()} is null or c.parent_category_id in (:categoryIds)) \n" +
             "or (:#{#categoryIds==null ? null : #categoryIds.size()} is null or c.id in (:categoryIds)) )\n" +
-            "and (:#{#filterFieldIds==null ? null : #filterFieldIds.size() } is null or p.id in (select p1.id from " +
-            "product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
+            "and (:#{#filterFieldIds==null ? null : #filterFieldIds.size() } is null or p.id in (select p1.id from \n" +
+            "product p1 join product_search_filter_map ps on ps.product_id = p1.id\n" +
             "where (:#{#filterFieldIds==null ? null : #filterFieldIds.size() } is null or  ps.field_id in " +
-            "(:filterFieldIds) ) GROUP BY p1.id HAVING COUNT(*) = :#{#filterFieldIds==null ? 0 : #filterFieldIds.size" +
-            "() } )) \n" +
+            "(:filterFieldIds) ))) " +
+//            "GROUP BY p1.id HAVING COUNT(*) = :#{#filterFieldIds==null ? 0 : #filterFieldIds.size" +
+//            "() } )) \n" +
             "order by p.created_at desc", nativeQuery = true, countQuery = "select count(*) from product p " +
             "join category c ON p.category_id = c.id " +
             "where p.state = \'ACTIVE\' " +
             "and (:curationId is null or p.id in (select cpm.product_id from curation_product_map cpm " +
             "WHERE cpm.curation_id=:curationId)) \n" +
+            "AND (p.promotion_start_at IS NULL OR p.promotion_start_at < NOW( ))\n" +
+            "  AND (p.promotion_end_at IS NULL OR NOW( ) < p.promotion_end_at)\n" +
             "and ( (:#{#categoryIds==null ? null : #categoryIds.size()} is null or c.parent_category_id in (:categoryIds)) \n" +
             "or (:#{#categoryIds==null ? null : #categoryIds.size()} is null or c.id in (:categoryIds)) )\n" +
-            "and (:#{#filterFieldIds==null ? null : #filterFieldIds.size() } is null or p.id in (select p1.id from " +
-            "product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
+            "and (:#{#filterFieldIds==null ? null : #filterFieldIds.size() } is null or p.id in (select p1.id from \n" +
+            "product p1 join product_search_filter_map ps on ps.product_id = p1.id\n" +
             "where (:#{#filterFieldIds==null ? null : #filterFieldIds.size() } is null or  ps.field_id in " +
-            "(:filterFieldIds) ) GROUP BY p1.id HAVING COUNT(*) = :#{#filterFieldIds==null ? 0 : #filterFieldIds.size" +
-            "() } )) \n")
+            "(:filterFieldIds) ))) "
+//            "GROUP BY p1.id HAVING COUNT(*) = :#{#filterFieldIds==null ? 0 : #filterFieldIds.size" +
+//            "() } )) \n"
+    )
     Page<Product> findNewerWithPagination(Pageable pageable,
                                           @Param("categoryIds") List<Integer> categoryIds,
                                           @Param("filterFieldIds") List<Integer> filterFieldIds,
@@ -354,13 +403,16 @@ public interface ProductRepository extends JpaRepository<Product, Integer>, JpaS
             "where p.state = \'ACTIVE\'" +
             "and (:curationId is null or p.id in (select cpm.product_id from curation_product_map cpm " +
             "WHERE cpm.curation_id=:curationId)) \n" +
+            "AND (p.promotion_start_at IS NULL OR p.promotion_start_at < NOW( ))\n" +
+            "  AND (p.promotion_end_at IS NULL OR NOW( ) < p.promotion_end_at)\n" +
             "and ( (:#{#categoryIds==null ? null : #categoryIds.size()} is null or c.parent_category_id in (:categoryIds)) \n" +
             "or (:#{#categoryIds==null ? null : #categoryIds.size()} is null or c.id in (:categoryIds)) )\n" +
             "and (:#{#filterFieldIds==null ? null : #filterFieldIds.size() } is null or p.id in (select p1.id from " +
             "product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
             "where (:#{#filterFieldIds==null ? null : #filterFieldIds.size() } is null or  ps.field_id in " +
-            "(:filterFieldIds) ) GROUP BY p1.id HAVING COUNT(*) = :#{#filterFieldIds==null ? 0 : #filterFieldIds.size" +
-            "() } )) \n" +
+            "(:filterFieldIds) ))) " +
+//            "GROUP BY p1.id HAVING COUNT(*) = :#{#filterFieldIds==null ? 0 : #filterFieldIds.size" +
+//            "() } )) \n" +
             "and oi.origin_price != 0\n" +
             " ORDER BY IF( oi.origin_price != 0, oi.discount_price / oi.origin_price, 100 )", nativeQuery = true, countQuery =
             "select count(*) from product p " +
@@ -368,13 +420,16 @@ public interface ProductRepository extends JpaRepository<Product, Integer>, JpaS
                     "where p.state = \'ACTIVE\'" +
                     "and (:curationId is null or p.id in (select cpm.product_id from curation_product_map cpm " +
                     "WHERE cpm.curation_id=:curationId)) \n" +
+                    "AND (p.promotion_start_at IS NULL OR p.promotion_start_at < NOW( ))\n" +
+                    "  AND (p.promotion_end_at IS NULL OR NOW( ) < p.promotion_end_at)\n" +
                     "and ( (:#{#categoryIds==null ? null : #categoryIds.size()} is null or c.parent_category_id in (:categoryIds)) \n" +
                     "or (:#{#categoryIds==null ? null : #categoryIds.size()} is null or c.id in (:categoryIds)) )\n" +
                     "and (:#{#filterFieldIds==null ? null : #filterFieldIds.size() } is null or p.id in (select p1.id from " +
                     "product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
                     "where (:#{#filterFieldIds==null ? null : #filterFieldIds.size() } is null or  ps.field_id in " +
-                    "(:filterFieldIds) ) GROUP BY p1.id HAVING COUNT(*) = :#{#filterFieldIds==null ? 0 : #filterFieldIds.size" +
-                    "() } )) \n" +
+                    "(:filterFieldIds) ))) " +
+//                    "GROUP BY p1.id HAVING COUNT(*) = :#{#filterFieldIds==null ? 0 : #filterFieldIds.size" +
+//                    "() } )) \n" +
                     "and oi.origin_price != 0\n")
     Page<Product> findDiscountWithPagination(Pageable pageable,
                                              @Param("categoryIds") List<Integer> categoryIds,
@@ -398,7 +453,10 @@ public interface ProductRepository extends JpaRepository<Product, Integer>, JpaS
 
     @Query(value = "SELECT *\n" +
             "FROM product pp\n" +
-            "WHERE pp.state=\'ACTIVE\' AND pp.id IN\n" +
+            "WHERE pp.state=\'ACTIVE\'" +
+            "AND (pp.promotion_start_at IS NULL OR pp.promotion_start_at < NOW( ))\n" +
+            "  AND (pp.promotion_end_at IS NULL OR NOW( ) < pp.promotion_end_at)\n" +
+            " AND pp.id IN\n" +
             "      (SELECT i.product_id AS productId\n" +
             "       FROM order_product_info i\n" +
             "       WHERE i.order_id IN\n" +
@@ -409,6 +467,7 @@ public interface ProductRepository extends JpaRepository<Product, Integer>, JpaS
             "              WHERE p.id IN (:productIds)\n" +
             "              GROUP BY o1.id)\n" +
             "         AND i.product_id NOT IN (:productIds)\n" +
+
             "       GROUP BY i.product_id)\n" +
             "LIMIT 10", nativeQuery = true)
     List<Product> selectProductOtherCustomerBuy(@Param("productIds") List<Integer> productIds);

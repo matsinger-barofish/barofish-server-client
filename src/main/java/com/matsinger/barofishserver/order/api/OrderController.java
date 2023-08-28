@@ -4,11 +4,15 @@ import com.matsinger.barofishserver.admin.log.application.AdminLogCommandService
 import com.matsinger.barofishserver.admin.log.application.AdminLogQueryService;
 import com.matsinger.barofishserver.admin.log.domain.AdminLog;
 import com.matsinger.barofishserver.admin.log.domain.AdminLogType;
+import com.matsinger.barofishserver.basketProduct.application.BasketCommandService;
+import com.matsinger.barofishserver.basketProduct.application.BasketQueryService;
 import com.matsinger.barofishserver.coupon.application.CouponCommandService;
 import com.matsinger.barofishserver.coupon.application.CouponQueryService;
 import com.matsinger.barofishserver.coupon.domain.Coupon;
 import com.matsinger.barofishserver.deliver.application.DeliverService;
 import com.matsinger.barofishserver.deliver.domain.Deliver;
+import com.matsinger.barofishserver.grade.application.GradeQueryService;
+import com.matsinger.barofishserver.grade.domain.Grade;
 import com.matsinger.barofishserver.jwt.JwtService;
 import com.matsinger.barofishserver.jwt.TokenAuthType;
 import com.matsinger.barofishserver.jwt.TokenInfo;
@@ -70,6 +74,8 @@ public class OrderController {
     private final AdminLogQueryService adminLogQueryService;
     private final DeliverService deliverService;
     private final StoreService storeService;
+    private final BasketCommandService basketCommandService;
+    private final GradeQueryService gradeQueryService;
     private final JwtService jwt;
     private final Common utils;
 
@@ -82,9 +88,12 @@ public class OrderController {
         try {
             Integer userId = tokenInfo.get().getId();
             UserInfo userInfo = userService.selectUserInfo(userId);
-            SiteInformation siteInfo = siteInfoQueryService.selectSiteInfo("INT_REVIEW_POINT_TEXT");
-            Integer maxReviewPoint = Integer.parseInt(siteInfo.getContent());
-            res.setData(Optional.ofNullable(PointRuleRes.builder().maxReviewPoint(maxReviewPoint).pointRate(userInfo.getGrade().getPointRate()).build()));
+            SiteInformation reviewTextSiteInfo = siteInfoQueryService.selectSiteInfo("INT_REVIEW_POINT_TEXT");
+            SiteInformation reviewImageSiteInfo = siteInfoQueryService.selectSiteInfo("INT_REVIEW_POINT_IMAGE");
+            Integer maxReviewPoint = Integer.parseInt(reviewTextSiteInfo.getContent());
+            Integer reviewImage = Integer.parseInt(reviewImageSiteInfo.getContent());
+            res.setData(Optional.ofNullable(PointRuleRes.builder().maxReviewPoint(maxReviewPoint).pointRate(userInfo.getGrade().getPointRate()).ImageReviewPoint(
+                    reviewImage).build()));
             return ResponseEntity.ok(res);
         } catch (Exception e) {
             return res.defaultError(e);
@@ -328,6 +337,13 @@ public class OrderController {
             for (OrderProductReq productReq : data.getProducts()) {
                 Product product = productService.selectProduct(productReq.getProductId());
                 StoreInfo storeInfo = storeService.selectStoreInfo(product.getStoreId());
+                if ((product.getPromotionStartAt() != null && product.getPromotionStartAt().after(utils.now())) ||
+                        (product.getPromotionEndAt() != null && product.getPromotionEndAt().before(utils.now()))) {
+                    basketCommandService.deleteBasket(product.getId(), userId);
+                    return res.throwError("프로모션 기간이 아닌 상품이 포함되어 있습니다.", "NOT_ALLOWED");
+                }
+
+
                 if (!product.getState().equals(ProductState.ACTIVE)) {
                     if (product.getState().equals(ProductState.SOLD_OUT))
                         return res.throwError("품절된 상품입니다.", "NOT_ALLOWED");
@@ -343,9 +359,7 @@ public class OrderController {
                     return res.throwError("최대 주문 수량을 초과하였습니다.", "INPUT_CHECK_REQUIRED");
                 optionItem.reduceAmount(productReq.getAmount());
                 int price = orderService.getProductPrice(product, productReq.getOptionId(), productReq.getAmount());
-                if (!product.getNeedTaxation()) {
-                    taxFreeAmount += price;
-                }
+                taxFreeAmount += productReq.getTaxFreeAmount() != null ? productReq.getTaxFreeAmount() : 0;
                 Integer
                         deliveryFee =
                         orderService.getProductDeliveryFee(product, productReq.getOptionId(), productReq.getAmount());
@@ -354,7 +368,7 @@ public class OrderController {
                         productReq.getProductId()).state(OrderProductState.WAIT_DEPOSIT).settlePrice(storeInfo.getSettlementRate() !=
                         null ? (int) ((storeInfo.getSettlementRate() / 100.) *
                         optionItem.getPurchasePrice()) : optionItem.getPurchasePrice()).price(price).amount(productReq.getAmount()).isSettled(
-                        false).deliveryFee(deliveryFee).build());
+                        false).deliveryFee(deliveryFee).taxFreeAmount(productReq.getTaxFreeAmount()).build());
             }
             infos.forEach(i -> {
                 int storeTotalPrice = infos.stream().filter(v -> {
@@ -375,7 +389,12 @@ public class OrderController {
                 couponQueryService.checkValidCoupon(coupon.getId(), userId);
 
             }
-            if (!Objects.equals(data.getTotalPrice(), data.getTotalPrice()))
+            int
+                    totalPrice =
+                    infos.stream().mapToInt(v -> v.getPrice() + v.getDeliveryFee()).sum() -
+                            data.getPoint() -
+                            data.getCouponDiscountPrice();
+            if (!Objects.equals(data.getTotalPrice(), totalPrice))
                 return res.throwError("총 금액을 확인해주세요.", "INPUT_CHECK_REQUIRED");
             if (data.getDeliverPlaceId() == null) return res.throwError("배송지를 입력해주세요.", "INPUT_CHECK_REQUIRED");
             DeliverPlace deliverPlace = userService.selectDeliverPlace(data.getDeliverPlaceId());
@@ -398,7 +417,7 @@ public class OrderController {
             Orders result = orderService.orderProduct(order, infos, orderDeliverPlace);
 
 //            taxFreeAmount = taxFreeAmount - data.getCouponDiscountPrice() + data.getPoint();
-            taxFreeAmount = orderService.getTaxFreeAmount(result, null);
+//            taxFreeAmount = orderService.getTaxFreeAmount(result, null);
             if (data.getPaymentWay().equals(OrderPaymentWay.KEY_IN)) {
                 PaymentMethod paymentMethod = paymentMethodService.selectPaymentMethod(data.getPaymentMethodId());
                 Product product = productService.selectProduct(data.getProducts().get(0).getProductId());
@@ -802,8 +821,9 @@ public class OrderController {
                 return res.throwError("배송 완료 후 처리 가능합니다.", "INPUT_CHECK_REQUIRED");
             UserInfo userInfo = userService.selectUserInfo(userId);
             Product product = productService.selectProduct(info.getProductId());
+            Grade grade = userInfo.getGrade();
             float pointRate = product.getPointRate() != null ? product.getPointRate() : 0;
-            Integer point = (int) Math.floor(info.getPrice() * info.getAmount() * pointRate);
+            Integer point = (int) Math.floor(info.getPrice() * info.getAmount() * (pointRate + grade.getPointRate()));
             userInfo.setPoint(userInfo.getPoint() + point);
             info.setState(OrderProductState.FINAL_CONFIRM);
             info.setFinalConfirmedAt(utils.now());

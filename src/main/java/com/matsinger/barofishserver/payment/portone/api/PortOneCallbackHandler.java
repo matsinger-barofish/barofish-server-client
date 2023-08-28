@@ -80,8 +80,9 @@ public class PortOneCallbackHandler {
                                         String.format("결제 금액: %d원\n", paymentData.getPaidAmount()) +
                                         String.format("가상계좌은행: %s\n", paymentData.getVbankName()) +
                                         String.format("가상계좌번호: %s\n",
-                                                paymentData.getVbankNum().replaceAll("[^\\d]", ""));
-                        sms.sendSms(paymentData.getBuyerTel(), smsContent, "가상 계좌 결제 요청");
+                                                paymentData.getVbankNum().replaceAll("[^\\d]", "") + "\n") +
+                                        String.format("가상계좌 예금주명: %s\n", paymentData.getVbankHolder()) +
+                                        "24시간 이내로 이체해주세요.";
                     }
                 } else if (data.getStatus().equals("paid")) {
                     Payments paymentData = paymentService.getPaymentInfo(order.getId(), data.getImp_uid());
@@ -106,7 +107,7 @@ public class PortOneCallbackHandler {
                                         cancelPrice,
                                         taxFreeAmount,
                                         vBankRefundInfo);
-                            } catch (IamportResponseException | IOException e) {
+                            } catch (Exception e) {
                                 throw new RuntimeException(e);
                             }
                             info.setCancelReasonContent("배송 불가 지역");

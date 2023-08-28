@@ -118,6 +118,11 @@ public class StoreController {
                 return builder.and(predicates.toArray(new Predicate[0]));
             };
             PageRequest pageRequest = PageRequest.of(page, take, Sort.by(sort, orderBy.label));
+
+            if (orderBy.label.equals("state")) {
+//                pageRequest = PageRequest.of(page, take, Sort.by(sort, "joinAt").and(Sort.by(sort, orderBy.label)));
+                pageRequest = PageRequest.of(page, take, Sort.by(sort, orderBy.label).and(Sort.by(sort, "joinAt")));
+            }
             Page<StoreDto>
                     stores =
                     storeService.selectStoreList(true, pageRequest, spec).map(store -> storeService.convert2Dto(store,
@@ -330,6 +335,7 @@ public class StoreController {
                                                              @RequestPart(value = "refundDeliverFee", required = false) Integer refundDeliverFee,
                                                              @RequestPart(value = "minOrderPrice", required = false) Integer minOrderPrice,
                                                              @RequestPart(value = "oneLineDescription", required = false) String oneLineDescription,
+                                                             @RequestPart(value = "deliverCompany", required = false) String deliverCompany,
                                                              @RequestPart(value = "additionalData") AddStoreAdditionalReq data,
                                                              @RequestPart(value = "mosRegistration") MultipartFile mosRegistration,
                                                              @RequestPart(value = "businessRegistration") MultipartFile businessRegistration,
@@ -346,6 +352,7 @@ public class StoreController {
                     ".*[^\\s]).{8,20}$")) return res.throwError("비밀번호 형식을 확인해주세요.", "INPUT_CHECK_REQUIRED");
             name = utils.validateString(name, 50L, "이름");
             location = utils.validateString(location, 50L, "위치");
+            deliverCompany = utils.validateString(deliverCompany, 20L, "택배사");
             if (data.settlementRate == null) return res.throwError("정산 비율을 입력해주세요.", "INPUT_CHECK_REQUIRED");
             if (data.getSettlementRate() > 100 || data.getSettlementRate() < 0)
                 return res.throwError("정산 비율을 확인해주세요.", "INPUT_CHECK_REQUIRED");
@@ -379,8 +386,8 @@ public class StoreController {
                             bankHolder).bankAccount(bankAccount).representativeName(representativeName).companyId(
                             companyId).businessType(businessType).mosRegistrationNumber(mosRegistrationNumber).businessAddress(
                             businessAddress).postalCode(postalCode).lotNumberAddress(lotNumberAddress).streetNameAddress(
-                            streetNameAddress).addressDetail(addressDetail).tel(tel).email(email).faxNumber(faxNumber).isReliable(
-                            false).build();
+                            streetNameAddress).addressDetail(addressDetail).tel(tel).email(email).faxNumber(faxNumber).deliverCompany(
+                            deliverCompany).isReliable(false).build();
             if (deliverFeeType != null) storeInfoData.setDeliverFeeType(storeInfoData.getDeliverFeeType());
             if (deliverFeeType != null && deliverFeeType.equals(StoreDeliverFeeType.FREE_IF_OVER) && deliverFee == null)
                 return res.throwError("무료 배송 최소 주문 금액을 입력해주세요.", "INPUT_CHECK_REQUIRED");
@@ -484,6 +491,7 @@ public class StoreController {
                                                                     @RequestPart(value = "visitNote", required = false) String visitNote,
                                                                     @RequestPart(value = "deliverFeeType", required = false) StoreDeliverFeeType deliverFeeType,
                                                                     @RequestPart(value = "deliverFee", required = false) Integer deliverFee,
+                                                                    @RequestPart(value = "deliverCompany", required = false) String deliverCompany,
                                                                     @RequestPart(value = "refundDeliverFee", required = false) Integer refundDeliverFee,
                                                                     @RequestPart(value = "minOrderPrice", required = false) Integer minOrderPrice,
                                                                     @RequestPart(value = "oneLineDescription", required = false) String oneLineDescription,
@@ -521,6 +529,10 @@ public class StoreController {
             if (location != null) {
                 location = utils.validateString(location, 50L, "위치");
                 storeInfo.setLocation(location);
+            }
+            if (deliverCompany != null) {
+                deliverCompany = utils.validateString(deliverCompany, 20L, "택배사");
+                storeInfo.setDeliverCompany(deliverCompany);
             }
             if (keyword != null) {
                 keyword = utils.validateString(keyword, 50L, "위치");

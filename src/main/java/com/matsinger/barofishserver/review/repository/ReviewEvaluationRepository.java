@@ -10,4 +10,6 @@ public interface ReviewEvaluationRepository extends JpaRepository<ReviewEvaluati
     List<ReviewEvaluation> findAllByReviewId(Integer reviewId);
 
     void deleteAllByReviewId(Integer reviewId);
+
+    void deleteAllByReview_UserIdIn(List<Integer> userIds);
 }

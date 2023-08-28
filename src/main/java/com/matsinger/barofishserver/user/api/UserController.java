@@ -1,9 +1,14 @@
 package com.matsinger.barofishserver.user.api;
 
 
+import com.matsinger.barofishserver.grade.application.GradeQueryService;
+import com.matsinger.barofishserver.grade.domain.Grade;
 import com.matsinger.barofishserver.jwt.*;
+import com.matsinger.barofishserver.siteInfo.application.SiteInfoQueryService;
+import com.matsinger.barofishserver.siteInfo.domain.SiteInformation;
 import com.matsinger.barofishserver.user.application.UserCommandService;
 import com.matsinger.barofishserver.user.application.UserQueryService;
+import com.matsinger.barofishserver.user.deliverplace.DeliverPlace;
 import com.matsinger.barofishserver.user.domain.User;
 import com.matsinger.barofishserver.user.domain.UserOrderByAdmin;
 import com.matsinger.barofishserver.user.domain.UserState;
@@ -13,6 +18,7 @@ import com.matsinger.barofishserver.user.paymentMethod.application.PaymentMethod
 import com.matsinger.barofishserver.user.paymentMethod.domain.PaymentMethod;
 import com.matsinger.barofishserver.user.paymentMethod.dto.PaymentMethodDto;
 import com.matsinger.barofishserver.userauth.application.UserAuthCommandService;
+import com.matsinger.barofishserver.userauth.application.UserAuthQueryService;
 import com.matsinger.barofishserver.userauth.domain.LoginType;
 import com.matsinger.barofishserver.userauth.domain.UserAuth;
 import com.matsinger.barofishserver.userinfo.application.UserInfoCommandService;
@@ -51,6 +57,7 @@ public class UserController {
     private final UserInfoQueryService userInfoQueryService;
     private final UserInfoCommandService userInfoCommandService;
     private final UserAuthCommandService userAuthCommandService;
+    private final UserAuthQueryService userAuthQueryService;
     private final UserQueryService userQueryService;
     private final UserCommandService userCommandService;
     private final PaymentMethodQueryService paymentMethodQueryService;
@@ -58,8 +65,10 @@ public class UserController {
     private final S3Uploader s3;
     private final RegexConstructor re;
     private final VerificationService verificationService;
+    private final SiteInfoQueryService siteInfoQueryService;
     private final JwtProvider jwtProvider;
     private final JwtService jwt;
+    private final GradeQueryService gradeQueryService;
     private final SmsService smsService;
     private final FcmTokenRepository fcmTokenRepository;
     private final Common utils;
@@ -71,6 +80,12 @@ public class UserController {
 
         String loginId;
         try {
+            if (request.getLoginType().equals(LoginType.APPLE)) {
+                boolean isExist = userAuthQueryService.checkUserExist(request);
+                if (!isExist) {
+                    return ResponseEntity.ok(res);
+                }
+            }
             userCommandService.addUserAuthIfPhoneNumberExists(request);
 
             loginId = userQueryService.getExistingLoginId(request);
@@ -131,6 +146,55 @@ public class UserController {
                 if (verification != null) verificationService.deleteVerification(verification.getId());
                 res.setData(Optional.of(true));
             }
+            return ResponseEntity.ok(res);
+        } catch (Exception e) {
+            return res.defaultError(e);
+        }
+    }
+
+    @PostMapping(value = "/join-apple", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
+    public ResponseEntity<CustomResponse<Boolean>> joinAppleSns(@RequestPart(value = "data") AppleJoinReq request,
+                                                                @RequestPart(value = "profileImage", required = false) MultipartFile profileImage) {
+        CustomResponse<Boolean> res = new CustomResponse<>();
+        try {
+            String name = utils.validateString(request.getName(), 20L, "이름");
+            String nickname = utils.validateString(request.getNickname(), 50L, "닉네임");
+            Verification verification = null;
+            String phone = request.getPhone().replaceAll("-", "");
+            if (request.getVerificationId() == null) {
+                throw new IllegalArgumentException("인증을 먼저 진행해주세요.");
+            } else if (request.getVerificationId() != null) {
+                verification = verificationService.selectVerificationById(request.getVerificationId());
+                if (verification == null || verification.getExpiredAt() != null)
+                    throw new IllegalArgumentException("인증을 먼저 진행해주세요.");
+            }
+
+            String profileImageUrl = s3.getS3Url() + "/default_profile.png";
+            if (profileImage != null && !profileImage.isEmpty()) {
+                if (!s3.validateImageType(profileImage))
+                    return res.throwError("지원하지 않는 이미지 확장자입니다.", "INPUT_CHECK_REQUIRED");
+            }
+            SiteInformation siteInformation = siteInfoQueryService.selectSiteInfo("INT_JOIN_POINT");
+            Integer point = Integer.parseInt(siteInformation.getContent());
+            Boolean checkUserExist = userCommandService.checkExistWithPhone(phone);
+//            if (checkUserExist) return res.throwError("이미 가입된 유저입니다.", "NOT_ALLOWED");
+            if (checkUserExist){
+
+            }
+            Grade grade = gradeQueryService.selectGrade(1);
+            User user = User.builder().state(UserState.ACTIVE).joinAt(utils.now()).build();
+            UserInfo
+                    userInfo =
+                    UserInfo.builder().profileImage("").email("").name(name).nickname(nickname).phone(phone).grade(grade).point(
+                            point).isAgreeMarketing(false).build();
+            UserAuth userAuth = UserAuth.builder().loginType(LoginType.APPLE).loginId(request.getLoginId()).build();
+            DeliverPlace
+                    deliverPlace =
+                    DeliverPlace.builder().bcode(request.getBcode()).name(name).receiverName(name).tel(phone).postalCode(
+                            request.getPostalCode()).address(request.getAddress()).addressDetail(request.getAddressDetail()).deliverMessage(
+                            "").isDefault(false).build();
+            userCommandService.addUser(user, userAuth, userInfo, deliverPlace);
+            res.setData(Optional.of(true));
             return ResponseEntity.ok(res);
         } catch (Exception e) {
             return res.defaultError(e);

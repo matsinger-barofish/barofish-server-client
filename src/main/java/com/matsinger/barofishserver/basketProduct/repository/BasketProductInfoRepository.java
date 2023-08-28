@@ -7,7 +7,11 @@ import java.util.List;
 
 public interface BasketProductInfoRepository extends JpaRepository<BasketProductInfo, Integer> {
     List<BasketProductInfo> findAllByUserId(Integer userId);
+
+    List<BasketProductInfo> findAllByUserIdIn(List<Integer> userIds);
+
     List<BasketProductInfo> findByUserIdAndProductId(Integer userId, Integer productId);
+
     void deleteAllByIdIn(List<Integer> ids);
 
 }

@@ -32,6 +32,7 @@ import com.matsinger.barofishserver.payment.domain.Payments;
 import com.matsinger.barofishserver.product.application.ProductService;
 import com.matsinger.barofishserver.product.difficultDeliverAddress.application.DifficultDeliverAddressQueryService;
 import com.matsinger.barofishserver.product.difficultDeliverAddress.domain.DifficultDeliverAddress;
+import com.matsinger.barofishserver.product.option.dto.OptionDto;
 import com.matsinger.barofishserver.product.optionitem.domain.OptionItem;
 import com.matsinger.barofishserver.product.domain.Product;
 import com.matsinger.barofishserver.review.application.ReviewQueryService;
@@ -110,8 +111,10 @@ public class OrderService {
                     deliveryCompany =
                     opi.getDeliverCompanyCode() !=
                             null ? deliveryCompanyRepository.findById(opi.getDeliverCompanyCode()) : Optional.empty();
+            com.matsinger.barofishserver.product.optionitem.dto.OptionItemDto optionItemDto = optionItem.convert2Dto();
+            optionItemDto.setPointRate(product.getPointRate());
             Boolean isWritten = reviewQueryService.checkReviewWritten(order.getUserId(), product.getId(), opi.getId());
-            return OrderProductDto.builder().id(opi.getId()).storeId(storeInfo.getStoreId()).optionItem(optionItem.convert2Dto()).product(
+            return OrderProductDto.builder().id(opi.getId()).storeId(storeInfo.getStoreId()).optionItem(optionItemDto).product(
                     productService.convert2ListDto(productService.selectProduct(opi.getProductId()))).optionName(
                     optionItem.getName()).amount(opi.getAmount()).state(opi.getState()).price(opi.getPrice()).storeName(
                     storeInfo.getName()).storeProfile(storeInfo.getProfileImage()).deliverFee(opi.getDeliveryFee()).deliverCompany(
@@ -307,7 +310,8 @@ public class OrderService {
             }
         });
         Integer price = getCancelPrice(order, List.of(info));
-        int taxFreeAmount = getTaxFreeAmount(order, List.of(info));
+//        int taxFreeAmount = getTaxFreeAmount(order, List.of(info));
+        int taxFreeAmount = info.getTaxFreeAmount() != null ? info.getTaxFreeAmount() : 0;
         VBankRefundInfo
                 vBankRefundInfo =
                 order.getPaymentWay().equals(OrderPaymentWay.VIRTUAL_ACCOUNT) ? VBankRefundInfo.builder().bankHolder(
@@ -465,8 +469,8 @@ public class OrderService {
                 difficultDeliverBcode =
                 difficultDeliverAddressQueryService.selectDifficultDeliverAddressWithProductId(orderProductInfo.getProductId()).stream().map(
                         DifficultDeliverAddress::getBcode).toList();
-        return difficultDeliverBcode.stream().noneMatch(v -> v.substring(0,
-                5).equals(orderDeliverPlace.getBcode().substring(0, 5)));
+        return difficultDeliverBcode.stream().noneMatch(v -> v.length() >= 5 &&
+                v.substring(0, 5).equals(orderDeliverPlace.getBcode().substring(0, 5)));
     }
 
     public void processOrderZeroAmount(Orders order) {

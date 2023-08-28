@@ -30,6 +30,7 @@ public class ReviewCommandService {
     private final ReportRepository reportRepository;
     private final StoreService storeService;
     private final SiteInfoQueryService siteInfoQueryService;
+
     public void likeReview(Integer userId, Integer reviewId) {
         reviewLikeRepository.save(ReviewLike.builder().userId(userId).reviewId(reviewId).build());
     }
@@ -37,11 +38,12 @@ public class ReviewCommandService {
     public void unlikeReview(Integer userId, Integer reviewId) {
         reviewLikeRepository.deleteById(ReviewLikeId.builder().userId(userId).reviewId(reviewId).build());
     }
+
     public void increaseUserPoint(Integer userId, Boolean hasImage) {
         UserInfo userInfo = userInfoRepository.findById(userId).orElseThrow(() -> {
             throw new Error("유저 정보를 찾을 수 없습니다.");
         });
-        String siteInfoId = hasImage ? "INT_REVIEW_POINT_TEXT" : "INT_REVIEW_POINT_IMAGE";
+        String siteInfoId = hasImage ? "INT_REVIEW_POINT_IMAGE" : "INT_REVIEW_POINT_TEXT";
         SiteInformation siteInformation = siteInfoQueryService.selectSiteInfo(siteInfoId);
         Integer point = Integer.parseInt(siteInformation.getContent());
         Integer increasedPoint = userInfo.getPoint() + point;
@@ -66,14 +68,16 @@ public class ReviewCommandService {
         dto.setStore(store);
         return dto;
     }
+
     public Integer countReviewLike(Integer reviewId) {
         return reviewLikeRepository.countAllByReviewId(reviewId);
     }
 
     public ReviewDto convert2Dto(Review review, Integer userId) {
         ReviewDto dto = review.convert2Dto();
-        UserInfo userDto = userInfoRepository.findById(review.getUserId()).orElseThrow(() ->
-                new Error("유저 정보를 찾을 수 없습니다."));
+        UserInfo
+                userDto =
+                userInfoRepository.findById(review.getUserId()).orElseThrow(() -> new Error("유저 정보를 찾을 수 없습니다."));
         SimpleStore store = storeService.selectStoreInfo(review.getStore().getId()).convert2Dto();
         Integer likeCount = countReviewLike(review.getId());
         dto.setIsLike(userId != null ? reviewLikeRepository.existsByUserIdAndReviewId(userId, review.getId()) : false);
@@ -82,6 +86,7 @@ public class ReviewCommandService {
         dto.setStore(store);
         return dto;
     }
+
     public void deleteReviewsByUserId(Integer userId) {
         reviewRepository.deleteAllByUserId(userId);
     }
@@ -106,6 +111,7 @@ public class ReviewCommandService {
             return false;
         }
     }
+
     public void deleteReviewWithReviewId(Integer reviewId) {
         evaluationRepository.deleteAllByReviewId(reviewId);
     }

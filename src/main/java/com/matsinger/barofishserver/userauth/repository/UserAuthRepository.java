@@ -5,6 +5,7 @@ import com.matsinger.barofishserver.userauth.domain.UserAuth;
 import com.matsinger.barofishserver.userauth.domain.UserAuthId;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface UserAuthRepository extends JpaRepository<UserAuth, UserAuthId> {
@@ -20,4 +21,8 @@ public interface UserAuthRepository extends JpaRepository<UserAuth, UserAuthId> 
     UserAuth findFirstByUserId(Integer userId);
 
     void deleteAllByUserId(Integer userId);
+
+    void deleteAllByUserIdIn(List<Integer> userIds);
+
+    boolean existsByLoginIdAndLoginType(String loginId, LoginType loginType);
 }

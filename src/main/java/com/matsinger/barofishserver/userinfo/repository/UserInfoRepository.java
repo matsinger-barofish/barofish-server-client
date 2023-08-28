@@ -21,8 +21,12 @@ public interface UserInfoRepository extends JpaRepository<UserInfo, Integer>, Jp
     Boolean existsByNickname(String nickname);
 
     Boolean existsByUserId(Integer userId);
+
     Page<UserInfo> findAll(Specification<UserInfo> spec, Pageable pageable);
 
     Optional<UserInfo> findByUserId(int userId);
+
     List<UserInfo> findAllByUserIdIn(List<Integer> ids);
+
+    void deleteAllByUserIdIn(List<Integer> userIds);
 }

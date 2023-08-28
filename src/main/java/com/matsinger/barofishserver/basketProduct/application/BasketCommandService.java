@@ -57,6 +57,13 @@ public class BasketCommandService {
         infoRepository.deleteAllByIdIn(basketIds);
     }
 
+    @Transactional
+    public void deleteBasket(Integer productId, Integer userId) {
+        List<BasketProductInfo> infos = infoRepository.findByUserIdAndProductId(userId, productId);
+        List<Integer> basketIds = infos.stream().map(BasketProductInfo::getId).toList();
+        optionRepository.deleteAllByOrderProductIdIn(basketIds);
+        infoRepository.deleteAllByIdIn(basketIds);
+    }
 
     public void processBasketProductAdd(Integer userId, Integer productId, Integer optionId, Integer amount)
             throws Exception {
@@ -70,7 +77,8 @@ public class BasketCommandService {
                     com.matsinger.barofishserver.product.optionitem.domain.OptionItem
                             optionItem =
                             productService.selectOptionItem(optionId);
-                    if (info.getAmount() + amount > optionItem.getMaxAvailableAmount())
+                    if (optionItem.getMaxAvailableAmount() != null &&
+                            (info.getAmount() + amount > optionItem.getMaxAvailableAmount()))
                         throw new IllegalArgumentException("최대 주문 수량을 초과하였습니다.");
 
                     info.setAmount(info.getAmount() + amount);

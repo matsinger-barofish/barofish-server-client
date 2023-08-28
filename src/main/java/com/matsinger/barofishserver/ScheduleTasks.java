@@ -3,6 +3,7 @@ package com.matsinger.barofishserver;
 import com.matsinger.barofishserver.deliver.application.DeliverService;
 import com.matsinger.barofishserver.order.application.OrderService;
 import com.matsinger.barofishserver.search.application.SearchKeywordCommandService;
+import com.matsinger.barofishserver.user.application.UserCommandService;
 import lombok.AllArgsConstructor;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -14,6 +15,7 @@ public class ScheduleTasks {
     private final SearchKeywordCommandService searchKeywordCommandService;
     private final DeliverService deliverService;
     private final OrderService orderService;
+    private final UserCommandService userCommandService;
 
     @Scheduled(cron = "0 0 0 * * 1")
     public void SearchKeywordSchedule() {
@@ -28,5 +30,10 @@ public class ScheduleTasks {
     @Scheduled(cron = "0 0 */1 * * *")
     public void autoFinalConfirmOrder() {
         orderService.automaticFinalConfirm();
+    }
+
+    @Scheduled(cron = "0 0 */1 * * *")
+    public void deleteWithdrawUserData() {
+        userCommandService.deleteWithdrawUserList();
     }
 }

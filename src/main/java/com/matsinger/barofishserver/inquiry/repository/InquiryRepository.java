@@ -18,4 +18,6 @@ public interface InquiryRepository extends JpaRepository<Inquiry, Integer>, JpaS
     void deleteAllByUserId(Integer userId);
 
     void deleteAllByIdIn(List<Integer> ids);
+
+    void deleteAllByUserIdIn(List<Integer> userIds);
 }

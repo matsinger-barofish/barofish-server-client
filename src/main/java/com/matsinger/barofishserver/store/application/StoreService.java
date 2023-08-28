@@ -53,8 +53,7 @@ public class StoreService {
                 storeInfo.getIsReliable()).location(storeInfo.getLocation()).visitNote(storeInfo.getVisitNote()).deliverFeeType(
                 storeInfo.getDeliverFeeType()).deliverFee(storeInfo.getDeliverFee()).minOrderPrice(storeInfo.getMinOrderPrice()).keyword(
                 storeInfo.getKeyword().split(",")).oneLineDescription(storeInfo.getOneLineDescription()).refundDeliverFee(
-                storeInfo.getRefundDeliverFee()).additionalData(
-                additionalDto).build();
+                storeInfo.getRefundDeliverFee()).additionalData(additionalDto).deliverCompany(storeInfo.getDeliverCompany()).build();
     }
 
     public SimpleStore convert2SimpleDto(StoreInfo storeInfo, Integer userId) {
@@ -76,9 +75,10 @@ public class StoreService {
                         storeInfo.getBackgroudImage()).profileImage(storeInfo.getProfileImage()).name(storeInfo.getName()).location(
                         storeInfo.getLocation()).isReliable(storeInfo.getIsReliable()).keyword(storeInfo.getKeyword().split(
                         ",")).visitNote(storeInfo.getVisitNote()).deliverFeeType(storeInfo.getDeliverFeeType()).deliverFee(
-                        storeInfo.getDeliverFee()).refundDeliverFee(storeInfo.getRefundDeliverFee()).minOrderPrice(storeInfo.getMinOrderPrice()).oneLineDescription(
-                        storeInfo.getOneLineDescription()).isLike(isLike).reviewStatistic(reviewStatistics).reviews(
-                        reviewDtos).reviewCount(reviewCount).productCount(productCount).build();
+                        storeInfo.getDeliverFee()).refundDeliverFee(storeInfo.getRefundDeliverFee()).minOrderPrice(
+                        storeInfo.getMinOrderPrice()).oneLineDescription(storeInfo.getOneLineDescription()).isLike(
+                        isLike).reviewStatistic(reviewStatistics).reviews(reviewDtos).reviewCount(reviewCount).productCount(
+                        productCount).deliverCompany(storeInfo.getDeliverCompany()).build();
         return simpleStore;
     }
 
