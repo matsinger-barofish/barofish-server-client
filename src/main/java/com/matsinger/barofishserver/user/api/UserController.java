@@ -169,8 +169,6 @@ public class UserController {
                     throw new IllegalArgumentException("인증을 먼저 진행해주세요.");
             }
 
-            Boolean checkUserExist = userCommandService.checkExistWithPhone(phone);
-            if (checkUserExist) return res.throwError("이미 가입된 유저입니다.", "NOT_ALLOWED");
             String profileImageUrl = s3.getS3Url() + "/default_profile.png";
             if (profileImage != null && !profileImage.isEmpty()) {
                 if (!s3.validateImageType(profileImage))
@@ -178,6 +176,11 @@ public class UserController {
             }
             SiteInformation siteInformation = siteInfoQueryService.selectSiteInfo("INT_JOIN_POINT");
             Integer point = Integer.parseInt(siteInformation.getContent());
+            Boolean checkUserExist = userCommandService.checkExistWithPhone(phone);
+//            if (checkUserExist) return res.throwError("이미 가입된 유저입니다.", "NOT_ALLOWED");
+            if (checkUserExist){
+
+            }
             Grade grade = gradeQueryService.selectGrade(1);
             User user = User.builder().state(UserState.ACTIVE).joinAt(utils.now()).build();
             UserInfo

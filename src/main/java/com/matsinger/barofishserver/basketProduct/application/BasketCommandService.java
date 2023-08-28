@@ -77,7 +77,8 @@ public class BasketCommandService {
                     com.matsinger.barofishserver.product.optionitem.domain.OptionItem
                             optionItem =
                             productService.selectOptionItem(optionId);
-                    if (info.getAmount() + amount > optionItem.getMaxAvailableAmount())
+                    if (optionItem.getMaxAvailableAmount() != null &&
+                            (info.getAmount() + amount > optionItem.getMaxAvailableAmount()))
                         throw new IllegalArgumentException("최대 주문 수량을 초과하였습니다.");
 
                     info.setAmount(info.getAmount() + amount);

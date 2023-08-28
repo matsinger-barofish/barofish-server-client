@@ -698,7 +698,7 @@ public class ProductController {
                             tokenInfo.get().getType().equals(TokenAuthType.PARTNER) ? "파트너" : admin.getName());
             AdminLog
                     adminLog =
-                    AdminLog.builder().id(adminLogQueryService.getAdminLogId()).adminId(adminId).type(AdminLogType.PARTNER).targetId(
+                    AdminLog.builder().id(adminLogQueryService.getAdminLogId()).adminId(adminId).type(AdminLogType.PRODUCT).targetId(
                             String.valueOf(result.getId())).content(content).createdAt(utils.now()).build();
             if (data.getIsActive() != null) {
                 String
@@ -706,7 +706,7 @@ public class ProductController {
                         String.format("%s -> %s 상태 변경하였습니다.[%s]",
                                 data.getIsActive() ? "미노출" : "노출",
                                 data.getIsActive() ? "노출" : "미노출",
-                                admin.getAuthority().equals(AdminAuthority.MASTER)? "관리자": "서브관리자");
+                                admin.getName());
                 AdminLog
                         stateAdminLog =
                         AdminLog.builder().id(adminLogQueryService.getAdminLogId()).adminId(adminId).type(AdminLogType.PRODUCT).targetId(

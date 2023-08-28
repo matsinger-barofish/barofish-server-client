@@ -2,15 +2,38 @@ package com.matsinger.barofishserver.user.application;
 
 import com.matsinger.barofishserver.basketProduct.application.BasketCommandService;
 import com.matsinger.barofishserver.basketProduct.application.BasketQueryService;
+import com.matsinger.barofishserver.basketProduct.domain.BasketProductInfo;
 import com.matsinger.barofishserver.basketProduct.dto.BasketProductDto;
+import com.matsinger.barofishserver.basketProduct.repository.BasketProductInfoRepository;
+import com.matsinger.barofishserver.basketProduct.repository.BasketProductOptionRepository;
+import com.matsinger.barofishserver.compare.domain.CompareSet;
+import com.matsinger.barofishserver.compare.repository.CompareItemRepository;
+import com.matsinger.barofishserver.compare.repository.CompareSetRepository;
+import com.matsinger.barofishserver.compare.repository.SaveProductRepository;
+import com.matsinger.barofishserver.coupon.domain.CouponUserMap;
+import com.matsinger.barofishserver.coupon.repository.CouponUserMapRepository;
 import com.matsinger.barofishserver.grade.domain.Grade;
 import com.matsinger.barofishserver.grade.repository.GradeRepository;
 import com.matsinger.barofishserver.inquiry.application.InquiryCommandService;
+import com.matsinger.barofishserver.inquiry.repository.InquiryRepository;
+import com.matsinger.barofishserver.notification.repository.NotificationRepository;
+import com.matsinger.barofishserver.order.domain.Orders;
+import com.matsinger.barofishserver.order.orderprductinfo.repository.OrderProductInfoRepository;
+import com.matsinger.barofishserver.order.repository.OrderDeliverPlaceRepository;
+import com.matsinger.barofishserver.order.repository.OrderRepository;
+import com.matsinger.barofishserver.payment.domain.Payments;
+import com.matsinger.barofishserver.payment.repository.PaymentRepository;
+import com.matsinger.barofishserver.report.repository.ReportRepository;
 import com.matsinger.barofishserver.review.application.ReviewCommandService;
+import com.matsinger.barofishserver.review.domain.ReviewLike;
+import com.matsinger.barofishserver.review.repository.ReviewEvaluationRepository;
+import com.matsinger.barofishserver.review.repository.ReviewLikeRepository;
+import com.matsinger.barofishserver.review.repository.ReviewRepository;
 import com.matsinger.barofishserver.user.deliverplace.DeliverPlace;
 import com.matsinger.barofishserver.user.deliverplace.repository.DeliverPlaceRepository;
 import com.matsinger.barofishserver.user.dto.SnsJoinLoginResponseDto;
 import com.matsinger.barofishserver.user.dto.UserJoinReq;
+import com.matsinger.barofishserver.user.paymentMethod.repository.PaymentMethodRepository;
 import com.matsinger.barofishserver.user.repository.UserRepository;
 import com.matsinger.barofishserver.user.dto.SnsJoinReq;
 import com.matsinger.barofishserver.user.domain.*;
@@ -24,6 +47,8 @@ import com.matsinger.barofishserver.userinfo.domain.UserInfo;
 import com.matsinger.barofishserver.userinfo.dto.UserInfoDto;
 import com.matsinger.barofishserver.userinfo.repository.UserInfoRepository;
 import com.matsinger.barofishserver.utils.Common;
+import com.matsinger.barofishserver.utils.fcm.FcmService;
+import com.matsinger.barofishserver.utils.fcm.FcmTokenRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.*;
 import org.springframework.data.jpa.domain.Specification;
@@ -32,6 +57,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.net.MalformedURLException;
 import java.sql.Timestamp;
+import java.util.Calendar;
 import java.util.List;
 import java.util.Optional;
 
@@ -51,7 +77,25 @@ public class UserCommandService {
     private final InquiryCommandService inquiryCommandService;
     private final UserAuthCommandService userAuthCommandService;
     private final UserInfoCommandService userInfoCommandService;
-    private final Common util;
+    private final FcmTokenRepository fcmTokenRepository;
+    private final BasketProductInfoRepository basketProductInfoRepository;
+    private final BasketProductOptionRepository basketProductOptionRepository;
+    private final NotificationRepository notificationRepository;
+    private final ReportRepository reportRepository;
+    private final CompareItemRepository compareItemRepository;
+    private final CompareSetRepository compareSetRepository;
+    private final SaveProductRepository saveProductRepository;
+    private final PaymentMethodRepository paymentMethodRepository;
+    private final ReviewLikeRepository reviewLikeRepository;
+    private final PaymentRepository paymentRepository;
+    private final OrderRepository orderRepository;
+    private final OrderProductInfoRepository orderProductInfoRepository;
+    private final OrderDeliverPlaceRepository orderDeliverPlaceRepository;
+    private final InquiryRepository inquiryRepository;
+    private final ReviewEvaluationRepository reviewEvaluationRepository;
+    private final ReviewRepository reviewRepository;
+    private final CouponUserMapRepository couponUserMapRepository;
+    private final Common utils;
 
     @Transactional
     public SnsJoinLoginResponseDto createSnsUserAndSave(SnsJoinReq request) throws MalformedURLException {
@@ -88,8 +132,8 @@ public class UserCommandService {
 
     public DeliverPlace setAndSaveDeliverPlace(User user, UserInfo userInfo, UserJoinReq request) throws Exception {
 
-        String address = util.validateString(request.getAddress(), 100L, "주소");
-        String addressDetail = util.validateString(request.getAddressDetail(), 100L, "상세 주소");
+        String address = utils.validateString(request.getAddress(), 100L, "주소");
+        String addressDetail = utils.validateString(request.getAddressDetail(), 100L, "상세 주소");
 
         if (request.getPostalCode() == null) {
             throw new IllegalArgumentException("우편 번호를 입력해주세요.");
@@ -112,6 +156,7 @@ public class UserCommandService {
             throw new IllegalArgumentException("유저를 찾을 수 없습니다.");
         });
         findUser.setState(UserState.DELETED);
+        findUser.setWithdrawAt(utils.now());
 //        findUserInfo.setNickname("탈퇴한 회원");
 
         // 장바구니 제거
@@ -122,6 +167,7 @@ public class UserCommandService {
         // 리뷰제거
         reviewService.deleteReviewsByUserId(userId);
         inquiryCommandService.deleteInquiryByUserId(userId);
+        userRepository.save(findUser);
     }
 
     public Page<UserInfoDto> selectUserInfoList(PageRequest pageRequest, Specification<UserInfo> spec) {
@@ -300,6 +346,7 @@ public class UserCommandService {
                 if (userAuth.getUser().getState() == UserState.DELETED) {
 //                    throw new IllegalArgumentException("탈퇴한 유저입니다.");
                     userAuth.getUser().setState(UserState.ACTIVE);
+                    userAuth.getUser().setWithdrawAt(null);
                 }
                 if (userAuth.getUser().getState() == UserState.BANNED) {
                     throw new IllegalArgumentException("운영 정책상 비활성된 유저입니다.");
@@ -338,6 +385,7 @@ public class UserCommandService {
             if (userAuth.getUser().getState() == UserState.DELETED) {
 //                throw new IllegalArgumentException("탈퇴한 유저입니다.");
                 userAuth.getUser().setState(UserState.ACTIVE);
+                userAuth.getUser().setWithdrawAt(null);
             }
             if (userAuth.getUser().getState() == UserState.BANNED) {
                 throw new IllegalArgumentException("운영 정책상 비활성된 유저입니다.");
@@ -351,5 +399,64 @@ public class UserCommandService {
 
     public List<UserInfo> selectUserInfoListWithIds(List<Integer> userIds) {
         return userInfoRepository.findAllByUserIdIn(userIds);
+    }
+
+    @Transactional
+    public void deleteWithdrawUserList() {
+        Timestamp ts = utils.now();
+        Calendar cal = Calendar.getInstance();
+        cal.setTime(ts);
+
+        cal.add(Calendar.YEAR, -1);
+        List<User> users = userRepository.findAllByWithdrawAtBefore(new Timestamp(cal.getTime().getTime()));
+        List<Integer> userIds = users.stream().map(User::getId).toList();
+        //fcmToken
+        fcmTokenRepository.deleteAllByUserIdIn(userIds);
+        //deliverPlace
+        deliverPlaceRepository.deleteAllByUserIdIn(userIds);
+        //userInfo
+        userInfoRepository.deleteAllByUserIdIn(userIds);
+        //userAuth
+        userAuthRepository.deleteAllByUserIdIn(userIds);
+        //basketProductOption
+        List<BasketProductInfo> basketProductInfos = basketProductInfoRepository.findAllByUserIdIn(userIds);
+        basketProductOptionRepository.deleteAllByOrderProductIdIn(basketProductInfos.stream().map(BasketProductInfo::getId).toList());
+        //basketProductInfo
+        basketProductInfoRepository.deleteAllByIdIn(basketProductInfos.stream().map(BasketProductInfo::getId).toList());
+        //notification
+        notificationRepository.deleteAllByUserIdIn(userIds);
+        //report
+        reportRepository.deleteAllByUserIdIn(userIds);
+        //compareItem
+        List<CompareSet> compareSets = compareSetRepository.findAllByUserIdIn(userIds);
+        compareItemRepository.deleteAllByCompareSetIdIn(compareSets.stream().map(CompareSet::getId).toList());
+        //compareSet
+        compareSetRepository.deleteAllByUserIdIn(userIds);
+        //saveProduct
+        saveProductRepository.deleteAllByUserIdIn(userIds);
+        //paymentMethod
+        paymentMethodRepository.deleteAllByUserIdIn(userIds);
+        //reviewLike
+        reviewLikeRepository.deleteAllByUserIdIn(userIds);
+        //payment
+        List<Orders> orders = orderRepository.findAllByUserIdIn(userIds);
+        List<Payments> payments = paymentRepository.findAllByOrderIdIn(orders.stream().map(Orders::getId).toList());
+        paymentRepository.saveAll(payments.stream().peek(v -> v.setOrderId(null)).toList());
+        //orderProductInfo
+        orderProductInfoRepository.deleteAllByOrderIdIn(orders.stream().map(Orders::getId).toList());
+        //orderDeliverPlace
+        orderDeliverPlaceRepository.deleteAllByOrderIdIn(orders.stream().map(Orders::getId).toList());
+        //orders
+        orderRepository.deleteAllByIdIn(orders.stream().map(Orders::getId).toList());
+        //inquiry
+        inquiryRepository.deleteAllByUserIdIn(userIds);
+        //reviewEvaluation
+        reviewEvaluationRepository.deleteAllByReview_UserIdIn(userIds);
+        //review
+        reviewRepository.deleteAllByUserIdIn(userIds);
+        //couponUserMap
+        couponUserMapRepository.deleteAllByUserIdIn(userIds);
+        //user
+        userRepository.findAllByIdIn(userIds);
     }
 }

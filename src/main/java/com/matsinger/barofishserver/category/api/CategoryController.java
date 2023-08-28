@@ -15,6 +15,9 @@ import com.matsinger.barofishserver.compare.filter.dto.CompareFilterDto;
 import com.matsinger.barofishserver.jwt.JwtService;
 import com.matsinger.barofishserver.jwt.TokenAuthType;
 import com.matsinger.barofishserver.jwt.TokenInfo;
+import com.matsinger.barofishserver.product.application.ProductService;
+import com.matsinger.barofishserver.product.domain.Product;
+import com.matsinger.barofishserver.product.domain.ProductState;
 import com.matsinger.barofishserver.utils.Common;
 import com.matsinger.barofishserver.utils.CustomResponse;
 import com.matsinger.barofishserver.utils.S3.S3Uploader;
@@ -35,6 +38,7 @@ public class CategoryController {
     private final CompareFilterQueryService compareFilterQueryService;
     private final CategoryFilterQueryService categoryFilterQueryService;
     private final CategoryFilterCommandService categoryFilterCommandService;
+    private final ProductService productService;
     private final Common util;
 
     private final S3Uploader s3;
@@ -122,8 +126,11 @@ public class CategoryController {
             if (category.getCategoryId() == null) {
                 List<Category> categories = categoryQueryService.findAll(id);
                 if (categories.size() != 0) throw new Error("하위 카테고리가 존재합니다.");
-                // 품목들이 존재하는 경우 처리 기획 필요
             }
+            List<Product> products = productService.selectProductWithCategoryId(category.getId());
+            if (products.stream().anyMatch(v -> v.getState().equals(ProductState.ACTIVE)))
+                return res.throwError("활성화 중인 상품이 있습니다.", "NOT_ALLOWED");
+            productService.saveAllProduct(products.stream().peek(v -> v.setCategory(null)).toList());
             categoryCommandService.delete(id);
             return ResponseEntity.ok(res);
         } catch (Exception e) {
@@ -140,7 +147,8 @@ public class CategoryController {
             List<Integer> compareFilterIds = categoryFilterQueryService.selectCompareFilterIdList(categoryId);
             List<CompareFilterDto>
                     compareFilterDtos =
-                    compareFilterQueryService.selectCompareFilterListWithIds(compareFilterIds).stream().map(CompareFilter::convert2Dto).toList();
+                    compareFilterQueryService.selectCompareFilterListWithIds(compareFilterIds).stream().map(
+                            CompareFilter::convert2Dto).toList();
             CategoryDto
                     categoryDto =
                     CategoryDto.builder().filters(compareFilterDtos).id(categoryId).name(category.getName()).image(
@@ -162,7 +170,8 @@ public class CategoryController {
                 List<Integer> compareFilterIds = categoryFilterQueryService.selectCompareFilterIdList(category.getId());
                 List<CompareFilterDto>
                         compareFilterDtos =
-                        compareFilterQueryService.selectCompareFilterListWithIds(compareFilterIds).stream().map(CompareFilter::convert2Dto).toList();
+                        compareFilterQueryService.selectCompareFilterListWithIds(compareFilterIds).stream().map(
+                                CompareFilter::convert2Dto).toList();
                 return CategoryDto.builder().filters(compareFilterDtos).id(category.getId()).name(category.getName()).image(
                         category.getImage()).build();
             }).toList();
@@ -181,7 +190,8 @@ public class CategoryController {
         if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
         try {
             if (data.getCategoryId() == null) return res.throwError("카테고리 아이디를 입력해주세요.", "INPUT_CHECK_REQUIRED");
-            if (data.getCompareFilterId() == null) return res.throwError("비교하기 필터 아이디를 입력해주세요.", "INPUT_CHECK_REQUIRED");
+            if (data.getCompareFilterId() == null)
+                return res.throwError("비교하기 필터 아이디를 입력해주세요.", "INPUT_CHECK_REQUIRED");
             Category category = categoryQueryService.findById(data.getCategoryId());
             if (category.getCategoryId() != null) return res.throwError("1차 카테고리만 선택해주세요.", "INPUT_CHECK_REQUIRED");
             CompareFilter compareFilter = compareFilterQueryService.selectCompareFilter(data.getCompareFilterId());
@@ -203,7 +213,8 @@ public class CategoryController {
         if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
         try {
             if (data.getCategoryId() == null) return res.throwError("카테고리 아이디를 입력해주세요.", "INPUT_CHECK_REQUIRED");
-            if (data.getCompareFilterId() == null) return res.throwError("비교하기 필터 아이디를 입력해주세요.", "INPUT_CHECK_REQUIRED");
+            if (data.getCompareFilterId() == null)
+                return res.throwError("비교하기 필터 아이디를 입력해주세요.", "INPUT_CHECK_REQUIRED");
             Category category = categoryQueryService.findById(data.getCategoryId());
             CompareFilter compareFilter = compareFilterQueryService.selectCompareFilter(data.getCompareFilterId());
             CategoryFilterId categoryFilterId = new CategoryFilterId();

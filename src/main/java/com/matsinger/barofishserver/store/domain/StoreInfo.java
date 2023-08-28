@@ -135,6 +135,8 @@ public class StoreInfo {
     @Column(name = "deliver_company", nullable = true)
     String deliverCompany;
 
+
+
     public String getBackgroudImage() {
         return backgroudImage;
     }

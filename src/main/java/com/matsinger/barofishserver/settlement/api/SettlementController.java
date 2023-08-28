@@ -19,6 +19,7 @@ import com.matsinger.barofishserver.settlement.domain.SettlementOrderBy;
 import com.matsinger.barofishserver.settlement.domain.SettlementState;
 import com.matsinger.barofishserver.settlement.domain.OrderProductInfoOrderBy;
 import com.matsinger.barofishserver.settlement.domain.Settlement;
+import com.matsinger.barofishserver.settlement.dto.cancelSettleReq;
 import com.matsinger.barofishserver.store.application.StoreService;
 import com.matsinger.barofishserver.store.domain.StoreInfo;
 import com.matsinger.barofishserver.utils.Common;
@@ -117,14 +118,14 @@ public class SettlementController {
 
     @GetMapping("/order/list/download")
     public ResponseEntity<CustomResponse<Page<OrderSettlementExcelDto>>> selectSettlementOrderListDownload(@RequestHeader(value = "Authorization") Optional<String> auth,
-                                                                                               @RequestParam(value = "page", required = false, defaultValue = "0") Integer page,
-                                                                                               @RequestParam(value = "take", required = false, defaultValue = "10") Integer take,
-                                                                                               @RequestParam(value = "orderby", required = false, defaultValue = "isSettled") OrderProductInfoOrderBy orderBy,
-                                                                                               @RequestParam(value = "orderType", required = false, defaultValue = "DESC") Sort.Direction orderType,
-                                                                                               @RequestParam(value = "isSettled", required = false) Boolean isSettled,
-                                                                                               @RequestParam(value = "storeId", required = false) Integer storeId,
-                                                                                               @RequestParam(value = "settledAtS", required = false) Timestamp settledAtS,
-                                                                                               @RequestParam(value = "settledAtE", required = false) Timestamp settledAtE) {
+                                                                                                           @RequestParam(value = "page", required = false, defaultValue = "0") Integer page,
+                                                                                                           @RequestParam(value = "take", required = false, defaultValue = "10") Integer take,
+                                                                                                           @RequestParam(value = "orderby", required = false, defaultValue = "isSettled") OrderProductInfoOrderBy orderBy,
+                                                                                                           @RequestParam(value = "orderType", required = false, defaultValue = "DESC") Sort.Direction orderType,
+                                                                                                           @RequestParam(value = "isSettled", required = false) Boolean isSettled,
+                                                                                                           @RequestParam(value = "storeId", required = false) Integer storeId,
+                                                                                                           @RequestParam(value = "settledAtS", required = false) Timestamp settledAtS,
+                                                                                                           @RequestParam(value = "settledAtE", required = false) Timestamp settledAtE) {
         CustomResponse<Page<OrderSettlementExcelDto>> res = new CustomResponse<>();
         Optional<TokenInfo>
                 tokenInfo =
@@ -153,7 +154,6 @@ public class SettlementController {
             return res.defaultError(e);
         }
     }
-
     @GetMapping("/log")
     public ResponseEntity<CustomResponse<Page<SettlementDto>>> selectSettlementLogs(@RequestHeader(value = "Authorization") Optional<String> auth,
                                                                                     @RequestParam(value = "page", required = false, defaultValue = "0") Integer page,

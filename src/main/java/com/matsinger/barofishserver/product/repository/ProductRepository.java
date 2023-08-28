@@ -14,7 +14,7 @@ import java.util.Optional;
 
 public interface ProductRepository extends JpaRepository<Product, Integer>, JpaSpecificationExecutor<Product> {
     List<Product> findAllByIdIn(List<Integer> ids);
-
+    List<Product> findAllByCategory_Id(Integer Integer);
     List<Product> findAllByStateNot(ProductState state);
 
     List<Product> findByTitleContainsAndStateEquals(String title, ProductState state);
@@ -370,8 +370,8 @@ public interface ProductRepository extends JpaRepository<Product, Integer>, JpaS
             "  AND (p.promotion_end_at IS NULL OR NOW( ) < p.promotion_end_at)\n" +
             "and ( (:#{#categoryIds==null ? null : #categoryIds.size()} is null or c.parent_category_id in (:categoryIds)) \n" +
             "or (:#{#categoryIds==null ? null : #categoryIds.size()} is null or c.id in (:categoryIds)) )\n" +
-            "and (:#{#filterFieldIds==null ? null : #filterFieldIds.size() } is null or p.id in (select p1.id from " +
-            "product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
+            "and (:#{#filterFieldIds==null ? null : #filterFieldIds.size() } is null or p.id in (select p1.id from \n" +
+            "product p1 join product_search_filter_map ps on ps.product_id = p1.id\n" +
             "where (:#{#filterFieldIds==null ? null : #filterFieldIds.size() } is null or  ps.field_id in " +
             "(:filterFieldIds) ))) " +
 //            "GROUP BY p1.id HAVING COUNT(*) = :#{#filterFieldIds==null ? 0 : #filterFieldIds.size" +
@@ -385,8 +385,8 @@ public interface ProductRepository extends JpaRepository<Product, Integer>, JpaS
             "  AND (p.promotion_end_at IS NULL OR NOW( ) < p.promotion_end_at)\n" +
             "and ( (:#{#categoryIds==null ? null : #categoryIds.size()} is null or c.parent_category_id in (:categoryIds)) \n" +
             "or (:#{#categoryIds==null ? null : #categoryIds.size()} is null or c.id in (:categoryIds)) )\n" +
-            "and (:#{#filterFieldIds==null ? null : #filterFieldIds.size() } is null or p.id in (select p1.id from " +
-            "product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
+            "and (:#{#filterFieldIds==null ? null : #filterFieldIds.size() } is null or p.id in (select p1.id from \n" +
+            "product p1 join product_search_filter_map ps on ps.product_id = p1.id\n" +
             "where (:#{#filterFieldIds==null ? null : #filterFieldIds.size() } is null or  ps.field_id in " +
             "(:filterFieldIds) ))) "
 //            "GROUP BY p1.id HAVING COUNT(*) = :#{#filterFieldIds==null ? 0 : #filterFieldIds.size" +

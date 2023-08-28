@@ -3,8 +3,6 @@ package com.matsinger.barofishserver.product.domain;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.matsinger.barofishserver.category.domain.Category;
 import com.matsinger.barofishserver.product.dto.ProductListDto;
-import com.matsinger.barofishserver.product.option.domain.Option;
-import com.matsinger.barofishserver.productinfonotice.domain.ProductInformation;
 import com.matsinger.barofishserver.review.domain.Review;
 import com.matsinger.barofishserver.store.domain.Store;
 import jakarta.persistence.*;
@@ -14,7 +12,6 @@ import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
 
 @Entity
 @AllArgsConstructor
@@ -99,12 +96,11 @@ public class Product {
     @JsonBackReference
     @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL, mappedBy = "product")
     private List<Review> reviews = new ArrayList<>();
-//    @Column(name = "delivery_fee", nullable = true)
-//    private int deliveryFee;
+    // @Column(name = "delivery_fee", nullable = true)
+    // private int deliveryFee;
 
     @Column(name = "item_code")
     private String itemCode;
-
     public int getId() {
         return id;
     }
@@ -112,7 +108,6 @@ public class Product {
     public void setId(int id) {
         this.id = id;
     }
-
 
     public Category getCategory() {
         return category;
@@ -123,7 +118,7 @@ public class Product {
     }
 
     public Integer getCategoryId() {
-        return category.getId();
+        return category != null ? category.getId() : null;
     }
 
     public ProductState getState() {
@@ -197,21 +192,33 @@ public class Product {
 
     public SimpleProductDto convert2SimpleDto() {
 
-        return SimpleProductDto.builder().id(this.getId()).category(this.category.convert2Dto()).expectedDeliverDay(this.getExpectedDeliverDay()).images(
-                this.images.substring(1,
+        return SimpleProductDto.builder().id(this.getId())
+                .category(this.category != null ? this.category.convert2Dto() : null)
+                .expectedDeliverDay(this.getExpectedDeliverDay()).images(this.images.substring(
+                        1,
                         images.length() -
-                                1).split(",")).title(title).state(this.getState()).originPrice(originPrice).deliveryInfo(
-                deliveryInfo).description(descriptionImages).descriptionImages(descriptionImages.substring(1,
-                descriptionImages.length() -
-                        1).split(",")).representOptionItemId(this.representOptionItemId).deliverBoxPerAmount(this.getDeliverBoxPerAmount()).createdAt(
-                this.getCreatedAt()).pointRate(this.getPointRate()).promotionStartAt(this.promotionStartAt).promotionEndAt(
-                this.promotionEndAt).build();
+                                1)
+                        .split(","))
+                .title(title).state(this.getState()).originPrice(originPrice).deliveryInfo(
+                        deliveryInfo)
+                .description(descriptionImages).descriptionImages(descriptionImages.substring(1,
+                        descriptionImages.length() -
+                                1)
+                        .split(","))
+                .representOptionItemId(this.representOptionItemId).deliverBoxPerAmount(this.getDeliverBoxPerAmount())
+                .createdAt(
+                        this.getCreatedAt())
+                .pointRate(this.getPointRate()).promotionStartAt(this.promotionStartAt).promotionEndAt(
+                        this.promotionEndAt)
+                .build();
     }
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o)
+            return true;
+        if (o == null || getClass() != o.getClass())
+            return false;
         Product that = (Product) o;
         return id == that.id &&
                 originPrice == that.originPrice &&

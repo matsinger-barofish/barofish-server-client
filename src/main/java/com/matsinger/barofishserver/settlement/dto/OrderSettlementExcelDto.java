@@ -29,7 +29,7 @@ public class OrderSettlementExcelDto {
     private int deliveryFee;                        // 배송비
     private int quantity;                           // 수량
     private int orderAmount;                        // 주문금액
-//    private int finalPaymentAmount;                // 최종 결제금액
+    //    private int finalPaymentAmount;                // 최종 결제금액
     private OrderPaymentWay paymentMethod;          // 결제수단
     private double settlementRatio;                 // 정산비율
     private String couponName;                      // 쿠폰명

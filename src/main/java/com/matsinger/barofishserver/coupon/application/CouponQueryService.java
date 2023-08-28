@@ -87,6 +87,6 @@ public class CouponQueryService {
 
     public Coupon findById(Integer couponId) {
         return couponRepository.findById(couponId)
-                .orElseThrow(() -> new IllegalArgumentException("쿠폰 정보를 찾을 수 없습니다."));
+                               .orElseThrow(() -> new IllegalArgumentException("쿠폰 정보를 찾을 수 없습니다."));
     }
 }

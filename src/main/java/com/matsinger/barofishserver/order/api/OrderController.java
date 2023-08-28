@@ -88,9 +88,12 @@ public class OrderController {
         try {
             Integer userId = tokenInfo.get().getId();
             UserInfo userInfo = userService.selectUserInfo(userId);
-            SiteInformation siteInfo = siteInfoQueryService.selectSiteInfo("INT_REVIEW_POINT_TEXT");
-            Integer maxReviewPoint = Integer.parseInt(siteInfo.getContent());
-            res.setData(Optional.ofNullable(PointRuleRes.builder().maxReviewPoint(maxReviewPoint).pointRate(userInfo.getGrade().getPointRate()).build()));
+            SiteInformation reviewTextSiteInfo = siteInfoQueryService.selectSiteInfo("INT_REVIEW_POINT_TEXT");
+            SiteInformation reviewImageSiteInfo = siteInfoQueryService.selectSiteInfo("INT_REVIEW_POINT_IMAGE");
+            Integer maxReviewPoint = Integer.parseInt(reviewTextSiteInfo.getContent());
+            Integer reviewImage = Integer.parseInt(reviewImageSiteInfo.getContent());
+            res.setData(Optional.ofNullable(PointRuleRes.builder().maxReviewPoint(maxReviewPoint).pointRate(userInfo.getGrade().getPointRate()).ImageReviewPoint(
+                    reviewImage).build()));
             return ResponseEntity.ok(res);
         } catch (Exception e) {
             return res.defaultError(e);
@@ -356,9 +359,7 @@ public class OrderController {
                     return res.throwError("최대 주문 수량을 초과하였습니다.", "INPUT_CHECK_REQUIRED");
                 optionItem.reduceAmount(productReq.getAmount());
                 int price = orderService.getProductPrice(product, productReq.getOptionId(), productReq.getAmount());
-                if (!product.getNeedTaxation()) {
-                    taxFreeAmount += price;
-                }
+                taxFreeAmount += productReq.getTaxFreeAmount() != null ? productReq.getTaxFreeAmount() : 0;
                 Integer
                         deliveryFee =
                         orderService.getProductDeliveryFee(product, productReq.getOptionId(), productReq.getAmount());
@@ -367,7 +368,7 @@ public class OrderController {
                         productReq.getProductId()).state(OrderProductState.WAIT_DEPOSIT).settlePrice(storeInfo.getSettlementRate() !=
                         null ? (int) ((storeInfo.getSettlementRate() / 100.) *
                         optionItem.getPurchasePrice()) : optionItem.getPurchasePrice()).price(price).amount(productReq.getAmount()).isSettled(
-                        false).deliveryFee(deliveryFee).build());
+                        false).deliveryFee(deliveryFee).taxFreeAmount(productReq.getTaxFreeAmount()).build());
             }
             infos.forEach(i -> {
                 int storeTotalPrice = infos.stream().filter(v -> {
@@ -388,7 +389,11 @@ public class OrderController {
                 couponQueryService.checkValidCoupon(coupon.getId(), userId);
 
             }
-            int totalPrice = infos.stream().mapToInt(v -> v.getPrice() + v.getDeliveryFee()).sum();
+            int
+                    totalPrice =
+                    infos.stream().mapToInt(v -> v.getPrice() + v.getDeliveryFee()).sum() -
+                            data.getPoint() -
+                            data.getCouponDiscountPrice();
             if (!Objects.equals(data.getTotalPrice(), totalPrice))
                 return res.throwError("총 금액을 확인해주세요.", "INPUT_CHECK_REQUIRED");
             if (data.getDeliverPlaceId() == null) return res.throwError("배송지를 입력해주세요.", "INPUT_CHECK_REQUIRED");
@@ -412,7 +417,7 @@ public class OrderController {
             Orders result = orderService.orderProduct(order, infos, orderDeliverPlace);
 
 //            taxFreeAmount = taxFreeAmount - data.getCouponDiscountPrice() + data.getPoint();
-            taxFreeAmount = orderService.getTaxFreeAmount(result, null);
+//            taxFreeAmount = orderService.getTaxFreeAmount(result, null);
             if (data.getPaymentWay().equals(OrderPaymentWay.KEY_IN)) {
                 PaymentMethod paymentMethod = paymentMethodService.selectPaymentMethod(data.getPaymentMethodId());
                 Product product = productService.selectProduct(data.getProducts().get(0).getProductId());

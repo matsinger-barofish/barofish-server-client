@@ -55,4 +55,6 @@ public interface OrderProductInfoRepository extends JpaRepository<OrderProductIn
             "WHERE opi.state = 'FINAL_CONFIRM'\n" +
             "  AND o.user_id = :userId", nativeQuery = true)
     Tuple countFinalConfirmedOrderWithUserId(Integer userId);
+
+    void deleteAllByOrderIdIn(List<String> orderIds);
 }

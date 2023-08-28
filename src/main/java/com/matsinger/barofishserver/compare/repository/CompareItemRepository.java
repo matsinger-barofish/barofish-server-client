@@ -12,4 +12,5 @@ public interface CompareItemRepository extends JpaRepository<CompareItem, Compar
     public void deleteByCompareSetId(Integer compareId);
 
     public List<CompareItem> findAllByCompareSetId(Integer compareSetId);
+    void deleteAllByCompareSetIdIn(List<Integer> ids);
 }
