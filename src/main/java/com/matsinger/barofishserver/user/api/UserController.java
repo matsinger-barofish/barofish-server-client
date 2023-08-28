@@ -72,9 +72,9 @@ public class UserController {
     private final Common utils;
 
     @PostMapping(value = "/join-sns")
-    public ResponseEntity<CustomResponse<Jwt>> joinSnsUser(@RequestPart(value = "data") SnsJoinReq request) {
+    public ResponseEntity<CustomResponse<Object>> joinSnsUser(@RequestPart(value = "data") SnsJoinReq request) {
 
-        CustomResponse<Jwt> res = new CustomResponse<>();
+        CustomResponse<Object> res = new CustomResponse<>();
 
         String loginId;
         try {
@@ -101,14 +101,9 @@ public class UserController {
                 userInfoCommandService.setImageUrl(responseDto.getUserId(), profileImage);
             }
             Integer userId = userCommandService.selectUserByLoginId(request.getLoginType(), loginId).getUserId();
-            String accessToken = jwtProvider.generateAccessToken(String.valueOf(userId), TokenAuthType.USER);
-            String refreshToken = jwtProvider.generateRefreshToken(String.valueOf(userId), TokenAuthType.USER);
-            Jwt token = new Jwt();
-            token.setAccessToken(accessToken);
-            token.setRefreshToken(refreshToken);
 
-            res.setData(Optional.of(token));
-            return ResponseEntity.ok(res);
+            CustomResponse<Object> customResponse = generateAndSetTokens(userId, res);
+            return ResponseEntity.ok(customResponse);
         } catch (Exception e) {
             return res.defaultError(e);
         }
