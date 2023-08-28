@@ -364,8 +364,12 @@ public class OrderService {
         });
         Coupon coupon = order.getCouponId() != null ? couponQueryService.selectCoupon(order.getCouponId()) : null;
         int couponDiscount = 0;
-        if (coupon != null && coupon.getMinPrice() > orderedPrice - cancelPrice.get())
+        if (coupon != null && coupon.getMinPrice() > orderedPrice - cancelPrice.get()) {
             couponDiscount = order.getCouponDiscount();
+            order.setCouponDiscount(0);
+            order.setCouponId(null);
+            orderRepository.save(order);
+        }
         Integer point = checkReturnPoint(order);
         return cancelPrice.get() + deliveryFee - couponDiscount - (point != null ? point : 0);
     }
