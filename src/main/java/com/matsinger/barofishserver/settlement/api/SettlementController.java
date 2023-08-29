@@ -137,8 +137,9 @@ public class SettlementController {
                 if (isSettled != null) predicates.add(builder.equal(root.get("isSettled"), isSettled));
                 if (settledAtS != null) predicates.add(builder.greaterThan(root.get("settledAt"), settledAtS));
                 if (settledAtE != null) predicates.add(builder.lessThan(root.get("settledAt"), settledAtE));
-                if (tokenInfo.get().getType().equals(TokenAuthType.PARTNER))
+                if (tokenInfo.get().getType().equals(TokenAuthType.PARTNER)) {
                     predicates.add(builder.equal(root.get("product").get("storeId"), tokenInfo.get().getId()));
+                }
                 predicates.add(builder.equal(root.get("state"), OrderProductState.FINAL_CONFIRM));
                 return builder.and(predicates.toArray(new Predicate[0]));
             };

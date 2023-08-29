@@ -121,24 +121,25 @@ public class SettlementQueryService {
                     .orderId(findOrder.getId())
                     .orderProductState(productInfo.getState())
                     .orderAt(findOrder.getOrderedAt())
+                    .finalConfirmDate() //
                     .storeName(findProduct.getStore().getName())
                     .productName(findProduct.getTitle())
                     .optionName(findOptionItem.getName())
                     .needTaxation(findProduct.getNeedTaxation())
                     .purchasePrice(findOptionItem.getPurchasePrice())
-                    .originPrice(findOptionItem.getOriginPrice())
-                    .discountPrice(discountPrice)
+                    .commission() //
+                    .sellingPrice() //
                     .deliveryFee(deliveryFee)
                     .quantity(quantity)
                     .orderAmount(discountPrice * quantity + deliveryFee)
-//                    .finalPaymentAmount(finalSettlementAmount)
+                    .totalOrderAmount()..
                     .paymentMethod(findOrder.getPaymentWay())
                     .settlementRatio(settlementRate)
                     .couponName(findCoupon.getTitle())
                     .couponDiscount(findCoupon.getAmount())
                     .usePoint(findOrder.getUsePoint())
                     .settlementAmount(settlementAmount)
-                    .finalSettlementAmount(settlementAmount + deliveryFee)
+                    .settlementState()..
                     .settledAt(productInfo.getSettledAt())
                     .customerName(findDeliverPlace.getReceiverName())
                     .customerPhoneNumber(findDeliverPlace.getTel())
