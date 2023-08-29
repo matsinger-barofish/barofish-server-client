@@ -1,6 +1,7 @@
 package com.matsinger.barofishserver.compare.dto;
 
 import com.matsinger.barofishserver.compare.filter.dto.CompareFilterDto;
+import com.matsinger.barofishserver.product.domain.ProductDeliverFeeType;
 import com.matsinger.barofishserver.product.productfilter.dto.ProductFilterValueDto;
 import com.matsinger.barofishserver.store.domain.StoreDeliverFeeType;
 import lombok.*;
@@ -20,7 +21,7 @@ public class CompareProductDto {
     Integer originPrice;
     Integer discountPrice;
     Integer deliveryFee;
-    StoreDeliverFeeType deliverFeeType;
+    ProductDeliverFeeType deliverFeeType;
     Integer minOrderPrice;
     List<CompareFilterDto> compareFilters;
     List<ProductFilterValueDto> filterValues;

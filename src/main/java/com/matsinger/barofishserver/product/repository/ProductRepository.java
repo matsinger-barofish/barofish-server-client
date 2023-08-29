@@ -14,7 +14,9 @@ import java.util.Optional;
 
 public interface ProductRepository extends JpaRepository<Product, Integer>, JpaSpecificationExecutor<Product> {
     List<Product> findAllByIdIn(List<Integer> ids);
+
     List<Product> findAllByCategory_Id(Integer Integer);
+
     List<Product> findAllByStateNot(ProductState state);
 
     List<Product> findByTitleContainsAndStateEquals(String title, ProductState state);
@@ -417,6 +419,7 @@ public interface ProductRepository extends JpaRepository<Product, Integer>, JpaS
             " ORDER BY IF( oi.origin_price != 0, oi.discount_price / oi.origin_price, 100 )", nativeQuery = true, countQuery =
             "select count(*) from product p " +
                     "join category c ON p.category_id = c.id " +
+                    "JOIN option_item oi ON p.represent_item_id = oi.id\n" +
                     "where p.state = \'ACTIVE\'" +
                     "and (:curationId is null or p.id in (select cpm.product_id from curation_product_map cpm " +
                     "WHERE cpm.curation_id=:curationId)) \n" +

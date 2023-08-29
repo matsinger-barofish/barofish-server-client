@@ -93,11 +93,14 @@ public class PortOneCallbackHandler {
                             try {
                                 cancelPrice = orderService.getCancelPrice(order, List.of(info));
                             } catch (Exception e) {
-                                throw new RuntimeException(e);
+                                System.out.println(e);
                             }
-                            System.out.println("callback cancel " + cancelPrice);
                             try {
-                                int taxFreeAmount = orderService.getTaxFreeAmount(order, List.of(info));
+//                                int taxFreeAmount = info.getTaxFreeAmount();
+                                int
+                                        taxFreeAmount =
+                                        info.getTaxFreeAmount() != 0 &&
+                                                info.getTaxFreeAmount() != null ? info.getPrice() : 0;
                                 VBankRefundInfo
                                         vBankRefundInfo =
                                         order.getPaymentWay().equals(OrderPaymentWay.VIRTUAL_ACCOUNT) ? VBankRefundInfo.builder().bankHolder(
@@ -108,7 +111,8 @@ public class PortOneCallbackHandler {
                                         taxFreeAmount,
                                         vBankRefundInfo);
                             } catch (Exception e) {
-                                throw new RuntimeException(e);
+
+                                System.out.println(e);
                             }
                             info.setCancelReasonContent("배송 불가 지역");
                             info.setCancelReason(OrderCancelReason.ORDER_FAULT);

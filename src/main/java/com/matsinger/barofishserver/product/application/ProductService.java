@@ -327,7 +327,7 @@ public class ProductService {
                 optionItem.getDiscountPrice()).title(product.getTitle()).reviewCount(reviewCount).storeId(storeInfo.getStoreId()).storeName(
                 storeInfo.getName()).parentCategoryId(product.getCategory() !=
                 null ? product.getCategory().getCategoryId() : null).filterValues(productFilterService.selectProductFilterValueListWithProductId(
-                product.getId())).minOrderPrice(storeInfo.getMinOrderPrice()).deliverFeeType(storeInfo.getDeliverFeeType()).storeImage(
+                product.getId())).minOrderPrice(product.getMinOrderPrice()).deliverFeeType(product.getDeliverFeeType()).storeImage(
                 storeInfo.getProfileImage()).isLike(isLike).build();
     }
 
@@ -342,7 +342,7 @@ public class ProductService {
                 optionItem.getDiscountPrice()).title(product.getTitle()).reviewCount(reviewCount).storeId(storeInfo.getStoreId()).storeName(
                 storeInfo.getName()).parentCategoryId(product.getCategory() !=
                 null ? product.getCategory().getCategoryId() : null).filterValues(productFilterService.selectProductFilterValueListWithProductId(
-                product.getId())).minOrderPrice(storeInfo.getMinOrderPrice()).deliverFeeType(storeInfo.getDeliverFeeType()).storeImage(
+                product.getId())).minOrderPrice(product.getMinOrderPrice()).deliverFeeType(product.getDeliverFeeType()).storeImage(
                 storeInfo.getProfileImage()).build();
     }
 
@@ -372,9 +372,9 @@ public class ProductService {
         OptionItem optionItem = selectOptionItem(product.getRepresentOptionItemId());
         productDto.setIsLike(userId != null &&
                 saveProductRepository.existsById(new SaveProductId(userId, product.getId())));
-        productDto.setDeliverFeeType(store.getDeliverFeeType());
-        productDto.setMinOrderPrice(store.getMinOrderPrice());
-        productDto.setDeliveryFee(store.getDeliverFee());
+        productDto.setDeliverFeeType(product.getDeliverFeeType());
+        productDto.setMinOrderPrice(product.getMinOrderPrice());
+        productDto.setDeliveryFee(product.getDeliverFee());
         productDto.setDifficultDeliverAddresses(addresses);
         productDto.setSearchFilterFields(searchFilterFields);
         productDto.setOriginPrice(optionItem.getOriginPrice());
@@ -524,7 +524,7 @@ public class ProductService {
                 product.getCategory() !=
                         null ? product.getCategory().getParentCategory().getName() : null).secondCategoryName(product.getCategory() !=
                 null ? product.getCategory().getName() : null).productName(product.getTitle()).expectedDeliverDay(
-                product.getExpectedDeliverDay()).deliveryInfo(product.getDeliveryInfo()).deliveryFee(storeInfo.getDeliverFee()).deliverBoxPerAmount(
+                product.getExpectedDeliverDay()).deliveryInfo(product.getDeliveryInfo()).deliveryFee(product.getDeliverFee()).deliverBoxPerAmount(
                 product.getDeliverBoxPerAmount()).isActive(product.getState().equals(ProductState.ACTIVE) ? "노출" : "미노출").needTaxation(
                 product.getNeedTaxation() ? "과세" : "비과세").hasOption("있음").purchasePrices(optionItems.stream().map(
                 OptionItem::getPurchasePrice).toList()).representativeOptionNo(representativeOptionNo).optionNames(
@@ -557,7 +557,7 @@ public class ProductService {
                             product.getCategory() !=
                                     null ? product.getCategory().getName() : null).productName(product.getTitle()).expectedDeliverDay(
                             product.getExpectedDeliverDay()).deliveryInfo(product.getDeliveryInfo()).deliveryFee(
-                            storeInfo.getDeliverFee()).deliverBoxPerAmount(product.getDeliverBoxPerAmount()).isActive(
+                            product.getDeliverFee()).deliverBoxPerAmount(product.getDeliverBoxPerAmount()).isActive(
                             product.getState().equals(ProductState.ACTIVE) ? "노출" : "미노출").needTaxation(product.getNeedTaxation() ? "과세" : "비과세").hasOption(
                             "있음").purchasePrices(optionItem.getPurchasePrice()).representativeOptionNo(
                             representativeOptionNo).optionName(optionItem.getName()).optionOriginPrice(optionItem.getOriginPrice()).optionDiscountPrice(

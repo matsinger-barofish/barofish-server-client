@@ -52,26 +52,26 @@ public class StoreInfo {
     @Column(name = "visit_note", nullable = true, columnDefinition = "TEXT")
     private String visitNote;
 
-    @Basic
-    @Enumerated(EnumType.STRING)
-    @ColumnDefault("FREE")
-    @Column(name = "deliver_fee_type", nullable = false)
-    private StoreDeliverFeeType deliverFeeType;
 
     @Basic
     @Column(name = "one_line_description", nullable = false)
     private String oneLineDescription;
 
-    @Basic
-    @ColumnDefault("0")
-    @Column(name = "deliver_fee", nullable = false)
-    private Integer deliverFee;
+    //    @Basic
+//    @Enumerated(EnumType.STRING)
+//    @ColumnDefault("FREE")
+//    @Column(name = "deliver_fee_type", nullable = false)
+//    private StoreDeliverFeeType deliverFeeType;
+//    @Basic
+//    @ColumnDefault("0")
+//    @Column(name = "deliver_fee", nullable = false)
+//    private Integer deliverFee;
+//    @Basic
+//    @Column(name = "min_order_price", nullable = true)
+//    private Integer minOrderPrice;
     @Basic
     @Column(name = "refund_deliver_fee", nullable = true)
     private Integer refundDeliverFee;
-    @Basic
-    @Column(name = "min_order_price", nullable = true)
-    private Integer minOrderPrice;
     @Basic
     @Column(name = "settlement_rate", nullable = true)
     Float settlementRate;
@@ -136,7 +136,6 @@ public class StoreInfo {
     String deliverCompany;
 
 
-
     public String getBackgroudImage() {
         return backgroudImage;
     }
@@ -179,9 +178,8 @@ public class StoreInfo {
 
     public SimpleStore convert2Dto() {
         return SimpleStore.builder().storeId(this.store.getId()).backgroundImage(backgroudImage).profileImage(
-                profileImage).name(name).location(location).keyword(keyword.split(",")).visitNote(this.getVisitNote()).deliverFee(
-                this.deliverFee).minOrderPrice(this.minOrderPrice).refundDeliverFee(this.refundDeliverFee).oneLineDescription(
-                this.oneLineDescription).build();
+                profileImage).name(name).location(location).keyword(keyword.split(",")).visitNote(this.getVisitNote()).refundDeliverFee(
+                this.refundDeliverFee).oneLineDescription(this.oneLineDescription).build();
     }
 
     @Override

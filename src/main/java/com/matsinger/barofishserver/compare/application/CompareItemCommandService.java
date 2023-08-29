@@ -96,9 +96,9 @@ public class CompareItemCommandService {
                         1)
                 .split(",")[0]).title(product.getTitle()).originPrice(optionItem.getOriginPrice()).storeName(
                         storeInfo.getName())
-                .discountPrice(optionItem.getDiscountPrice()).deliveryFee(storeInfo.getDeliverFee()).deliverFeeType(
-                        storeInfo.getDeliverFeeType())
-                .minOrderPrice(storeInfo.getMinOrderPrice()).compareFilters(
+                .discountPrice(optionItem.getDiscountPrice()).deliveryFee(product.getDeliverFee()).deliverFeeType(
+                        product.getDeliverFeeType())
+                .minOrderPrice(product.getMinOrderPrice()).compareFilters(
                         compareFilterDtos)
                 .filterValues(filterValues).build();
     }

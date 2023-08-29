@@ -5,8 +5,10 @@ import com.matsinger.barofishserver.category.domain.Category;
 import com.matsinger.barofishserver.product.dto.ProductListDto;
 import com.matsinger.barofishserver.review.domain.Review;
 import com.matsinger.barofishserver.store.domain.Store;
+import com.matsinger.barofishserver.store.domain.StoreDeliverFeeType;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.ColumnDefault;
 
 import java.sql.Timestamp;
 import java.util.ArrayList;
@@ -92,6 +94,19 @@ public class Product {
     @Column(name = "promotion_end_at", nullable = true)
     private Timestamp promotionEndAt;
 
+    @Basic
+    @Enumerated(EnumType.STRING)
+    @ColumnDefault("FREE")
+    @Column(name = "deliver_fee_type", nullable = false)
+    private ProductDeliverFeeType deliverFeeType;
+    @Basic
+    @ColumnDefault("0")
+    @Column(name = "deliver_fee", nullable = false)
+    private Integer deliverFee;
+    @Basic
+    @Column(name = "min_order_price", nullable = true)
+    private Integer minOrderPrice;
+
     @Builder.Default
     @JsonBackReference
     @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL, mappedBy = "product")
@@ -101,6 +116,7 @@ public class Product {
 
     @Column(name = "item_code")
     private String itemCode;
+
     public int getId() {
         return id;
     }
@@ -192,33 +208,22 @@ public class Product {
 
     public SimpleProductDto convert2SimpleDto() {
 
-        return SimpleProductDto.builder().id(this.getId())
-                .category(this.category != null ? this.category.convert2Dto() : null)
-                .expectedDeliverDay(this.getExpectedDeliverDay()).images(this.images.substring(
-                        1,
-                        images.length() -
-                                1)
-                        .split(","))
-                .title(title).state(this.getState()).originPrice(originPrice).deliveryInfo(
-                        deliveryInfo)
-                .description(descriptionImages).descriptionImages(descriptionImages.substring(1,
-                        descriptionImages.length() -
-                                1)
-                        .split(","))
-                .representOptionItemId(this.representOptionItemId).deliverBoxPerAmount(this.getDeliverBoxPerAmount())
-                .createdAt(
-                        this.getCreatedAt())
-                .pointRate(this.getPointRate()).promotionStartAt(this.promotionStartAt).promotionEndAt(
-                        this.promotionEndAt)
-                .build();
+        return SimpleProductDto.builder().id(this.getId()).category(this.category !=
+                null ? this.category.convert2Dto() : null).expectedDeliverDay(this.getExpectedDeliverDay()).images(this.images.substring(
+                1,
+                images.length() -
+                        1).split(",")).title(title).state(this.getState()).originPrice(originPrice).deliveryInfo(
+                deliveryInfo).description(descriptionImages).descriptionImages(descriptionImages.substring(1,
+                descriptionImages.length() -
+                        1).split(",")).representOptionItemId(this.representOptionItemId).deliverBoxPerAmount(this.getDeliverBoxPerAmount()).createdAt(
+                this.getCreatedAt()).pointRate(this.getPointRate()).promotionStartAt(this.promotionStartAt).promotionEndAt(
+                this.promotionEndAt).build();
     }
 
     @Override
     public boolean equals(Object o) {
-        if (this == o)
-            return true;
-        if (o == null || getClass() != o.getClass())
-            return false;
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
         Product that = (Product) o;
         return id == that.id &&
                 originPrice == that.originPrice &&
