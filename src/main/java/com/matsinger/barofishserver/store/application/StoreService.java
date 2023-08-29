@@ -50,8 +50,7 @@ public class StoreService {
                         storeInfo.getBusinessRegistration()).bankAccountCopy(storeInfo.getBankAccountCopy()).build();
         return StoreDto.builder().id(store.getId()).state(store.getState()).loginId(store.getLoginId()).joinAt(store.getJoinAt()).backgroundImage(
                 storeInfo.getBackgroudImage()).profileImage(storeInfo.getProfileImage()).name(storeInfo.getName()).isReliable(
-                storeInfo.getIsReliable()).location(storeInfo.getLocation()).visitNote(storeInfo.getVisitNote()).deliverFeeType(
-                storeInfo.getDeliverFeeType()).deliverFee(storeInfo.getDeliverFee()).minOrderPrice(storeInfo.getMinOrderPrice()).keyword(
+                storeInfo.getIsReliable()).location(storeInfo.getLocation()).visitNote(storeInfo.getVisitNote()).keyword(
                 storeInfo.getKeyword().split(",")).oneLineDescription(storeInfo.getOneLineDescription()).refundDeliverFee(
                 storeInfo.getRefundDeliverFee()).additionalData(additionalDto).deliverCompany(storeInfo.getDeliverCompany()).build();
     }
@@ -74,11 +73,9 @@ public class StoreService {
                 SimpleStore.builder().loginId(store.getLoginId()).storeId(storeInfo.getStoreId()).backgroundImage(
                         storeInfo.getBackgroudImage()).profileImage(storeInfo.getProfileImage()).name(storeInfo.getName()).location(
                         storeInfo.getLocation()).isReliable(storeInfo.getIsReliable()).keyword(storeInfo.getKeyword().split(
-                        ",")).visitNote(storeInfo.getVisitNote()).deliverFeeType(storeInfo.getDeliverFeeType()).deliverFee(
-                        storeInfo.getDeliverFee()).refundDeliverFee(storeInfo.getRefundDeliverFee()).minOrderPrice(
-                        storeInfo.getMinOrderPrice()).oneLineDescription(storeInfo.getOneLineDescription()).isLike(
-                        isLike).reviewStatistic(reviewStatistics).reviews(reviewDtos).reviewCount(reviewCount).productCount(
-                        productCount).deliverCompany(storeInfo.getDeliverCompany()).build();
+                        ",")).visitNote(storeInfo.getVisitNote()).refundDeliverFee(storeInfo.getRefundDeliverFee()).oneLineDescription(
+                        storeInfo.getOneLineDescription()).isLike(isLike).reviewStatistic(reviewStatistics).reviews(
+                        reviewDtos).reviewCount(reviewCount).productCount(productCount).deliverCompany(storeInfo.getDeliverCompany()).build();
         return simpleStore;
     }
 
@@ -214,21 +211,6 @@ public class StoreService {
         return storeScrapRepository.existsByStoreIdAndUserId(storeId, userId);
     }
 
-    public Integer getDeliverFee(StoreInfo storeInfo, Integer totalPrice) {
-        switch (storeInfo.getDeliverFeeType()) {
-            case FREE -> {
-                return 0;
-            }
-            case FIX -> {
-                return storeInfo.getDeliverFee();
-            }
-            case FREE_IF_OVER -> {
-                if (totalPrice > storeInfo.getMinOrderPrice()) return 0;
-                else return storeInfo.getDeliverFee();
-            }
-        }
-        return 0;
-    }
 
     public List<StoreInfo> selectReliableStoreRandomOrder() {
         return storeInfoRepository.selectReliableStoreRandomOrder();

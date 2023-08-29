@@ -354,7 +354,7 @@ public class OrderController {
                 }
 
                 OptionItem optionItem = productService.selectOptionItem(productReq.getOptionId());
-                if (optionItem.getDeliverBoxPerAmount() != null &&
+                if (optionItem.getMaxAvailableAmount() != null &&
                         optionItem.getMaxAvailableAmount() < productReq.getAmount())
                     return res.throwError("최대 주문 수량을 초과하였습니다.", "INPUT_CHECK_REQUIRED");
                 optionItem.reduceAmount(productReq.getAmount());
@@ -362,7 +362,10 @@ public class OrderController {
                 taxFreeAmount += productReq.getTaxFreeAmount() != null ? productReq.getTaxFreeAmount() : 0;
                 Integer
                         deliveryFee =
-                        orderService.getProductDeliveryFee(product, productReq.getOptionId(), productReq.getAmount());
+                        orderService.getProductDeliveryFee(product,
+                                productReq.getOptionId(),
+                                productReq.getAmount(),
+                                data.getProducts());
                 optionItems.add(productService.selectOptionItem(productReq.getOptionId()));
                 infos.add(OrderProductInfo.builder().optionItemId(optionItem.getId()).orderId(orderId).productId(
                         productReq.getProductId()).state(OrderProductState.WAIT_DEPOSIT).settlePrice(storeInfo.getSettlementRate() !=
@@ -371,17 +374,31 @@ public class OrderController {
                         false).deliveryFee(deliveryFee).taxFreeAmount(productReq.getTaxFreeAmount()).build());
             }
             infos.forEach(i -> {
-                int storeTotalPrice = infos.stream().filter(v -> {
+                List<OrderProductInfo> sameStoreOrderInfos = infos.stream().filter(v -> {
                     Product productA = productService.selectProduct(v.getProductId());
                     Product productB = productService.selectProduct(i.getProductId());
                     return productA.getStoreId() == productB.getStoreId();
-                }).mapToInt(OrderProductInfo::getPrice).sum();
-                Product p = productService.selectProduct(i.getProductId());
-                StoreInfo storeInfo = storeService.selectStoreInfo(p.getStoreId());
-                if (storeInfo.getDeliverFeeType().equals(StoreDeliverFeeType.FREE_IF_OVER) &&
-                        storeTotalPrice > (storeInfo.getMinOrderPrice() != null ? storeInfo.getMinOrderPrice() : 0)) {
-                    i.setDeliveryFee(0);
+                }).toList();
+                int maxDeliverFee = Collections.max(infos.stream().map(OrderProductInfo::getDeliveryFee).toList());
+                if (i.getDeliveryFee() == maxDeliverFee) {
+                    infos.forEach(v -> {
+                        if (sameStoreOrderInfos.stream().anyMatch(soi -> soi.getId() == v.getId())) {
+                            v.setDeliveryFee(0);
+                        }
+                    });
+                    i.setDeliveryFee(maxDeliverFee);
                 }
+//                int storeTotalPrice = infos.stream().filter(v -> {
+//                    Product productA = productService.selectProduct(v.getProductId());
+//                    Product productB = productService.selectProduct(i.getProductId());
+//                    return productA.getStoreId() == productB.getStoreId();
+//                }).map(v -> storeService.selectStoreInfo(v.getProduct().getStoreId()));
+//                Product p = productService.selectProduct(i.getProductId());
+//                StoreInfo storeInfo = storeService.selectStoreInfo(p.getStoreId());
+//                if (storeInfo.getDeliverFeeType().equals(StoreDeliverFeeType.FREE_IF_OVER) &&
+//                        storeTotalPrice > (storeInfo.getMinOrderPrice() != null ? storeInfo.getMinOrderPrice() : 0)) {
+//                    i.setDeliveryFee(0);
+//                }
             });
             if (coupon != null) {
                 if (data.getTotalPrice() < coupon.getMinPrice())
@@ -551,6 +568,7 @@ public class OrderController {
                     infos.stream().mapToInt(v -> v.getTaxFreeAmount() != 0 &&
                             v.getTaxFreeAmount() != null ? v.getPrice() : 0).sum();
             taxFreeAmount = Math.min(taxFreeAmount, cancelPrice);
+            System.out.println(cancelPrice + "|" + taxFreeAmount);
             VBankRefundInfo
                     vBankRefundInfo =
                     order.getPaymentWay().equals(OrderPaymentWay.VIRTUAL_ACCOUNT) ? VBankRefundInfo.builder().bankHolder(

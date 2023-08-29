@@ -1,6 +1,7 @@
 package com.matsinger.barofishserver.product.dto;
 
 import com.matsinger.barofishserver.product.api.ProductController;
+import com.matsinger.barofishserver.product.domain.ProductDeliverFeeType;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -18,8 +19,10 @@ public class ProductAddReq {
     private String title;
     private Boolean isActive;
 
-    private String deliveryInfo;
     private Integer deliveryFee;
+    private ProductDeliverFeeType deliverFeeType;
+    private Integer minOrderPrice;
+    private String deliveryInfo;
     private Integer expectedDeliverDay;
     private Integer deliverBoxPerAmount;
     private String descriptionContent;

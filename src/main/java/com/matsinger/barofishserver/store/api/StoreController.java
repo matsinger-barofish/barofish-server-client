@@ -330,10 +330,7 @@ public class StoreController {
                                                              @RequestPart(value = "location") String location,
                                                              @RequestPart(value = "keyword") String keyword,
                                                              @RequestPart(value = "visitNote", required = false) String visitNote,
-                                                             @RequestPart(value = "deliverFeeType", required = false) StoreDeliverFeeType deliverFeeType,
-                                                             @RequestPart(value = "deliverFee", required = false) Integer deliverFee,
                                                              @RequestPart(value = "refundDeliverFee", required = false) Integer refundDeliverFee,
-                                                             @RequestPart(value = "minOrderPrice", required = false) Integer minOrderPrice,
                                                              @RequestPart(value = "oneLineDescription", required = false) String oneLineDescription,
                                                              @RequestPart(value = "deliverCompany", required = false) String deliverCompany,
                                                              @RequestPart(value = "additionalData") AddStoreAdditionalReq data,
@@ -380,20 +377,13 @@ public class StoreController {
                             StoreState.ACTIVE).joinAt(utils.now()).build();
             StoreInfo
                     storeInfoData =
-                    StoreInfo.builder().name(name).location(location).keyword(keyword).visitNote("").deliverFeeType(
-                            deliverFeeType).deliverFee(deliverFee).refundDeliverFee(refundDeliverFee).oneLineDescription(
-                            oneLineDescriptionData).settlementRate(data.settlementRate).bankName(bankName).bankHolder(
-                            bankHolder).bankAccount(bankAccount).representativeName(representativeName).companyId(
-                            companyId).businessType(businessType).mosRegistrationNumber(mosRegistrationNumber).businessAddress(
-                            businessAddress).postalCode(postalCode).lotNumberAddress(lotNumberAddress).streetNameAddress(
-                            streetNameAddress).addressDetail(addressDetail).tel(tel).email(email).faxNumber(faxNumber).deliverCompany(
-                            deliverCompany).isReliable(false).build();
-            if (deliverFeeType != null) storeInfoData.setDeliverFeeType(storeInfoData.getDeliverFeeType());
-            if (deliverFeeType != null && deliverFeeType.equals(StoreDeliverFeeType.FREE_IF_OVER) && deliverFee == null)
-                return res.throwError("무료 배송 최소 주문 금액을 입력해주세요.", "INPUT_CHECK_REQUIRED");
-            if (deliverFee != null) storeInfoData.setDeliverFee(deliverFee);
-            else storeInfoData.setDeliverFee(0);
-            storeInfoData.setMinOrderPrice(minOrderPrice);
+                    StoreInfo.builder().name(name).location(location).keyword(keyword).visitNote("").refundDeliverFee(
+                            refundDeliverFee).oneLineDescription(oneLineDescriptionData).settlementRate(data.settlementRate).bankName(
+                            bankName).bankHolder(bankHolder).bankAccount(bankAccount).representativeName(
+                            representativeName).companyId(companyId).businessType(businessType).mosRegistrationNumber(
+                            mosRegistrationNumber).businessAddress(businessAddress).postalCode(postalCode).lotNumberAddress(
+                            lotNumberAddress).streetNameAddress(streetNameAddress).addressDetail(addressDetail).tel(tel).email(
+                            email).faxNumber(faxNumber).deliverCompany(deliverCompany).isReliable(false).build();
             Store store = storeService.addStore(storeData);
             String
                     backgroundImageUrl =
@@ -489,11 +479,8 @@ public class StoreController {
                                                                     @RequestPart(value = "location", required = false) String location,
                                                                     @RequestPart(value = "keyword", required = false) String keyword,
                                                                     @RequestPart(value = "visitNote", required = false) String visitNote,
-                                                                    @RequestPart(value = "deliverFeeType", required = false) StoreDeliverFeeType deliverFeeType,
-                                                                    @RequestPart(value = "deliverFee", required = false) Integer deliverFee,
                                                                     @RequestPart(value = "deliverCompany", required = false) String deliverCompany,
                                                                     @RequestPart(value = "refundDeliverFee", required = false) Integer refundDeliverFee,
-                                                                    @RequestPart(value = "minOrderPrice", required = false) Integer minOrderPrice,
                                                                     @RequestPart(value = "oneLineDescription", required = false) String oneLineDescription,
                                                                     @RequestPart(value = "additionalData", required = false) AddStoreAdditionalReq data,
                                                                     @RequestPart(value = "mosRegistration", required = false) MultipartFile mosRegistration,
@@ -544,27 +531,6 @@ public class StoreController {
             }
             if (isReliable != null) {
                 if (tokenInfo.get().getType().equals(TokenAuthType.ADMIN)) storeInfo.setIsReliable(isReliable);
-            }
-            if (deliverFeeType == null) {
-                if (deliverFee != null) storeInfo.setDeliverFee(deliverFee);
-                if (minOrderPrice != null) storeInfo.setMinOrderPrice(minOrderPrice);
-            } else if (deliverFeeType.toString().equals("FREE")) {
-                storeInfo.setDeliverFeeType(StoreDeliverFeeType.FREE);
-                storeInfo.setDeliverFee(0);
-                storeInfo.setMinOrderPrice(0);
-            } else if (deliverFeeType.toString().equals("FIX")) {
-                if (storeInfo.getDeliverFee() == 0 && deliverFee == null)
-                    return res.throwError("배송비를 입력해주세요.", "INPUT_CHECK_REQUIRED");
-                storeInfo.setDeliverFeeType(StoreDeliverFeeType.FIX);
-                storeInfo.setDeliverFee(deliverFee);
-                storeInfo.setMinOrderPrice(0);
-            } else if (deliverFeeType.toString().equals("FREE_IF_OVER")) {
-                if (minOrderPrice == null) return res.throwError("무료 배송 최소 금액을 입력해주세요.", "INPUT_CHECK_REQUIRED");
-                if (storeInfo.getDeliverFee() == 0 && deliverFee == null)
-                    return res.throwError("배송비를 입력해주세요.", "INPUT_CHECK_REQUIRED");
-                storeInfo.setDeliverFeeType(StoreDeliverFeeType.FREE_IF_OVER);
-                if (deliverFee != null) storeInfo.setDeliverFee(deliverFee);
-                storeInfo.setMinOrderPrice(minOrderPrice);
             }
             if (refundDeliverFee != null) {
                 storeInfo.setRefundDeliverFee(refundDeliverFee);

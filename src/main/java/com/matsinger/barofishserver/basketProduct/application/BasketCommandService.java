@@ -7,6 +7,8 @@ import com.matsinger.barofishserver.basketProduct.repository.BasketProductOption
 import com.matsinger.barofishserver.order.domain.Orders;
 import com.matsinger.barofishserver.order.orderprductinfo.domain.OrderProductInfo;
 import com.matsinger.barofishserver.product.application.ProductService;
+import com.matsinger.barofishserver.product.domain.Product;
+import com.matsinger.barofishserver.product.domain.ProductDeliverFeeType;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -91,12 +93,18 @@ public class BasketCommandService {
                     optionItem =
                     optionItemRepository.findById(optionId).orElseThrow(() -> new IllegalArgumentException(
                             "옵션 아이템 정보를 찾을 수 없습니다."));
-            int
-                    deliveryFee =
-                    optionItem.getDeliverFee() *
-                            ((int) (amount /
-                                    (optionItem.getDeliverBoxPerAmount() ==
-                                            null ? 9999999 : optionItem.getDeliverBoxPerAmount())) + 1);
+            Product product = productService.selectProduct(productId);
+            int deliveryFee = 0;
+            if (product.getDeliverFeeType().equals(ProductDeliverFeeType.FREE)) deliveryFee = 0;
+            else if (product.getDeliverFeeType().equals(ProductDeliverFeeType.FIX))
+                deliveryFee = product.getDeliverFee();
+            else if (product.getDeliverFeeType().equals(ProductDeliverFeeType.FREE_IF_OVER))
+                deliveryFee =
+                        product.getMinOrderPrice() == null ||
+                                optionItem.getDiscountPrice() * amount >
+                                        product.getMinOrderPrice() ? 0 : (product.getDeliverFee() ==
+                                null ? 0 : product.getDeliverFee());
+
             BasketProductInfo
                     info =
                     BasketProductInfo.builder().userId(userId).productId(productId).amount(amount).deliveryFee(
