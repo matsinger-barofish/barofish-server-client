@@ -11,4 +11,6 @@ public interface DeliverPlaceRepository extends JpaRepository<DeliverPlace, Inte
     List<DeliverPlace> findAllByUserId(Integer userId);
 
     Optional<DeliverPlace> findByUserIdAndIsDefault(Integer userId, Boolean isDefault);
+
+    void deleteAllByUserIdIn(List<Integer> userIds);
 }

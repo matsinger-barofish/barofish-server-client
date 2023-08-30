@@ -80,11 +80,9 @@ public class PortOneCallbackHandler {
                                         String.format("결제 금액: %d원\n", paymentData.getPaidAmount()) +
                                         String.format("가상계좌은행: %s\n", paymentData.getVbankName()) +
                                         String.format("가상계좌번호: %s\n",
-                                                paymentData.getVbankNum().replaceAll("[^\\d]", "") +
-                                                        String.format("가상계좌 예금주명: %s\n", paymentData.getVbankHolder()) +
-                                                        String.format("입금 마감기한: %s",paymentData.getVbankDate() ));
-
-                        sms.sendSms(paymentData.getBuyerTel(), smsContent, "가상 계좌 결제 요청");
+                                                paymentData.getVbankNum().replaceAll("[^\\d]", "") + "\n") +
+                                        String.format("가상계좌 예금주명: %s\n", paymentData.getVbankHolder()) +
+                                        "24시간 이내로 이체해주세요.";
                     }
                 } else if (data.getStatus().equals("paid")) {
                     Payments paymentData = paymentService.getPaymentInfo(order.getId(), data.getImp_uid());
@@ -95,11 +93,14 @@ public class PortOneCallbackHandler {
                             try {
                                 cancelPrice = orderService.getCancelPrice(order, List.of(info));
                             } catch (Exception e) {
-                                throw new RuntimeException(e);
+                                System.out.println(e);
                             }
-                            System.out.println("callback cancel " + cancelPrice);
                             try {
-                                int taxFreeAmount = orderService.getTaxFreeAmount(order, List.of(info));
+//                                int taxFreeAmount = info.getTaxFreeAmount();
+                                int
+                                        taxFreeAmount =
+                                        info.getTaxFreeAmount() != 0 &&
+                                                info.getTaxFreeAmount() != null ? info.getPrice() : 0;
                                 VBankRefundInfo
                                         vBankRefundInfo =
                                         order.getPaymentWay().equals(OrderPaymentWay.VIRTUAL_ACCOUNT) ? VBankRefundInfo.builder().bankHolder(
@@ -109,8 +110,9 @@ public class PortOneCallbackHandler {
                                         cancelPrice,
                                         taxFreeAmount,
                                         vBankRefundInfo);
-                            } catch (IamportResponseException | IOException e) {
-                                throw new RuntimeException(e);
+                            } catch (Exception e) {
+
+                                System.out.println(e);
                             }
                             info.setCancelReasonContent("배송 불가 지역");
                             info.setCancelReason(OrderCancelReason.ORDER_FAULT);
@@ -156,6 +158,7 @@ public class PortOneCallbackHandler {
             }
         } catch (Exception e) {
             log.info(e.getMessage());
-        } return ResponseEntity.ok(null);
+        }
+        return ResponseEntity.ok(null);
     }
 }

@@ -39,7 +39,9 @@ public class ProductInfoNoticeController {
             return res.throwError("상품이 속한 품목의 코드를 입력해주세요.", "INVALID");
         }
         try {
-            ProductInformation productInformation = productInfoNotificationQueryService.getProductInfoNotificationForm(itemCode);
+            ProductInformation
+                    productInformation =
+                    productInfoNotificationQueryService.getProductInfoNotificationForm(itemCode);
             res.setData(Optional.ofNullable(productInformation));
             return ResponseEntity.ok(res);
         } catch (Exception e) {
@@ -103,14 +105,16 @@ public class ProductInfoNoticeController {
     public ResponseEntity<CustomResponse<Object>> get(@RequestHeader(value = "Authorization") Optional<String> auth,
                                                       @PathVariable("productId") int productId) {
         CustomResponse<Object> res = new CustomResponse<>();
-        Set<TokenAuthType> permission = Set.of(TokenAuthType.ADMIN, TokenAuthType.PARTNER);
+        Set<TokenAuthType> permission = Set.of(TokenAuthType.ADMIN, TokenAuthType.PARTNER, TokenAuthType.USER);
         Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(permission, auth);
         if (tokenInfo == null) {
             return res.throwError("인증이 필요합니다.", "FORBIDDEN");
         }
 
         try {
-            ProductInformation productInfoNotification = productInfoNotificationQueryService.getProductInfoNotification(productId);
+            ProductInformation
+                    productInfoNotification =
+                    productInfoNotificationQueryService.getProductInfoNotification(productId);
             res.setData(Optional.ofNullable(productInfoNotification));
 
             return ResponseEntity.ok(res);

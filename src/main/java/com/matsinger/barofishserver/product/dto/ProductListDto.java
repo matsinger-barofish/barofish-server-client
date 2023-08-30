@@ -1,5 +1,6 @@
 package com.matsinger.barofishserver.product.dto;
 
+import com.matsinger.barofishserver.product.domain.ProductDeliverFeeType;
 import com.matsinger.barofishserver.product.domain.ProductState;
 import com.matsinger.barofishserver.product.productfilter.dto.ProductFilterValueDto;
 import com.matsinger.barofishserver.store.domain.StoreDeliverFeeType;
@@ -27,7 +28,7 @@ public class ProductListDto {
     String storeName;
     Integer minOrderPrice;
     String storeImage;
-    StoreDeliverFeeType deliverFeeType;
+    ProductDeliverFeeType deliverFeeType;
     Integer parentCategoryId;
     List<ProductFilterValueDto> filterValues;
 }

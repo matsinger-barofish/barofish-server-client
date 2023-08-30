@@ -21,4 +21,8 @@ public interface UserRepository extends JpaRepository<User, Integer>, JpaSpecifi
     List<User> findAllByIdIn(List<Integer> ids);
 
     Integer countAllByJoinAtBetween(Timestamp joinAtS, Timestamp joinAtE);
+
+    List<User> findAllByWithdrawAtBefore(Timestamp timestamp);
+
+    void deleteAllByIdIn(List<Integer> userIds);
 }

@@ -72,4 +72,6 @@ public interface ReviewRepository extends JpaRepository<Review, Integer>, JpaSpe
     Boolean existsByUserIdAndProductIdAndOrderProductInfoId(Integer userId,
                                                             Integer productId,
                                                             Integer orderProductInfoId);
+
+    void deleteAllByUserIdIn(List<Integer> userIds);
 }

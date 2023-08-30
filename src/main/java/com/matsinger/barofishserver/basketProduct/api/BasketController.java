@@ -122,8 +122,8 @@ public class BasketController {
                     option != null ? productService.selectOptionItem(option.getOptionId()).convert2Dto() : null;
             BasketProductDto
                     dto =
-                    BasketProductDto.builder().product(product.convert2ListDto()).amount(amount).deliveryFee(storeInfo.getDeliverFee()).deliverFeeType(
-                            storeInfo.getDeliverFeeType()).minOrderPrice(storeInfo.getMinOrderPrice()).option(optionDto).build();
+                    BasketProductDto.builder().product(product.convert2ListDto()).amount(amount).deliveryFee(product.getDeliverFee()).deliverFeeType(
+                            product.getDeliverFeeType()).minOrderPrice(product.getMinOrderPrice()).option(optionDto).build();
             res.setData(Optional.ofNullable(dto));
             return ResponseEntity.ok(res);
         } catch (Exception e) {

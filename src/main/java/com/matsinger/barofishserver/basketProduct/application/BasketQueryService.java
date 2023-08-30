@@ -67,13 +67,14 @@ public class BasketQueryService {
                                 "옵션 아이템 정보를 찾을 수 없습니다."));
                 optionDto = optionItem.convert2Dto();
                 optionDto.setDeliverBoxPerAmount(product.getDeliverBoxPerAmount());
+                optionDto.setPointRate(product.getPointRate());
             }
 
             ProductListDto productListDto = createProductListDto(product);
             BasketProductDto
                     basketProductDto =
                     BasketProductDto.builder().id(info.getId()).product(productListDto).amount(info.getAmount()).deliveryFee(
-                            storeInfo.getDeliverFee()).deliverFeeType(storeInfo.getDeliverFeeType()).minOrderPrice(store.getMinOrderPrice()).store(
+                            product.getDeliverFee()).deliverFeeType(product.getDeliverFeeType()).minOrderPrice(product.getMinOrderPrice()).store(
                             store).option(optionDto).build();
             productDtos.add(basketProductDto);
         }
@@ -92,7 +93,8 @@ public class BasketQueryService {
                 1,
                 product.getImages().length() - 1).split(",")[0]).originPrice(optionItem.getOriginPrice()).discountPrice(
                 optionItem.getDiscountPrice()).title(product.getTitle()).reviewCount(reviewCount).storeId(storeInfo.getStoreId()).storeName(
-                storeInfo.getName()).parentCategoryId(product.getCategory().getCategoryId()).filterValues(
-                productFilterService.selectProductFilterValueListWithProductId(product.getId())).build();
+                storeInfo.getName()).parentCategoryId(product.getCategory() !=
+                null ? product.getCategory().getCategoryId() : null).filterValues(productFilterService.selectProductFilterValueListWithProductId(
+                product.getId())).build();
     }
 }

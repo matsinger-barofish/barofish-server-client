@@ -40,17 +40,15 @@ public class CompareItemCommandService {
     private final CompareFilterQueryService compareFilterQueryService;
 
     public CompareSet addCompareSet(Integer userId, List<Integer> productIds) {
-        CompareSet
-                compareSet =
-                CompareSet.builder().userId(userId).createdAt(new Timestamp(System.currentTimeMillis())).build();
+        CompareSet compareSet = CompareSet.builder().userId(userId).createdAt(new Timestamp(System.currentTimeMillis()))
+                .build();
         compareSetRepository.save(compareSet);
         List<CompareItem> compareItems = new ArrayList<>();
         List<Product> products = new ArrayList<>();
         for (Integer productId : productIds) {
             Product product = productService.findById(productId);
-            CompareItem
-                    compareItem =
-                    CompareItem.builder().compareSetId(compareSet.getId()).productId(product.getId()).build();
+            CompareItem compareItem = CompareItem.builder().compareSetId(compareSet.getId()).productId(product.getId())
+                    .build();
             compareItems.add(compareItem);
             compareItemRepository.save(compareItem);
             products.add(product);
@@ -84,21 +82,24 @@ public class CompareItemCommandService {
 
     public CompareProductDto convertProduct2Dto(Product product) {
         StoreInfo storeInfo = storeService.selectStoreInfo(product.getStoreId());
-        List<ProductFilterValueDto>
-                filterValues =
-                productFilterService.selectProductFilterValueListWithProductId(product.getId());
-        List<CompareFilterDto>
-                compareFilterDtos =
-                categoryFilterRepository.findAllByCategoryId(product.getCategory().getCategoryId()).stream().map(v -> compareFilterQueryService.selectCompareFilter(
-                        v.getCompareFilterId()).convert2Dto()).toList();
-        com.matsinger.barofishserver.product.optionitem.domain.OptionItem
-                optionItem =
-                productService.selectOptionItem(product.getRepresentOptionItemId());
+        List<ProductFilterValueDto> filterValues = productFilterService
+                .selectProductFilterValueListWithProductId(product.getId());
+        List<CompareFilterDto> compareFilterDtos = categoryFilterRepository
+                .findAllByCategoryId(product.getCategory() != null ? product.getCategory().getCategoryId() : 0).stream()
+                .map(v -> compareFilterQueryService.selectCompareFilter(
+                        v.getCompareFilterId()).convert2Dto())
+                .toList();
+        com.matsinger.barofishserver.product.optionitem.domain.OptionItem optionItem = productService
+                .selectOptionItem(product.getRepresentOptionItemId());
         return CompareProductDto.builder().id(product.getId()).image(product.getImages().substring(1,
                 product.getImages().length() -
-                        1).split(",")[0]).title(product.getTitle()).originPrice(optionItem.getOriginPrice()).storeName(
-                storeInfo.getName()).discountPrice(optionItem.getDiscountPrice()).deliveryFee(storeInfo.getDeliverFee()).deliverFeeType(
-                storeInfo.getDeliverFeeType()).minOrderPrice(storeInfo.getMinOrderPrice()).compareFilters(
-                compareFilterDtos).filterValues(filterValues).build();
+                        1)
+                .split(",")[0]).title(product.getTitle()).originPrice(optionItem.getOriginPrice()).storeName(
+                        storeInfo.getName())
+                .discountPrice(optionItem.getDiscountPrice()).deliveryFee(product.getDeliverFee()).deliverFeeType(
+                        product.getDeliverFeeType())
+                .minOrderPrice(product.getMinOrderPrice()).compareFilters(
+                        compareFilterDtos)
+                .filterValues(filterValues).build();
     }
 }

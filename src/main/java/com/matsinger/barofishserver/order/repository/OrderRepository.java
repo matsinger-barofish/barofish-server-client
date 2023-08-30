@@ -26,4 +26,7 @@ public interface OrderRepository extends JpaRepository<Orders, String>, JpaSpeci
 
     Integer countAllByOrderedAtBetween(Timestamp startAt, Timestamp endAt);
 
+    List<Orders> findAllByUserIdIn(List<Integer> userIds);
+
+    void deleteAllByIdIn(List<String> ids);
 }

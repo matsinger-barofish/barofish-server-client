@@ -32,7 +32,7 @@ public class SimpleProductDto {
     Integer originPrice;
     String deliveryInfo;
     Integer deliveryFee;
-    StoreDeliverFeeType deliverFeeType;
+    ProductDeliverFeeType deliverFeeType;
     Integer minOrderPrice;
     String[] descriptionImages;
     Integer representOptionItemId;

@@ -15,6 +15,6 @@ public class OrderQueryService {
 
     public Orders findById(String orderId) {
         return orderRepository.findById(orderId)
-                .orElseThrow(() -> new IllegalArgumentException("주문 정보를 찾을 수 없습니다."));
+                              .orElseThrow(() -> new IllegalArgumentException("주문 정보를 찾을 수 없습니다."));
     }
 }

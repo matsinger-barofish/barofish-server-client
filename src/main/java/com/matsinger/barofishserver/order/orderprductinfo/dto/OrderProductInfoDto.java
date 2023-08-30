@@ -3,6 +3,7 @@ package com.matsinger.barofishserver.order.orderprductinfo.dto;
 import com.matsinger.barofishserver.order.dto.OrderDto;
 import com.matsinger.barofishserver.order.orderprductinfo.domain.OrderProductState;
 import com.matsinger.barofishserver.order.orderprductinfo.domain.OrderCancelReason;
+import com.matsinger.barofishserver.product.domain.ProductDeliverFeeType;
 import com.matsinger.barofishserver.product.dto.ProductListDto;
 
 import com.matsinger.barofishserver.store.domain.StoreDeliverFeeType;
@@ -24,7 +25,7 @@ public class OrderProductInfoDto {
     private int price;
     private int amount;
     private int deliveryFee;
-    private StoreDeliverFeeType deliverFeeType;
+    private ProductDeliverFeeType deliverFeeType;
     private OrderCancelReason cancelReason;
     private String cancelReasonContent;
     private String deliverCompany;
