@@ -2,13 +2,10 @@ package com.matsinger.barofishserver.user.api;
 
 
 import com.matsinger.barofishserver.grade.application.GradeQueryService;
-import com.matsinger.barofishserver.grade.domain.Grade;
 import com.matsinger.barofishserver.jwt.*;
 import com.matsinger.barofishserver.siteInfo.application.SiteInfoQueryService;
-import com.matsinger.barofishserver.siteInfo.domain.SiteInformation;
 import com.matsinger.barofishserver.user.application.UserCommandService;
 import com.matsinger.barofishserver.user.application.UserQueryService;
-import com.matsinger.barofishserver.user.deliverplace.DeliverPlace;
 import com.matsinger.barofishserver.user.domain.User;
 import com.matsinger.barofishserver.user.domain.UserOrderByAdmin;
 import com.matsinger.barofishserver.user.domain.UserState;
@@ -46,6 +43,7 @@ import org.springframework.security.crypto.bcrypt.BCrypt;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.sql.Timestamp;
 import java.util.*;
 import java.util.regex.Pattern;
@@ -74,18 +72,18 @@ public class UserController {
     private final Common utils;
 
     @PostMapping(value = "/join-sns")
-    public ResponseEntity<CustomResponse<Jwt>> joinSnsUser(@RequestPart(value = "data") SnsJoinReq request) {
+    public ResponseEntity<CustomResponse<Object>> joinSnsUser(@RequestPart(value = "data") SnsJoinReq request) {
 
-        CustomResponse<Jwt> res = new CustomResponse<>();
+        CustomResponse<Object> res = new CustomResponse<>();
 
         String loginId;
         try {
-            if (request.getLoginType().equals(LoginType.APPLE)) {
-                boolean isExist = userAuthQueryService.checkUserExist(request);
-                if (!isExist) {
-                    return ResponseEntity.ok(res);
-                }
-            }
+//            if (request.getLoginType().equals(LoginType.APPLE)) {
+//                boolean isExist = userAuthQueryService.checkUserExist(request);
+//                if (!isExist) {
+//                    return ResponseEntity.ok(res);
+//                }
+//            }
             userCommandService.addUserAuthIfPhoneNumberExists(request);
 
             loginId = userQueryService.getExistingLoginId(request);
@@ -103,14 +101,9 @@ public class UserController {
                 userInfoCommandService.setImageUrl(responseDto.getUserId(), profileImage);
             }
             Integer userId = userCommandService.selectUserByLoginId(request.getLoginType(), loginId).getUserId();
-            String accessToken = jwtProvider.generateAccessToken(String.valueOf(userId), TokenAuthType.USER);
-            String refreshToken = jwtProvider.generateRefreshToken(String.valueOf(userId), TokenAuthType.USER);
-            Jwt token = new Jwt();
-            token.setAccessToken(accessToken);
-            token.setRefreshToken(refreshToken);
 
-            res.setData(Optional.of(token));
-            return ResponseEntity.ok(res);
+            CustomResponse<Object> customResponse = generateAndSetTokens(userId, res);
+            return ResponseEntity.ok(customResponse);
         } catch (Exception e) {
             return res.defaultError(e);
         }
@@ -121,7 +114,7 @@ public class UserController {
                                                             @RequestPart(value = "profileImage", required = false) MultipartFile profileImage) {
         CustomResponse<Boolean> res = new CustomResponse<>();
         try {
-            verificationService.verifyPhoneVerification(request); // 휴대폰 번호 검증
+            verificationService.verifyPhoneVerification(request.getVerificationId(), request.getImpUid()); // 휴대폰 번호 검증
 
             boolean
                     isUserAlreadyExists =
@@ -153,49 +146,44 @@ public class UserController {
     }
 
     @PostMapping(value = "/join-apple", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
-    public ResponseEntity<CustomResponse<Boolean>> joinAppleSns(@RequestPart(value = "data") AppleJoinReq request,
-                                                                @RequestPart(value = "profileImage", required = false) MultipartFile profileImage) {
-        CustomResponse<Boolean> res = new CustomResponse<>();
+    public ResponseEntity<CustomResponse<Object>> joinAppleSns(@RequestPart(value = "data") AppleJoinReq request,
+                                                                @RequestPart(value = "profileImage", required = false) MultipartFile profileImage) throws IOException {
+        CustomResponse<Object> res = new CustomResponse<>();
+        verificationService.verifyPhoneVerification(request.getVerificationId()); // 휴대폰 번호 검증
+
+        if (profileImage != null && !profileImage.isEmpty()) {
+            if (!s3.validateImageType(profileImage))
+                return res.throwError("지원하지 않는 이미지 확장자입니다.", "INPUT_CHECK_REQUIRED");
+        }
+
         try {
-            String name = utils.validateString(request.getName(), 20L, "이름");
-            String nickname = utils.validateString(request.getNickname(), 50L, "닉네임");
-            Verification verification = null;
             String phone = request.getPhone().replaceAll("-", "");
-            if (request.getVerificationId() == null) {
-                throw new IllegalArgumentException("인증을 먼저 진행해주세요.");
-            } else if (request.getVerificationId() != null) {
-                verification = verificationService.selectVerificationById(request.getVerificationId());
-                if (verification == null || verification.getExpiredAt() != null)
-                    throw new IllegalArgumentException("인증을 먼저 진행해주세요.");
+
+            int appleUserId = userInfoQueryService.getAppleUserId(phone);
+
+            if (appleUserId != -1) { // 애플 유저 아이디가 있는 경우
+                CustomResponse<Object> customResponse = generateAndSetTokens(appleUserId, res);
+                return ResponseEntity.ok(customResponse);
             }
 
-            Boolean checkUserExist = userCommandService.checkExistWithPhone(phone);
-            if (checkUserExist) return res.throwError("이미 가입된 유저입니다.", "NOT_ALLOWED");
-            String profileImageUrl = s3.getS3Url() + "/default_profile.png";
-            if (profileImage != null && !profileImage.isEmpty()) {
-                if (!s3.validateImageType(profileImage))
-                    return res.throwError("지원하지 않는 이미지 확장자입니다.", "INPUT_CHECK_REQUIRED");
-            }
-            SiteInformation siteInformation = siteInfoQueryService.selectSiteInfo("INT_JOIN_POINT");
-            Integer point = Integer.parseInt(siteInformation.getContent());
-            Grade grade = gradeQueryService.selectGrade(1);
-            User user = User.builder().state(UserState.ACTIVE).joinAt(utils.now()).build();
-            UserInfo
-                    userInfo =
-                    UserInfo.builder().profileImage("").email("").name(name).nickname(nickname).phone(phone).grade(grade).point(
-                            point).isAgreeMarketing(false).build();
-            UserAuth userAuth = UserAuth.builder().loginType(LoginType.APPLE).loginId(request.getLoginId()).build();
-            DeliverPlace
-                    deliverPlace =
-                    DeliverPlace.builder().bcode(request.getBcode()).name(name).receiverName(name).tel(phone).postalCode(
-                            request.getPostalCode()).address(request.getAddress()).addressDetail(request.getAddressDetail()).deliverMessage(
-                            "").isDefault(false).build();
-            userCommandService.addUser(user, userAuth, userInfo, deliverPlace);
-            res.setData(Optional.of(true));
-            return ResponseEntity.ok(res);
+            int userId = userCommandService.addAppleUser(request, phone, profileImage);
+
+            CustomResponse<Object> customResponse = generateAndSetTokens(userId, res);
+            return ResponseEntity.ok(customResponse);
         } catch (Exception e) {
             return res.defaultError(e);
         }
+    }
+
+    private CustomResponse<Object> generateAndSetTokens(int userId, CustomResponse<Object> res) {
+        String accessToken = jwtProvider.generateAccessToken(String.valueOf(userId), TokenAuthType.USER);
+        String refreshToken = jwtProvider.generateRefreshToken(String.valueOf(userId), TokenAuthType.USER);
+        Jwt token = new Jwt();
+        token.setAccessToken(accessToken);
+        token.setRefreshToken(refreshToken);
+
+        res.setData(Optional.of(token));
+        return res;
     }
 
     @PostMapping("/mypage/update")

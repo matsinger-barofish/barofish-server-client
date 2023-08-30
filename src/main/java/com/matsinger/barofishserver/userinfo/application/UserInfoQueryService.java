@@ -5,6 +5,8 @@ import com.matsinger.barofishserver.notification.repository.NotificationReposito
 import com.matsinger.barofishserver.review.repository.ReviewRepository;
 import com.matsinger.barofishserver.user.deliverplace.repository.DeliverPlaceRepository;
 import com.matsinger.barofishserver.user.deliverplace.DeliverPlace;
+import com.matsinger.barofishserver.userauth.domain.LoginType;
+import com.matsinger.barofishserver.userauth.domain.UserAuth;
 import com.matsinger.barofishserver.userinfo.domain.UserInfo;
 import com.matsinger.barofishserver.userinfo.dto.UserInfoDto;
 import com.matsinger.barofishserver.userinfo.repository.UserInfoRepository;
@@ -13,6 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 
 @Transactional(readOnly = true)
 @RequiredArgsConstructor
@@ -51,5 +54,30 @@ public class UserInfoQueryService {
                 .point(findUserInfo.getPoint())
                 .saveProductCount(saveProductCount)
                 .build();
+    }
+
+    public int getAppleUserId(String phone) {
+
+        Optional<UserInfo> userInfoOptional = userInfoRepository.findByPhone(phone);
+        if (userInfoOptional.isEmpty()) {
+            return -1;
+        }
+
+        for (UserAuth userAuth : userInfoOptional.get().getUser().getUserAuth()) {
+            if (userAuth.getLoginType() == LoginType.APPLE) {
+                return userAuth.getUserId();
+            }
+        }
+
+        return -1;
+    }
+
+    public UserInfo findByPhone(String phoneNumber) {
+        return userInfoRepository.findByPhone(phoneNumber)
+                .orElseThrow(() -> new IllegalArgumentException("유저 정보를 찾을 수 없습니다."));
+    }
+
+    public Optional<UserInfo> findByPhoneOptional(String phoneNumber) {
+        return userInfoRepository.findByPhone(phoneNumber);
     }
 }
