@@ -15,6 +15,6 @@ public class DeliveryQueryService {
 
     public DeliveryCompany findById(String deliveryCompanyCode) {
         return deliveryCompanyRepository.findById(deliveryCompanyCode)
-                .orElseThrow(() -> new IllegalStateException("배송 정보를 찾을 수 없습니다."));
+                                        .orElseThrow(() -> new IllegalStateException("배송 정보를 찾을 수 없습니다."));
     }
 }

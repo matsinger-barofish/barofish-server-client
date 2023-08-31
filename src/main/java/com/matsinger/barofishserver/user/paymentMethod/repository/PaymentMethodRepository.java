@@ -9,4 +9,6 @@ public interface PaymentMethodRepository extends JpaRepository<PaymentMethod, In
     List<PaymentMethod> findAllByUserId(Integer userId);
 
     Boolean existsByCardNoAndUserId(String cardNo, Integer userId);
+
+    void deleteAllByUserIdIn(List<Integer> userIds);
 }

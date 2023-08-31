@@ -93,7 +93,7 @@ public class PaymentService {
     }
 
     public void cancelPayment(String impUid, Integer amount, Integer taxFreeAmount, VBankRefundInfo vBankRefundInfo)
-            throws IamportResponseException, IOException {
+            throws Exception {
         IamportClient iamportClient = callbackService.getIamportClient();
         CancelData
                 cancelData =
@@ -108,6 +108,7 @@ public class PaymentService {
         IamportResponse<Payment> cancelResult = iamportClient.cancelPaymentByImpUid(cancelData);
         if (cancelResult.getCode() != 0) {
             System.out.println(cancelResult.getMessage());
+            throw new Exception("환불에 실패하였습니다.");
         }
     }
 

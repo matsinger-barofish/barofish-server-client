@@ -79,6 +79,9 @@ public class OrderProductInfo {
     @Basic
     @Column(name = "final_confirmed_at", nullable = true)
     private Timestamp finalConfirmedAt;
+    @Basic
+    @Column(name = "tax_free_amount", nullable = true)
+    private Integer taxFreeAmount;
 
     @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     @JsonBackReference

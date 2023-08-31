@@ -34,6 +34,7 @@ import com.matsinger.barofishserver.searchFilter.application.SearchFilterQuerySe
 import com.matsinger.barofishserver.searchFilter.domain.ProductSearchFilterMap;
 import com.matsinger.barofishserver.store.domain.Store;
 import com.matsinger.barofishserver.store.application.StoreService;
+import com.matsinger.barofishserver.store.domain.StoreDeliverFeeType;
 import com.matsinger.barofishserver.utils.Common;
 import com.matsinger.barofishserver.utils.CustomResponse;
 import com.matsinger.barofishserver.utils.S3.S3Uploader;
@@ -330,10 +331,21 @@ public class ProductController {
                     deliveryInfo =
                     data.getDeliveryInfo() != null ? utils.validateString(data.getDeliveryInfo(), 500L, "배송안내") : null;
             boolean existRepresent = false;
-            if (data.getDeliveryFee() == null) data.setDeliveryFee(0);
+            if (data.getDeliverFeeType() == null) return res.throwError("배송비 유형을 입력해주세요.", "INPUT_CHECK_REQUIRED");
+            if (data.getDeliverFeeType().equals(ProductDeliverFeeType.FREE)) {
+                data.setDeliveryFee(0);
+                data.setMinOrderPrice(null);
+            } else if (data.getDeliverFeeType().equals(ProductDeliverFeeType.FREE_IF_OVER)) {
+                if (data.getDeliveryFee() == null) return res.throwError("배송비를 입력해주세요.", "INPUT_CHECK_REQUIRED");
+                if (data.getMinOrderPrice() == null)
+                    return res.throwError("무료 배송 최소 금액을 입력해주세요.", "INPUT_CHECK_REQUIRED");
+                data.setMinOrderPrice(0);
+            } else {
+                if (data.getDeliveryFee() == null) return res.throwError("배송비를 입력해주세요.", "INPUT_CHECK_REQUIRED");
+            }
             if (data.getOptions() == null || data.getOptions().size() == 0)
                 return res.throwError("옵션은 최소 1개 이상 필수입니다.", "INPUT_CHECK_REQUIRED");
-            if (data.getOptions().stream().noneMatch(v -> v.getIsNeeded()))
+            if (data.getOptions().stream().noneMatch(OptionAddReq::getIsNeeded))
                 return res.throwError("필수 옵션은 최소 1개 이상입니다.", "INPUT_CHECK_REQUIRED");
             for (OptionAddReq optionData : data.getOptions()) {
                 if (optionData.getIsNeeded() == null) return res.throwError("필수 여부를 체크해주세요.", "INPUT_CHECK_REQUIRED");
@@ -390,7 +402,9 @@ public class ProductController {
             product.setDeliverBoxPerAmount(data.getDeliverBoxPerAmount());
             product.setPromotionStartAt(data.getPromotionStartAt());
             product.setPromotionEndAt(data.getPromotionEndAt());
-//            product.setDeliveryFee(data.getDeliveryFee() != null ? data.getDeliveryFee() : 0);
+            product.setDeliverFee(data.getDeliveryFee());
+            product.setDeliverFeeType(data.getDeliverFeeType());
+            product.setMinOrderPrice(data.getMinOrderPrice());
             product.setCreatedAt(new Timestamp(System.currentTimeMillis()));
             Product result = productService.addProduct(product);
             OptionItem representOptionItem = null;
@@ -501,6 +515,28 @@ public class ProductController {
             if (data.getDeliveryInfo() != null) {
                 String deliveryInfo = utils.validateString(data.getDeliveryInfo(), 500L, "배송 안내");
                 product.setDeliveryInfo(deliveryInfo);
+            }
+            if (data.getDeliverFeeType() == null) {
+                if (data.getDeliveryFee() != null) product.setDeliverFee(data.getDeliveryFee());
+                if (data.getMinOrderPrice() != null) product.setMinOrderPrice(data.getMinOrderPrice());
+            } else if (data.getDeliverFeeType().equals(ProductDeliverFeeType.FREE)) {
+                product.setDeliverFeeType(ProductDeliverFeeType.FREE);
+                product.setDeliverFee(0);
+                product.setMinOrderPrice(0);
+            } else if (data.getDeliverFeeType().equals(ProductDeliverFeeType.FIX)) {
+                if (product.getDeliverFee() == null && data.getDeliveryFee() == null)
+                    return res.throwError("배송비를 입력해주세요.", "INPUT_CHECK_REQUIRED");
+                product.setDeliverFeeType(ProductDeliverFeeType.FIX);
+                product.setDeliverFee(data.getDeliveryFee());
+                product.setMinOrderPrice(null);
+            } else if (data.getDeliverFeeType().equals(ProductDeliverFeeType.FREE_IF_OVER)) {
+                if (data.getMinOrderPrice() == null && product.getMinOrderPrice() == null)
+                    return res.throwError("무료 배송 최소 금액을 입력해주세요.", "INPUT_CHECK_REQUIRED");
+                if (product.getDeliverFee() == null && data.getDeliveryFee() == null)
+                    return res.throwError("배송비를 입력해주세요.", "INPUT_CHECK_REQUIRED");
+                product.setDeliverFeeType(ProductDeliverFeeType.FREE_IF_OVER);
+                if (data.getDeliveryFee() != null) product.setDeliverFee(data.getDeliveryFee());
+                if (data.getMinOrderPrice() != null) product.setMinOrderPrice(data.getMinOrderPrice());
             }
             if (data.getDeliveryFee() != null) {
                 if (data.getDeliveryFee() < 0) return res.throwError("배달료를 확인해주세요.", "INPUT_CHECK_REQUIRED");
@@ -698,7 +734,7 @@ public class ProductController {
                             tokenInfo.get().getType().equals(TokenAuthType.PARTNER) ? "파트너" : admin.getName());
             AdminLog
                     adminLog =
-                    AdminLog.builder().id(adminLogQueryService.getAdminLogId()).adminId(adminId).type(AdminLogType.PARTNER).targetId(
+                    AdminLog.builder().id(adminLogQueryService.getAdminLogId()).adminId(adminId).type(AdminLogType.PRODUCT).targetId(
                             String.valueOf(result.getId())).content(content).createdAt(utils.now()).build();
             if (data.getIsActive() != null) {
                 String
@@ -706,7 +742,7 @@ public class ProductController {
                         String.format("%s -> %s 상태 변경하였습니다.[%s]",
                                 data.getIsActive() ? "미노출" : "노출",
                                 data.getIsActive() ? "노출" : "미노출",
-                                admin.getAuthority().equals(AdminAuthority.MASTER)? "관리자": "서브관리자");
+                                admin.getName());
                 AdminLog
                         stateAdminLog =
                         AdminLog.builder().id(adminLogQueryService.getAdminLogId()).adminId(adminId).type(AdminLogType.PRODUCT).targetId(

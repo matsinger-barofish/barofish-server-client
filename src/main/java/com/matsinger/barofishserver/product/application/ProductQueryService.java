@@ -153,6 +153,6 @@ public class ProductQueryService {
 
     public Product findById(int productId) {
         return productRepository.findById(productId)
-                .orElseThrow(() -> new IllegalArgumentException("상품 정보를 찾을 수 없습니다."));
+                                .orElseThrow(() -> new IllegalArgumentException("상품 정보를 찾을 수 없습니다."));
     }
 }

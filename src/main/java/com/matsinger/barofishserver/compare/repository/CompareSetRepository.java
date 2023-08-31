@@ -14,6 +14,10 @@ import java.util.Optional;
 public interface CompareSetRepository extends JpaRepository<CompareSet, Integer> {
     List<CompareSet> findAllByUserId(Integer userId);
 
+    List<CompareSet> findAllByUserIdIn(List<Integer> userIds);
+
+    void deleteAllByUserIdIn(List<Integer> userIds);
+
     @Query(value = "SELECT q1.setId as setId\n" +
             "FROM (SELECT ci.compare_set_id AS setId, GROUP_CONCAT( ci.product_id ORDER BY ci.product_id, '' ) AS compareSet\n" +
             "      FROM compare_item ci\n" +

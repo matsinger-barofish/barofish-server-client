@@ -10,4 +10,5 @@ import lombok.*;
 public class PointRuleRes {
     Float pointRate;
     Integer maxReviewPoint;
+    Integer ImageReviewPoint;
 }

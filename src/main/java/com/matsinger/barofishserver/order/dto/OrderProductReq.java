@@ -13,4 +13,5 @@ public class OrderProductReq {
     Integer amount;
     Boolean needTaxation;
     Integer deliveryFee;
+    Integer taxFreeAmount;
 }

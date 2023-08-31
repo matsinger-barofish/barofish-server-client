@@ -2,6 +2,7 @@ package com.matsinger.barofishserver.order.orderprductinfo.dto;
 
 import com.matsinger.barofishserver.order.orderprductinfo.domain.OrderProductState;
 import com.matsinger.barofishserver.order.orderprductinfo.domain.OrderCancelReason;
+import com.matsinger.barofishserver.product.domain.ProductDeliverFeeType;
 import com.matsinger.barofishserver.product.optionitem.dto.OptionItemDto;
 import com.matsinger.barofishserver.product.dto.ProductListDto;
 
@@ -21,7 +22,7 @@ public class OrderProductDto {
     private String storeProfile;
     private String storeName;
     private Integer deliverFee;
-    private StoreDeliverFeeType deliverFeeType;
+    private ProductDeliverFeeType deliverFeeType;
     private Integer minOrderPrice;
     private ProductListDto product;
     private OrderProductState state;

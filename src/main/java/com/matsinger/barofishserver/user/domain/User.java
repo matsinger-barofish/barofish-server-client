@@ -44,6 +44,9 @@ public class User {
     @Basic
     @Column(name = "join_at", nullable = false)
     private Timestamp joinAt;
+    @Basic
+    @Column(name = "withdraw_at", nullable = true)
+    private Timestamp withdrawAt;
 
 //    @OneToMany(mappedBy = "user")
 //    private List<Review> reviews = new ArrayList<>();
@@ -70,6 +73,10 @@ public class User {
 
     public void setJoinAt(Timestamp joinAt) {
         this.joinAt = joinAt;
+    }
+
+    public void setWithdrawAt(Timestamp withdrawAt) {
+        this.withdrawAt = withdrawAt;
     }
 
     public UserDto convert2Dto() {

@@ -10,6 +10,4 @@ class BarofishServerApplicationTests {
 	void contextLoads() {
 	}
 
-
-
 }

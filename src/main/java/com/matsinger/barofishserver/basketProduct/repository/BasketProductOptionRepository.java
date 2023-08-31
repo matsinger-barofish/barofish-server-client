@@ -13,6 +13,8 @@ public interface BasketProductOptionRepository extends JpaRepository<BasketProdu
     void deleteAllByOrderProductIdIn(List<Integer> ids);
 
     void deleteAllByOptionId(Integer optionId);
+
     void deleteAllByOptionIdIn(List<Integer> optionIds);
 
+//    void deleteAllByOrderProductIdIn(List<Integer> ids);
 }

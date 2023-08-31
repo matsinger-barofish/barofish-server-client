@@ -24,10 +24,7 @@ public class SimpleStore {
     private String location;
     private String[] keyword;
     private String visitNote;
-    private StoreDeliverFeeType deliverFeeType;
-    private Integer deliverFee;
     private Integer refundDeliverFee;
-    private Integer minOrderPrice;
     private String oneLineDescription;
     private String deliverCompany;
 
