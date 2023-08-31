@@ -78,7 +78,8 @@ public class ProductController {
     private final S3Uploader s3;
 
     @GetMapping("/recent-view")
-    public ResponseEntity<CustomResponse<List<ProductListDto>>> selectRecentViewList(@RequestParam(value = "ids") String ids) {
+    public ResponseEntity<CustomResponse<List<ProductListDto>>> selectRecentViewList(
+            @RequestParam(value = "ids") String ids) {
         CustomResponse<List<ProductListDto>> res = new CustomResponse<>();
         try {
             List<Integer> idList = utils.str2IntList(ids);
@@ -99,7 +100,8 @@ public class ProductController {
     }
 
     @GetMapping("/list/ids")
-    public ResponseEntity<CustomResponse<List<ProductListDto>>> selectProductListWithIds(@RequestParam(value = "ids") String ids) {
+    public ResponseEntity<CustomResponse<List<ProductListDto>>> selectProductListWithIds(
+            @RequestParam(value = "ids") String ids) {
         CustomResponse<List<ProductListDto>> res = new CustomResponse<>();
         try {
             List<Integer> idList = utils.str2IntList(ids);
@@ -113,42 +115,49 @@ public class ProductController {
     }
 
     @GetMapping("/")
-    public ResponseEntity<CustomResponse<Page<SimpleProductDto>>> selectProductList(@RequestHeader(value = "Authorization") Optional<String> auth,
-                                                                                    @RequestParam(value = "page", required = false, defaultValue = "0") Integer page,
-                                                                                    @RequestParam(value = "take", required = false, defaultValue = "10") Integer take,
-                                                                                    @RequestParam(value = "orderby", defaultValue = "createdAt") ProductOrderBy orderBy,
-                                                                                    @RequestParam(value = "orderType", defaultValue = "DESC") Sort.Direction sort,
-                                                                                    @RequestParam(value = "partnerName", required = false) String partnerName,
-                                                                                    @RequestParam(value = "title", required = false) String title,
-                                                                                    @RequestParam(value = "state", required = false) String state,
-                                                                                    @RequestParam(value = "category", required = false) String category,
-                                                                                    @RequestParam(value = "partnerId", required = false) String partnerId,
-                                                                                    @RequestParam(value = "categoryId", required = false) String categoryId,
-                                                                                    @RequestParam(value = "createdAtS", required = false) Timestamp createdAtS,
-                                                                                    @RequestParam(value = "createdAtE", required = false) Timestamp createdAtE) {
+    public ResponseEntity<CustomResponse<Page<SimpleProductDto>>> selectProductList(
+            @RequestHeader(value = "Authorization") Optional<String> auth,
+            @RequestParam(value = "page", required = false, defaultValue = "0") Integer page,
+            @RequestParam(value = "take", required = false, defaultValue = "10") Integer take,
+            @RequestParam(value = "orderby", defaultValue = "createdAt") ProductOrderBy orderBy,
+            @RequestParam(value = "orderType", defaultValue = "DESC") Sort.Direction sort,
+            @RequestParam(value = "partnerName", required = false) String partnerName,
+            @RequestParam(value = "title", required = false) String title,
+            @RequestParam(value = "state", required = false) String state,
+            @RequestParam(value = "category", required = false) String category,
+            @RequestParam(value = "partnerId", required = false) String partnerId,
+            @RequestParam(value = "categoryId", required = false) String categoryId,
+            @RequestParam(value = "createdAtS", required = false) Timestamp createdAtS,
+            @RequestParam(value = "createdAtE", required = false) Timestamp createdAtE) {
         CustomResponse<Page<SimpleProductDto>> res = new CustomResponse<>();
-        Optional<TokenInfo>
-                tokenInfo =
-                jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN, TokenAuthType.PARTNER), auth);
-        if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
+        Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN, TokenAuthType.PARTNER),
+                auth);
+        if (tokenInfo == null)
+            return res.throwError("인증이 필요합니다.", "FORBIDDEN");
         try {
             Specification<Product> spec = (root, query, builder) -> {
                 List<Predicate> predicates = new ArrayList<>();
-                if (partnerName != null) predicates.add(builder.like(root.get("store").get("storeInfo").get("name"),
-                        "%" + partnerName + "%"));
-                if (title != null) predicates.add(builder.like(root.get("title"), "%" + title + "%"));
+                if (partnerName != null)
+                    predicates.add(builder.like(root.get("store").get("storeInfo").get("name"),
+                            "%" + partnerName + "%"));
+                if (title != null)
+                    predicates.add(builder.like(root.get("title"), "%" + title + "%"));
                 if (category != null)
                     predicates.add(builder.like(root.get("category").get("name"), "%" + category + "%"));
                 if (partnerId != null)
                     predicates.add(builder.and(root.get("store").get("id").in(Arrays.stream(partnerId.split(",")).map(
                             Integer::valueOf).toList())));
                 if (state != null)
-                    predicates.add(builder.and(root.get("state").in(Arrays.stream(state.split(",")).map(ProductState::valueOf).toList())));
+                    predicates.add(builder.and(
+                            root.get("state").in(Arrays.stream(state.split(",")).map(ProductState::valueOf).toList())));
                 if (categoryId != null)
-                    predicates.add(builder.and(root.get("category").get("id").in(Arrays.stream(categoryId.split(",")).map(
-                            Integer::valueOf).toList())));
-                if (createdAtS != null) predicates.add(builder.greaterThan(root.get("createdAt"), createdAtS));
-                if (createdAtE != null) predicates.add(builder.lessThan(root.get("createdAt"), createdAtE));
+                    predicates
+                            .add(builder.and(root.get("category").get("id").in(Arrays.stream(categoryId.split(",")).map(
+                                    Integer::valueOf).toList())));
+                if (createdAtS != null)
+                    predicates.add(builder.greaterThan(root.get("createdAt"), createdAtS));
+                if (createdAtE != null)
+                    predicates.add(builder.lessThan(root.get("createdAt"), createdAtE));
                 if (tokenInfo.get().getType().equals(TokenAuthType.PARTNER))
                     predicates.add(builder.equal(root.get("storeId"), tokenInfo.get().getId()));
                 predicates.add(builder.notEqual(root.get("state"), ProductState.DELETED));
@@ -158,9 +167,8 @@ public class ProductController {
             Page<Product> products;
             products = productService.selectProductByAdmin(pageRequest, spec);
 
-            Page<SimpleProductDto>
-                    productDtos =
-                    products.map(product -> productService.convert2SimpleDto(product, null));
+            Page<SimpleProductDto> productDtos = products
+                    .map(product -> productService.convert2SimpleDto(product, null));
 
             res.setData(Optional.of(productDtos));
             return ResponseEntity.ok(res);
@@ -170,32 +178,31 @@ public class ProductController {
     }
 
     @GetMapping("/list/count")
-    public ResponseEntity<CustomResponse<Long>> selectProductCountByUser(@RequestParam(value = "page", defaultValue = "1") Integer page,
-                                                                         @RequestParam(value = "take", defaultValue = "10") Integer take,
-                                                                         @RequestParam(value = "sortby", defaultValue = "RECOMMEND", required = false) ProductSortBy sortBy,
-                                                                         @RequestParam(value = "categoryIds", required = false) String categoryIds,
-                                                                         @RequestParam(value = "filterFieldIds", required = false) String filterFieldIds,
-                                                                         @RequestParam(value = "typeIds", required = false) String typeIds,
-                                                                         @RequestParam(value = "locationIds", required = false) String locationIds,
-                                                                         @RequestParam(value = "processIds", required = false) String processIds,
-                                                                         @RequestParam(value = "usageIds", required = false) String usageIds,
-                                                                         @RequestParam(value = "storageIds", required = false) String storageIds,
-                                                                         @RequestParam(value = "curationId", required = false) Integer curationId,
-                                                                         @RequestParam(value = "keyword", required = false, defaultValue = "") String keyword,
-                                                                         @RequestParam(value = "storeId", required = false) Integer storeId) {
+    public ResponseEntity<CustomResponse<Long>> selectProductCountByUser(
+            @RequestParam(value = "page", defaultValue = "1") Integer page,
+            @RequestParam(value = "take", defaultValue = "10") Integer take,
+            @RequestParam(value = "sortby", defaultValue = "RECOMMEND", required = false) ProductSortBy sortBy,
+            @RequestParam(value = "categoryIds", required = false) String categoryIds,
+            @RequestParam(value = "filterFieldIds", required = false) String filterFieldIds,
+            @RequestParam(value = "typeIds", required = false) String typeIds,
+            @RequestParam(value = "locationIds", required = false) String locationIds,
+            @RequestParam(value = "processIds", required = false) String processIds,
+            @RequestParam(value = "usageIds", required = false) String usageIds,
+            @RequestParam(value = "storageIds", required = false) String storageIds,
+            @RequestParam(value = "curationId", required = false) Integer curationId,
+            @RequestParam(value = "keyword", required = false, defaultValue = "") String keyword,
+            @RequestParam(value = "storeId", required = false) Integer storeId) {
         CustomResponse<Long> res = new CustomResponse<>();
         try {
-            Page<ProductListDto>
-                    result =
-                    productService.selectProductListWithPagination(page - 1,
-                            take,
-                            sortBy,
-                            utils.str2IntList(categoryIds),
-                            utils.str2IntList(filterFieldIds),
-                            curationId,
-                            keyword,
-                            storeId,
-                            null);
+            Page<ProductListDto> result = productService.selectProductListWithPagination(page - 1,
+                    take,
+                    sortBy,
+                    utils.str2IntList(categoryIds),
+                    utils.str2IntList(filterFieldIds),
+                    curationId,
+                    keyword,
+                    storeId,
+                    null);
             res.setData(Optional.of(result.getTotalElements()));
             return ResponseEntity.ok(res);
         } catch (Exception e) {
@@ -204,38 +211,38 @@ public class ProductController {
     }
 
     @GetMapping("/list")
-    public ResponseEntity<CustomResponse<Page<ProductListDto>>> selectProductListByUser(@RequestHeader(value = "Authorization", required = false) Optional<String> auth,
-                                                                                        @RequestParam(value = "page", defaultValue = "1") Integer page,
-                                                                                        @RequestParam(value = "take", defaultValue = "10") Integer take,
-                                                                                        @RequestParam(value = "sortby", defaultValue = "RECOMMEND", required = false) ProductSortBy sortBy,
-                                                                                        @RequestParam(value = "categoryIds", required = false) String categoryIds,
-                                                                                        @RequestParam(value = "filterFieldIds", required = false) String filterFieldIds,
-                                                                                        @RequestParam(value = "typeIds", required = false) String typeIds,
-                                                                                        @RequestParam(value = "locationIds", required = false) String locationIds,
-                                                                                        @RequestParam(value = "processIds", required = false) String processIds,
-                                                                                        @RequestParam(value = "usageIds", required = false) String usageIds,
-                                                                                        @RequestParam(value = "storageIds", required = false) String storageIds,
-                                                                                        @RequestParam(value = "curationId", required = false) Integer curationId,
-                                                                                        @RequestParam(value = "keyword", required = false, defaultValue = "") String keyword,
-                                                                                        @RequestParam(value = "storeId", required = false) Integer storeId) {
+    public ResponseEntity<CustomResponse<Page<ProductListDto>>> selectProductListByUser(
+            @RequestHeader(value = "Authorization", required = false) Optional<String> auth,
+            @RequestParam(value = "page", defaultValue = "1") Integer page,
+            @RequestParam(value = "take", defaultValue = "10") Integer take,
+            @RequestParam(value = "sortby", defaultValue = "RECOMMEND", required = false) ProductSortBy sortBy,
+            @RequestParam(value = "categoryIds", required = false) String categoryIds,
+            @RequestParam(value = "filterFieldIds", required = false) String filterFieldIds,
+            @RequestParam(value = "typeIds", required = false) String typeIds,
+            @RequestParam(value = "locationIds", required = false) String locationIds,
+            @RequestParam(value = "processIds", required = false) String processIds,
+            @RequestParam(value = "usageIds", required = false) String usageIds,
+            @RequestParam(value = "storageIds", required = false) String storageIds,
+            @RequestParam(value = "curationId", required = false) Integer curationId,
+            @RequestParam(value = "keyword", required = false, defaultValue = "") String keyword,
+            @RequestParam(value = "storeId", required = false) Integer storeId) {
         CustomResponse<Page<ProductListDto>> res = new CustomResponse<>();
         Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ALLOW), auth);
         try {
             Integer userId = null;
             if (tokenInfo != null && tokenInfo.isPresent() && tokenInfo.get().getType().equals(TokenAuthType.USER))
                 userId = tokenInfo.get().getId();
-            Page<ProductListDto>
-                    result =
-                    productService.selectProductListWithPagination(page - 1,
-                            take,
-                            sortBy,
-                            utils.str2IntList(categoryIds),
-                            utils.str2IntList(filterFieldIds),
-                            curationId,
-                            keyword,
-                            storeId,
-                            userId);
-            if (keyword != null && keyword.length() != 0) searchKeywordQueryService.searchKeyword(keyword);
+            Page<ProductListDto> result = productService.selectProductListWithPagination(page - 1,
+                    take,
+                    sortBy,
+                    utils.str2IntList(categoryIds),
+                    utils.str2IntList(filterFieldIds),
+                    curationId,
+                    keyword,
+                    storeId,
+                    userId);
+            if (keyword != null && keyword.length() != 0)
+                searchKeywordQueryService.searchKeyword(keyword);
             res.setData(Optional.ofNullable(result));
             return ResponseEntity.ok(res);
         } catch (Exception e) {
@@ -244,20 +251,24 @@ public class ProductController {
     }
 
     @GetMapping("/excel-list")
-    public ResponseEntity<CustomResponse<List<List<ExcelProductDto2>>>> selectProductListForExcel(@RequestHeader(value = "Authorization") Optional<String> auth,
-                                                                                                  @RequestParam(value = "ids", required = false) String idsStr) {
+    public ResponseEntity<CustomResponse<List<List<ExcelProductDto2>>>> selectProductListForExcel(
+            @RequestHeader(value = "Authorization") Optional<String> auth,
+            @RequestParam(value = "ids", required = false) String idsStr) {
         CustomResponse<List<List<ExcelProductDto2>>> res = new CustomResponse<>();
         Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
-        if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
+        if (tokenInfo == null)
+            return res.throwError("인증이 필요합니다.", "FORBIDDEN");
         try {
             List<Integer> ids = null;
-            if (idsStr != null) ids = utils.str2IntList(idsStr);
+            if (idsStr != null)
+                ids = utils.str2IntList(idsStr);
             List<Product> products = new ArrayList<>();
-            if (ids != null) products = productService.selectProductListWithIds(ids);
-            else products = productService.selectProductListNotDelete();
-            List<List<ExcelProductDto2>>
-                    productDtos =
-                    products.stream().map(productService::convert2ExcelProductDto2).toList();
+            if (ids != null)
+                products = productService.selectProductListWithIds(ids);
+            else
+                products = productService.selectProductListNotDelete();
+            List<List<ExcelProductDto2>> productDtos = products.stream().map(productService::convert2ExcelProductDto2)
+                    .toList();
             res.setData(Optional.of(productDtos));
             return ResponseEntity.ok(res);
         } catch (Exception e) {
@@ -265,24 +276,20 @@ public class ProductController {
         }
     }
 
-
     @GetMapping("/{id}")
-    public ResponseEntity<CustomResponse<SimpleProductDto>> selectProduct(@RequestHeader(value = "Authorization") Optional<String> auth,
-                                                                          @PathVariable("id") Integer id) {
-        Optional<TokenInfo>
-                tokenInfo =
-                auth.isPresent() ? jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER,
-                        TokenAuthType.PARTNER,
-                        TokenAuthType.ADMIN), auth) : Optional.empty();
+    public ResponseEntity<CustomResponse<SimpleProductDto>> selectProduct(
+            @RequestHeader(value = "Authorization") Optional<String> auth,
+            @PathVariable("id") Integer id) {
+        Optional<TokenInfo> tokenInfo = auth.isPresent() ? jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER,
+                TokenAuthType.PARTNER,
+                TokenAuthType.ADMIN), auth) : Optional.empty();
         CustomResponse<SimpleProductDto> res = new CustomResponse<>();
         try {
             Product product = productService.findById(id);
-            SimpleProductDto
-                    productDto =
-                    productService.convert2SimpleDto(product,
-                            tokenInfo != null &&
-                                    tokenInfo.isPresent() &&
-                                    tokenInfo.get().getType().equals(TokenAuthType.USER) ? tokenInfo.get().getId() : null);
+            SimpleProductDto productDto = productService.convert2SimpleDto(product,
+                    tokenInfo != null &&
+                            tokenInfo.isPresent() &&
+                            tokenInfo.get().getType().equals(TokenAuthType.USER) ? tokenInfo.get().getId() : null);
             res.setData(Optional.ofNullable(productDto));
             return ResponseEntity.ok(res);
         } catch (Exception e) {
@@ -303,82 +310,101 @@ public class ProductController {
     }
 
     @PostMapping("/add")
-    public ResponseEntity<CustomResponse<SimpleProductDto>> addProduct(@RequestHeader(value = "Authorization") Optional<String> auth,
-                                                                       @RequestPart(value = "data") ProductAddReq data,
-                                                                       @RequestPart(value = "images") List<MultipartFile> images) {
+    public ResponseEntity<CustomResponse<SimpleProductDto>> addProduct(
+            @RequestHeader(value = "Authorization") Optional<String> auth,
+            @RequestPart(value = "data") ProductAddReq data,
+            @RequestPart(value = "images") List<MultipartFile> images) {
         CustomResponse<SimpleProductDto> res = new CustomResponse<>();
-        Optional<TokenInfo>
-                tokenInfo =
-                jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN, TokenAuthType.PARTNER), auth);
-        if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
+        Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN, TokenAuthType.PARTNER),
+                auth);
+        if (tokenInfo == null)
+            return res.throwError("인증이 필요합니다.", "FORBIDDEN");
         try {
             Integer adminId = null;
-            if (tokenInfo.get().getType().equals(TokenAuthType.ADMIN)) adminId = tokenInfo.get().getId();
+            if (tokenInfo.get().getType().equals(TokenAuthType.ADMIN))
+                adminId = tokenInfo.get().getId();
             if (tokenInfo.get().getType().equals(TokenAuthType.ADMIN) && data.getStoreId() == null)
                 return res.throwError("상점 아이디를 입력해주세요.", "INPUT_CHECK_REQUIRED");
-            else if (tokenInfo.get().getType().equals(TokenAuthType.PARTNER)) data.setStoreId(tokenInfo.get().getId());
+            else if (tokenInfo.get().getType().equals(TokenAuthType.PARTNER))
+                data.setStoreId(tokenInfo.get().getId());
             Optional<Store> store = storeService.selectStoreOptional(data.getStoreId());
-            if (store.isEmpty()) return res.throwError("가게 정보를 찾을 수 없습니다.", "NO_SUCH_DATA");
+            if (store.isEmpty())
+                return res.throwError("가게 정보를 찾을 수 없습니다.", "NO_SUCH_DATA");
             Category category = categoryQueryService.findById(data.getCategoryId());
-            if (images.size() == 0) return res.throwError("이미지를 입력해주세요.", "INPUT_CHECK_REQUIRED");
+            if (images.size() == 0)
+                return res.throwError("이미지를 입력해주세요.", "INPUT_CHECK_REQUIRED");
             for (MultipartFile image : images) {
-                if (!s3.validateImageType(image)) return res.throwError("허용되지 않는 확장자입니다.", "INPUT_CHECK_REQUIRED");
+                if (!s3.validateImageType(image))
+                    return res.throwError("허용되지 않는 확장자입니다.", "INPUT_CHECK_REQUIRED");
             }
-            if (data.getDescriptionContent() == null) return res.throwError("상품 설명을 입력해주세요.", "INPUT_CHECK_REQUIRED");
+            if (data.getDescriptionContent() == null)
+                return res.throwError("상품 설명을 입력해주세요.", "INPUT_CHECK_REQUIRED");
             String title = utils.validateString(data.getTitle(), 100L, "상품");
             data.getSearchFilterFieldIds().forEach(searchFilterQueryService::selectSearchFilterField);
-            String
-                    deliveryInfo =
-                    data.getDeliveryInfo() != null ? utils.validateString(data.getDeliveryInfo(), 500L, "배송안내") : null;
+            String deliveryInfo = data.getDeliveryInfo() != null
+                    ? utils.validateString(data.getDeliveryInfo(), 500L, "배송안내")
+                    : null;
             boolean existRepresent = false;
-            if (data.getDeliverFeeType() == null) return res.throwError("배송비 유형을 입력해주세요.", "INPUT_CHECK_REQUIRED");
+            if (data.getDeliverFeeType() == null)
+                return res.throwError("배송비 유형을 입력해주세요.", "INPUT_CHECK_REQUIRED");
             if (data.getDeliverFeeType().equals(ProductDeliverFeeType.FREE)) {
                 data.setDeliveryFee(0);
                 data.setMinOrderPrice(null);
             } else if (data.getDeliverFeeType().equals(ProductDeliverFeeType.FREE_IF_OVER)) {
-                if (data.getDeliveryFee() == null) return res.throwError("배송비를 입력해주세요.", "INPUT_CHECK_REQUIRED");
+                if (data.getDeliveryFee() == null)
+                    return res.throwError("배송비를 입력해주세요.", "INPUT_CHECK_REQUIRED");
                 if (data.getMinOrderPrice() == null)
                     return res.throwError("무료 배송 최소 금액을 입력해주세요.", "INPUT_CHECK_REQUIRED");
                 data.setMinOrderPrice(0);
             } else {
-                if (data.getDeliveryFee() == null) return res.throwError("배송비를 입력해주세요.", "INPUT_CHECK_REQUIRED");
+                if (data.getDeliveryFee() == null)
+                    return res.throwError("배송비를 입력해주세요.", "INPUT_CHECK_REQUIRED");
             }
             if (data.getOptions() == null || data.getOptions().size() == 0)
                 return res.throwError("옵션은 최소 1개 이상 필수입니다.", "INPUT_CHECK_REQUIRED");
             if (data.getOptions().stream().noneMatch(OptionAddReq::getIsNeeded))
                 return res.throwError("필수 옵션은 최소 1개 이상입니다.", "INPUT_CHECK_REQUIRED");
             for (OptionAddReq optionData : data.getOptions()) {
-                if (optionData.getIsNeeded() == null) return res.throwError("필수 여부를 체크해주세요.", "INPUT_CHECK_REQUIRED");
+                if (optionData.getIsNeeded() == null)
+                    return res.throwError("필수 여부를 체크해주세요.", "INPUT_CHECK_REQUIRED");
                 if (optionData.getItems() == null || optionData.getItems().size() == 0)
                     return res.throwError("옵션 아이템을 입력해주세요.", "INPUT_CHECK_REQUIRED");
                 for (OptionItemAddReq itemData : optionData.getItems()) {
                     String name = utils.validateString(itemData.getName(), 100L, "옵션 이름");
                     itemData.setName(name);
-                    if (itemData.getIsRepresent() != null && itemData.getIsRepresent()) existRepresent = true;
-                    if (itemData.getDiscountPrice() == null) itemData.setDiscountPrice(0);
+                    if (itemData.getIsRepresent() != null && itemData.getIsRepresent())
+                        existRepresent = true;
+                    if (itemData.getDiscountPrice() == null)
+                        itemData.setDiscountPrice(0);
                     // return res.throwError("할인(판매) 가격을 입력해주세요.", "INPUT_CHECK_REQUIRED");
-                    if (itemData.getAmount() == null) itemData.setAmount(null);
+                    if (itemData.getAmount() == null)
+                        itemData.setAmount(null);
                     // return res.throwError("개수를 입력해주세요.", "INPUT_CHECK_REQUIRED");
-                    if (itemData.getPurchasePrice() == null) itemData.setPurchasePrice(0);
+                    if (itemData.getPurchasePrice() == null)
+                        itemData.setPurchasePrice(0);
                     // return res.throwError("매입가를 입력해주세요.", "INPUT_CHECK_REQUIRED");
-                    if (!optionData.getIsNeeded() && itemData.getOriginPrice() == null) itemData.setOriginPrice(0);
-                    if (itemData.getDeliveryFee() == null) itemData.setDeliveryFee(0);
+                    if (!optionData.getIsNeeded() && itemData.getOriginPrice() == null)
+                        itemData.setOriginPrice(0);
+                    if (itemData.getDeliveryFee() == null)
+                        itemData.setDeliveryFee(0);
                     // return res.throwError("배송비를 입력해주세요.", "INPUT_CHECK_REQUIRED");
                 }
             }
-            if (!existRepresent) return res.throwError("대표 옵션 아이템을 선택해주세요.", "INPUT_CHECK_REQUIRED");
-            List<ProductFilterValue>
-                    filterValues =
-                    data.getFilterValues() != null ? data.getFilterValues().stream().map(v -> {
+            if (!existRepresent)
+                return res.throwError("대표 옵션 아이템을 선택해주세요.", "INPUT_CHECK_REQUIRED");
+            List<ProductFilterValue> filterValues = data.getFilterValues() != null
+                    ? data.getFilterValues().stream().map(v -> {
                         try {
                             String valueName = utils.validateString(v.getValue(), 50L, "필터 값");
                             searchFilterQueryService.selectSearchFilterField(v.getCompareFilterId());
-                            return ProductFilterValue.builder().compareFilterId(v.getCompareFilterId()).value(valueName).build();
+                            return ProductFilterValue.builder().compareFilterId(v.getCompareFilterId()).value(valueName)
+                                    .build();
                         } catch (Exception e) {
                             System.out.println(e.getStackTrace());
                             throw new RuntimeException(e);
                         }
-                    }).toList() : null;
+                    }).toList()
+                    : null;
             List<Address> addresses = null;
             if (data.getDifficultDeliverAddressIds() != null) {
                 addresses = addressQueryService.selectAddressListWithIds(data.getDifficultDeliverAddressIds());
@@ -410,20 +436,24 @@ public class ProductController {
             OptionItem representOptionItem = null;
             if (data.getOptions() != null) {
                 for (OptionAddReq od : data.getOptions()) {
-                    Option
-                            option =
-                            Option.builder().productId(result.getId()).state(OptionState.ACTIVE).isNeeded(od.getIsNeeded()).description(
-                                    "").build();
+                    Option option = Option.builder().productId(result.getId()).state(OptionState.ACTIVE)
+                            .isNeeded(od.getIsNeeded()).description(
+                                    "")
+                            .build();
                     option = productService.addOption(option);
                     for (OptionItemAddReq itemData : od.getItems()) {
-                        OptionItem
-                                item =
-                                OptionItem.builder().optionId(option.getId()).name(itemData.getName()).discountPrice(
-                                        itemData.getDiscountPrice()).amount(itemData.getAmount()).purchasePrice(itemData.getPurchasePrice()).originPrice(
-                                        itemData.getOriginPrice()).state(OptionItemState.ACTIVE).deliverFee(itemData.getDeliveryFee()).deliverBoxPerAmount(
-                                        itemData.getDeliverBoxPerAmount()).maxAvailableAmount(itemData.getMaxAvailableAmount()).build();
+                        OptionItem item = OptionItem.builder().optionId(option.getId()).name(itemData.getName())
+                                .discountPrice(
+                                        itemData.getDiscountPrice())
+                                .amount(itemData.getAmount()).purchasePrice(itemData.getPurchasePrice()).originPrice(
+                                        itemData.getOriginPrice())
+                                .state(OptionItemState.ACTIVE).deliverFee(itemData.getDeliveryFee())
+                                .deliverBoxPerAmount(
+                                        itemData.getDeliverBoxPerAmount())
+                                .maxAvailableAmount(itemData.getMaxAvailableAmount()).build();
                         item = productService.addOptionItem(item);
-                        if (itemData.getIsRepresent() != null && itemData.getIsRepresent()) representOptionItem = item;
+                        if (itemData.getIsRepresent() != null && itemData.getIsRepresent())
+                            representOptionItem = item;
                     }
                 }
             }
@@ -434,16 +464,15 @@ public class ProductController {
                 difficultDeliverAddressCommandService.addDifficultDeliverAddressList(difficultDeliverAddresses);
             }
             if (filterValues != null)
-                productFilterService.addAllProductFilter(filterValues.stream().peek(v -> v.setProductId(product.getId())).toList());
-            List<String>
-                    imagesUrl =
-                    s3.uploadFiles(images, new ArrayList<>(Arrays.asList("product", String.valueOf(result.getId()))));
-            String
-                    descriptionContent =
-                    s3.uploadEditorStringToS3(data.getDescriptionContent(),
-                            new ArrayList<>(Arrays.asList("product", String.valueOf(result.getId()))));
-            productService.addProductSearchFilters(data.getSearchFilterFieldIds().stream().map(v -> ProductSearchFilterMap.builder().productId(
-                    product.getId()).fieldId(v).build()).toList());
+                productFilterService
+                        .addAllProductFilter(filterValues.stream().peek(v -> v.setProductId(product.getId())).toList());
+            List<String> imagesUrl = s3.uploadFiles(images,
+                    new ArrayList<>(Arrays.asList("product", String.valueOf(result.getId()))));
+            String descriptionContent = s3.uploadEditorStringToS3(data.getDescriptionContent(),
+                    new ArrayList<>(Arrays.asList("product", String.valueOf(result.getId()))));
+            productService.addProductSearchFilters(
+                    data.getSearchFilterFieldIds().stream().map(v -> ProductSearchFilterMap.builder().productId(
+                            product.getId()).fieldId(v).build()).toList());
             result.setImages(imagesUrl.toString());
             result.setDescriptionImages(descriptionContent);
             result.setRepresentOptionItemId(representOptionItem.getId());
@@ -452,10 +481,10 @@ public class ProductController {
             dto.setReviews(null);
             if (adminId != null) {
                 String content = "상품을 등록하였습니다.";
-                AdminLog
-                        adminLog =
-                        AdminLog.builder().id(adminLogQueryService.getAdminLogId()).adminId(adminId).type(AdminLogType.PRODUCT).targetId(
-                                String.valueOf(result.getId())).content(content).createdAt(utils.now()).build();
+                AdminLog adminLog = AdminLog.builder().id(adminLogQueryService.getAdminLogId()).adminId(adminId)
+                        .type(AdminLogType.PRODUCT).targetId(
+                                String.valueOf(result.getId()))
+                        .content(content).createdAt(utils.now()).build();
                 adminLogCommandService.saveAdminLog(adminLog);
             }
             res.setData(Optional.of(dto));
@@ -466,22 +495,25 @@ public class ProductController {
     }
 
     @PostMapping("/update/{id}")
-    public ResponseEntity<CustomResponse<SimpleProductDto>> updateProduct(@RequestHeader(value = "Authorization") Optional<String> auth,
-                                                                          @PathVariable(value = "id") Integer id,
-                                                                          @RequestPart(value = "data") ProductUpdateReq data,
-                                                                          @RequestPart(value = "existingImages", required = false) List<String> existingImages,
-                                                                          @RequestPart(value = "newImages", required = false) List<MultipartFile> newImages) {
+    public ResponseEntity<CustomResponse<SimpleProductDto>> updateProduct(
+            @RequestHeader(value = "Authorization") Optional<String> auth,
+            @PathVariable(value = "id") Integer id,
+            @RequestPart(value = "data") ProductUpdateReq data,
+            @RequestPart(value = "existingImages", required = false) List<String> existingImages,
+            @RequestPart(value = "newImages", required = false) List<MultipartFile> newImages) {
         CustomResponse<SimpleProductDto> res = new CustomResponse<>();
-        Optional<TokenInfo>
-                tokenInfo =
-                jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN, TokenAuthType.PARTNER), auth);
-        if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
+        Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN, TokenAuthType.PARTNER),
+                auth);
+        if (tokenInfo == null)
+            return res.throwError("인증이 필요합니다.", "FORBIDDEN");
         try {
             Integer adminId = null;
-            if (tokenInfo.get().getType().equals(TokenAuthType.ADMIN)) adminId = tokenInfo.get().getId();
+            if (tokenInfo.get().getType().equals(TokenAuthType.ADMIN))
+                adminId = tokenInfo.get().getId();
             if (tokenInfo.get().getType().equals(TokenAuthType.ADMIN) && data.getStoreId() == null)
                 return res.throwError("상점 아이디를 입력해주세요.", "INPUT_CHECK_REQUIRED");
-            else if (tokenInfo.get().getType().equals(TokenAuthType.PARTNER)) data.setStoreId(tokenInfo.get().getId());
+            else if (tokenInfo.get().getType().equals(TokenAuthType.PARTNER))
+                data.setStoreId(tokenInfo.get().getId());
             Product product = productService.findById(id);
             if (tokenInfo.get().getType().equals(TokenAuthType.PARTNER) &&
                     product.getStoreId() != tokenInfo.get().getId())
@@ -517,8 +549,10 @@ public class ProductController {
                 product.setDeliveryInfo(deliveryInfo);
             }
             if (data.getDeliverFeeType() == null) {
-                if (data.getDeliveryFee() != null) product.setDeliverFee(data.getDeliveryFee());
-                if (data.getMinOrderPrice() != null) product.setMinOrderPrice(data.getMinOrderPrice());
+                if (data.getDeliveryFee() != null)
+                    product.setDeliverFee(data.getDeliveryFee());
+                if (data.getMinOrderPrice() != null)
+                    product.setMinOrderPrice(data.getMinOrderPrice());
             } else if (data.getDeliverFeeType().equals(ProductDeliverFeeType.FREE)) {
                 product.setDeliverFeeType(ProductDeliverFeeType.FREE);
                 product.setDeliverFee(0);
@@ -535,15 +569,19 @@ public class ProductController {
                 if (product.getDeliverFee() == null && data.getDeliveryFee() == null)
                     return res.throwError("배송비를 입력해주세요.", "INPUT_CHECK_REQUIRED");
                 product.setDeliverFeeType(ProductDeliverFeeType.FREE_IF_OVER);
-                if (data.getDeliveryFee() != null) product.setDeliverFee(data.getDeliveryFee());
-                if (data.getMinOrderPrice() != null) product.setMinOrderPrice(data.getMinOrderPrice());
+                if (data.getDeliveryFee() != null)
+                    product.setDeliverFee(data.getDeliveryFee());
+                if (data.getMinOrderPrice() != null)
+                    product.setMinOrderPrice(data.getMinOrderPrice());
             }
             if (data.getDeliveryFee() != null) {
-                if (data.getDeliveryFee() < 0) return res.throwError("배달료를 확인해주세요.", "INPUT_CHECK_REQUIRED");
-//                product.setDeliveryFee(data.getDeliveryFee());
+                if (data.getDeliveryFee() < 0)
+                    return res.throwError("배달료를 확인해주세요.", "INPUT_CHECK_REQUIRED");
+                // product.setDeliveryFee(data.getDeliveryFee());
             }
             if (data.getExpectedDeliverDay() != null) {
-                if (data.getExpectedDeliverDay() < 0) return res.throwError("예상 도착일을 입력해주세요.", "INPUT_CHECK_REQUIRED");
+                if (data.getExpectedDeliverDay() < 0)
+                    return res.throwError("예상 도착일을 입력해주세요.", "INPUT_CHECK_REQUIRED");
                 product.setExpectedDeliverDay(data.getExpectedDeliverDay());
             }
             if (data.getPromotionStartAt() != null) {
@@ -555,32 +593,33 @@ public class ProductController {
             if (data.getSearchFilterFieldIds() != null)
                 data.getSearchFilterFieldIds().forEach(searchFilterQueryService::selectSearchFilterField);
             if (data.getDescriptionContent() != null) {
-                String
-                        url =
-                        s3.uploadEditorStringToS3(data.getDescriptionContent(),
-                                new ArrayList<>(Arrays.asList("product", id.toString())));
+                String url = s3.uploadEditorStringToS3(data.getDescriptionContent(),
+                        new ArrayList<>(Arrays.asList("product", id.toString())));
                 product.setDescriptionImages(url);
             }
             if (existingImages != null || newImages != null) {
                 List<String> imgUrls = existingImages;
-                if (newImages != null) existingImages.addAll(s3.uploadFiles(newImages,
-                        new ArrayList<>(Arrays.asList("product", String.valueOf(id)))));
+                if (newImages != null)
+                    existingImages.addAll(s3.uploadFiles(newImages,
+                            new ArrayList<>(Arrays.asList("product", String.valueOf(id)))));
 
                 product.setImages(imgUrls.toString());
             }
-            List<ProductFilterValue>
-                    filterValues =
-                    data.getFilterValues() != null ? data.getFilterValues().stream().map(v -> {
+            List<ProductFilterValue> filterValues = data.getFilterValues() != null
+                    ? data.getFilterValues().stream().map(v -> {
                         try {
                             String valueName = utils.validateString(v.getValue(), 50L, "필터 값");
                             System.out.println(v.getCompareFilterId());
                             compareFilterQueryService.selectCompareFilter(v.getCompareFilterId());
-                            return ProductFilterValue.builder().productId(product.getId()).compareFilterId(v.getCompareFilterId()).value(
-                                    valueName).build();
+                            return ProductFilterValue.builder().productId(product.getId())
+                                    .compareFilterId(v.getCompareFilterId()).value(
+                                            valueName)
+                                    .build();
                         } catch (Exception e) {
                             throw new RuntimeException(e);
                         }
-                    }).toList() : null;
+                    }).toList()
+                    : null;
             OptionItem representOptionItem = null;
             if (data.getOptions() != null) {
                 for (Common.CudInput<OptionUpdateReq, Integer> optionData : data.getOptions()) {
@@ -589,18 +628,22 @@ public class ProductController {
                             return res.throwError("CREATE의 경우 DATA는 필수 입니다.", "INPUT_CHECK_REQUIRED");
                         if (optionData.getData().getIsNeeded() == null)
                             return res.throwError("필수 여부를 입력해주세요.", "INPUT_CHECK_REQUIRED");
-                        for (OptionItemUpdateReq itemData : optionData.getData().getItems().stream().map(Common.CudInput::getData).toList()) {
+                        for (OptionItemUpdateReq itemData : optionData.getData().getItems().stream()
+                                .map(Common.CudInput::getData).toList()) {
                             String name = utils.validateString(itemData.getName(), 100L, "옵션 이름");
                             itemData.setName(name);
-                            if (itemData.getDiscountPrice() == null) itemData.setDiscountPrice(0);
+                            if (itemData.getDiscountPrice() == null)
+                                itemData.setDiscountPrice(0);
                             // return res.throwError("할인(판매) 가격을 입력해주세요.", "INPUT_CHECK_REQUIRED");
                             if (itemData.getAmount() == null)
                                 return res.throwError("개수를 입력해주세요.", "INPUT_CHECK_REQUIRED");
-                            if (itemData.getPurchasePrice() == null) itemData.setPurchasePrice(0);
+                            if (itemData.getPurchasePrice() == null)
+                                itemData.setPurchasePrice(0);
                             // return res.throwError("매입가를 입력해주세요.", "INPUT_CHECK_REQUIRED");
-                            if (itemData.getOriginPrice() == null) itemData.setOriginPrice(0);
+                            if (itemData.getOriginPrice() == null)
+                                itemData.setOriginPrice(0);
                             if (itemData.getDeliveryFee() == null)
-                                return res.throwError("배송비를 입력해주세요.", "INPUT_CHECK_REQUIRED");
+                                itemData.setDeliveryFee(0);
                         }
                     } else if (optionData.getType().equals(Common.CudType.UPDATE)) {
                         if (optionData.getId() == null || optionData.getData() == null)
@@ -616,9 +659,10 @@ public class ProductController {
                                     return res.throwError("개수를 입력해주세요.", "INPUT_CHECK_REQUIRED");
                                 if (itemData.getData().getPurchasePrice() == null)
                                     return res.throwError("매입가를 입력해주세요.", "INPUT_CHECK_REQUIRED");
-                                if (itemData.getData().getOriginPrice() == null) itemData.getData().setOriginPrice(0);
+                                if (itemData.getData().getOriginPrice() == null)
+                                    itemData.getData().setOriginPrice(0);
                                 if (itemData.getData().getDeliveryFee() == null)
-                                    return res.throwError("배송비를 입력해주세요.", "INPUT_CHECK_REQUIRED");
+                                    itemData.getData().setDeliveryFee(0);
                             } else if (itemData.getType().equals(Common.CudType.UPDATE)) {
                                 if (itemData.getId() == null)
                                     return res.throwError("옵션 아이템 UPDATE 시 ID를 필수로 입력해주세요.", "INPUT_CHECK_REQUIRED");
@@ -632,25 +676,31 @@ public class ProductController {
                     }
                 }
             }
-            if (adminId == null) product.setState(ProductState.INACTIVE_PARTNER);
-            else product.setState(ProductState.INACTIVE);
+            if (adminId == null)
+                product.setState(ProductState.INACTIVE_PARTNER);
+            else
+                product.setState(ProductState.INACTIVE);
             Product result = productService.update(id, product);
 
             if (data.getOptions() != null) {
                 for (Common.CudInput<OptionUpdateReq, Integer> optionData : data.getOptions()) {
                     if (optionData.getType().equals(Common.CudType.CREATE)) {
-                        Option
-                                option =
-                                productService.addOption(Option.builder().productId(product.getId()).description("").state(
+                        Option option = productService
+                                .addOption(Option.builder().productId(product.getId()).description("").state(
                                         OptionState.ACTIVE).isNeeded(optionData.getData().getIsNeeded()).build());
-                        for (OptionItemUpdateReq itemData : optionData.getData().getItems().stream().map(Common.CudInput::getData).toList()) {
-                            OptionItem
-                                    optionItem =
-                                    productService.addOptionItem(OptionItem.builder().optionId(option.getId()).name(
-                                            itemData.getName()).discountPrice(itemData.getDiscountPrice()).amount(
-                                            itemData.getAmount()).purchasePrice(itemData.getPurchasePrice()).originPrice(
-                                            itemData.getOriginPrice()).state(OptionItemState.ACTIVE).deliverFee(itemData.getDeliveryFee()).deliverBoxPerAmount(
-                                            itemData.getDeliverBoxPerAmount()).maxAvailableAmount(itemData.getMaxAvailableAmount()).build());
+                        for (OptionItemUpdateReq itemData : optionData.getData().getItems().stream()
+                                .map(Common.CudInput::getData).toList()) {
+                            OptionItem optionItem = productService.addOptionItem(OptionItem.builder()
+                                    .optionId(option.getId()).name(
+                                            itemData.getName())
+                                    .discountPrice(itemData.getDiscountPrice()).amount(
+                                            itemData.getAmount())
+                                    .purchasePrice(itemData.getPurchasePrice()).originPrice(
+                                            itemData.getOriginPrice())
+                                    .state(OptionItemState.ACTIVE).deliverFee(itemData.getDeliveryFee())
+                                    .deliverBoxPerAmount(
+                                            itemData.getDeliverBoxPerAmount())
+                                    .maxAvailableAmount(itemData.getMaxAvailableAmount()).build());
                             if (itemData.getIsRepresent() != null && itemData.getIsRepresent())
                                 representOptionItem = optionItem;
                         }
@@ -661,37 +711,55 @@ public class ProductController {
                         for (Common.CudInput<OptionItemUpdateReq, Integer> itemData : optionData.getData().getItems()) {
                             OptionItemUpdateReq d = itemData.getData();
                             if (itemData.getType().equals(Common.CudType.CREATE)) {
-                                OptionItem
-                                        optionItem =
-                                        productService.addOptionItem(OptionItem.builder().optionId(option.getId()).name(
-                                                d.getName()).discountPrice(d.getDiscountPrice()).state(OptionItemState.ACTIVE).amount(
-                                                d.getAmount()).purchasePrice(d.getPurchasePrice()).originPrice(d.getOriginPrice()).deliverFee(
-                                                d.getDeliveryFee()).deliverBoxPerAmount(d.getDeliverBoxPerAmount()).maxAvailableAmount(
-                                                d.getMaxAvailableAmount()).build());
-                                if (d.getIsRepresent() != null && d.getIsRepresent()) representOptionItem = optionItem;
+                                OptionItem optionItem = productService.addOptionItem(OptionItem.builder()
+                                        .optionId(option.getId()).name(
+                                                d.getName())
+                                        .discountPrice(d.getDiscountPrice()).state(OptionItemState.ACTIVE).amount(
+                                                d.getAmount())
+                                        .purchasePrice(d.getPurchasePrice()).originPrice(d.getOriginPrice()).deliverFee(
+                                                d.getDeliveryFee())
+                                        .deliverBoxPerAmount(d.getDeliverBoxPerAmount()).maxAvailableAmount(
+                                                d.getMaxAvailableAmount())
+                                        .build());
+                                if (d.getIsRepresent() != null && d.getIsRepresent())
+                                    representOptionItem = optionItem;
                             } else if (itemData.getType().equals(Common.CudType.UPDATE)) {
                                 OptionItem oi = productService.selectOptionItem(itemData.getId());
-                                OptionItem
-                                        optionItem =
-                                        OptionItem.builder().id(itemData.getId()).optionId(option.getId()).name(itemData.getData().getName() !=
-                                                null ? itemData.getData().getName() : oi.getName()).discountPrice(
-                                                itemData.getData().getDiscountPrice() !=
-                                                        null ? itemData.getData().getDiscountPrice() : oi.getDiscountPrice()).amount(
-                                                itemData.getData().getAmount() !=
-                                                        null ? itemData.getData().getAmount() : oi.getAmount()).state(oi.getState()).purchasePrice(
-                                                itemData.getData().getPurchasePrice() !=
-                                                        null ? itemData.getData().getPurchasePrice() : oi.getPurchasePrice()).originPrice(
-                                                itemData.getData().getOriginPrice() !=
-                                                        null ? itemData.getData().getOriginPrice() : oi.getOriginPrice()).deliverFee(
-                                                itemData.getData().getDeliveryFee() !=
-                                                        null ? itemData.getData().getDeliveryFee() : oi.getDeliverFee()).deliverBoxPerAmount(
-                                                itemData.getData().getDeliverBoxPerAmount() !=
-                                                        null ? itemData.getData().getDeliverBoxPerAmount() : oi.getDeliverBoxPerAmount()).maxAvailableAmount(
-                                                itemData.getData().getMaxAvailableAmount() !=
-                                                        null ? itemData.getData().getMaxAvailableAmount() : oi.getMaxAvailableAmount()).build();
+                                OptionItem optionItem = OptionItem.builder().id(itemData.getId())
+                                        .optionId(option.getId())
+                                        .name(itemData.getData().getName() != null ? itemData.getData().getName()
+                                                : oi.getName())
+                                        .discountPrice(
+                                                itemData.getData().getDiscountPrice() != null
+                                                        ? itemData.getData().getDiscountPrice()
+                                                        : oi.getDiscountPrice())
+                                        .amount(
+                                                itemData.getData().getAmount() != null ? itemData.getData()
+                                                        .getAmount() : oi.getAmount())
+                                        .state(oi.getState()).purchasePrice(
+                                                itemData.getData().getPurchasePrice() != null ? itemData
+                                                        .getData().getPurchasePrice() : oi.getPurchasePrice())
+                                        .originPrice(
+                                                itemData.getData().getOriginPrice() != null
+                                                        ? itemData.getData().getOriginPrice()
+                                                        : oi.getOriginPrice())
+                                        .deliverFee(
+                                                itemData.getData().getDeliveryFee() != null
+                                                        ? itemData.getData().getDeliveryFee()
+                                                        : oi.getDeliverFee())
+                                        .deliverBoxPerAmount(
+                                                itemData.getData().getDeliverBoxPerAmount() != null
+                                                        ? itemData.getData().getDeliverBoxPerAmount()
+                                                        : oi.getDeliverBoxPerAmount())
+                                        .maxAvailableAmount(
+                                                itemData.getData().getMaxAvailableAmount() != null
+                                                        ? itemData.getData().getMaxAvailableAmount()
+                                                        : oi.getMaxAvailableAmount())
+                                        .build();
                                 optionItem = productService.addOptionItem(optionItem);
 
-                                if (d.getIsRepresent() != null && d.getIsRepresent()) representOptionItem = optionItem;
+                                if (d.getIsRepresent() != null && d.getIsRepresent())
+                                    representOptionItem = optionItem;
                             } else {
                                 productService.deleteOptionItem(itemData.getId());
                             }
@@ -703,9 +771,8 @@ public class ProductController {
             }
 
             if (data.getDifficultDeliverAddressIds() != null) {
-                List<Address>
-                        addresses =
-                        addressQueryService.selectAddressListWithIds(data.getDifficultDeliverAddressIds());
+                List<Address> addresses = addressQueryService
+                        .selectAddressListWithIds(data.getDifficultDeliverAddressIds());
                 List<DifficultDeliverAddress> difficultDeliverAddresses = addresses.stream().map(v -> {
                     return DifficultDeliverAddress.builder().productId(product.getId()).bcode(v.getBcode()).build();
                 }).toList();
@@ -715,8 +782,9 @@ public class ProductController {
             }
             if (data.getSearchFilterFieldIds() != null) {
                 productService.deleteProductSearchFilters(product.getId());
-                productService.addProductSearchFilters(data.getSearchFilterFieldIds().stream().map(v -> ProductSearchFilterMap.builder().productId(
-                        product.getId()).fieldId(v).build()).toList());
+                productService.addProductSearchFilters(
+                        data.getSearchFilterFieldIds().stream().map(v -> ProductSearchFilterMap.builder().productId(
+                                product.getId()).fieldId(v).build()).toList());
             }
             if (representOptionItem != null) {
                 product.setRepresentOptionItemId(representOptionItem.getId());
@@ -726,27 +794,24 @@ public class ProductController {
                 productFilterService.deleteAllFilterValueWithProductId(product.getId());
                 productFilterService.addAllProductFilter(filterValues);
             }
-            if (adminId == null) adminId = 1;
+            if (adminId == null)
+                adminId = 1;
             Admin admin = adminQueryService.selectAdmin(adminId);
-            String
-                    content =
-                    String.format("상품 정보를 수정하였습니다.[%s]",
-                            tokenInfo.get().getType().equals(TokenAuthType.PARTNER) ? "파트너" : admin.getName());
-            AdminLog
-                    adminLog =
-                    AdminLog.builder().id(adminLogQueryService.getAdminLogId()).adminId(adminId).type(AdminLogType.PRODUCT).targetId(
-                            String.valueOf(result.getId())).content(content).createdAt(utils.now()).build();
+            String content = String.format("상품 정보를 수정하였습니다.[%s]",
+                    tokenInfo.get().getType().equals(TokenAuthType.PARTNER) ? "파트너" : admin.getName());
+            AdminLog adminLog = AdminLog.builder().id(adminLogQueryService.getAdminLogId()).adminId(adminId)
+                    .type(AdminLogType.PRODUCT).targetId(
+                            String.valueOf(result.getId()))
+                    .content(content).createdAt(utils.now()).build();
             if (data.getIsActive() != null) {
-                String
-                        contentState =
-                        String.format("%s -> %s 상태 변경하였습니다.[%s]",
-                                data.getIsActive() ? "미노출" : "노출",
-                                data.getIsActive() ? "노출" : "미노출",
-                                admin.getName());
-                AdminLog
-                        stateAdminLog =
-                        AdminLog.builder().id(adminLogQueryService.getAdminLogId()).adminId(adminId).type(AdminLogType.PRODUCT).targetId(
-                                String.valueOf(result.getId())).createdAt(utils.now()).content(contentState).build();
+                String contentState = String.format("%s -> %s 상태 변경하였습니다.[%s]",
+                        data.getIsActive() ? "미노출" : "노출",
+                        data.getIsActive() ? "노출" : "미노출",
+                        admin.getName());
+                AdminLog stateAdminLog = AdminLog.builder().id(adminLogQueryService.getAdminLogId()).adminId(adminId)
+                        .type(AdminLogType.PRODUCT).targetId(
+                                String.valueOf(result.getId()))
+                        .createdAt(utils.now()).content(contentState).build();
                 adminLogCommandService.saveAdminLog(stateAdminLog);
             }
             adminLogCommandService.saveAdminLog(adminLog);
@@ -758,30 +823,31 @@ public class ProductController {
     }
 
     @PostMapping("/update/state")
-    public ResponseEntity<CustomResponse<Boolean>> updateStateProducts(@RequestHeader(value = "Authorization") Optional<String> auth,
-                                                                       @RequestPart(value = "data") UpdateStateProductsReq data) {
+    public ResponseEntity<CustomResponse<Boolean>> updateStateProducts(
+            @RequestHeader(value = "Authorization") Optional<String> auth,
+            @RequestPart(value = "data") UpdateStateProductsReq data) {
         CustomResponse<Boolean> res = new CustomResponse<>();
         Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
-        if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
+        if (tokenInfo == null)
+            return res.throwError("인증이 필요합니다.", "FORBIDDEN");
         try {
             Integer adminId = tokenInfo.get().getId();
             if (data.getProductIds() == null || data.getProductIds().size() == 0)
                 return res.throwError("상품 아이디를 입력해주세요", "INPUT_CHECK_REQUIRED");
-            if (data.getIsActive() == null) return res.throwError("노출 여부를 입력해주세요.", "INPUT_CHECK_REQUIRED");
+            if (data.getIsActive() == null)
+                return res.throwError("노출 여부를 입력해주세요.", "INPUT_CHECK_REQUIRED");
             List<Product> products = productService.selectProductListWithIds(data.getProductIds());
             Admin admin = adminQueryService.selectAdmin(adminId);
             products.forEach(v -> {
-                String
-                        content =
-                        String.format("%s -> %s 상태 변경하였습니다.[%s]",
-                                v.getState().equals(ProductState.ACTIVE) ? "노출" : "미노출",
-                                data.getIsActive() ? "노출" : "미노출",
-                                admin.getAuthority().equals(AdminAuthority.MASTER) ? "관리자" : "서브관리자");
+                String content = String.format("%s -> %s 상태 변경하였습니다.[%s]",
+                        v.getState().equals(ProductState.ACTIVE) ? "노출" : "미노출",
+                        data.getIsActive() ? "노출" : "미노출",
+                        admin.getAuthority().equals(AdminAuthority.MASTER) ? "관리자" : "서브관리자");
                 v.setState(data.getIsActive() ? ProductState.ACTIVE : ProductState.INACTIVE);
-                AdminLog
-                        adminLog =
-                        AdminLog.builder().id(adminLogQueryService.getAdminLogId()).adminId(adminId).type(AdminLogType.PRODUCT).targetId(
-                                String.valueOf(v.getId())).createdAt(utils.now()).content(content).build();
+                AdminLog adminLog = AdminLog.builder().id(adminLogQueryService.getAdminLogId()).adminId(adminId)
+                        .type(AdminLogType.PRODUCT).targetId(
+                                String.valueOf(v.getId()))
+                        .createdAt(utils.now()).content(content).build();
                 adminLogCommandService.saveAdminLog(adminLog);
             });
             productService.updateProducts(products);
@@ -793,12 +859,14 @@ public class ProductController {
     }
 
     @PostMapping("/like")
-    public ResponseEntity<CustomResponse<Boolean>> likeProductByUser(@RequestHeader(value = "Authorization") Optional<String> auth,
-                                                                     @RequestParam(value = "productId") Integer productId,
-                                                                     @RequestParam(value = "type") LikePostType type) {
+    public ResponseEntity<CustomResponse<Boolean>> likeProductByUser(
+            @RequestHeader(value = "Authorization") Optional<String> auth,
+            @RequestParam(value = "productId") Integer productId,
+            @RequestParam(value = "type") LikePostType type) {
         CustomResponse<Boolean> res = new CustomResponse<>();
         Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth);
-        if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
+        if (tokenInfo == null)
+            return res.throwError("인증이 필요합니다.", "FORBIDDEN");
         try {
             Integer check = productService.checkLikeProduct(productId, tokenInfo.get().getId());
             if (check == 0 && type.equals(LikePostType.LIKE)) {
@@ -816,15 +884,16 @@ public class ProductController {
 
     @DeleteMapping("/{id}")
     public ResponseEntity<CustomResponse<Boolean>> deleteProduct(@PathVariable("id") Integer id,
-                                                                 @RequestHeader(value = "Authorization") Optional<String> auth) {
+            @RequestHeader(value = "Authorization") Optional<String> auth) {
         CustomResponse<Boolean> res = new CustomResponse<>();
-        Optional<TokenInfo>
-                tokenInfo =
-                jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.PARTNER, TokenAuthType.ADMIN), auth);
-        if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
+        Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.PARTNER, TokenAuthType.ADMIN),
+                auth);
+        if (tokenInfo == null)
+            return res.throwError("인증이 필요합니다.", "FORBIDDEN");
         try {
             Integer adminId = null;
-            if (tokenInfo.get().getType().equals(TokenAuthType.ADMIN)) adminId = tokenInfo.get().getId();
+            if (tokenInfo.get().getType().equals(TokenAuthType.ADMIN))
+                adminId = tokenInfo.get().getId();
             Product product = productService.findById(id);
             if (tokenInfo.get().getType().equals(TokenAuthType.PARTNER) &&
                     product.getStoreId() != tokenInfo.get().getId())
@@ -834,10 +903,10 @@ public class ProductController {
             product = productService.update(product.getId(), product);
             if (adminId != null) {
                 String content = "삭제 처리 되었습니다.";
-                AdminLog
-                        adminLog =
-                        AdminLog.builder().id(adminLogQueryService.getAdminLogId()).adminId(adminId).type(AdminLogType.PRODUCT).targetId(
-                                String.valueOf(product.getId())).content(content).createdAt(utils.now()).build();
+                AdminLog adminLog = AdminLog.builder().id(adminLogQueryService.getAdminLogId()).adminId(adminId)
+                        .type(AdminLogType.PRODUCT).targetId(
+                                String.valueOf(product.getId()))
+                        .content(content).createdAt(utils.now()).build();
                 adminLogCommandService.saveAdminLog(adminLog);
             }
             res.setData(Optional.of(true));
