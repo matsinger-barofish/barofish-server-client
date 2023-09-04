@@ -32,6 +32,7 @@ public class OrderProductDto {
     private Integer amount;
     private String deliverCompany;
     private String invoiceCode;
+    private String deliverCompanyCode;
     private Timestamp finalConfirmedAt;
     private Boolean needTaxation;
     // private Integer deliveryFee;

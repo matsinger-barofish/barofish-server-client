@@ -28,7 +28,7 @@ public class NotificationCommandService {
                         type)).content(message.getMessage(type)).build();
         addNotification(notification);
         fcmService.sendFcmByToken(FcmRequestDto.builder().title(notification.getTitle()).body(notification.getContent().replaceAll(
-                "<.+>",
-                "")).targetUserId(userId).build());
+                "<strong>",
+                "").replaceAll("</strong>", "")).targetUserId(userId).build());
     }
 }

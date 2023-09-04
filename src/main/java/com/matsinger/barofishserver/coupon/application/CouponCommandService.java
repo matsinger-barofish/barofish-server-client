@@ -50,7 +50,10 @@ public class CouponCommandService {
     }
 
     public void sendCouponCreateNotification(Coupon coupon, List<Integer> userIds) {
-        List<User> users = userService.selectUserWithState(UserState.ACTIVE);
+        List<User>
+                users =
+                userIds == null ? userService.selectUserWithState(UserState.ACTIVE) : userService.selectUserListWithIds(
+                        userIds);
         for (User user : users) {
             Optional<UserInfo> userInfo = userService.selectOptionalUserInfo(user.getId());
             if (userInfo.isPresent()) notificationCommandService.sendFcmToUser(user.getId(),
@@ -66,6 +69,7 @@ public class CouponCommandService {
             mapRepository.save(couponUserMap);
         });
     }
+
     public void unUseCoupon(Integer couponId, Integer userId) {
         Optional<CouponUserMap> map = mapRepository.findById(new CouponUserMapId(userId, couponId));
         map.ifPresent(couponUserMap -> {

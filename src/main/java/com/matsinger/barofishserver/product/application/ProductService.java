@@ -33,6 +33,8 @@ import com.matsinger.barofishserver.review.dto.ReviewTotalStatistic;
 import com.matsinger.barofishserver.review.repository.ReviewRepository;
 import com.matsinger.barofishserver.searchFilter.application.SearchFilterQueryService;
 import com.matsinger.barofishserver.searchFilter.domain.ProductSearchFilterMap;
+import com.matsinger.barofishserver.searchFilter.domain.SearchFilter;
+import com.matsinger.barofishserver.searchFilter.domain.SearchFilterField;
 import com.matsinger.barofishserver.searchFilter.dto.SearchFilterFieldDto;
 import com.matsinger.barofishserver.searchFilter.repository.ProductSearchFilterMapRepository;
 import com.matsinger.barofishserver.store.application.StoreService;
@@ -147,6 +149,13 @@ public class ProductService {
                                                                 Integer storeId,
                                                                 Integer userId) {
         Page<Product> products;
+        List<Integer> filterIds = null;
+        if (filterFieldIds != null) {
+            List<SearchFilterField>
+                    searchFilterFields =
+                    searchFilterQueryService.selectSearchFilterListWithIds(filterFieldIds);
+            filterIds = searchFilterFields.stream().map(SearchFilterField::getSearchFilterId).toList();
+        }
         switch (sortBy) {
             case REVIEW:
                 products =
@@ -426,6 +435,13 @@ public class ProductService {
                                                 Integer take,
                                                 List<Integer> categoryIds,
                                                 List<Integer> filterFieldIds) {
+        List<Integer> filterIds = null;
+        if (filterFieldIds != null) {
+            List<SearchFilterField>
+                    searchFilterFields =
+                    searchFilterQueryService.selectSearchFilterListWithIds(filterFieldIds);
+            filterIds = searchFilterFields.stream().map(SearchFilterField::getSearchFilterId).toList();
+        }
         return productRepository.findNewerWithPagination(Pageable.ofSize(take).withPage(page),
                 categoryIds,
                 filterFieldIds,
@@ -556,10 +572,9 @@ public class ProductService {
                                     null ? product.getCategory().getParentCategory().getName() : null).secondCategoryName(
                             product.getCategory() !=
                                     null ? product.getCategory().getName() : null).productName(product.getTitle()).expectedDeliverDay(
-                            product.getExpectedDeliverDay()).deliveryInfo(product.getDeliveryInfo()).deliveryFee(
-                            product.getDeliverFee()).deliverBoxPerAmount(product.getDeliverBoxPerAmount()).isActive(
-                            product.getState().equals(ProductState.ACTIVE) ? "노출" : "미노출").needTaxation(product.getNeedTaxation() ? "과세" : "비과세").hasOption(
-                            "있음").purchasePrices(optionItem.getPurchasePrice()).representativeOptionNo(
+                            product.getExpectedDeliverDay()).deliveryInfo(product.getDeliveryInfo()).deliveryFee(product.getDeliverFee()).deliverBoxPerAmount(
+                            product.getDeliverBoxPerAmount()).isActive(product.getState().equals(ProductState.ACTIVE) ? "노출" : "미노출").needTaxation(
+                            product.getNeedTaxation() ? "과세" : "비과세").hasOption("있음").purchasePrices(optionItem.getPurchasePrice()).representativeOptionNo(
                             representativeOptionNo).optionName(optionItem.getName()).optionOriginPrice(optionItem.getOriginPrice()).optionDiscountPrice(
                             optionItem.getDiscountPrice()).optionMaxOrderAmount(optionItem.getMaxAvailableAmount()).optionAmount(
                             optionItem.getAmount()).pointRate(product.getPointRate()).build();
