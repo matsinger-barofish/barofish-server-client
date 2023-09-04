@@ -18,8 +18,13 @@ public class SearchFilterQueryService {
     private final SearchFilterRepository searchFilterRepository;
     private final SearchFilterFieldRepository searchFilterFieldRepository;
     private final ProductSearchFilterMapRepository productSearchFilterMapRepository;
+
     public List<SearchFilter> selectSearchFilterList() {
         return searchFilterRepository.findAll();
+    }
+
+    public List<SearchFilterField> selectSearchFilterListWithIds(List<Integer> ids) {
+        return searchFilterFieldRepository.findAllByIdIn(ids);
     }
 
     public SearchFilter selectSearchFilter(Integer id) {
@@ -27,6 +32,7 @@ public class SearchFilterQueryService {
             throw new Error("검색 필터 정보를 찾을 수 없습니다.");
         });
     }
+
     public List<SearchFilterField> selectSearchFilterFieldWithFilterId(Integer id) {
         return searchFilterFieldRepository.findAllBySearchFilterId(id);
     }
