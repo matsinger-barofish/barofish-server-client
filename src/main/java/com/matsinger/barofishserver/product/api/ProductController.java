@@ -599,8 +599,7 @@ public class ProductController {
                             if (itemData.getPurchasePrice() == null) itemData.setPurchasePrice(0);
                             // return res.throwError("매입가를 입력해주세요.", "INPUT_CHECK_REQUIRED");
                             if (itemData.getOriginPrice() == null) itemData.setOriginPrice(0);
-                            if (itemData.getDeliveryFee() == null)
-                                return res.throwError("배송비를 입력해주세요.", "INPUT_CHECK_REQUIRED");
+                            if (itemData.getDeliveryFee() == null) itemData.setDeliveryFee(0);
                         }
                     } else if (optionData.getType().equals(Common.CudType.UPDATE)) {
                         if (optionData.getId() == null || optionData.getData() == null)
@@ -617,8 +616,7 @@ public class ProductController {
                                 if (itemData.getData().getPurchasePrice() == null)
                                     return res.throwError("매입가를 입력해주세요.", "INPUT_CHECK_REQUIRED");
                                 if (itemData.getData().getOriginPrice() == null) itemData.getData().setOriginPrice(0);
-                                if (itemData.getData().getDeliveryFee() == null)
-                                    return res.throwError("배송비를 입력해주세요.", "INPUT_CHECK_REQUIRED");
+                                if (itemData.getData().getDeliveryFee() == null) itemData.getData().setDeliveryFee(0);
                             } else if (itemData.getType().equals(Common.CudType.UPDATE)) {
                                 if (itemData.getId() == null)
                                     return res.throwError("옵션 아이템 UPDATE 시 ID를 필수로 입력해주세요.", "INPUT_CHECK_REQUIRED");

@@ -12,7 +12,6 @@ import com.matsinger.barofishserver.compare.repository.CompareSetRepository;
 import com.matsinger.barofishserver.compare.repository.SaveProductRepository;
 import com.matsinger.barofishserver.coupon.domain.CouponUserMap;
 import com.matsinger.barofishserver.coupon.repository.CouponUserMapRepository;
-import com.matsinger.barofishserver.grade.application.GradeQueryService;
 import com.matsinger.barofishserver.grade.domain.Grade;
 import com.matsinger.barofishserver.grade.repository.GradeRepository;
 import com.matsinger.barofishserver.inquiry.application.InquiryCommandService;
@@ -30,11 +29,8 @@ import com.matsinger.barofishserver.review.domain.ReviewLike;
 import com.matsinger.barofishserver.review.repository.ReviewEvaluationRepository;
 import com.matsinger.barofishserver.review.repository.ReviewLikeRepository;
 import com.matsinger.barofishserver.review.repository.ReviewRepository;
-import com.matsinger.barofishserver.siteInfo.application.SiteInfoQueryService;
-import com.matsinger.barofishserver.siteInfo.domain.SiteInformation;
 import com.matsinger.barofishserver.user.deliverplace.DeliverPlace;
 import com.matsinger.barofishserver.user.deliverplace.repository.DeliverPlaceRepository;
-import com.matsinger.barofishserver.user.dto.AppleJoinReq;
 import com.matsinger.barofishserver.user.dto.SnsJoinLoginResponseDto;
 import com.matsinger.barofishserver.user.dto.UserJoinReq;
 import com.matsinger.barofishserver.user.paymentMethod.repository.PaymentMethodRepository;
@@ -47,27 +43,21 @@ import com.matsinger.barofishserver.userauth.domain.LoginType;
 import com.matsinger.barofishserver.userauth.domain.UserAuth;
 import com.matsinger.barofishserver.userauth.repository.UserAuthRepository;
 import com.matsinger.barofishserver.userinfo.application.UserInfoCommandService;
-import com.matsinger.barofishserver.userinfo.application.UserInfoQueryService;
 import com.matsinger.barofishserver.userinfo.domain.UserInfo;
 import com.matsinger.barofishserver.userinfo.dto.UserInfoDto;
 import com.matsinger.barofishserver.userinfo.repository.UserInfoRepository;
 import com.matsinger.barofishserver.utils.Common;
 import com.matsinger.barofishserver.utils.fcm.FcmService;
 import com.matsinger.barofishserver.utils.fcm.FcmTokenRepository;
-import com.matsinger.barofishserver.utils.S3.S3Uploader;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.*;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.net.MalformedURLException;
 import java.sql.Timestamp;
 import java.util.Calendar;
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
@@ -106,11 +96,6 @@ public class UserCommandService {
     private final ReviewRepository reviewRepository;
     private final CouponUserMapRepository couponUserMapRepository;
     private final Common utils;
-    private final Common util;
-    private final SiteInfoQueryService siteInfoQueryService;
-    private final GradeQueryService gradeQueryService;
-    private final UserInfoQueryService userInfoQueryService;
-    private final S3Uploader s3;
 
     @Transactional
     public SnsJoinLoginResponseDto createSnsUserAndSave(SnsJoinReq request) throws MalformedURLException {
@@ -343,6 +328,7 @@ public class UserCommandService {
 
     @Transactional
     public void addUserAuthIfPhoneNumberExists(SnsJoinReq request) {
+        if (request.getLoginType().equals(LoginType.APPLE)) return;
 
         Optional<UserInfo> optionalUserInfo = userInfoRepository.findByPhone(request.getPhone().replace("-", ""));
 
@@ -413,38 +399,6 @@ public class UserCommandService {
 
     public List<UserInfo> selectUserInfoListWithIds(List<Integer> userIds) {
         return userInfoRepository.findAllByUserIdIn(userIds);
-    }
-
-    @Transactional
-    public int addAppleUser(AppleJoinReq request, String phoneNumber, MultipartFile profileImage) throws Exception {
-
-        utils.validateString(request.getName(), 20L, "이름");
-        utils.validateString(request.getNickname(), 50L, "닉네임");
-
-        User savedUser = userRepository.save(request.toUserEntity());
-
-        userAuthRepository.save(request.toUserAuthEntity(savedUser));
-
-        SiteInformation siteInformation = siteInfoQueryService.selectSiteInfo("INT_JOIN_POINT");
-        int point = Integer.parseInt(siteInformation.getContent());
-        Grade grade = gradeQueryService.selectGrade(1);
-        userInfoRepository.save(
-                request.toUserInfoEntity(savedUser, "", phoneNumber, point, grade)
-        );
-
-        deliverPlaceRepository.save(request.toDeliveryPlaceEntity(savedUser, phoneNumber));
-
-        ArrayList<String> directoryElement = new ArrayList<>(Arrays.asList("user", String.valueOf(savedUser.getId())));
-        String profileImageUrl = s3.getS3Url() + "/default_profile.png";
-        if (profileImage != null) {
-            profileImageUrl = s3.upload(profileImage, directoryElement);
-            userInfoCommandService.setImageUrl(savedUser.getId(), profileImageUrl);
-            return savedUser.getId();
-        }
-
-        userInfoCommandService.setImageUrl(savedUser.getId(), profileImageUrl);
-
-        return savedUser.getId();
     }
 
     @Transactional

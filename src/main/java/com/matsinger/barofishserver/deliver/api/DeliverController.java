@@ -4,6 +4,7 @@ import com.matsinger.barofishserver.deliver.application.DeliverService;
 import com.matsinger.barofishserver.deliver.domain.Deliver;
 import com.matsinger.barofishserver.utils.CustomResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -19,6 +20,8 @@ import java.util.Optional;
 public class DeliverController {
 
     private final DeliverService deliverService;
+    @Value("${smart-parcel.apiKey}")
+    private String apiKey;
 
     @GetMapping("/company/list")
     public ResponseEntity<CustomResponse<List<Deliver.Company>>> selectDeliverCompanyList() {
@@ -49,6 +52,17 @@ public class DeliverController {
         CustomResponse<Deliver.TrackingInfo> res = new CustomResponse<>();
         try {
             res.setData(Optional.ofNullable(deliverService.selectTrackingInfo(code, invoice)));
+            return ResponseEntity.ok(res);
+        } catch (Exception e) {
+            return res.defaultError(e);
+        }
+    }
+
+    @GetMapping("/api-key")
+    public ResponseEntity<CustomResponse<String>> selectSmartDeliverApiKey() {
+        CustomResponse<String> res = new CustomResponse<>();
+        try {
+            res.setData(Optional.ofNullable(apiKey));
             return ResponseEntity.ok(res);
         } catch (Exception e) {
             return res.defaultError(e);

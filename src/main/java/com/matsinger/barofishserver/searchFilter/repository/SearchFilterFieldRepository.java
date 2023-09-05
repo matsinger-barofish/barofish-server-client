@@ -8,5 +8,8 @@ import java.util.List;
 public interface SearchFilterFieldRepository extends JpaRepository<SearchFilterField, Integer> {
     List<SearchFilterField> findAllBySearchFilterId(Integer filterId);
 
+    List<SearchFilterField> findAllByIdIn(List<Integer> ids);
+
     void deleteAllBySearchFilterId(Integer filterId);
+
 }
