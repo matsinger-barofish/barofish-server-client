@@ -83,6 +83,7 @@ public class PortOneCallbackHandler {
                                                 paymentData.getVbankNum().replaceAll("[^\\d]", "") + "\n") +
                                         String.format("가상계좌 예금주명: %s\n", paymentData.getVbankHolder()) +
                                         "24시간 이내로 이체해주세요.";
+                        sms.sendSms(paymentData.getBuyerTel(), smsContent, "가상 계좌 결제 요청");
                     }
                 } else if (data.getStatus().equals("paid")) {
                     Payments paymentData = paymentService.getPaymentInfo(order.getId(), data.getImp_uid());

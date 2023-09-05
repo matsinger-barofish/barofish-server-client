@@ -14,27 +14,14 @@ import java.util.Random;
 public class VerificationService {
     private final VerificationRepository verificationRepository;
 
-    public void verifyPhoneVerification(Integer verificationId, String ImpUid) {
+    public void verifyPhoneVerification(UserJoinReq request) {
 
         Verification verification = null;
 
-        if (verificationId == null && ImpUid == null) {
+        if (request.getVerificationId() == null && request.getImpUid() == null) {
             throw new IllegalArgumentException("인증을 먼저 진행해주세요.");
-        } else if (verificationId != null) {
-            verification = selectVerificationById(verificationId);
-            if (verification == null || verification.getExpiredAt() != null)
-                throw new IllegalArgumentException("인증을 먼저 진행해주세요.");
-        }
-    }
-
-    public void verifyPhoneVerification(Integer verificationId) {
-
-        Verification verification = null;
-
-        if (verificationId == null) {
-            throw new IllegalArgumentException("인증을 먼저 진행해주세요.");
-        } else if (verificationId != null) {
-            verification = selectVerificationById(verificationId);
+        } else if (request.getVerificationId() != null) {
+            verification = selectVerificationById(request.getVerificationId());
             if (verification == null || verification.getExpiredAt() != null)
                 throw new IllegalArgumentException("인증을 먼저 진행해주세요.");
         }
