@@ -41,6 +41,7 @@ import com.matsinger.barofishserver.store.application.StoreService;
 import com.matsinger.barofishserver.store.domain.Store;
 import com.matsinger.barofishserver.store.domain.StoreInfo;
 import com.matsinger.barofishserver.store.repository.StoreInfoRepository;
+import com.matsinger.barofishserver.utils.Common;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
@@ -79,6 +80,7 @@ public class ProductService {
     private final StoreInfoRepository storeInfoRepository;
     private final DifficultDeliverAddressQueryService difficultDeliverAddressQueryService;
     private final AddressQueryService addressQueryService;
+    private final Common utils;
 
     public List<Product> selectProductListWithIds(List<Integer> ids) {
         return productRepository.findAllByIdIn(ids);
@@ -162,6 +164,7 @@ public class ProductService {
                         productRepository.findWithPaginationSortByReview(Pageable.ofSize(take).withPage(page),
                                 categoryIds,
                                 filterFieldIds,
+                                filterIds,
                                 curationId,
                                 keyword,
                                 storeId);
@@ -171,6 +174,7 @@ public class ProductService {
                         productRepository.findWithPaginationSortByNewer(Pageable.ofSize(take).withPage(page),
                                 categoryIds,
                                 filterFieldIds,
+                                filterIds,
                                 curationId,
                                 keyword,
                                 storeId);
@@ -180,6 +184,7 @@ public class ProductService {
                         productRepository.findWithPaginationSortByLike(Pageable.ofSize(take).withPage(page),
                                 categoryIds,
                                 filterFieldIds,
+                                filterIds,
                                 curationId,
                                 keyword,
                                 storeId);
@@ -189,6 +194,7 @@ public class ProductService {
                         productRepository.findWithPaginationSortByOrder(Pageable.ofSize(take).withPage(page),
                                 categoryIds,
                                 filterFieldIds,
+                                filterIds,
                                 curationId,
                                 keyword,
                                 storeId);
@@ -198,6 +204,7 @@ public class ProductService {
                         productRepository.findWithPaginationSortByRecommend(Pageable.ofSize(take).withPage(page),
                                 categoryIds,
                                 filterFieldIds,
+                                filterIds,
                                 curationId,
                                 keyword,
                                 storeId);
@@ -207,6 +214,7 @@ public class ProductService {
                         productRepository.findWithPaginationSortByLowPrice(Pageable.ofSize(take).withPage(page),
                                 categoryIds,
                                 filterFieldIds,
+                                filterIds,
                                 curationId,
                                 keyword,
                                 storeId);
@@ -216,6 +224,7 @@ public class ProductService {
                         productRepository.findWithPaginationSortByHighPrice(Pageable.ofSize(take).withPage(page),
                                 categoryIds,
                                 filterFieldIds,
+                                filterIds,
                                 curationId,
                                 keyword,
                                 storeId);
@@ -445,6 +454,7 @@ public class ProductService {
         return productRepository.findNewerWithPagination(Pageable.ofSize(take).withPage(page),
                 categoryIds,
                 filterFieldIds,
+                filterIds,
                 null);
     }
 
@@ -452,9 +462,17 @@ public class ProductService {
                                                    Integer take,
                                                    List<Integer> categoryIds,
                                                    List<Integer> filterFieldIds) {
+        List<Integer> filterIds = null;
+        if (filterFieldIds != null) {
+            List<SearchFilterField>
+                    searchFilterFields =
+                    searchFilterQueryService.selectSearchFilterListWithIds(filterFieldIds);
+            filterIds = searchFilterFields.stream().map(SearchFilterField::getSearchFilterId).toList();
+        }
         return productRepository.findDiscountWithPagination(Pageable.ofSize(take).withPage(page),
                 categoryIds,
                 filterFieldIds,
+                filterIds,
                 null);
     }
 
@@ -462,9 +480,17 @@ public class ProductService {
                                                   Integer take,
                                                   List<Integer> categoryIds,
                                                   List<Integer> filterFieldIds) {
+        List<Integer> filterIds = null;
+        if (filterFieldIds != null) {
+            List<SearchFilterField>
+                    searchFilterFields =
+                    searchFilterQueryService.selectSearchFilterListWithIds(filterFieldIds);
+            filterIds = searchFilterFields.stream().map(SearchFilterField::getSearchFilterId).toList();
+        }
         return productRepository.findWithPaginationSortByOrder(Pageable.ofSize(take).withPage(page),
                 categoryIds,
                 filterFieldIds,
+                filterIds,
                 null,
                 null,
                 null);
@@ -588,6 +614,12 @@ public class ProductService {
     }
 
     public void saveAllProduct(List<Product> products) {
+        productRepository.saveAll(products);
+    }
+
+    public void updatePassedPromotionProductInactive() {
+        List<Product> products = productRepository.findAllByPromotionEndAtBefore(utils.now());
+        products.forEach(v -> v.setState(ProductState.INACTIVE));
         productRepository.saveAll(products);
     }
 }

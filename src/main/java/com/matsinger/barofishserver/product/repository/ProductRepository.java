@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.sql.Timestamp;
 import java.util.List;
 import java.util.Optional;
 
@@ -61,10 +62,34 @@ public interface ProductRepository extends JpaRepository<Product, Integer>, JpaS
             "and (:keyword is null or p.title like concat('%', :keyword, '%') ) \n" +
             "and ( (:#{#categoryIds==null ? null : #categoryIds.size()} is null or c.parent_category_id in (:categoryIds)) \n" +
             "or (:#{#categoryIds==null ? null : #categoryIds.size()} is null or c.id in (:categoryIds)) )\n" +
-            "and (:#{#filterFieldIds==null ? null : #filterFieldIds.size() } is null or p.id in (select p1.id from " +
-            "product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
-            "where (:#{#filterFieldIds==null ? null : #filterFieldIds.size() } is null or  ps.field_id in " +
-            "(:filterFieldIds) ))) " +
+            "and (:#{#filterIds!=null && #filterIds.contains(1) ? #filterFieldIds.size() : null } is null or " +
+            "p.id in (select p1.id from product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
+            "where (:#{#filterIds!=null && #filterIds.contains(1) ? #filterIds.size() : null } is null or  ps.field_id in " +
+            "(SELECT sff.id FROM search_filter_field sff WHERE sff.search_filter_id = 1 AND sff.id IN (:filterFieldIds)) ))) " +
+            "and (:#{#filterIds!=null && #filterIds.contains(2) ? #filterFieldIds.size() : null } is null or p.id in " +
+            "(select p1.id from product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
+            "where (:#{#filterIds!=null && #filterIds.contains(2) ? #filterIds.size() : null } is null or  ps.field_id in " +
+            "(SELECT sff.id FROM search_filter_field sff WHERE sff.search_filter_id = 2 AND sff.id IN (:filterFieldIds)) ))) " +
+            "and (:#{#filterIds!=null && #filterIds.contains(3) ? #filterFieldIds.size() : null } is null or p.id in " +
+            "(select p1.id from product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
+            "where (:#{#filterIds!=null && #filterIds.contains(3) ? #filterIds.size() : null } is null or  ps.field_id in " +
+            "(SELECT sff.id FROM search_filter_field sff WHERE sff.search_filter_id = 3 AND sff.id IN (:filterFieldIds)) ))) " +
+            "and (:#{#filterIds!=null && #filterIds.contains(4) ? #filterFieldIds.size() : null } is null or p.id in " +
+            "(select p1.id from product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
+            "where (:#{#filterIds!=null && #filterIds.contains(4) ? #filterIds.size() :null } is null or  ps.field_id in (SELECT" +
+            " sff.id FROM search_filter_field sff WHERE sff.search_filter_id = 4 AND sff.id IN (:filterFieldIds)) ))) " +
+            "and (:#{#filterIds!=null && #filterIds.contains(5) ? #filterFieldIds.size() : null } is null or p.id in " +
+            "(select p1.id from product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
+            "where (:#{#filterIds!=null && #filterIds.contains(5) ? #filterIds.size() : null } is null or  ps.field_id in " +
+            "(SELECT sff.id FROM search_filter_field sff WHERE sff.search_filter_id = 5 AND sff.id IN (:filterFieldIds)) ))) " +
+            "and (:#{#filterIds!=null && #filterIds.contains(6) ? #filterFieldIds.size() : null } is null or p.id in " +
+            "(select p1.id from product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
+            "where (:#{#filterIds!=null && #filterIds.contains(6) ? #filterIds.size() : null } is null or  ps.field_id in " +
+            "(SELECT sff.id FROM search_filter_field sff WHERE sff.search_filter_id = 6 AND sff.id IN (:filterFieldIds)) ))) " +
+            "and (:#{#filterIds!=null && #filterIds.contains(7) ? #filterFieldIds.size() : null } is null or p.id in" +
+            " (select p1.id from product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
+            "where (:#{#filterIds!=null && #filterIds.contains(7) ? #filterIds.size() : null } is null or  ps.field_id in " +
+            "(SELECT sff.id FROM search_filter_field sff WHERE sff.search_filter_id = 7 AND sff.id IN (:filterFieldIds)) ))) " +
 //            "GROUP BY p1.id HAVING COUNT(*) = :#{#filterFieldIds==null ? 0 : #filterFieldIds.size" +
 //            "() } )) \n" +
             "group by p.id \n" +
@@ -80,16 +105,41 @@ public interface ProductRepository extends JpaRepository<Product, Integer>, JpaS
             "and (:keyword is null or p.title like concat('%', :keyword, '%') ) \n" +
             "and ( (:#{#categoryIds==null ? null : #categoryIds.size()} is null or c.parent_category_id in (:categoryIds)) \n" +
             "or (:#{#categoryIds==null ? null : #categoryIds.size()} is null or c.id in (:categoryIds)) )\n" +
-            "and (:#{#filterFieldIds==null ? null : #filterFieldIds.size() } is null or p.id in (select p1.id from " +
-            "product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
-            "where (:#{#filterFieldIds==null ? null : #filterFieldIds.size() } is null or  ps.field_id in " +
-            "(:filterFieldIds) ))) " +
+            "and (:#{#filterIds!=null && #filterIds.contains(1) ? #filterFieldIds.size() : null } is null or " +
+            "p.id in (select p1.id from product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
+            "where (:#{#filterIds!=null && #filterIds.contains(1) ? #filterIds.size() : null } is null or  ps.field_id in " +
+            "(SELECT sff.id FROM search_filter_field sff WHERE sff.search_filter_id = 1 AND sff.id IN (:filterFieldIds)) ))) " +
+            "and (:#{#filterIds!=null && #filterIds.contains(2) ? #filterFieldIds.size() : null } is null or p.id in " +
+            "(select p1.id from product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
+            "where (:#{#filterIds!=null && #filterIds.contains(2) ? #filterIds.size() : null } is null or  ps.field_id in " +
+            "(SELECT sff.id FROM search_filter_field sff WHERE sff.search_filter_id = 2 AND sff.id IN (:filterFieldIds)) ))) " +
+            "and (:#{#filterIds!=null && #filterIds.contains(3) ? #filterFieldIds.size() : null } is null or p.id in " +
+            "(select p1.id from product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
+            "where (:#{#filterIds!=null && #filterIds.contains(3) ? #filterIds.size() : null } is null or  ps.field_id in " +
+            "(SELECT sff.id FROM search_filter_field sff WHERE sff.search_filter_id = 3 AND sff.id IN (:filterFieldIds)) ))) " +
+            "and (:#{#filterIds!=null && #filterIds.contains(4) ? #filterFieldIds.size() : null } is null or p.id in " +
+            "(select p1.id from product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
+            "where (:#{#filterIds!=null && #filterIds.contains(4) ? #filterIds.size() :null } is null or  ps.field_id in (SELECT" +
+            " sff.id FROM search_filter_field sff WHERE sff.search_filter_id = 4 AND sff.id IN (:filterFieldIds)) ))) " +
+            "and (:#{#filterIds!=null && #filterIds.contains(5) ? #filterFieldIds.size() : null } is null or p.id in " +
+            "(select p1.id from product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
+            "where (:#{#filterIds!=null && #filterIds.contains(5) ? #filterIds.size() : null } is null or  ps.field_id in " +
+            "(SELECT sff.id FROM search_filter_field sff WHERE sff.search_filter_id = 5 AND sff.id IN (:filterFieldIds)) ))) " +
+            "and (:#{#filterIds!=null && #filterIds.contains(6) ? #filterFieldIds.size() : null } is null or p.id in " +
+            "(select p1.id from product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
+            "where (:#{#filterIds!=null && #filterIds.contains(6) ? #filterIds.size() : null } is null or  ps.field_id in " +
+            "(SELECT sff.id FROM search_filter_field sff WHERE sff.search_filter_id = 6 AND sff.id IN (:filterFieldIds)) ))) " +
+            "and (:#{#filterIds!=null && #filterIds.contains(7) ? #filterFieldIds.size() : null } is null or p.id in" +
+            " (select p1.id from product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
+            "where (:#{#filterIds!=null && #filterIds.contains(7) ? #filterIds.size() : null } is null or  ps.field_id in " +
+            "(SELECT sff.id FROM search_filter_field sff WHERE sff.search_filter_id = 7 AND sff.id IN (:filterFieldIds)) ))) " +
 //            "GROUP BY p1.id HAVING COUNT(*) = :#{#filterFieldIds==null ? 0 : #filterFieldIds.size" +
 //            "() } )) \n" +
             "group by p.id \n")
     Page<Product> findWithPaginationSortByRecommend(Pageable pageable,
                                                     @Param("categoryIds") List<Integer> categoryIds,
                                                     @Param("filterFieldIds") List<Integer> filterFieldIds,
+                                                    @Param("filterIds") List<Integer> filterIds,
                                                     @Param("curationId") Integer curationId,
                                                     @Param("keyword") String keyword,
                                                     @Param("storeId") Integer storeId);
@@ -105,10 +155,34 @@ public interface ProductRepository extends JpaRepository<Product, Integer>, JpaS
             "and (:keyword is null or p.title like concat('%', :keyword, '%') ) \n" +
             "and ( (:#{#categoryIds==null ? null : #categoryIds.size()} is null or c.parent_category_id in (:categoryIds)) \n" +
             "or (:#{#categoryIds==null ? null : #categoryIds.size()} is null or c.id in (:categoryIds)) )\n" +
-            "and (:#{#filterFieldIds==null ? null : #filterFieldIds.size() } is null or p.id in (select p1.id from " +
-            "product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
-            "where (:#{#filterFieldIds==null ? null : #filterFieldIds.size() } is null or  ps.field_id in " +
-            "(:filterFieldIds) ))) " +
+            "and (:#{#filterIds!=null && #filterIds.contains(1) ? #filterFieldIds.size() : null } is null or " +
+            "p.id in (select p1.id from product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
+            "where (:#{#filterIds!=null && #filterIds.contains(1) ? #filterIds.size() : null } is null or  ps.field_id in " +
+            "(SELECT sff.id FROM search_filter_field sff WHERE sff.search_filter_id = 1 AND sff.id IN (:filterFieldIds)) ))) " +
+            "and (:#{#filterIds!=null && #filterIds.contains(2) ? #filterFieldIds.size() : null } is null or p.id in " +
+            "(select p1.id from product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
+            "where (:#{#filterIds!=null && #filterIds.contains(2) ? #filterIds.size() : null } is null or  ps.field_id in " +
+            "(SELECT sff.id FROM search_filter_field sff WHERE sff.search_filter_id = 2 AND sff.id IN (:filterFieldIds)) ))) " +
+            "and (:#{#filterIds!=null && #filterIds.contains(3) ? #filterFieldIds.size() : null } is null or p.id in " +
+            "(select p1.id from product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
+            "where (:#{#filterIds!=null && #filterIds.contains(3) ? #filterIds.size() : null } is null or  ps.field_id in " +
+            "(SELECT sff.id FROM search_filter_field sff WHERE sff.search_filter_id = 3 AND sff.id IN (:filterFieldIds)) ))) " +
+            "and (:#{#filterIds!=null && #filterIds.contains(4) ? #filterFieldIds.size() : null } is null or p.id in " +
+            "(select p1.id from product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
+            "where (:#{#filterIds!=null && #filterIds.contains(4) ? #filterIds.size() :null } is null or  ps.field_id in (SELECT" +
+            " sff.id FROM search_filter_field sff WHERE sff.search_filter_id = 4 AND sff.id IN (:filterFieldIds)) ))) " +
+            "and (:#{#filterIds!=null && #filterIds.contains(5) ? #filterFieldIds.size() : null } is null or p.id in " +
+            "(select p1.id from product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
+            "where (:#{#filterIds!=null && #filterIds.contains(5) ? #filterIds.size() : null } is null or  ps.field_id in " +
+            "(SELECT sff.id FROM search_filter_field sff WHERE sff.search_filter_id = 5 AND sff.id IN (:filterFieldIds)) ))) " +
+            "and (:#{#filterIds!=null && #filterIds.contains(6) ? #filterFieldIds.size() : null } is null or p.id in " +
+            "(select p1.id from product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
+            "where (:#{#filterIds!=null && #filterIds.contains(6) ? #filterIds.size() : null } is null or  ps.field_id in " +
+            "(SELECT sff.id FROM search_filter_field sff WHERE sff.search_filter_id = 6 AND sff.id IN (:filterFieldIds)) ))) " +
+            "and (:#{#filterIds!=null && #filterIds.contains(7) ? #filterFieldIds.size() : null } is null or p.id in" +
+            " (select p1.id from product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
+            "where (:#{#filterIds!=null && #filterIds.contains(7) ? #filterIds.size() : null } is null or  ps.field_id in " +
+            "(SELECT sff.id FROM search_filter_field sff WHERE sff.search_filter_id = 7 AND sff.id IN (:filterFieldIds)) ))) " +
 //            "GROUP BY p1.id HAVING COUNT(*) = :#{#filterFieldIds==null ? 0 : #filterFieldIds.size" +
 //            "() } )) \n" +
             "group by p.id \n" +
@@ -123,16 +197,41 @@ public interface ProductRepository extends JpaRepository<Product, Integer>, JpaS
             "and (:keyword is null or p.title like concat('%', :keyword, '%') ) \n" +
             "and ( (:#{#categoryIds==null ? null : #categoryIds.size()} is null or c.parent_category_id in (:categoryIds)) \n" +
             "or (:#{#categoryIds==null ? null : #categoryIds.size()} is null or c.id in (:categoryIds)) )\n" +
-            "and (:#{#filterFieldIds==null ? null : #filterFieldIds.size() } is null or p.id in (select p1.id from " +
-            "product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
-            "where (:#{#filterFieldIds==null ? null : #filterFieldIds.size() } is null or  ps.field_id in " +
-            "(:filterFieldIds) ))) " +
+            "and (:#{#filterIds!=null && #filterIds.contains(1) ? #filterFieldIds.size() : null } is null or " +
+            "p.id in (select p1.id from product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
+            "where (:#{#filterIds!=null && #filterIds.contains(1) ? #filterIds.size() : null } is null or  ps.field_id in " +
+            "(SELECT sff.id FROM search_filter_field sff WHERE sff.search_filter_id = 1 AND sff.id IN (:filterFieldIds)) ))) " +
+            "and (:#{#filterIds!=null && #filterIds.contains(2) ? #filterFieldIds.size() : null } is null or p.id in " +
+            "(select p1.id from product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
+            "where (:#{#filterIds!=null && #filterIds.contains(2) ? #filterIds.size() : null } is null or  ps.field_id in " +
+            "(SELECT sff.id FROM search_filter_field sff WHERE sff.search_filter_id = 2 AND sff.id IN (:filterFieldIds)) ))) " +
+            "and (:#{#filterIds!=null && #filterIds.contains(3) ? #filterFieldIds.size() : null } is null or p.id in " +
+            "(select p1.id from product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
+            "where (:#{#filterIds!=null && #filterIds.contains(3) ? #filterIds.size() : null } is null or  ps.field_id in " +
+            "(SELECT sff.id FROM search_filter_field sff WHERE sff.search_filter_id = 3 AND sff.id IN (:filterFieldIds)) ))) " +
+            "and (:#{#filterIds!=null && #filterIds.contains(4) ? #filterFieldIds.size() : null } is null or p.id in " +
+            "(select p1.id from product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
+            "where (:#{#filterIds!=null && #filterIds.contains(4) ? #filterIds.size() :null } is null or  ps.field_id in (SELECT" +
+            " sff.id FROM search_filter_field sff WHERE sff.search_filter_id = 4 AND sff.id IN (:filterFieldIds)) ))) " +
+            "and (:#{#filterIds!=null && #filterIds.contains(5) ? #filterFieldIds.size() : null } is null or p.id in " +
+            "(select p1.id from product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
+            "where (:#{#filterIds!=null && #filterIds.contains(5) ? #filterIds.size() : null } is null or  ps.field_id in " +
+            "(SELECT sff.id FROM search_filter_field sff WHERE sff.search_filter_id = 5 AND sff.id IN (:filterFieldIds)) ))) " +
+            "and (:#{#filterIds!=null && #filterIds.contains(6) ? #filterFieldIds.size() : null } is null or p.id in " +
+            "(select p1.id from product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
+            "where (:#{#filterIds!=null && #filterIds.contains(6) ? #filterIds.size() : null } is null or  ps.field_id in " +
+            "(SELECT sff.id FROM search_filter_field sff WHERE sff.search_filter_id = 6 AND sff.id IN (:filterFieldIds)) ))) " +
+            "and (:#{#filterIds!=null && #filterIds.contains(7) ? #filterFieldIds.size() : null } is null or p.id in" +
+            " (select p1.id from product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
+            "where (:#{#filterIds!=null && #filterIds.contains(7) ? #filterIds.size() : null } is null or  ps.field_id in " +
+            "(SELECT sff.id FROM search_filter_field sff WHERE sff.search_filter_id = 7 AND sff.id IN (:filterFieldIds)) ))) " +
 //            "GROUP BY p1.id HAVING COUNT(*) = :#{#filterFieldIds==null ? 0 : #filterFieldIds.size" +
 //            "() } )) \n" +
             "group by p.id \n")
     Page<Product> findWithPaginationSortByNewer(Pageable pageable,
                                                 @Param("categoryIds") List<Integer> categoryIds,
                                                 @Param("filterFieldIds") List<Integer> filterFieldIds,
+                                                @Param("filterIds") List<Integer> filterIds,
                                                 @Param("curationId") Integer curationId,
                                                 @Param("keyword") String keyword,
                                                 @Param("storeId") Integer storeId);
@@ -149,10 +248,34 @@ public interface ProductRepository extends JpaRepository<Product, Integer>, JpaS
             "and (:keyword is null or p.title like concat('%', :keyword, '%') ) \n" +
             "and ( (:#{#categoryIds==null ? null : #categoryIds.size()} is null or c.parent_category_id in (:categoryIds)) \n" +
             "or (:#{#categoryIds==null ? null : #categoryIds.size()} is null or c.id in (:categoryIds)) )\n" +
-            "and (:#{#filterFieldIds==null ? null : #filterFieldIds.size() } is null or p.id in (select p1.id from " +
-            "product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
-            "where (:#{#filterFieldIds==null ? null : #filterFieldIds.size() } is null or  ps.field_id in " +
-            "(:filterFieldIds) ))) " +
+            "and (:#{#filterIds!=null && #filterIds.contains(1) ? #filterFieldIds.size() : null } is null or " +
+            "p.id in (select p1.id from product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
+            "where (:#{#filterIds!=null && #filterIds.contains(1) ? #filterIds.size() : null } is null or  ps.field_id in " +
+            "(SELECT sff.id FROM search_filter_field sff WHERE sff.search_filter_id = 1 AND sff.id IN (:filterFieldIds)) ))) " +
+            "and (:#{#filterIds!=null && #filterIds.contains(2) ? #filterFieldIds.size() : null } is null or p.id in " +
+            "(select p1.id from product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
+            "where (:#{#filterIds!=null && #filterIds.contains(2) ? #filterIds.size() : null } is null or  ps.field_id in " +
+            "(SELECT sff.id FROM search_filter_field sff WHERE sff.search_filter_id = 2 AND sff.id IN (:filterFieldIds)) ))) " +
+            "and (:#{#filterIds!=null && #filterIds.contains(3) ? #filterFieldIds.size() : null } is null or p.id in " +
+            "(select p1.id from product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
+            "where (:#{#filterIds!=null && #filterIds.contains(3) ? #filterIds.size() : null } is null or  ps.field_id in " +
+            "(SELECT sff.id FROM search_filter_field sff WHERE sff.search_filter_id = 3 AND sff.id IN (:filterFieldIds)) ))) " +
+            "and (:#{#filterIds!=null && #filterIds.contains(4) ? #filterFieldIds.size() : null } is null or p.id in " +
+            "(select p1.id from product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
+            "where (:#{#filterIds!=null && #filterIds.contains(4) ? #filterIds.size() :null } is null or  ps.field_id in (SELECT" +
+            " sff.id FROM search_filter_field sff WHERE sff.search_filter_id = 4 AND sff.id IN (:filterFieldIds)) ))) " +
+            "and (:#{#filterIds!=null && #filterIds.contains(5) ? #filterFieldIds.size() : null } is null or p.id in " +
+            "(select p1.id from product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
+            "where (:#{#filterIds!=null && #filterIds.contains(5) ? #filterIds.size() : null } is null or  ps.field_id in " +
+            "(SELECT sff.id FROM search_filter_field sff WHERE sff.search_filter_id = 5 AND sff.id IN (:filterFieldIds)) ))) " +
+            "and (:#{#filterIds!=null && #filterIds.contains(6) ? #filterFieldIds.size() : null } is null or p.id in " +
+            "(select p1.id from product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
+            "where (:#{#filterIds!=null && #filterIds.contains(6) ? #filterIds.size() : null } is null or  ps.field_id in " +
+            "(SELECT sff.id FROM search_filter_field sff WHERE sff.search_filter_id = 6 AND sff.id IN (:filterFieldIds)) ))) " +
+            "and (:#{#filterIds!=null && #filterIds.contains(7) ? #filterFieldIds.size() : null } is null or p.id in" +
+            " (select p1.id from product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
+            "where (:#{#filterIds!=null && #filterIds.contains(7) ? #filterIds.size() : null } is null or  ps.field_id in " +
+            "(SELECT sff.id FROM search_filter_field sff WHERE sff.search_filter_id = 7 AND sff.id IN (:filterFieldIds)) ))) " +
 //            "GROUP BY p1.id HAVING COUNT(*) = :#{#filterFieldIds==null ? 0 : #filterFieldIds.size" +
 //            "() } )) \n" +
             "group by p.id \n" +
@@ -167,16 +290,41 @@ public interface ProductRepository extends JpaRepository<Product, Integer>, JpaS
             "and (:keyword is null or p.title like concat('%', :keyword, '%') ) \n" +
             "and ( (:#{#categoryIds==null ? null : #categoryIds.size()} is null or c.parent_category_id in (:categoryIds)) \n" +
             "or (:#{#categoryIds==null ? null : #categoryIds.size()} is null or c.id in (:categoryIds)) )\n" +
-            "and (:#{#filterFieldIds==null ? null : #filterFieldIds.size() } is null or p.id in (select p1.id from " +
-            "product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
-            "where (:#{#filterFieldIds==null ? null : #filterFieldIds.size() } is null or  ps.field_id in " +
-            "(:filterFieldIds) ))) " +
+            "and (:#{#filterIds!=null && #filterIds.contains(1) ? #filterFieldIds.size() : null } is null or " +
+            "p.id in (select p1.id from product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
+            "where (:#{#filterIds!=null && #filterIds.contains(1) ? #filterIds.size() : null } is null or  ps.field_id in " +
+            "(SELECT sff.id FROM search_filter_field sff WHERE sff.search_filter_id = 1 AND sff.id IN (:filterFieldIds)) ))) " +
+            "and (:#{#filterIds!=null && #filterIds.contains(2) ? #filterFieldIds.size() : null } is null or p.id in " +
+            "(select p1.id from product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
+            "where (:#{#filterIds!=null && #filterIds.contains(2) ? #filterIds.size() : null } is null or  ps.field_id in " +
+            "(SELECT sff.id FROM search_filter_field sff WHERE sff.search_filter_id = 2 AND sff.id IN (:filterFieldIds)) ))) " +
+            "and (:#{#filterIds!=null && #filterIds.contains(3) ? #filterFieldIds.size() : null } is null or p.id in " +
+            "(select p1.id from product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
+            "where (:#{#filterIds!=null && #filterIds.contains(3) ? #filterIds.size() : null } is null or  ps.field_id in " +
+            "(SELECT sff.id FROM search_filter_field sff WHERE sff.search_filter_id = 3 AND sff.id IN (:filterFieldIds)) ))) " +
+            "and (:#{#filterIds!=null && #filterIds.contains(4) ? #filterFieldIds.size() : null } is null or p.id in " +
+            "(select p1.id from product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
+            "where (:#{#filterIds!=null && #filterIds.contains(4) ? #filterIds.size() :null } is null or  ps.field_id in (SELECT" +
+            " sff.id FROM search_filter_field sff WHERE sff.search_filter_id = 4 AND sff.id IN (:filterFieldIds)) ))) " +
+            "and (:#{#filterIds!=null && #filterIds.contains(5) ? #filterFieldIds.size() : null } is null or p.id in " +
+            "(select p1.id from product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
+            "where (:#{#filterIds!=null && #filterIds.contains(5) ? #filterIds.size() : null } is null or  ps.field_id in " +
+            "(SELECT sff.id FROM search_filter_field sff WHERE sff.search_filter_id = 5 AND sff.id IN (:filterFieldIds)) ))) " +
+            "and (:#{#filterIds!=null && #filterIds.contains(6) ? #filterFieldIds.size() : null } is null or p.id in " +
+            "(select p1.id from product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
+            "where (:#{#filterIds!=null && #filterIds.contains(6) ? #filterIds.size() : null } is null or  ps.field_id in " +
+            "(SELECT sff.id FROM search_filter_field sff WHERE sff.search_filter_id = 6 AND sff.id IN (:filterFieldIds)) ))) " +
+            "and (:#{#filterIds!=null && #filterIds.contains(7) ? #filterFieldIds.size() : null } is null or p.id in" +
+            " (select p1.id from product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
+            "where (:#{#filterIds!=null && #filterIds.contains(7) ? #filterIds.size() : null } is null or  ps.field_id in " +
+            "(SELECT sff.id FROM search_filter_field sff WHERE sff.search_filter_id = 7 AND sff.id IN (:filterFieldIds)) ))) " +
 //            "GROUP BY p1.id HAVING COUNT(*) = :#{#filterFieldIds==null ? 0 : #filterFieldIds.size" +
 //            "() } )) \n" +
             "group by p.id \n")
     Page<Product> findWithPaginationSortByLowPrice(Pageable pageable,
                                                    @Param("categoryIds") List<Integer> categoryIds,
                                                    @Param("filterFieldIds") List<Integer> filterFieldIds,
+                                                   @Param("filterIds") List<Integer> filterIds,
                                                    @Param("curationId") Integer curationId,
                                                    @Param("keyword") String keyword,
                                                    @Param("storeId") Integer storeId);
@@ -193,10 +341,34 @@ public interface ProductRepository extends JpaRepository<Product, Integer>, JpaS
             "and (:keyword is null or p.title like concat('%', :keyword, '%') ) \n" +
             "and ( (:#{#categoryIds==null ? null : #categoryIds.size()} is null or c.parent_category_id in (:categoryIds)) \n" +
             "or (:#{#categoryIds==null ? null : #categoryIds.size()} is null or c.id in (:categoryIds)) )\n" +
-            "and (:#{#filterFieldIds==null ? null : #filterFieldIds.size() } is null or p.id in (select p1.id from " +
-            "product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
-            "where (:#{#filterFieldIds==null ? null : #filterFieldIds.size() } is null or  ps.field_id in " +
-            "(:filterFieldIds) ))) " +
+            "and (:#{#filterIds!=null && #filterIds.contains(1) ? #filterFieldIds.size() : null } is null or " +
+            "p.id in (select p1.id from product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
+            "where (:#{#filterIds!=null && #filterIds.contains(1) ? #filterIds.size() : null } is null or  ps.field_id in " +
+            "(SELECT sff.id FROM search_filter_field sff WHERE sff.search_filter_id = 1 AND sff.id IN (:filterFieldIds)) ))) " +
+            "and (:#{#filterIds!=null && #filterIds.contains(2) ? #filterFieldIds.size() : null } is null or p.id in " +
+            "(select p1.id from product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
+            "where (:#{#filterIds!=null && #filterIds.contains(2) ? #filterIds.size() : null } is null or  ps.field_id in " +
+            "(SELECT sff.id FROM search_filter_field sff WHERE sff.search_filter_id = 2 AND sff.id IN (:filterFieldIds)) ))) " +
+            "and (:#{#filterIds!=null && #filterIds.contains(3) ? #filterFieldIds.size() : null } is null or p.id in " +
+            "(select p1.id from product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
+            "where (:#{#filterIds!=null && #filterIds.contains(3) ? #filterIds.size() : null } is null or  ps.field_id in " +
+            "(SELECT sff.id FROM search_filter_field sff WHERE sff.search_filter_id = 3 AND sff.id IN (:filterFieldIds)) ))) " +
+            "and (:#{#filterIds!=null && #filterIds.contains(4) ? #filterFieldIds.size() : null } is null or p.id in " +
+            "(select p1.id from product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
+            "where (:#{#filterIds!=null && #filterIds.contains(4) ? #filterIds.size() :null } is null or  ps.field_id in (SELECT" +
+            " sff.id FROM search_filter_field sff WHERE sff.search_filter_id = 4 AND sff.id IN (:filterFieldIds)) ))) " +
+            "and (:#{#filterIds!=null && #filterIds.contains(5) ? #filterFieldIds.size() : null } is null or p.id in " +
+            "(select p1.id from product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
+            "where (:#{#filterIds!=null && #filterIds.contains(5) ? #filterIds.size() : null } is null or  ps.field_id in " +
+            "(SELECT sff.id FROM search_filter_field sff WHERE sff.search_filter_id = 5 AND sff.id IN (:filterFieldIds)) ))) " +
+            "and (:#{#filterIds!=null && #filterIds.contains(6) ? #filterFieldIds.size() : null } is null or p.id in " +
+            "(select p1.id from product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
+            "where (:#{#filterIds!=null && #filterIds.contains(6) ? #filterIds.size() : null } is null or  ps.field_id in " +
+            "(SELECT sff.id FROM search_filter_field sff WHERE sff.search_filter_id = 6 AND sff.id IN (:filterFieldIds)) ))) " +
+            "and (:#{#filterIds!=null && #filterIds.contains(7) ? #filterFieldIds.size() : null } is null or p.id in" +
+            " (select p1.id from product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
+            "where (:#{#filterIds!=null && #filterIds.contains(7) ? #filterIds.size() : null } is null or  ps.field_id in " +
+            "(SELECT sff.id FROM search_filter_field sff WHERE sff.search_filter_id = 7 AND sff.id IN (:filterFieldIds)) ))) " +
 //            "GROUP BY p1.id HAVING COUNT(*) = :#{#filterFieldIds==null ? 0 : #filterFieldIds.size" +
 //            "() } )) \n" +
             "group by p.id \n" +
@@ -211,16 +383,41 @@ public interface ProductRepository extends JpaRepository<Product, Integer>, JpaS
             "and (:keyword is null or p.title like concat('%', :keyword, '%') ) \n" +
             "and ( (:#{#categoryIds==null ? null : #categoryIds.size()} is null or c.parent_category_id in (:categoryIds)) \n" +
             "or (:#{#categoryIds==null ? null : #categoryIds.size()} is null or c.id in (:categoryIds)) )\n" +
-            "and (:#{#filterFieldIds==null ? null : #filterFieldIds.size() } is null or p.id in (select p1.id from " +
-            "product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
-            "where (:#{#filterFieldIds==null ? null : #filterFieldIds.size() } is null or  ps.field_id in " +
-            "(:filterFieldIds) ))) " +
+            "and (:#{#filterIds!=null && #filterIds.contains(1) ? #filterFieldIds.size() : null } is null or " +
+            "p.id in (select p1.id from product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
+            "where (:#{#filterIds!=null && #filterIds.contains(1) ? #filterIds.size() : null } is null or  ps.field_id in " +
+            "(SELECT sff.id FROM search_filter_field sff WHERE sff.search_filter_id = 1 AND sff.id IN (:filterFieldIds)) ))) " +
+            "and (:#{#filterIds!=null && #filterIds.contains(2) ? #filterFieldIds.size() : null } is null or p.id in " +
+            "(select p1.id from product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
+            "where (:#{#filterIds!=null && #filterIds.contains(2) ? #filterIds.size() : null } is null or  ps.field_id in " +
+            "(SELECT sff.id FROM search_filter_field sff WHERE sff.search_filter_id = 2 AND sff.id IN (:filterFieldIds)) ))) " +
+            "and (:#{#filterIds!=null && #filterIds.contains(3) ? #filterFieldIds.size() : null } is null or p.id in " +
+            "(select p1.id from product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
+            "where (:#{#filterIds!=null && #filterIds.contains(3) ? #filterIds.size() : null } is null or  ps.field_id in " +
+            "(SELECT sff.id FROM search_filter_field sff WHERE sff.search_filter_id = 3 AND sff.id IN (:filterFieldIds)) ))) " +
+            "and (:#{#filterIds!=null && #filterIds.contains(4) ? #filterFieldIds.size() : null } is null or p.id in " +
+            "(select p1.id from product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
+            "where (:#{#filterIds!=null && #filterIds.contains(4) ? #filterIds.size() :null } is null or  ps.field_id in (SELECT" +
+            " sff.id FROM search_filter_field sff WHERE sff.search_filter_id = 4 AND sff.id IN (:filterFieldIds)) ))) " +
+            "and (:#{#filterIds!=null && #filterIds.contains(5) ? #filterFieldIds.size() : null } is null or p.id in " +
+            "(select p1.id from product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
+            "where (:#{#filterIds!=null && #filterIds.contains(5) ? #filterIds.size() : null } is null or  ps.field_id in " +
+            "(SELECT sff.id FROM search_filter_field sff WHERE sff.search_filter_id = 5 AND sff.id IN (:filterFieldIds)) ))) " +
+            "and (:#{#filterIds!=null && #filterIds.contains(6) ? #filterFieldIds.size() : null } is null or p.id in " +
+            "(select p1.id from product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
+            "where (:#{#filterIds!=null && #filterIds.contains(6) ? #filterIds.size() : null } is null or  ps.field_id in " +
+            "(SELECT sff.id FROM search_filter_field sff WHERE sff.search_filter_id = 6 AND sff.id IN (:filterFieldIds)) ))) " +
+            "and (:#{#filterIds!=null && #filterIds.contains(7) ? #filterFieldIds.size() : null } is null or p.id in" +
+            " (select p1.id from product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
+            "where (:#{#filterIds!=null && #filterIds.contains(7) ? #filterIds.size() : null } is null or  ps.field_id in " +
+            "(SELECT sff.id FROM search_filter_field sff WHERE sff.search_filter_id = 7 AND sff.id IN (:filterFieldIds)) ))) " +
 //            "GROUP BY p1.id HAVING COUNT(*) = :#{#filterFieldIds==null ? 0 : #filterFieldIds.size" +
 //            "() } )) \n" +
             "group by p.id \n")
     Page<Product> findWithPaginationSortByHighPrice(Pageable pageable,
                                                     @Param("categoryIds") List<Integer> categoryIds,
                                                     @Param("filterFieldIds") List<Integer> filterFieldIds,
+                                                    @Param("filterIds") List<Integer> filterIds,
                                                     @Param("curationId") Integer curationId,
                                                     @Param("keyword") String keyword,
                                                     @Param("storeId") Integer storeId);
@@ -237,10 +434,34 @@ public interface ProductRepository extends JpaRepository<Product, Integer>, JpaS
             "and (:keyword is null or p.title like concat('%', :keyword, '%') ) \n" +
             "and ( (:#{#categoryIds==null ? null : #categoryIds.size()} is null or c.parent_category_id in (:categoryIds)) \n" +
             "or (:#{#categoryIds==null ? null : #categoryIds.size()} is null or c.id in (:categoryIds)) )\n" +
-            "and (:#{#filterFieldIds==null ? null : #filterFieldIds.size() } is null or p.id in (select p1.id from " +
-            "product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
-            "where (:#{#filterFieldIds==null ? null : #filterFieldIds.size() } is null or  ps.field_id in " +
-            "(:filterFieldIds) ))) " +
+            "and (:#{#filterIds!=null && #filterIds.contains(1) ? #filterFieldIds.size() : null } is null or " +
+            "p.id in (select p1.id from product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
+            "where (:#{#filterIds!=null && #filterIds.contains(1) ? #filterIds.size() : null } is null or  ps.field_id in " +
+            "(SELECT sff.id FROM search_filter_field sff WHERE sff.search_filter_id = 1 AND sff.id IN (:filterFieldIds)) ))) " +
+            "and (:#{#filterIds!=null && #filterIds.contains(2) ? #filterFieldIds.size() : null } is null or p.id in " +
+            "(select p1.id from product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
+            "where (:#{#filterIds!=null && #filterIds.contains(2) ? #filterIds.size() : null } is null or  ps.field_id in " +
+            "(SELECT sff.id FROM search_filter_field sff WHERE sff.search_filter_id = 2 AND sff.id IN (:filterFieldIds)) ))) " +
+            "and (:#{#filterIds!=null && #filterIds.contains(3) ? #filterFieldIds.size() : null } is null or p.id in " +
+            "(select p1.id from product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
+            "where (:#{#filterIds!=null && #filterIds.contains(3) ? #filterIds.size() : null } is null or  ps.field_id in " +
+            "(SELECT sff.id FROM search_filter_field sff WHERE sff.search_filter_id = 3 AND sff.id IN (:filterFieldIds)) ))) " +
+            "and (:#{#filterIds!=null && #filterIds.contains(4) ? #filterFieldIds.size() : null } is null or p.id in " +
+            "(select p1.id from product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
+            "where (:#{#filterIds!=null && #filterIds.contains(4) ? #filterIds.size() :null } is null or  ps.field_id in (SELECT" +
+            " sff.id FROM search_filter_field sff WHERE sff.search_filter_id = 4 AND sff.id IN (:filterFieldIds)) ))) " +
+            "and (:#{#filterIds!=null && #filterIds.contains(5) ? #filterFieldIds.size() : null } is null or p.id in " +
+            "(select p1.id from product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
+            "where (:#{#filterIds!=null && #filterIds.contains(5) ? #filterIds.size() : null } is null or  ps.field_id in " +
+            "(SELECT sff.id FROM search_filter_field sff WHERE sff.search_filter_id = 5 AND sff.id IN (:filterFieldIds)) ))) " +
+            "and (:#{#filterIds!=null && #filterIds.contains(6) ? #filterFieldIds.size() : null } is null or p.id in " +
+            "(select p1.id from product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
+            "where (:#{#filterIds!=null && #filterIds.contains(6) ? #filterIds.size() : null } is null or  ps.field_id in " +
+            "(SELECT sff.id FROM search_filter_field sff WHERE sff.search_filter_id = 6 AND sff.id IN (:filterFieldIds)) ))) " +
+            "and (:#{#filterIds!=null && #filterIds.contains(7) ? #filterFieldIds.size() : null } is null or p.id in" +
+            " (select p1.id from product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
+            "where (:#{#filterIds!=null && #filterIds.contains(7) ? #filterIds.size() : null } is null or  ps.field_id in " +
+            "(SELECT sff.id FROM search_filter_field sff WHERE sff.search_filter_id = 7 AND sff.id IN (:filterFieldIds)) ))) " +
 //            "GROUP BY p1.id HAVING COUNT(*) = :#{#filterFieldIds==null ? 0 : #filterFieldIds.size" +
 //            "() } )) \n" +
             "group by p.id \n" +
@@ -256,16 +477,41 @@ public interface ProductRepository extends JpaRepository<Product, Integer>, JpaS
             "and (:keyword is null or p.title like concat('%', :keyword, '%') ) \n" +
             "and ( (:#{#categoryIds==null ? null : #categoryIds.size()} is null or c.parent_category_id in (:categoryIds)) \n" +
             "or (:#{#categoryIds==null ? null : #categoryIds.size()} is null or c.id in (:categoryIds)) )\n" +
-            "and (:#{#filterFieldIds==null ? null : #filterFieldIds.size() } is null or p.id in (select p1.id from " +
-            "product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
-            "where (:#{#filterFieldIds==null ? null : #filterFieldIds.size() } is null or  ps.field_id in " +
-            "(:filterFieldIds) ))) " +
+            "and (:#{#filterIds!=null && #filterIds.contains(1) ? #filterFieldIds.size() : null } is null or " +
+            "p.id in (select p1.id from product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
+            "where (:#{#filterIds!=null && #filterIds.contains(1) ? #filterIds.size() : null } is null or  ps.field_id in " +
+            "(SELECT sff.id FROM search_filter_field sff WHERE sff.search_filter_id = 1 AND sff.id IN (:filterFieldIds)) ))) " +
+            "and (:#{#filterIds!=null && #filterIds.contains(2) ? #filterFieldIds.size() : null } is null or p.id in " +
+            "(select p1.id from product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
+            "where (:#{#filterIds!=null && #filterIds.contains(2) ? #filterIds.size() : null } is null or  ps.field_id in " +
+            "(SELECT sff.id FROM search_filter_field sff WHERE sff.search_filter_id = 2 AND sff.id IN (:filterFieldIds)) ))) " +
+            "and (:#{#filterIds!=null && #filterIds.contains(3) ? #filterFieldIds.size() : null } is null or p.id in " +
+            "(select p1.id from product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
+            "where (:#{#filterIds!=null && #filterIds.contains(3) ? #filterIds.size() : null } is null or  ps.field_id in " +
+            "(SELECT sff.id FROM search_filter_field sff WHERE sff.search_filter_id = 3 AND sff.id IN (:filterFieldIds)) ))) " +
+            "and (:#{#filterIds!=null && #filterIds.contains(4) ? #filterFieldIds.size() : null } is null or p.id in " +
+            "(select p1.id from product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
+            "where (:#{#filterIds!=null && #filterIds.contains(4) ? #filterIds.size() :null } is null or  ps.field_id in (SELECT" +
+            " sff.id FROM search_filter_field sff WHERE sff.search_filter_id = 4 AND sff.id IN (:filterFieldIds)) ))) " +
+            "and (:#{#filterIds!=null && #filterIds.contains(5) ? #filterFieldIds.size() : null } is null or p.id in " +
+            "(select p1.id from product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
+            "where (:#{#filterIds!=null && #filterIds.contains(5) ? #filterIds.size() : null } is null or  ps.field_id in " +
+            "(SELECT sff.id FROM search_filter_field sff WHERE sff.search_filter_id = 5 AND sff.id IN (:filterFieldIds)) ))) " +
+            "and (:#{#filterIds!=null && #filterIds.contains(6) ? #filterFieldIds.size() : null } is null or p.id in " +
+            "(select p1.id from product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
+            "where (:#{#filterIds!=null && #filterIds.contains(6) ? #filterIds.size() : null } is null or  ps.field_id in " +
+            "(SELECT sff.id FROM search_filter_field sff WHERE sff.search_filter_id = 6 AND sff.id IN (:filterFieldIds)) ))) " +
+            "and (:#{#filterIds!=null && #filterIds.contains(7) ? #filterFieldIds.size() : null } is null or p.id in" +
+            " (select p1.id from product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
+            "where (:#{#filterIds!=null && #filterIds.contains(7) ? #filterIds.size() : null } is null or  ps.field_id in " +
+            "(SELECT sff.id FROM search_filter_field sff WHERE sff.search_filter_id = 7 AND sff.id IN (:filterFieldIds)) ))) " +
 //            "GROUP BY p1.id HAVING COUNT(*) = :#{#filterFieldIds==null ? 0 : #filterFieldIds.size" +
 //            "() } )) \n" +
             "group by p.id \n")
     Page<Product> findWithPaginationSortByLike(Pageable pageable,
                                                @Param("categoryIds") List<Integer> categoryIds,
                                                @Param("filterFieldIds") List<Integer> filterFieldIds,
+                                               @Param("filterIds") List<Integer> filterIds,
                                                @Param("curationId") Integer curationId,
                                                @Param("keyword") String keyword,
                                                @Param("storeId") Integer storeId);
@@ -282,10 +528,34 @@ public interface ProductRepository extends JpaRepository<Product, Integer>, JpaS
             "and (:keyword is null or p.title like concat('%', :keyword, '%') ) \n" +
             "and ( (:#{#categoryIds==null ? null : #categoryIds.size()} is null or c.parent_category_id in (:categoryIds)) \n" +
             "or (:#{#categoryIds==null ? null : #categoryIds.size()} is null or c.id in (:categoryIds)) )\n" +
-            "and (:#{#filterFieldIds==null ? null : #filterFieldIds.size() } is null or p.id in (select p1.id from " +
-            "product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
-            "where (:#{#filterFieldIds==null ? null : #filterFieldIds.size() } is null or  ps.field_id in " +
-            "(:filterFieldIds) ))) " +
+            "and (:#{#filterIds!=null && #filterIds.contains(1) ? #filterFieldIds.size() : null } is null or " +
+            "p.id in (select p1.id from product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
+            "where (:#{#filterIds!=null && #filterIds.contains(1) ? #filterIds.size() : null } is null or  ps.field_id in " +
+            "(SELECT sff.id FROM search_filter_field sff WHERE sff.search_filter_id = 1 AND sff.id IN (:filterFieldIds)) ))) " +
+            "and (:#{#filterIds!=null && #filterIds.contains(2) ? #filterFieldIds.size() : null } is null or p.id in " +
+            "(select p1.id from product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
+            "where (:#{#filterIds!=null && #filterIds.contains(2) ? #filterIds.size() : null } is null or  ps.field_id in " +
+            "(SELECT sff.id FROM search_filter_field sff WHERE sff.search_filter_id = 2 AND sff.id IN (:filterFieldIds)) ))) " +
+            "and (:#{#filterIds!=null && #filterIds.contains(3) ? #filterFieldIds.size() : null } is null or p.id in " +
+            "(select p1.id from product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
+            "where (:#{#filterIds!=null && #filterIds.contains(3) ? #filterIds.size() : null } is null or  ps.field_id in " +
+            "(SELECT sff.id FROM search_filter_field sff WHERE sff.search_filter_id = 3 AND sff.id IN (:filterFieldIds)) ))) " +
+            "and (:#{#filterIds!=null && #filterIds.contains(4) ? #filterFieldIds.size() : null } is null or p.id in " +
+            "(select p1.id from product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
+            "where (:#{#filterIds!=null && #filterIds.contains(4) ? #filterIds.size() :null } is null or  ps.field_id in (SELECT" +
+            " sff.id FROM search_filter_field sff WHERE sff.search_filter_id = 4 AND sff.id IN (:filterFieldIds)) ))) " +
+            "and (:#{#filterIds!=null && #filterIds.contains(5) ? #filterFieldIds.size() : null } is null or p.id in " +
+            "(select p1.id from product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
+            "where (:#{#filterIds!=null && #filterIds.contains(5) ? #filterIds.size() : null } is null or  ps.field_id in " +
+            "(SELECT sff.id FROM search_filter_field sff WHERE sff.search_filter_id = 5 AND sff.id IN (:filterFieldIds)) ))) " +
+            "and (:#{#filterIds!=null && #filterIds.contains(6) ? #filterFieldIds.size() : null } is null or p.id in " +
+            "(select p1.id from product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
+            "where (:#{#filterIds!=null && #filterIds.contains(6) ? #filterIds.size() : null } is null or  ps.field_id in " +
+            "(SELECT sff.id FROM search_filter_field sff WHERE sff.search_filter_id = 6 AND sff.id IN (:filterFieldIds)) ))) " +
+            "and (:#{#filterIds!=null && #filterIds.contains(7) ? #filterFieldIds.size() : null } is null or p.id in" +
+            " (select p1.id from product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
+            "where (:#{#filterIds!=null && #filterIds.contains(7) ? #filterIds.size() : null } is null or  ps.field_id in " +
+            "(SELECT sff.id FROM search_filter_field sff WHERE sff.search_filter_id = 7 AND sff.id IN (:filterFieldIds)) ))) " +
 //            "GROUP BY p1.id HAVING COUNT(*) = :#{#filterFieldIds==null ? 0 : #filterFieldIds.size" +
 //            "() } )) \n" +
             "group by p.id \n" +
@@ -301,16 +571,41 @@ public interface ProductRepository extends JpaRepository<Product, Integer>, JpaS
             "and (:keyword is null or p.title like concat('%', :keyword, '%') ) \n" +
             "and ( (:#{#categoryIds==null ? null : #categoryIds.size()} is null or c.parent_category_id in (:categoryIds)) \n" +
             "or (:#{#categoryIds==null ? null : #categoryIds.size()} is null or c.id in (:categoryIds)) )\n" +
-            "and (:#{#filterFieldIds==null ? null : #filterFieldIds.size() } is null or p.id in (select p1.id from " +
-            "product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
-            "where (:#{#filterFieldIds==null ? null : #filterFieldIds.size() } is null or  ps.field_id in " +
-            "(:filterFieldIds) ))) " +
+            "and (:#{#filterIds!=null && #filterIds.contains(1) ? #filterFieldIds.size() : null } is null or " +
+            "p.id in (select p1.id from product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
+            "where (:#{#filterIds!=null && #filterIds.contains(1) ? #filterIds.size() : null } is null or  ps.field_id in " +
+            "(SELECT sff.id FROM search_filter_field sff WHERE sff.search_filter_id = 1 AND sff.id IN (:filterFieldIds)) ))) " +
+            "and (:#{#filterIds!=null && #filterIds.contains(2) ? #filterFieldIds.size() : null } is null or p.id in " +
+            "(select p1.id from product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
+            "where (:#{#filterIds!=null && #filterIds.contains(2) ? #filterIds.size() : null } is null or  ps.field_id in " +
+            "(SELECT sff.id FROM search_filter_field sff WHERE sff.search_filter_id = 2 AND sff.id IN (:filterFieldIds)) ))) " +
+            "and (:#{#filterIds!=null && #filterIds.contains(3) ? #filterFieldIds.size() : null } is null or p.id in " +
+            "(select p1.id from product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
+            "where (:#{#filterIds!=null && #filterIds.contains(3) ? #filterIds.size() : null } is null or  ps.field_id in " +
+            "(SELECT sff.id FROM search_filter_field sff WHERE sff.search_filter_id = 3 AND sff.id IN (:filterFieldIds)) ))) " +
+            "and (:#{#filterIds!=null && #filterIds.contains(4) ? #filterFieldIds.size() : null } is null or p.id in " +
+            "(select p1.id from product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
+            "where (:#{#filterIds!=null && #filterIds.contains(4) ? #filterIds.size() :null } is null or  ps.field_id in (SELECT" +
+            " sff.id FROM search_filter_field sff WHERE sff.search_filter_id = 4 AND sff.id IN (:filterFieldIds)) ))) " +
+            "and (:#{#filterIds!=null && #filterIds.contains(5) ? #filterFieldIds.size() : null } is null or p.id in " +
+            "(select p1.id from product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
+            "where (:#{#filterIds!=null && #filterIds.contains(5) ? #filterIds.size() : null } is null or  ps.field_id in " +
+            "(SELECT sff.id FROM search_filter_field sff WHERE sff.search_filter_id = 5 AND sff.id IN (:filterFieldIds)) ))) " +
+            "and (:#{#filterIds!=null && #filterIds.contains(6) ? #filterFieldIds.size() : null } is null or p.id in " +
+            "(select p1.id from product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
+            "where (:#{#filterIds!=null && #filterIds.contains(6) ? #filterIds.size() : null } is null or  ps.field_id in " +
+            "(SELECT sff.id FROM search_filter_field sff WHERE sff.search_filter_id = 6 AND sff.id IN (:filterFieldIds)) ))) " +
+            "and (:#{#filterIds!=null && #filterIds.contains(7) ? #filterFieldIds.size() : null } is null or p.id in" +
+            " (select p1.id from product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
+            "where (:#{#filterIds!=null && #filterIds.contains(7) ? #filterIds.size() : null } is null or  ps.field_id in " +
+            "(SELECT sff.id FROM search_filter_field sff WHERE sff.search_filter_id = 7 AND sff.id IN (:filterFieldIds)) ))) " +
 //            "GROUP BY p1.id HAVING COUNT(*) = :#{#filterFieldIds==null ? 0 : #filterFieldIds.size" +
 //            "() } )) \n" +
             "group by p.id \n")
     Page<Product> findWithPaginationSortByReview(Pageable pageable,
                                                  @Param("categoryIds") List<Integer> categoryIds,
                                                  @Param("filterFieldIds") List<Integer> filterFieldIds,
+                                                 @Param("filterIds") List<Integer> filterIds,
                                                  @Param("curationId") Integer curationId,
                                                  @Param("keyword") String keyword,
                                                  @Param("storeId") Integer storeId);
@@ -327,10 +622,34 @@ public interface ProductRepository extends JpaRepository<Product, Integer>, JpaS
             "and (:keyword is null or p.title like concat('%', :keyword, '%') ) \n" +
             "and ( (:#{#categoryIds==null ? null : #categoryIds.size()} is null or c.parent_category_id in (:categoryIds)) \n" +
             "or (:#{#categoryIds==null ? null : #categoryIds.size()} is null or c.id in (:categoryIds)) )\n" +
-            "and (:#{#filterFieldIds==null ? null : #filterFieldIds.size() } is null or p.id in (select p1.id from " +
-            "product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
-            "where (:#{#filterFieldIds==null ? null : #filterFieldIds.size() } is null or  ps.field_id in " +
-            "(:filterFieldIds) ))) " +
+            "and (:#{#filterIds!=null && #filterIds.contains(1) ? #filterFieldIds.size() : null } is null or " +
+            "p.id in (select p1.id from product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
+            "where (:#{#filterIds!=null && #filterIds.contains(1) ? #filterIds.size() : null } is null or  ps.field_id in " +
+            "(SELECT sff.id FROM search_filter_field sff WHERE sff.search_filter_id = 1 AND sff.id IN (:filterFieldIds)) ))) " +
+            "and (:#{#filterIds!=null && #filterIds.contains(2) ? #filterFieldIds.size() : null } is null or p.id in " +
+            "(select p1.id from product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
+            "where (:#{#filterIds!=null && #filterIds.contains(2) ? #filterIds.size() : null } is null or  ps.field_id in " +
+            "(SELECT sff.id FROM search_filter_field sff WHERE sff.search_filter_id = 2 AND sff.id IN (:filterFieldIds)) ))) " +
+            "and (:#{#filterIds!=null && #filterIds.contains(3) ? #filterFieldIds.size() : null } is null or p.id in " +
+            "(select p1.id from product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
+            "where (:#{#filterIds!=null && #filterIds.contains(3) ? #filterIds.size() : null } is null or  ps.field_id in " +
+            "(SELECT sff.id FROM search_filter_field sff WHERE sff.search_filter_id = 3 AND sff.id IN (:filterFieldIds)) ))) " +
+            "and (:#{#filterIds!=null && #filterIds.contains(4) ? #filterFieldIds.size() : null } is null or p.id in " +
+            "(select p1.id from product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
+            "where (:#{#filterIds!=null && #filterIds.contains(4) ? #filterIds.size() :null } is null or  ps.field_id in (SELECT" +
+            " sff.id FROM search_filter_field sff WHERE sff.search_filter_id = 4 AND sff.id IN (:filterFieldIds)) ))) " +
+            "and (:#{#filterIds!=null && #filterIds.contains(5) ? #filterFieldIds.size() : null } is null or p.id in " +
+            "(select p1.id from product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
+            "where (:#{#filterIds!=null && #filterIds.contains(5) ? #filterIds.size() : null } is null or  ps.field_id in " +
+            "(SELECT sff.id FROM search_filter_field sff WHERE sff.search_filter_id = 5 AND sff.id IN (:filterFieldIds)) ))) " +
+            "and (:#{#filterIds!=null && #filterIds.contains(6) ? #filterFieldIds.size() : null } is null or p.id in " +
+            "(select p1.id from product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
+            "where (:#{#filterIds!=null && #filterIds.contains(6) ? #filterIds.size() : null } is null or  ps.field_id in " +
+            "(SELECT sff.id FROM search_filter_field sff WHERE sff.search_filter_id = 6 AND sff.id IN (:filterFieldIds)) ))) " +
+            "and (:#{#filterIds!=null && #filterIds.contains(7) ? #filterFieldIds.size() : null } is null or p.id in" +
+            " (select p1.id from product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
+            "where (:#{#filterIds!=null && #filterIds.contains(7) ? #filterIds.size() : null } is null or  ps.field_id in " +
+            "(SELECT sff.id FROM search_filter_field sff WHERE sff.search_filter_id = 7 AND sff.id IN (:filterFieldIds)) ))) " +
 //            "GROUP BY p1.id HAVING COUNT(*) = :#{#filterFieldIds==null ? 0 : #filterFieldIds.size" +
 //            "() } )) \n" +
             "group by p.id \n" +
@@ -349,16 +668,41 @@ public interface ProductRepository extends JpaRepository<Product, Integer>, JpaS
                     "and (:keyword is null or p.title like concat('%', :keyword, '%') ) \n" +
                     "and ( (:#{#categoryIds==null ? null : #categoryIds.size()} is null or c.parent_category_id in (:categoryIds)) \n" +
                     "or (:#{#categoryIds==null ? null : #categoryIds.size()} is null or c.id in (:categoryIds)) )\n" +
-                    "and (:#{#filterFieldIds==null ? null : #filterFieldIds.size() } is null or p.id in (select p1.id from " +
-                    "product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
-                    "where (:#{#filterFieldIds==null ? null : #filterFieldIds.size() } is null or  ps.field_id in " +
-                    "(:filterFieldIds) ))) " +
+                    "and (:#{#filterIds!=null && #filterIds.contains(1) ? #filterFieldIds.size() : null } is null or " +
+                    "p.id in (select p1.id from product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
+                    "where (:#{#filterIds!=null && #filterIds.contains(1) ? #filterIds.size() : null } is null or  ps.field_id in " +
+                    "(SELECT sff.id FROM search_filter_field sff WHERE sff.search_filter_id = 1 AND sff.id IN (:filterFieldIds)) ))) " +
+                    "and (:#{#filterIds!=null && #filterIds.contains(2) ? #filterFieldIds.size() : null } is null or p.id in " +
+                    "(select p1.id from product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
+                    "where (:#{#filterIds!=null && #filterIds.contains(2) ? #filterIds.size() : null } is null or  ps.field_id in " +
+                    "(SELECT sff.id FROM search_filter_field sff WHERE sff.search_filter_id = 2 AND sff.id IN (:filterFieldIds)) ))) " +
+                    "and (:#{#filterIds!=null && #filterIds.contains(3) ? #filterFieldIds.size() : null } is null or p.id in " +
+                    "(select p1.id from product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
+                    "where (:#{#filterIds!=null && #filterIds.contains(3) ? #filterIds.size() : null } is null or  ps.field_id in " +
+                    "(SELECT sff.id FROM search_filter_field sff WHERE sff.search_filter_id = 3 AND sff.id IN (:filterFieldIds)) ))) " +
+                    "and (:#{#filterIds!=null && #filterIds.contains(4) ? #filterFieldIds.size() : null } is null or p.id in " +
+                    "(select p1.id from product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
+                    "where (:#{#filterIds!=null && #filterIds.contains(4) ? #filterIds.size() :null } is null or  ps.field_id in (SELECT" +
+                    " sff.id FROM search_filter_field sff WHERE sff.search_filter_id = 4 AND sff.id IN (:filterFieldIds)) ))) " +
+                    "and (:#{#filterIds!=null && #filterIds.contains(5) ? #filterFieldIds.size() : null } is null or p.id in " +
+                    "(select p1.id from product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
+                    "where (:#{#filterIds!=null && #filterIds.contains(5) ? #filterIds.size() : null } is null or  ps.field_id in " +
+                    "(SELECT sff.id FROM search_filter_field sff WHERE sff.search_filter_id = 5 AND sff.id IN (:filterFieldIds)) ))) " +
+                    "and (:#{#filterIds!=null && #filterIds.contains(6) ? #filterFieldIds.size() : null } is null or p.id in " +
+                    "(select p1.id from product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
+                    "where (:#{#filterIds!=null && #filterIds.contains(6) ? #filterIds.size() : null } is null or  ps.field_id in " +
+                    "(SELECT sff.id FROM search_filter_field sff WHERE sff.search_filter_id = 6 AND sff.id IN (:filterFieldIds)) ))) " +
+                    "and (:#{#filterIds!=null && #filterIds.contains(7) ? #filterFieldIds.size() : null } is null or p.id in" +
+                    " (select p1.id from product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
+                    "where (:#{#filterIds!=null && #filterIds.contains(7) ? #filterIds.size() : null } is null or  ps.field_id in " +
+                    "(SELECT sff.id FROM search_filter_field sff WHERE sff.search_filter_id = 7 AND sff.id IN (:filterFieldIds)) ))) " +
 //                    "GROUP BY p1.id HAVING COUNT(*) = :#{#filterFieldIds==null ? 0 : #filterFieldIds.size" +
 //                    "() } )) \n" +
                     "group by p.id \n")
     Page<Product> findWithPaginationSortByOrder(Pageable pageable,
                                                 @Param("categoryIds") List<Integer> categoryIds,
                                                 @Param("filterFieldIds") List<Integer> filterFieldIds,
+                                                @Param("filterIds") List<Integer> filterIds,
                                                 @Param("curationId") Integer curationId,
                                                 @Param("keyword") String keyword,
                                                 @Param("storeId") Integer storeId);
@@ -372,10 +716,34 @@ public interface ProductRepository extends JpaRepository<Product, Integer>, JpaS
             "  AND (p.promotion_end_at IS NULL OR NOW( ) < p.promotion_end_at)\n" +
             "and ( (:#{#categoryIds==null ? null : #categoryIds.size()} is null or c.parent_category_id in (:categoryIds)) \n" +
             "or (:#{#categoryIds==null ? null : #categoryIds.size()} is null or c.id in (:categoryIds)) )\n" +
-            "and (:#{#filterFieldIds==null ? null : #filterFieldIds.size() } is null or p.id in (select p1.id from \n" +
-            "product p1 join product_search_filter_map ps on ps.product_id = p1.id\n" +
-            "where (:#{#filterFieldIds==null ? null : #filterFieldIds.size() } is null or  ps.field_id in " +
-            "(:filterFieldIds) ))) " +
+            "and (:#{#filterIds!=null && #filterIds.contains(1) ? #filterFieldIds.size() : null } is null or " +
+            "p.id in (select p1.id from product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
+            "where (:#{#filterIds!=null && #filterIds.contains(1) ? #filterIds.size() : null } is null or  ps.field_id in " +
+            "(SELECT sff.id FROM search_filter_field sff WHERE sff.search_filter_id = 1 AND sff.id IN (:filterFieldIds)) ))) " +
+            "and (:#{#filterIds!=null && #filterIds.contains(2) ? #filterFieldIds.size() : null } is null or p.id in " +
+            "(select p1.id from product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
+            "where (:#{#filterIds!=null && #filterIds.contains(2) ? #filterIds.size() : null } is null or  ps.field_id in " +
+            "(SELECT sff.id FROM search_filter_field sff WHERE sff.search_filter_id = 2 AND sff.id IN (:filterFieldIds)) ))) " +
+            "and (:#{#filterIds!=null && #filterIds.contains(3) ? #filterFieldIds.size() : null } is null or p.id in " +
+            "(select p1.id from product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
+            "where (:#{#filterIds!=null && #filterIds.contains(3) ? #filterIds.size() : null } is null or  ps.field_id in " +
+            "(SELECT sff.id FROM search_filter_field sff WHERE sff.search_filter_id = 3 AND sff.id IN (:filterFieldIds)) ))) " +
+            "and (:#{#filterIds!=null && #filterIds.contains(4) ? #filterFieldIds.size() : null } is null or p.id in " +
+            "(select p1.id from product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
+            "where (:#{#filterIds!=null && #filterIds.contains(4) ? #filterIds.size() :null } is null or  ps.field_id in (SELECT" +
+            " sff.id FROM search_filter_field sff WHERE sff.search_filter_id = 4 AND sff.id IN (:filterFieldIds)) ))) " +
+            "and (:#{#filterIds!=null && #filterIds.contains(5) ? #filterFieldIds.size() : null } is null or p.id in " +
+            "(select p1.id from product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
+            "where (:#{#filterIds!=null && #filterIds.contains(5) ? #filterIds.size() : null } is null or  ps.field_id in " +
+            "(SELECT sff.id FROM search_filter_field sff WHERE sff.search_filter_id = 5 AND sff.id IN (:filterFieldIds)) ))) " +
+            "and (:#{#filterIds!=null && #filterIds.contains(6) ? #filterFieldIds.size() : null } is null or p.id in " +
+            "(select p1.id from product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
+            "where (:#{#filterIds!=null && #filterIds.contains(6) ? #filterIds.size() : null } is null or  ps.field_id in " +
+            "(SELECT sff.id FROM search_filter_field sff WHERE sff.search_filter_id = 6 AND sff.id IN (:filterFieldIds)) ))) " +
+            "and (:#{#filterIds!=null && #filterIds.contains(7) ? #filterFieldIds.size() : null } is null or p.id in" +
+            " (select p1.id from product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
+            "where (:#{#filterIds!=null && #filterIds.contains(7) ? #filterIds.size() : null } is null or  ps.field_id in " +
+            "(SELECT sff.id FROM search_filter_field sff WHERE sff.search_filter_id = 7 AND sff.id IN (:filterFieldIds)) ))) " +
 //            "GROUP BY p1.id HAVING COUNT(*) = :#{#filterFieldIds==null ? 0 : #filterFieldIds.size" +
 //            "() } )) \n" +
             "order by p.created_at desc", nativeQuery = true, countQuery = "select count(*) from product p " +
@@ -387,16 +755,41 @@ public interface ProductRepository extends JpaRepository<Product, Integer>, JpaS
             "  AND (p.promotion_end_at IS NULL OR NOW( ) < p.promotion_end_at)\n" +
             "and ( (:#{#categoryIds==null ? null : #categoryIds.size()} is null or c.parent_category_id in (:categoryIds)) \n" +
             "or (:#{#categoryIds==null ? null : #categoryIds.size()} is null or c.id in (:categoryIds)) )\n" +
-            "and (:#{#filterFieldIds==null ? null : #filterFieldIds.size() } is null or p.id in (select p1.id from \n" +
-            "product p1 join product_search_filter_map ps on ps.product_id = p1.id\n" +
-            "where (:#{#filterFieldIds==null ? null : #filterFieldIds.size() } is null or  ps.field_id in " +
-            "(:filterFieldIds) ))) "
+            "and (:#{#filterIds!=null && #filterIds.contains(1) ? #filterFieldIds.size() : null } is null or " +
+            "p.id in (select p1.id from product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
+            "where (:#{#filterIds!=null && #filterIds.contains(1) ? #filterIds.size() : null } is null or  ps.field_id in " +
+            "(SELECT sff.id FROM search_filter_field sff WHERE sff.search_filter_id = 1 AND sff.id IN (:filterFieldIds)) ))) " +
+            "and (:#{#filterIds!=null && #filterIds.contains(2) ? #filterFieldIds.size() : null } is null or p.id in " +
+            "(select p1.id from product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
+            "where (:#{#filterIds!=null && #filterIds.contains(2) ? #filterIds.size() : null } is null or  ps.field_id in " +
+            "(SELECT sff.id FROM search_filter_field sff WHERE sff.search_filter_id = 2 AND sff.id IN (:filterFieldIds)) ))) " +
+            "and (:#{#filterIds!=null && #filterIds.contains(3) ? #filterFieldIds.size() : null } is null or p.id in " +
+            "(select p1.id from product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
+            "where (:#{#filterIds!=null && #filterIds.contains(3) ? #filterIds.size() : null } is null or  ps.field_id in " +
+            "(SELECT sff.id FROM search_filter_field sff WHERE sff.search_filter_id = 3 AND sff.id IN (:filterFieldIds)) ))) " +
+            "and (:#{#filterIds!=null && #filterIds.contains(4) ? #filterFieldIds.size() : null } is null or p.id in " +
+            "(select p1.id from product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
+            "where (:#{#filterIds!=null && #filterIds.contains(4) ? #filterIds.size() :null } is null or  ps.field_id in (SELECT" +
+            " sff.id FROM search_filter_field sff WHERE sff.search_filter_id = 4 AND sff.id IN (:filterFieldIds)) ))) " +
+            "and (:#{#filterIds!=null && #filterIds.contains(5) ? #filterFieldIds.size() : null } is null or p.id in " +
+            "(select p1.id from product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
+            "where (:#{#filterIds!=null && #filterIds.contains(5) ? #filterIds.size() : null } is null or  ps.field_id in " +
+            "(SELECT sff.id FROM search_filter_field sff WHERE sff.search_filter_id = 5 AND sff.id IN (:filterFieldIds)) ))) " +
+            "and (:#{#filterIds!=null && #filterIds.contains(6) ? #filterFieldIds.size() : null } is null or p.id in " +
+            "(select p1.id from product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
+            "where (:#{#filterIds!=null && #filterIds.contains(6) ? #filterIds.size() : null } is null or  ps.field_id in " +
+            "(SELECT sff.id FROM search_filter_field sff WHERE sff.search_filter_id = 6 AND sff.id IN (:filterFieldIds)) ))) " +
+            "and (:#{#filterIds!=null && #filterIds.contains(7) ? #filterFieldIds.size() : null } is null or p.id in" +
+            " (select p1.id from product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
+            "where (:#{#filterIds!=null && #filterIds.contains(7) ? #filterIds.size() : null } is null or  ps.field_id in " +
+            "(SELECT sff.id FROM search_filter_field sff WHERE sff.search_filter_id = 7 AND sff.id IN (:filterFieldIds)) ))) "
 //            "GROUP BY p1.id HAVING COUNT(*) = :#{#filterFieldIds==null ? 0 : #filterFieldIds.size" +
 //            "() } )) \n"
     )
     Page<Product> findNewerWithPagination(Pageable pageable,
                                           @Param("categoryIds") List<Integer> categoryIds,
                                           @Param("filterFieldIds") List<Integer> filterFieldIds,
+                                          @Param("filterIds") List<Integer> filterIds,
                                           @Param("curationId") Integer curationId);
 
     @Query(value = "select p.* from product p \n" +
@@ -409,10 +802,34 @@ public interface ProductRepository extends JpaRepository<Product, Integer>, JpaS
             "  AND (p.promotion_end_at IS NULL OR NOW( ) < p.promotion_end_at)\n" +
             "and ( (:#{#categoryIds==null ? null : #categoryIds.size()} is null or c.parent_category_id in (:categoryIds)) \n" +
             "or (:#{#categoryIds==null ? null : #categoryIds.size()} is null or c.id in (:categoryIds)) )\n" +
-            "and (:#{#filterFieldIds==null ? null : #filterFieldIds.size() } is null or p.id in (select p1.id from " +
-            "product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
-            "where (:#{#filterFieldIds==null ? null : #filterFieldIds.size() } is null or  ps.field_id in " +
-            "(:filterFieldIds) ))) " +
+            "and (:#{#filterIds!=null && #filterIds.contains(1) ? #filterFieldIds.size() : null } is null or " +
+            "p.id in (select p1.id from product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
+            "where (:#{#filterIds!=null && #filterIds.contains(1) ? #filterIds.size() : null } is null or  ps.field_id in " +
+            "(SELECT sff.id FROM search_filter_field sff WHERE sff.search_filter_id = 1 AND sff.id IN (:filterFieldIds)) ))) " +
+            "and (:#{#filterIds!=null && #filterIds.contains(2) ? #filterFieldIds.size() : null } is null or p.id in " +
+            "(select p1.id from product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
+            "where (:#{#filterIds!=null && #filterIds.contains(2) ? #filterIds.size() : null } is null or  ps.field_id in " +
+            "(SELECT sff.id FROM search_filter_field sff WHERE sff.search_filter_id = 2 AND sff.id IN (:filterFieldIds)) ))) " +
+            "and (:#{#filterIds!=null && #filterIds.contains(3) ? #filterFieldIds.size() : null } is null or p.id in " +
+            "(select p1.id from product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
+            "where (:#{#filterIds!=null && #filterIds.contains(3) ? #filterIds.size() : null } is null or  ps.field_id in " +
+            "(SELECT sff.id FROM search_filter_field sff WHERE sff.search_filter_id = 3 AND sff.id IN (:filterFieldIds)) ))) " +
+            "and (:#{#filterIds!=null && #filterIds.contains(4) ? #filterFieldIds.size() : null } is null or p.id in " +
+            "(select p1.id from product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
+            "where (:#{#filterIds!=null && #filterIds.contains(4) ? #filterIds.size() :null } is null or  ps.field_id in (SELECT" +
+            " sff.id FROM search_filter_field sff WHERE sff.search_filter_id = 4 AND sff.id IN (:filterFieldIds)) ))) " +
+            "and (:#{#filterIds!=null && #filterIds.contains(5) ? #filterFieldIds.size() : null } is null or p.id in " +
+            "(select p1.id from product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
+            "where (:#{#filterIds!=null && #filterIds.contains(5) ? #filterIds.size() : null } is null or  ps.field_id in " +
+            "(SELECT sff.id FROM search_filter_field sff WHERE sff.search_filter_id = 5 AND sff.id IN (:filterFieldIds)) ))) " +
+            "and (:#{#filterIds!=null && #filterIds.contains(6) ? #filterFieldIds.size() : null } is null or p.id in " +
+            "(select p1.id from product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
+            "where (:#{#filterIds!=null && #filterIds.contains(6) ? #filterIds.size() : null } is null or  ps.field_id in " +
+            "(SELECT sff.id FROM search_filter_field sff WHERE sff.search_filter_id = 6 AND sff.id IN (:filterFieldIds)) ))) " +
+            "and (:#{#filterIds!=null && #filterIds.contains(7) ? #filterFieldIds.size() : null } is null or p.id in" +
+            " (select p1.id from product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
+            "where (:#{#filterIds!=null && #filterIds.contains(7) ? #filterIds.size() : null } is null or  ps.field_id in " +
+            "(SELECT sff.id FROM search_filter_field sff WHERE sff.search_filter_id = 7 AND sff.id IN (:filterFieldIds)) ))) " +
 //            "GROUP BY p1.id HAVING COUNT(*) = :#{#filterFieldIds==null ? 0 : #filterFieldIds.size" +
 //            "() } )) \n" +
             "and oi.origin_price != 0\n" +
@@ -427,16 +844,41 @@ public interface ProductRepository extends JpaRepository<Product, Integer>, JpaS
                     "  AND (p.promotion_end_at IS NULL OR NOW( ) < p.promotion_end_at)\n" +
                     "and ( (:#{#categoryIds==null ? null : #categoryIds.size()} is null or c.parent_category_id in (:categoryIds)) \n" +
                     "or (:#{#categoryIds==null ? null : #categoryIds.size()} is null or c.id in (:categoryIds)) )\n" +
-                    "and (:#{#filterFieldIds==null ? null : #filterFieldIds.size() } is null or p.id in (select p1.id from " +
-                    "product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
-                    "where (:#{#filterFieldIds==null ? null : #filterFieldIds.size() } is null or  ps.field_id in " +
-                    "(:filterFieldIds) ))) " +
+                    "and (:#{#filterIds!=null && #filterIds.contains(1) ? #filterFieldIds.size() : null } is null or " +
+                    "p.id in (select p1.id from product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
+                    "where (:#{#filterIds!=null && #filterIds.contains(1) ? #filterIds.size() : null } is null or  ps.field_id in " +
+                    "(SELECT sff.id FROM search_filter_field sff WHERE sff.search_filter_id = 1 AND sff.id IN (:filterFieldIds)) ))) " +
+                    "and (:#{#filterIds!=null && #filterIds.contains(2) ? #filterFieldIds.size() : null } is null or p.id in " +
+                    "(select p1.id from product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
+                    "where (:#{#filterIds!=null && #filterIds.contains(2) ? #filterIds.size() : null } is null or  ps.field_id in " +
+                    "(SELECT sff.id FROM search_filter_field sff WHERE sff.search_filter_id = 2 AND sff.id IN (:filterFieldIds)) ))) " +
+                    "and (:#{#filterIds!=null && #filterIds.contains(3) ? #filterFieldIds.size() : null } is null or p.id in " +
+                    "(select p1.id from product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
+                    "where (:#{#filterIds!=null && #filterIds.contains(3) ? #filterIds.size() : null } is null or  ps.field_id in " +
+                    "(SELECT sff.id FROM search_filter_field sff WHERE sff.search_filter_id = 3 AND sff.id IN (:filterFieldIds)) ))) " +
+                    "and (:#{#filterIds!=null && #filterIds.contains(4) ? #filterFieldIds.size() : null } is null or p.id in " +
+                    "(select p1.id from product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
+                    "where (:#{#filterIds!=null && #filterIds.contains(4) ? #filterIds.size() :null } is null or  ps.field_id in (SELECT" +
+                    " sff.id FROM search_filter_field sff WHERE sff.search_filter_id = 4 AND sff.id IN (:filterFieldIds)) ))) " +
+                    "and (:#{#filterIds!=null && #filterIds.contains(5) ? #filterFieldIds.size() : null } is null or p.id in " +
+                    "(select p1.id from product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
+                    "where (:#{#filterIds!=null && #filterIds.contains(5) ? #filterIds.size() : null } is null or  ps.field_id in " +
+                    "(SELECT sff.id FROM search_filter_field sff WHERE sff.search_filter_id = 5 AND sff.id IN (:filterFieldIds)) ))) " +
+                    "and (:#{#filterIds!=null && #filterIds.contains(6) ? #filterFieldIds.size() : null } is null or p.id in " +
+                    "(select p1.id from product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
+                    "where (:#{#filterIds!=null && #filterIds.contains(6) ? #filterIds.size() : null } is null or  ps.field_id in " +
+                    "(SELECT sff.id FROM search_filter_field sff WHERE sff.search_filter_id = 6 AND sff.id IN (:filterFieldIds)) ))) " +
+                    "and (:#{#filterIds!=null && #filterIds.contains(7) ? #filterFieldIds.size() : null } is null or p.id in" +
+                    " (select p1.id from product p1 inner join product_search_filter_map ps on ps.product_id = p1.id\n" +
+                    "where (:#{#filterIds!=null && #filterIds.contains(7) ? #filterIds.size() : null } is null or  ps.field_id in " +
+                    "(SELECT sff.id FROM search_filter_field sff WHERE sff.search_filter_id = 7 AND sff.id IN (:filterFieldIds)) ))) " +
 //                    "GROUP BY p1.id HAVING COUNT(*) = :#{#filterFieldIds==null ? 0 : #filterFieldIds.size" +
 //                    "() } )) \n" +
                     "and oi.origin_price != 0\n")
     Page<Product> findDiscountWithPagination(Pageable pageable,
                                              @Param("categoryIds") List<Integer> categoryIds,
                                              @Param("filterFieldIds") List<Integer> filterFieldIds,
+                                             @Param("filterIds") List<Integer> filterIds,
                                              @Param("curationId") Integer curationId);
 
     @Query(value = "insert into product_like (product_id, user_id) value (:productId, :userId)", nativeQuery = true)
@@ -475,4 +917,5 @@ public interface ProductRepository extends JpaRepository<Product, Integer>, JpaS
             "LIMIT 10", nativeQuery = true)
     List<Product> selectProductOtherCustomerBuy(@Param("productIds") List<Integer> productIds);
 
+    List<Product> findAllByPromotionEndAtBefore(Timestamp now);
 }

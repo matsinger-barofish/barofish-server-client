@@ -2,6 +2,7 @@ package com.matsinger.barofishserver;
 
 import com.matsinger.barofishserver.deliver.application.DeliverService;
 import com.matsinger.barofishserver.order.application.OrderService;
+import com.matsinger.barofishserver.product.application.ProductService;
 import com.matsinger.barofishserver.search.application.SearchKeywordCommandService;
 import com.matsinger.barofishserver.user.application.UserCommandService;
 import lombok.AllArgsConstructor;
@@ -16,6 +17,7 @@ public class ScheduleTasks {
     private final DeliverService deliverService;
     private final OrderService orderService;
     private final UserCommandService userCommandService;
+    private final ProductService productService;
 
     @Scheduled(cron = "0 0 0 * * 1")
     public void SearchKeywordSchedule() {
@@ -35,5 +37,10 @@ public class ScheduleTasks {
     @Scheduled(cron = "0 0 */1 * * *")
     public void deleteWithdrawUserData() {
         userCommandService.deleteWithdrawUserList();
+    }
+
+    @Scheduled(cron = "0 0 0 * * *")
+    public void updatePassedPromotionProductInactive() {
+        productService.updatePassedPromotionProductInactive();
     }
 }
