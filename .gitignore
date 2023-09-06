@@ -44,4 +44,3 @@ out/
 *.yml
 *.sql
 http/
-src/main/resources/sql/
