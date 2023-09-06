@@ -99,7 +99,7 @@ public class PaymentService {
                 cancelData =
                 amount != null ? new CancelData(impUid, true, BigDecimal.valueOf(amount)) : new CancelData(impUid,
                         true);
-        cancelData.setTax_free(BigDecimal.valueOf(taxFreeAmount));
+        if (taxFreeAmount != null) cancelData.setTax_free(BigDecimal.valueOf(taxFreeAmount));
         if (vBankRefundInfo != null) {
             cancelData.setRefund_holder(vBankRefundInfo.getBankHolder());
             cancelData.setRefund_bank(vBankRefundInfo.getBankCode());

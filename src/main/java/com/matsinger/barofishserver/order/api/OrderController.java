@@ -269,6 +269,22 @@ public class OrderController {
         }
     }
 
+    @GetMapping("/list/count")
+    public ResponseEntity<CustomResponse<Integer>> selectOrderList(@RequestHeader(value = "Authorization") Optional<String> auth,
+                                                                   @RequestParam(value = "state", required = false) String state) {
+        CustomResponse<Integer> res = new CustomResponse<>();
+        Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth);
+        if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
+        try {
+            Integer count = orderService.countOrderList(tokenInfo.get().getId(), state);
+
+            res.setData(Optional.of(count));
+            return ResponseEntity.ok(res);
+        } catch (Exception e) {
+            return res.defaultError(e);
+        }
+    }
+
     @GetMapping("/cancel-list")
     public ResponseEntity<CustomResponse<List<OrderDto>>> selectCanceledOrderList(@RequestHeader(value = "Authorization") Optional<String> auth) {
         CustomResponse<List<OrderDto>> res = new CustomResponse<>();
@@ -371,7 +387,7 @@ public class OrderController {
                         productReq.getProductId()).state(OrderProductState.WAIT_DEPOSIT).settlePrice(storeInfo.getSettlementRate() !=
                         null ? (int) ((storeInfo.getSettlementRate() / 100.) *
                         optionItem.getPurchasePrice()) : optionItem.getPurchasePrice()).price(price).amount(productReq.getAmount()).isSettled(
-                        false).deliveryFee(deliveryFee).taxFreeAmount(productReq.getTaxFreeAmount()).build());
+                        false).deliveryFee(deliveryFee).taxFreeAmount(productReq.getTaxFreeAmount()).isTaxFree(!product.getNeedTaxation()).build());
             }
             infos.forEach(i -> {
                 List<OrderProductInfo> sameStoreOrderInfos = infos.stream().filter(v -> {
@@ -379,32 +395,20 @@ public class OrderController {
                     Product productB = productService.selectProduct(i.getProductId());
                     return productA.getStoreId() == productB.getStoreId();
                 }).toList();
-                int maxDeliverFee = Collections.max(infos.stream().map(OrderProductInfo::getDeliveryFee).toList());
+                int
+                        maxDeliverFee =
+                        Collections.max(sameStoreOrderInfos.stream().map(OrderProductInfo::getDeliveryFee).toList());
                 if (i.getDeliveryFee() == maxDeliverFee) {
-                    infos.forEach(v -> {
-                        if (sameStoreOrderInfos.stream().anyMatch(soi -> soi.getId() == v.getId())) {
-                            v.setDeliveryFee(0);
-                        }
+                    sameStoreOrderInfos.forEach(soi -> {
+                        soi.setDeliveryFee(0);
                     });
                     i.setDeliveryFee(maxDeliverFee);
                 }
-//                int storeTotalPrice = infos.stream().filter(v -> {
-//                    Product productA = productService.selectProduct(v.getProductId());
-//                    Product productB = productService.selectProduct(i.getProductId());
-//                    return productA.getStoreId() == productB.getStoreId();
-//                }).map(v -> storeService.selectStoreInfo(v.getProduct().getStoreId()));
-//                Product p = productService.selectProduct(i.getProductId());
-//                StoreInfo storeInfo = storeService.selectStoreInfo(p.getStoreId());
-//                if (storeInfo.getDeliverFeeType().equals(StoreDeliverFeeType.FREE_IF_OVER) &&
-//                        storeTotalPrice > (storeInfo.getMinOrderPrice() != null ? storeInfo.getMinOrderPrice() : 0)) {
-//                    i.setDeliveryFee(0);
-//                }
             });
             if (coupon != null) {
                 if (data.getTotalPrice() < coupon.getMinPrice())
                     return res.throwError("쿠폰 최소 금액에 맞지 않습니다.", "INPUT_CHECK_REQUIRED");
                 couponQueryService.checkValidCoupon(coupon.getId(), userId);
-
             }
             int
                     totalPrice =
@@ -421,6 +425,8 @@ public class OrderController {
                             deliverPlace.getTel()).address(deliverPlace.getAddress()).addressDetail(deliverPlace.getAddressDetail()).deliverMessage(
                             deliverPlace.getDeliverMessage()).postalCode(deliverPlace.getPostalCode()).bcode(
                             deliverPlace.getBcode()).build();
+            if (infos.stream().anyMatch(v -> !orderService.checkProductCanDeliver(orderDeliverPlace, v)))
+                return res.throwError("배송지에 배송 불가능한 상품이 포함돼 있습니다.", "NOT_ALLOWED");
             Orders
                     order =
                     Orders.builder().id(orderId).userId(tokenInfo.get().getId()).paymentWay(data.getPaymentWay()).state(
@@ -528,7 +534,12 @@ public class OrderController {
             info.setCancelReason(data.getCancelReason());
             info.setCancelReasonContent(content);
             Product product = productService.selectProduct(info.getProductId());
-            orderService.requestCancelOrderProduct(info.getId());
+            boolean isCouponUsed = order.getCouponId() != null;
+            if (isCouponUsed) {
+                orderService.requestCancelOrderProductsCouponUsed(order);
+            } else {
+                orderService.requestCancelOrderProduct(info);
+            }
             notificationCommandService.sendFcmToUser(tokenInfo.get().getId(),
                     NotificationMessageType.ORDER_CANCEL,
                     NotificationMessage.builder().productName(product.getTitle()).isCanceledByRegion(false).build());
@@ -559,28 +570,38 @@ public class OrderController {
             if (infos.stream().anyMatch(v -> v.getState().equals(OrderProductState.CANCELED)))
                 return res.throwError("이미 취소된 주문이 포함되어 있습니다.", "INPUT_CHECK_REQUIRED");
             Orders order = orderService.selectOrder(infos.get(0).getOrderId());
-            int cancelPrice = orderService.getCancelPrice(order, infos);
-//            int
-//                    taxFreeAmount =
-//                    infos.stream().mapToInt(v -> v.getTaxFreeAmount() != null ? v.getTaxFreeAmount() : 0).sum();
+            if (order.getCouponId() != null) {
+                List<OrderProductInfo> orderInfos = orderService.selectOrderProductInfoListWithOrderId(order.getId());
+                if (tokenInfo.get().getType().equals(TokenAuthType.PARTNER)) {
+                    List<Integer>
+                            storeIds =
+                            orderInfos.stream().map(v -> v.getProduct().getStoreId()).distinct().toList();
+                    if (storeIds.size() != 1 || !Objects.equals(storeIds.get(0), tokenInfo.get().getId())) {
+                        return res.throwError("타파트너사의 주문과 같이 있어 취소 불가합니다.", "NOT_ALLOWED");
+                    }
+                }
+                if (infos.size() != orderInfos.size())
+                    return res.throwError("쿠폰이 적용된 주문은 전체 취소만 가능합니다.", "NOT_ALLOWED");
+            }
+            GetCancelPriceDto cancelData = orderService.getCancelPrice(order, infos);
             int
                     taxFreeAmount =
-                    infos.stream().mapToInt(v -> v.getTaxFreeAmount() != 0 &&
-                            v.getTaxFreeAmount() != null ? v.getPrice() : 0).sum();
-            taxFreeAmount = Math.min(taxFreeAmount, cancelPrice);
-            System.out.println(cancelPrice + "|" + taxFreeAmount);
+                    infos.stream().mapToInt(v -> v.getIsTaxFree() &&
+                            v.getTaxFreeAmount() != null ? v.getTaxFreeAmount() : 0).sum();
             VBankRefundInfo
                     vBankRefundInfo =
                     order.getPaymentWay().equals(OrderPaymentWay.VIRTUAL_ACCOUNT) ? VBankRefundInfo.builder().bankHolder(
                             order.getBankHolder()).bankCode(order.getBankCode()).bankName(order.getBankName()).bankAccount(
                             order.getBankAccount()).build() : null;
-            paymentService.cancelPayment(order.getImpUid(), cancelPrice, taxFreeAmount, vBankRefundInfo);
-//            info.setState(OrderProductState.CANCELED);
+            paymentService.cancelPayment(order.getImpUid(),
+                    cancelData.getCancelPrice(),
+                    taxFreeAmount,
+                    vBankRefundInfo);
             infos.forEach(v -> v.setState(OrderProductState.CANCELED));
             orderService.updateOrderProductInfos(infos);
-            Integer returnPoint = orderService.checkReturnPoint(order);
+            Integer returnPoint = cancelData.getReturnPoint();
             orderService.returnCouponIfAllCanceled(order);
-            if (returnPoint != null) orderService.returnPoint(order.getUserId(), returnPoint);
+            if (returnPoint != null && returnPoint != 0) orderService.returnPoint(order.getUserId(), returnPoint);
 
             res.setData(Optional.of(true));
             Integer finalAdminId = adminId;
@@ -617,10 +638,10 @@ public class OrderController {
             Integer adminId = null;
             if (tokenInfo.get().getType().equals(TokenAuthType.ADMIN)) adminId = null;
             OrderProductInfo info = orderService.selectOrderProductInfo(orderProductInfoId);
-            orderService.cancelOrderedProduct(orderProductInfoId);
             res.setData(Optional.of(true));
             Orders order = orderService.selectOrder(info.getOrderId());
             Product product = productService.findById(info.getProductId());
+            orderService.cancelOrderedProduct(orderProductInfoId);
             info.setState(OrderProductState.CANCELED);
             orderService.updateOrderProductInfo(new ArrayList<>(List.of(info)));
             notificationCommandService.sendFcmToUser(order.getUserId(),
