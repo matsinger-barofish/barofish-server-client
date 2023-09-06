@@ -44,3 +44,4 @@ out/
 *.yml
 *.sql
 http/
+build/generated/

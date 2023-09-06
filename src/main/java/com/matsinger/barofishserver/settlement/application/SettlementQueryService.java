@@ -116,39 +116,40 @@ public class SettlementQueryService {
 
             double settlementAmount = (double) (discountPrice * quantity) * (1 - settlementRate);
 
-            return OrderSettlementExcelDto.builder()
-                    .productId(productInfo.getProductId())
-                    .orderId(findOrder.getId())
-                    .orderProductState(productInfo.getState())
-                    .orderAt(findOrder.getOrderedAt())
-                    .finalConfirmDate() //
-                    .storeName(findProduct.getStore().getName())
-                    .productName(findProduct.getTitle())
-                    .optionName(findOptionItem.getName())
-                    .needTaxation(findProduct.getNeedTaxation())
-                    .purchasePrice(findOptionItem.getPurchasePrice())
-                    .commission() //
-                    .sellingPrice() //
-                    .deliveryFee(deliveryFee)
-                    .quantity(quantity)
-                    .orderAmount(discountPrice * quantity + deliveryFee)
-                    .totalOrderAmount()..
-                    .paymentMethod(findOrder.getPaymentWay())
-                    .settlementRatio(settlementRate)
-                    .couponName(findCoupon.getTitle())
-                    .couponDiscount(findCoupon.getAmount())
-                    .usePoint(findOrder.getUsePoint())
-                    .settlementAmount(settlementAmount)
-                    .settlementState()..
-                    .settledAt(productInfo.getSettledAt())
-                    .customerName(findDeliverPlace.getReceiverName())
-                    .customerPhoneNumber(findDeliverPlace.getTel())
-                    .customerEmail(findUserInfo.getEmail())
-                    .customerAddress(findDeliverPlace.getAddress())
-                    .deliveryMessage(findDeliverPlace.getDeliverMessage())
-                    .deliveryCompany(findStoreInfo.getDeliverCompany())
-                    .trackingNumber(productInfo.getInvoiceCode())
-                    .build();
+//            return OrderSettlementExcelDto.builder()
+//                    .productId(productInfo.getProductId())
+//                    .orderId(findOrder.getId())
+//                    .orderProductState(productInfo.getState())
+//                    .orderAt(findOrder.getOrderedAt())
+//                    .finalConfirmDate() //
+//                    .storeName(findProduct.getStore().getName())
+//                    .productName(findProduct.getTitle())
+//                    .optionName(findOptionItem.getName())
+//                    .needTaxation(findProduct.getNeedTaxation())
+//                    .purchasePrice(findOptionItem.getPurchasePrice())
+//                    .commission() //
+//                    .sellingPrice() //
+//                    .deliveryFee(deliveryFee)
+//                    .quantity(quantity)
+//                    .orderAmount(discountPrice * quantity + deliveryFee)
+//                    .totalOrderAmount()..
+//                    .paymentMethod(findOrder.getPaymentWay())
+//                    .settlementRatio(settlementRate)
+//                    .couponName(findCoupon.getTitle())
+//                    .couponDiscount(findCoupon.getAmount())
+//                    .usePoint(findOrder.getUsePoint())
+//                    .settlementAmount(settlementAmount)
+//                    .settlementState()..
+//                    .settledAt(productInfo.getSettledAt())
+//                    .customerName(findDeliverPlace.getReceiverName())
+//                    .customerPhoneNumber(findDeliverPlace.getTel())
+//                    .customerEmail(findUserInfo.getEmail())
+//                    .customerAddress(findDeliverPlace.getAddress())
+//                    .deliveryMessage(findDeliverPlace.getDeliverMessage())
+//                    .deliveryCompany(findStoreInfo.getDeliverCompany())
+//                    .trackingNumber(productInfo.getInvoiceCode())
+//                    .build();
+            return OrderSettlementExcelDto.builder().build();
         });
     }
 }
