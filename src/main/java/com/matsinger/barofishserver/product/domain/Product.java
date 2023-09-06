@@ -236,5 +236,4 @@ public class Product {
                 descriptionImages,
                 createdAt);
     }
-
 }

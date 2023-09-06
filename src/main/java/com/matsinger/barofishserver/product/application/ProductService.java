@@ -326,8 +326,8 @@ public class ProductService {
                         1).split(",")[0]).originPrice(optionItem.getOriginPrice()).isNeedTaxation(product.getNeedTaxation()).discountPrice(
                 optionItem.getDiscountPrice()).title(product.getTitle()).reviewCount(reviewCount).storeId(storeInfo.getStoreId()).storeName(
                 storeInfo.getName()).parentCategoryId(product.getCategory().getCategoryId()).filterValues(
-                productFilterService.selectProductFilterValueListWithProductId(product.getId())).minOrderPrice(storeInfo.getMinOrderPrice()).deliverFeeType(
-                storeInfo.getDeliverFeeType()).storeImage(storeInfo.getProfileImage()).isLike(isLike).build();
+                productFilterService.selectProductFilterValueListWithProductId(product.getId()))
+                .storeImage(storeInfo.getProfileImage()).isLike(isLike).build();
     }
 
     public ProductListDto convert2ListDto(Product product) {
@@ -340,8 +340,8 @@ public class ProductService {
                         1).split(",")[0]).originPrice(optionItem.getOriginPrice()).isNeedTaxation(product.getNeedTaxation()).discountPrice(
                 optionItem.getDiscountPrice()).title(product.getTitle()).reviewCount(reviewCount).storeId(storeInfo.getStoreId()).storeName(
                 storeInfo.getName()).parentCategoryId(product.getCategory().getCategoryId()).filterValues(
-                productFilterService.selectProductFilterValueListWithProductId(product.getId())).minOrderPrice(storeInfo.getMinOrderPrice()).deliverFeeType(
-                storeInfo.getDeliverFeeType()).storeImage(storeInfo.getProfileImage()).build();
+                productFilterService.selectProductFilterValueListWithProductId(product.getId()))
+                .storeImage(storeInfo.getProfileImage()).build();
     }
 
     public SimpleProductDto convert2SimpleDto(Product product, Integer userId) {
@@ -370,9 +370,6 @@ public class ProductService {
         OptionItem optionItem = selectOptionItem(product.getRepresentOptionItemId());
         productDto.setIsLike(userId != null &&
                 saveProductRepository.existsById(new SaveProductId(userId, product.getId())));
-        productDto.setDeliverFeeType(store.getDeliverFeeType());
-        productDto.setMinOrderPrice(store.getMinOrderPrice());
-        productDto.setDeliveryFee(store.getDeliverFee());
         productDto.setDifficultDeliverAddresses(addresses);
         productDto.setSearchFilterFields(searchFilterFields);
         productDto.setOriginPrice(optionItem.getOriginPrice());
@@ -519,8 +516,8 @@ public class ProductService {
         }
         return ExcelProductDto.builder().storeLoginId(store.getLoginId()).storeName(storeInfo.getName()).firstCategoryName(
                 product.getCategory().getParentCategory().getName()).secondCategoryName(product.getCategory().getName()).productName(
-                product.getTitle()).expectedDeliverDay(product.getExpectedDeliverDay()).deliveryInfo(product.getDeliveryInfo()).deliveryFee(
-                storeInfo.getDeliverFee()).deliverBoxPerAmount(product.getDeliverBoxPerAmount()).isActive(product.getState().equals(
+                product.getTitle()).expectedDeliverDay(product.getExpectedDeliverDay()).deliveryInfo(product.getDeliveryInfo())
+                .deliverBoxPerAmount(product.getDeliverBoxPerAmount()).isActive(product.getState().equals(
                 ProductState.ACTIVE) ? "노출" : "미노출").needTaxation(product.getNeedTaxation() ? "과세" : "비과세").hasOption(
                 "있음").purchasePrices(optionItems.stream().map(OptionItem::getPurchasePrice).toList()).representativeOptionNo(
                 representativeOptionNo).optionNames(optionItems.stream().map(OptionItem::getName).toList()).optionOriginPrices(
@@ -548,8 +545,8 @@ public class ProductService {
                     excelProductDto =
                     ExcelProductDto2.builder().storeLoginId(store.getLoginId()).storeName(storeInfo.getName()).firstCategoryName(
                             product.getCategory().getParentCategory().getName()).secondCategoryName(product.getCategory().getName()).productName(
-                            product.getTitle()).expectedDeliverDay(product.getExpectedDeliverDay()).deliveryInfo(product.getDeliveryInfo()).deliveryFee(
-                            storeInfo.getDeliverFee()).deliverBoxPerAmount(product.getDeliverBoxPerAmount()).isActive(
+                            product.getTitle()).expectedDeliverDay(product.getExpectedDeliverDay()).deliveryInfo(product.getDeliveryInfo())
+                            .deliverBoxPerAmount(product.getDeliverBoxPerAmount()).isActive(
                             product.getState().equals(ProductState.ACTIVE) ? "노출" : "미노출").needTaxation(product.getNeedTaxation() ? "과세" : "비과세").hasOption(
                             "있음").purchasePrices(optionItem.getPurchasePrice()).representativeOptionNo(
                             representativeOptionNo).optionName(optionItem.getName()).optionOriginPrice(optionItem.getOriginPrice()).optionDiscountPrice(

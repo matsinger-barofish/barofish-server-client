@@ -72,8 +72,8 @@ public class BasketQueryService {
             ProductListDto productListDto = createProductListDto(product);
             BasketProductDto
                     basketProductDto =
-                    BasketProductDto.builder().id(info.getId()).product(productListDto).amount(info.getAmount()).deliveryFee(
-                            storeInfo.getDeliverFee()).deliverFeeType(storeInfo.getDeliverFeeType()).minOrderPrice(store.getMinOrderPrice()).store(
+                    BasketProductDto.builder().id(info.getId()).product(productListDto).amount(info.getAmount())
+                            .minOrderPrice(store.getMinOrderPrice()).store(
                             store).option(optionDto).build();
             productDtos.add(basketProductDto);
         }

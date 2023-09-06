@@ -116,8 +116,8 @@ public class OrderService {
                     optionItem.getName()).amount(opi.getAmount()).state(opi.getState()).price(opi.getPrice()).storeName(
                     storeInfo.getName()).storeProfile(storeInfo.getProfileImage()).deliverFee(opi.getDeliveryFee()).deliverCompany(
                     deliveryCompany.map(DeliveryCompany::getName).orElse(null)).invoiceCode(opi.getInvoiceCode()).cancelReason(
-                    opi.getCancelReason()).cancelReasonContent(opi.getCancelReasonContent()).isReviewWritten(isWritten).deliverFeeType(
-                    storeInfo.getDeliverFeeType()).minOrderPrice(storeInfo.getMinOrderPrice()).finalConfirmedAt(opi.getFinalConfirmedAt()).needTaxation(
+                    opi.getCancelReason()).cancelReasonContent(opi.getCancelReasonContent()).isReviewWritten(isWritten)
+                    .finalConfirmedAt(opi.getFinalConfirmedAt()).needTaxation(
                     product.getNeedTaxation()).build();
         }).filter(Objects::nonNull).toList();
         String couponName = null;
@@ -266,23 +266,15 @@ public class OrderService {
         Integer price = info.getPrice() * info.getAmount();
         StoreInfo storeInfo = storeService.selectStoreInfo(product.getStoreId());
         Integer orderPrice = infos.stream().mapToInt(v -> v.getPrice() * v.getAmount()).sum();
-        Integer paidDeliverFee = storeService.getDeliverFee(storeInfo, orderPrice);
+//        Integer paidDeliverFee = storeService.getDeliverFee(storeInfo, orderPrice);
         if ((info.getState().equals(OrderProductState.PAYMENT_DONE) ||
                 info.getState().equals(OrderProductState.DELIVERY_READY) ||
                 info.getState().equals(OrderProductState.CANCEL_REQUEST))) {
 
         } else {
-            if (storeInfo.getDeliverFeeType().equals(StoreDeliverFeeType.FREE_IF_OVER)) {
-                if (paidDeliverFee - price != 0 && paidDeliverFee - price < storeInfo.getMinOrderPrice()) {
-                    price -= storeInfo.getDeliverFee();
-                }
-            } else if (storeInfo.getDeliverFeeType().equals(StoreDeliverFeeType.FREE)) {
+            if (infos.stream().allMatch(v -> v.getId() == info.getId() ||
+                    v.getState().equals(OrderProductState.CANCELED))) {
 
-            } else {
-                if (infos.stream().allMatch(v -> v.getId() == info.getId() ||
-                        v.getState().equals(OrderProductState.CANCELED))) {
-
-                }
             }
         }
         // .stream().filter(v -> {
@@ -379,16 +371,16 @@ public class OrderService {
         return totalPrice;
     }
 
-    public Integer getProductDeliveryFee(Product product, Integer OptionItemId, Integer amount) {
-        OptionItem optionItem = productService.selectOptionItem(OptionItemId);
-        StoreInfo storeInfo = storeService.selectStoreInfo(product.getStoreId());
-        if (storeInfo.getDeliverFeeType().equals(StoreDeliverFeeType.FREE)) return 0;
-        else if (storeInfo.getDeliverFeeType().equals(StoreDeliverFeeType.FIX)) return storeInfo.getDeliverFee();
-        else return storeInfo.getDeliverFee() *
-                    (product.getDeliverBoxPerAmount() == null ||
-                            product.getDeliverBoxPerAmount() == 0 ? 1 : ((int) Math.ceil((double) amount /
-                            product.getDeliverBoxPerAmount())));
-    }
+//    public Integer getProductDeliveryFee(Product product, Integer OptionItemId, Integer amount) {
+//        OptionItem optionItem = productService.selectOptionItem(OptionItemId);
+//        StoreInfo storeInfo = storeService.selectStoreInfo(product.getStoreId());
+//        if (storeInfo.getDeliverFeeType().equals(StoreDeliverFeeType.FREE)) return 0;
+//        else if (storeInfo.getDeliverFeeType().equals(StoreDeliverFeeType.FIX)) return storeInfo.getDeliverFee();
+//        else return storeInfo.getDeliverFee() *
+//                    (product.getDeliverBoxPerAmount() == null ||
+//                            product.getDeliverBoxPerAmount() == 0 ? 1 : ((int) Math.ceil((double) amount /
+//                            product.getDeliverBoxPerAmount())));
+//    }
 
     public List<OrderProductInfo> selectOrderProductInfoWithIds(List<Integer> ids) {
         return infoRepository.findAllByIdIn(ids);
@@ -419,7 +411,7 @@ public class OrderService {
                 info.getPrice()).amount(info.getAmount()).deliveryFee(info.getDeliveryFee()).cancelReasonContent(info.getCancelReasonContent()).cancelReason(
                 info.getCancelReason()).deliverCompanyCode(info.getDeliverCompanyCode()).invoiceCode(info.getInvoiceCode()).isSettled(
                 info.getIsSettled()).settledAt(info.getSettledAt()).product(productService.convert2ListDto(info.getProduct())).order(
-                orderDto).settlementRate(storeInfo.getSettlementRate()).deliverFeeType(storeInfo.getDeliverFeeType()).needTaxation(
+                orderDto).settlementRate(storeInfo.getSettlementRate()).needTaxation(
                 product.getNeedTaxation()).deliverCompany(deliveryCompany.map(DeliveryCompany::getName).orElse(null)).build();
     }
 
@@ -442,7 +434,7 @@ public class OrderService {
                 }
                 return 0;
             }).sum();
-            storePrice += storeService.getDeliverFee(storeInfo, storePrice);
+//            storePrice += storeService.getDeliverFee(storeInfo, storePrice);
             return storePrice;
         }).sum();
 

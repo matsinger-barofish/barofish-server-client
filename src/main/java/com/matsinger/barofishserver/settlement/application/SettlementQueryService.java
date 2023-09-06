@@ -21,19 +21,23 @@ import com.matsinger.barofishserver.product.optionitem.repository.OptionItemRepo
 import com.matsinger.barofishserver.settlement.domain.Settlement;
 import com.matsinger.barofishserver.settlement.domain.SettlementState;
 import com.matsinger.barofishserver.settlement.dto.OrderSettlementExcelDto;
+import com.matsinger.barofishserver.settlement.dto.SettlementExcelDownloadRawDto;
 import com.matsinger.barofishserver.settlement.repository.SettlementRepository;
 import com.matsinger.barofishserver.store.application.StoreService;
 import com.matsinger.barofishserver.store.domain.StoreInfo;
 import com.matsinger.barofishserver.user.application.UserQueryService;
 import com.matsinger.barofishserver.user.domain.User;
 import com.matsinger.barofishserver.userinfo.domain.UserInfo;
+import com.querydsl.core.Tuple;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @RequiredArgsConstructor
@@ -41,6 +45,7 @@ import java.util.List;
 @Service
 public class SettlementQueryService {
     private final SettlementRepository settlementRepository;
+    private final OrderProductInfoRepository orderProductInfoRepository;
     private final StoreService storeService;
     private final OrderService orderService;
     private final OrderQueryService orderQueryService;
@@ -151,5 +156,12 @@ public class SettlementQueryService {
 //                    .build();
             return OrderSettlementExcelDto.builder().build();
         });
+    }
+
+    @Transactional(readOnly = true)
+    public List<SettlementExcelDownloadRawDto> getSettlementExcel() {
+        List<SettlementExcelDownloadRawDto> excelRawDataWithNotSettled = orderProductInfoRepository.getExcelRawDataWithNotSettled();
+        System.out.println(excelRawDataWithNotSettled.get(0).toString());
+        return excelRawDataWithNotSettled;
     }
 }

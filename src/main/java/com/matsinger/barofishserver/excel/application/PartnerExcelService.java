@@ -106,9 +106,9 @@ public class PartnerExcelService {
             storeInfo.setName(partnerName);
             storeInfo.setLocation(location);
             storeInfo.setKeyword(keyword);
-            storeInfo.setDeliverFee(deliveryFee);
-            storeInfo.setDeliverFeeType(deliverFeeType);
-            storeInfo.setMinOrderPrice(minOrderPrice);
+//            storeInfo.setDeliverFee(deliveryFee);
+//            storeInfo.setDeliverFeeType(deliverFeeType);
+//            storeInfo.setMinOrderPrice(minOrderPrice);
             storeInfo.setSettlementRate(settlementRate);
             storeInfo.setBankName(bankName);
             storeInfo.setBankHolder(bankHolder);
@@ -134,8 +134,8 @@ public class PartnerExcelService {
             StoreInfo
                     storeInfo =
                     StoreInfo.builder().backgroudImage(s3Url + "/default_backgroud.png").profileImage(s3Url +
-                            "/default_profile.png").name(partnerName).location(location).keyword(keyword).visitNote("").deliverFeeType(
-                            deliverFeeType).deliverFee(deliveryFee).minOrderPrice(minOrderPrice).oneLineDescription("").settlementRate(
+                            "/default_profile.png").name(partnerName).location(location).keyword(keyword).visitNote("")
+                            .oneLineDescription("").settlementRate(
                             settlementRate).bankName(bankName).bankHolder(bankHolder).bankAccount(bankAccount).representativeName(
                             representativeName).companyId(companyId).businessType(businessType).mosRegistrationNumber(
                             mosRegistrationNumber).businessAddress(businessAddress).postalCode(postalCode).lotNumberAddress(

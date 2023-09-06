@@ -359,29 +359,30 @@ public class OrderController {
                 if (!product.getNeedTaxation()) {
                     taxFreeAmount += price;
                 }
-                Integer
-                        deliveryFee =
-                        orderService.getProductDeliveryFee(product, productReq.getOptionId(), productReq.getAmount());
+//                Integer
+//                        deliveryFee =
+//                        orderService.getProductDeliveryFee(product, productReq.getOptionId(), productReq.getAmount());
                 optionItems.add(productService.selectOptionItem(productReq.getOptionId()));
                 infos.add(OrderProductInfo.builder().optionItemId(optionItem.getId()).orderId(orderId).productId(
                         productReq.getProductId()).state(OrderProductState.WAIT_DEPOSIT).settlePrice(storeInfo.getSettlementRate() !=
                         null ? (int) ((storeInfo.getSettlementRate() / 100.) *
                         optionItem.getPurchasePrice()) : optionItem.getPurchasePrice()).price(price).amount(productReq.getAmount()).isSettled(
-                        false).deliveryFee(deliveryFee).build());
+                        false).build());
             }
-            infos.forEach(i -> {
-                int storeTotalPrice = infos.stream().filter(v -> {
-                    Product productA = productService.selectProduct(v.getProductId());
-                    Product productB = productService.selectProduct(i.getProductId());
-                    return productA.getStoreId() == productB.getStoreId();
-                }).mapToInt(OrderProductInfo::getPrice).sum();
-                Product p = productService.selectProduct(i.getProductId());
-                StoreInfo storeInfo = storeService.selectStoreInfo(p.getStoreId());
-                if (storeInfo.getDeliverFeeType().equals(StoreDeliverFeeType.FREE_IF_OVER) &&
-                        storeTotalPrice > (storeInfo.getMinOrderPrice() != null ? storeInfo.getMinOrderPrice() : 0)) {
-                    i.setDeliveryFee(0);
-                }
-            });
+//            infos.forEach(i -> {
+//                int storeTotalPrice = infos.stream().filter(v -> {
+//                    Product productA = productService.selectProduct(v.getProductId());
+//                    Product productB = productService.selectProduct(i.getProductId());
+//                    return productA.getStoreId() == productB.getStoreId();
+//                }).mapToInt(OrderProductInfo::getPrice).sum();
+//                Product p = productService.selectProduct(i.getProductId());
+//                StoreInfo storeInfo = storeService.selectStoreInfo(p.getStoreId());
+//                if (
+////                        storeInfo.getDeliverFeeType().equals(StoreDeliverFeeType.FREE_IF_OVER) &&
+//                        storeTotalPrice > (storeInfo.getMinOrderPrice() != null ? storeInfo.getMinOrderPrice() : 0)) {
+//                    i.setDeliveryFee(0);
+//                }
+//            });
             if (coupon != null) {
                 if (data.getTotalPrice() < coupon.getMinPrice())
                     return res.throwError("쿠폰 최소 금액에 맞지 않습니다.", "INPUT_CHECK_REQUIRED");
