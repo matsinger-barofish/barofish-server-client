@@ -24,6 +24,8 @@ import static com.matsinger.barofishserver.product.domain.QProduct.product;
 import static com.matsinger.barofishserver.product.optionitem.domain.QOptionItem.optionItem;
 import static com.matsinger.barofishserver.store.domain.QStore.store;
 import static com.matsinger.barofishserver.store.domain.QStoreInfo.storeInfo;
+import static com.matsinger.barofishserver.user.domain.QUser.user;
+import static com.matsinger.barofishserver.userinfo.domain.QUserInfo.userInfo;
 import static com.querydsl.core.group.GroupBy.groupBy;
 import static com.querydsl.core.group.GroupBy.list;
 
@@ -123,7 +125,8 @@ public class OrderProductInfoRepositoryImpl implements OrderProductInfoRepositor
 public List<SettlementOrderDto> getExcelRawDataWithNotSettled2() {
 
     return queryFactory
-            .selectFrom(orderProductInfo)
+            .select()
+            .from(orderProductInfo)
             .leftJoin(optionItem).on(orderProductInfo.optionItemId.eq(optionItem.id))
             .leftJoin(product).on(product.id.eq(orderProductInfo.productId))
             .leftJoin(orders).on(orders.id.eq(orderProductInfo.orderId))
@@ -131,6 +134,8 @@ public List<SettlementOrderDto> getExcelRawDataWithNotSettled2() {
             .leftJoin(coupon).on(coupon.id.eq(orders.couponId))
             .leftJoin(store).on(store.id.eq(product.storeId))
             .leftJoin(storeInfo).on(storeInfo.storeId.eq(store.id))
+            .leftJoin(user).on(orders.userId.eq(user.id))
+            .leftJoin(userInfo).on(userInfo.userId.eq(user.id))
             .where(orderProductInfo.state.eq(OrderProductState.FINAL_CONFIRM))
             .orderBy(orderProductInfo.orderId.desc())
             .orderBy(product.storeId.asc())
@@ -140,54 +145,71 @@ public List<SettlementOrderDto> getExcelRawDataWithNotSettled2() {
                                     SettlementOrderDto.class,
                                     orders.id.as("orderId"),
                                     list(Projections.fields(
-                                            SettlementStoreDto.class,
-                                            store.id.as("storeId"),
-                                            storeInfo.name.as("partnerName"), // 여기까진 됨
-                                            list(Projections.fields(
-                                                    SettlementProductOptionItemDto.class,
-                                                    orderProductInfo.id.as("orderProductInfoId"),
-                                                    product.id.as("productId"),
-                                                    product.title.as("productName"),
-                                                    optionItem.name.as("optionItemName")
-                                            )).as("settlementProductOptionItemDtos")
+                                            SettlementProductOptionItemDto.class,
+                                            optionItem.id.as("optionItemId"),
+                                            product.title.as("productName"),
+                                            optionItem.name.as("optionItemName"),
+                                            orderProductInfo.state.as("orderProductState"),
+                                            orders.orderedAt.as("orderedAt"),
+                                            orderProductInfo.finalConfirmedAt.as("finalConfirmedAt"),
+                                            product.needTaxation.as("isTaxFree"),
+                                            optionItem.purchasePrice.as("purchasePrice"),
+                                            ExpressionUtils.as(Expressions.constant(0), "commissionPrice"),
+                                            ExpressionUtils.as(Expressions.constant(0), "sellingPrice"),
+                                            orderProductInfo.deliveryFee.as("deliveryFee"),
+                                            orderProductInfo.amount.as("quantity"),
+                                            ExpressionUtils.as(Expressions.constant(0), "totalPrice"),
+                                            ExpressionUtils.as(Expressions.constant(0), "finalPaymentPrice"),
+                                            orders.paymentWay.as("paymentWay"),
+                                            ExpressionUtils.as(Expressions.constant(0), "settlementRate"),
+                                            ExpressionUtils.as(Expressions.constant(0), "settlementPrice"),
+                                            orderProductInfo.isSettled.as("settlementState"),
+                                            orderProductInfo.settledAt.as("settledAt"),
+                                            orderDeliverPlace.name.as("customerName"),
+                                            orderDeliverPlace.tel.as("phoneNumber"),
+                                            userInfo.email.as("email"),
+                                            ExpressionUtils.as(Expressions.constant(orderDeliverPlace.address + " " + orderDeliverPlace.addressDetail), "address"),
+                                            orderDeliverPlace.deliverMessage.as("deliverMessage"),
+                                            ExpressionUtils.as(Expressions.constant(""), "deliveryCompany"),
+                                            orderProductInfo.invoiceCode.as("invoiceCode")
                                     )).as("settlementStoreDtos")
                             ))
             );
     }
 
-    @Override
-    public List<SettlementOrderDto> getExcelRawDataWithNotSettled3() {
-
-        return queryFactory
-                .selectFrom(orderProductInfo)
-                .leftJoin(optionItem).on(orderProductInfo.optionItemId.eq(optionItem.id))
-                .leftJoin(product).on(product.id.eq(orderProductInfo.productId))
-                .leftJoin(orders).on(orders.id.eq(orderProductInfo.orderId))
-                .leftJoin(orderDeliverPlace).on(orders.id.eq(orderDeliverPlace.orderId))
-                .leftJoin(coupon).on(coupon.id.eq(orders.couponId))
-                .leftJoin(store).on(store.id.eq(product.storeId))
-                .leftJoin(storeInfo).on(storeInfo.storeId.eq(store.id))
-                .where(orderProductInfo.state.eq(OrderProductState.FINAL_CONFIRM))
-                .orderBy(orderProductInfo.orderId.desc())
-                .orderBy(product.storeId.asc())
-                .transform(
-                        groupBy(orders.id, store.id)
-                                .list(Projections.fields(
-                                        SettlementOrderDto.class,
-                                        orders.id.as("orderId"),
-                                        list(Projections.fields(
-                                                SettlementStoreDto.class,
-                                                store.id.as("storeId"),
-                                                storeInfo.name.as("partnerName"), // 여기까진 됨
-                                                list(Projections.fields(
-                                                        SettlementProductOptionItemDto.class,
-                                                        orderProductInfo.id.as("orderProductInfoId"),
-                                                        product.id.as("productId"),
-                                                        product.title.as("productName"),
-                                                        optionItem.name.as("optionItemName")
-                                                )).as("settlementProductOptionItemDtos")
-                                        )).as("settlementStoreDtos")
-                                ))
-                );
-    }
+//    @Override
+//    public List<SettlementOrderDto> getExcelRawDataWithNotSettled3() {
+//
+//        return queryFactory
+//                .selectFrom(orderProductInfo)
+//                .leftJoin(optionItem).on(orderProductInfo.optionItemId.eq(optionItem.id))
+//                .leftJoin(product).on(product.id.eq(orderProductInfo.productId))
+//                .leftJoin(orders).on(orders.id.eq(orderProductInfo.orderId))
+//                .leftJoin(orderDeliverPlace).on(orders.id.eq(orderDeliverPlace.orderId))
+//                .leftJoin(coupon).on(coupon.id.eq(orders.couponId))
+//                .leftJoin(store).on(store.id.eq(product.storeId))
+//                .leftJoin(storeInfo).on(storeInfo.storeId.eq(store.id))
+//                .where(orderProductInfo.state.eq(OrderProductState.FINAL_CONFIRM))
+////                .orderBy(orderProductInfo.orderId.desc())
+////                .orderBy(product.storeId.asc())
+//                .transform(
+//                        groupBy(orders.id, store.id)
+//                                .list(Projections.fields(
+//                                        SettlementOrderDto.class,
+//                                        orders.id.as("orderId"),
+//                                        list(Projections.fields(
+//                                                SettlementStoreDto.class,
+//                                                store.id.as("storeId"),
+//                                                storeInfo.name.as("partnerName"), // 여기까진 됨
+//                                                list(Projections.fields(
+//                                                        SettlementProductOptionItemDto.class,
+//                                                        orderProductInfo.id.as("orderProductInfoId"),
+//                                                        product.id.as("productId"),
+//                                                        product.title.as("productName"),
+//                                                        optionItem.name.as("optionItemName")
+//                                                )).as("settlementProductOptionItemDtos")
+//                                        )).as("settlementStoreDtos")
+//                                ))
+//                );
+//    }
 }

@@ -1,5 +1,6 @@
 package com.matsinger.barofishserver.settlement.dto;
 
+import com.matsinger.barofishserver.order.domain.OrderPaymentWay;
 import com.matsinger.barofishserver.order.orderprductinfo.domain.OrderProductState;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -11,13 +12,13 @@ import java.sql.Timestamp;
 @NoArgsConstructor
 @AllArgsConstructor
 public class SettlementProductOptionItemDto {
-    private int orderProductInfoId;                         // 주문상품번호
-    private int productId;                                  // 상품번호
+
+    private int optionItemId;
+    private String productName;                             // 상품명
+    private String optionItemName;                          // 옵션명
     private OrderProductState orderProductInfoState;        // 주문상태
     private Timestamp orderedAt;                            // 주문일
     private Timestamp finalConfirmedAt;                       // 구매 확정일
-    private String productName;                             // 상품명
-    private String optionItemName;                          // 옵션명
     private boolean isTaxFree;                              // 과세여부
     private int purchasePrice;                              // 공급가(원)
     private int commissionPrice;                            // 수수료가(원) | 공급가 - 판매가
@@ -26,7 +27,7 @@ public class SettlementProductOptionItemDto {
     private int quantity;                                   // 수량
     private int totalPrice;                                 // 총 금액(원) (판매가 * 수량) - 배송비         개별 | 파트너끝
     private int finalPaymentPrice;                           // 최종결제금액(원) 총 금액 - 쿠폰할인 - 포인트    개별 | 파트너끝 | 주문끝
-    private String PaymentWay;                              // 결제수단
+    private OrderPaymentWay paymentWay;                     // 결제수단
     private Float settlementRate;                           // 정산비율
     private int settlementPrice;                            // 정산금액(원)
     private boolean settlementState;                        // 정산상태
@@ -42,7 +43,6 @@ public class SettlementProductOptionItemDto {
     @Override
     public String toString() {
         return "SettlementProductOptionItemDto{" +
-                "productId=" + productId +
                 ", orderProductInfoState=" + orderProductInfoState +
                 ", orderedAt=" + orderedAt +
                 ", finalConfirmedAt=" + finalConfirmedAt +
@@ -56,7 +56,7 @@ public class SettlementProductOptionItemDto {
                 ", quantity=" + quantity +
                 ", totalPrice=" + totalPrice +
                 ", finalPaymentPrice=" + finalPaymentPrice +
-                ", PaymentWay='" + PaymentWay + '\'' +
+                ", PaymentWay='" + paymentWay + '\'' +
                 ", settlementRate=" + settlementRate +
                 ", settlementPrice=" + settlementPrice +
                 ", settlementState=" + settlementState +
