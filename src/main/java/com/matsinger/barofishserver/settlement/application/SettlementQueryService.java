@@ -162,8 +162,9 @@ public class SettlementQueryService {
 
     @Transactional(readOnly = true)
     public List<SettlementOrderDto> getSettlementExcel2() {
+        // TODO:
         List<SettlementOrderDto> excelRawDataWithNotSettled2 = orderProductInfoRepository.getExcelRawDataWithNotSettled2();
-        System.out.println(excelRawDataWithNotSettled2.get(0).toString());
+        System.out.println(excelRawDataWithNotSettled2.toString());
         return excelRawDataWithNotSettled2;
     }
 }

@@ -140,12 +140,13 @@ public List<SettlementOrderDto> getExcelRawDataWithNotSettled2() {
                                     orders.id.as("orderId"),
                                     list(Projections.fields(SettlementStoreDto.class,
                                             store.id.as("storeId"),
-                                            storeInfo.name.as("partnerName"),
-                                            list(Projections.fields(SettlementProductOptionItemDto.class,
-                                                    product.title.as("productName"),
-                                                    optionItem.name.as("optionItemName"),
-                                                    product.id.as("productId")
-                                            )).as("productOptionItemDtos")
+                                            storeInfo.name.as("partnerName")
+//                                            // TODO: SettlementProductOptionItemDto가 하나밖에 없으면 리스트 형태로 들어가지 않는듯. 에러남
+//                                            list(Projections.fields(SettlementProductOptionItemDto.class,
+//                                                    product.title.as("productName"),
+//                                                    optionItem.name.as("optionItemName"),
+//                                                    product.id.as("productId")
+//                                            )).as("productOptionItemDtos")
                                     )).as("settlementStoreDtos")
                             ))
             );
