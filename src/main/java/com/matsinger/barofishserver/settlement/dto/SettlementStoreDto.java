@@ -22,7 +22,7 @@ public class SettlementStoreDto {
     private int usePoint;                                   // 포인트                                               | 주문끝
     private int finalPaymentPrice;                           // 최종결제금액(원) 총 금액 - 쿠폰할인 - 포인트    개별 | 파트너끝 | 주문끝
 
-//    private List<SettlementProductOptionItemDto> productOptionItemDtos;
+    private List<SettlementProductOptionItemDto> settlementProductOptionItemDtos;
 
     @Override
     public String toString() {
@@ -35,7 +35,7 @@ public class SettlementStoreDto {
                 ", couponDiscount=" + couponDiscount +
                 ", usePoint=" + usePoint +
                 ", finalPaymentPrice=" + finalPaymentPrice +
-//                ", productOptionItemDtos=" + productOptionItemDtos +
+                ", settlementProductOptionItemDtos=" + settlementProductOptionItemDtos +
                 '}';
     }
 }

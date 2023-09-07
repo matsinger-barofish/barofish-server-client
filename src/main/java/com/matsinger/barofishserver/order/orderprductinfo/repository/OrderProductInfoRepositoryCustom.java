@@ -15,4 +15,6 @@ public interface OrderProductInfoRepositoryCustom {
     List<SettlementExcelDownloadRawDto> getExcelRawDataWithNotSettled1();
 
     List<SettlementOrderDto> getExcelRawDataWithNotSettled2();
+
+    List<SettlementOrderDto> getExcelRawDataWithNotSettled3();
 }

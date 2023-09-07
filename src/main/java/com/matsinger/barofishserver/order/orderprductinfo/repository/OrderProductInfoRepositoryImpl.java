@@ -136,19 +136,58 @@ public List<SettlementOrderDto> getExcelRawDataWithNotSettled2() {
             .orderBy(product.storeId.asc())
             .transform(
                     groupBy(orders.id, store.id)
-                            .list(Projections.fields(SettlementOrderDto.class,
+                            .list(Projections.fields(
+                                    SettlementOrderDto.class,
                                     orders.id.as("orderId"),
-                                    list(Projections.fields(SettlementStoreDto.class,
+                                    list(Projections.fields(
+                                            SettlementStoreDto.class,
                                             store.id.as("storeId"),
-                                            storeInfo.name.as("partnerName")
-//                                            // TODO: SettlementProductOptionItemDto가 하나밖에 없으면 리스트 형태로 들어가지 않는듯. 에러남
-//                                            list(Projections.fields(SettlementProductOptionItemDto.class,
-//                                                    product.title.as("productName"),
-//                                                    optionItem.name.as("optionItemName"),
-//                                                    product.id.as("productId")
-//                                            )).as("productOptionItemDtos")
+                                            storeInfo.name.as("partnerName"), // 여기까진 됨
+                                            list(Projections.fields(
+                                                    SettlementProductOptionItemDto.class,
+                                                    orderProductInfo.id.as("orderProductInfoId"),
+                                                    product.id.as("productId"),
+                                                    product.title.as("productName"),
+                                                    optionItem.name.as("optionItemName")
+                                            )).as("settlementProductOptionItemDtos")
                                     )).as("settlementStoreDtos")
                             ))
             );
+    }
+
+    @Override
+    public List<SettlementOrderDto> getExcelRawDataWithNotSettled3() {
+
+        return queryFactory
+                .selectFrom(orderProductInfo)
+                .leftJoin(optionItem).on(orderProductInfo.optionItemId.eq(optionItem.id))
+                .leftJoin(product).on(product.id.eq(orderProductInfo.productId))
+                .leftJoin(orders).on(orders.id.eq(orderProductInfo.orderId))
+                .leftJoin(orderDeliverPlace).on(orders.id.eq(orderDeliverPlace.orderId))
+                .leftJoin(coupon).on(coupon.id.eq(orders.couponId))
+                .leftJoin(store).on(store.id.eq(product.storeId))
+                .leftJoin(storeInfo).on(storeInfo.storeId.eq(store.id))
+                .where(orderProductInfo.state.eq(OrderProductState.FINAL_CONFIRM))
+                .orderBy(orderProductInfo.orderId.desc())
+                .orderBy(product.storeId.asc())
+                .transform(
+                        groupBy(orders.id, store.id)
+                                .list(Projections.fields(
+                                        SettlementOrderDto.class,
+                                        orders.id.as("orderId"),
+                                        list(Projections.fields(
+                                                SettlementStoreDto.class,
+                                                store.id.as("storeId"),
+                                                storeInfo.name.as("partnerName"), // 여기까진 됨
+                                                list(Projections.fields(
+                                                        SettlementProductOptionItemDto.class,
+                                                        orderProductInfo.id.as("orderProductInfoId"),
+                                                        product.id.as("productId"),
+                                                        product.title.as("productName"),
+                                                        optionItem.name.as("optionItemName")
+                                                )).as("settlementProductOptionItemDtos")
+                                        )).as("settlementStoreDtos")
+                                ))
+                );
     }
 }
