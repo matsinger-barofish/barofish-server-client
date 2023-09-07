@@ -3,6 +3,9 @@ package com.matsinger.barofishserver.order.orderprductinfo.repository;
 import com.matsinger.barofishserver.order.orderprductinfo.domain.OrderProductInfo;
 import com.matsinger.barofishserver.order.orderprductinfo.domain.OrderProductState;
 import com.matsinger.barofishserver.settlement.dto.SettlementExcelDownloadRawDto;
+import com.matsinger.barofishserver.settlement.dto.SettlementOrderDto;
+import com.matsinger.barofishserver.settlement.dto.SettlementProductOptionItemDto;
+import com.matsinger.barofishserver.settlement.dto.SettlementStoreDto;
 import com.querydsl.core.types.ExpressionUtils;
 import com.querydsl.core.types.Projections;
 import com.querydsl.core.types.dsl.Expressions;
@@ -21,6 +24,8 @@ import static com.matsinger.barofishserver.product.domain.QProduct.product;
 import static com.matsinger.barofishserver.product.optionitem.domain.QOptionItem.optionItem;
 import static com.matsinger.barofishserver.store.domain.QStore.store;
 import static com.matsinger.barofishserver.store.domain.QStoreInfo.storeInfo;
+import static com.querydsl.core.group.GroupBy.groupBy;
+import static com.querydsl.core.group.GroupBy.list;
 
 @Repository
 @RequiredArgsConstructor
@@ -36,7 +41,7 @@ public class OrderProductInfoRepositoryImpl implements OrderProductInfoRepositor
     }
 
     @Override
-    public List<SettlementExcelDownloadRawDto> getExcelRawDataWithNotSettled() {
+    public List<SettlementExcelDownloadRawDto> getExcelRawDataWithNotSettled1() {
         return queryFactory
                 .select(Projections.fields(SettlementExcelDownloadRawDto.class,
                         product.id.as("productId"),
@@ -84,5 +89,65 @@ public class OrderProductInfoRepositoryImpl implements OrderProductInfoRepositor
                 .orderBy(orderProductInfo.orderId.desc())
                 .orderBy(product.storeId.asc())
                 .fetch();
+    }
+
+//    @Override
+//    public List<SettlementOrderDto> getExcelRawDataWithNotSettled2() {
+//
+//        return queryFactory
+//                .selectFrom(orderProductInfo)
+//                .leftJoin(optionItem).on(orderProductInfo.optionItemId.eq(optionItem.id))
+//                .leftJoin(product).on(product.id.eq(orderProductInfo.productId)).fetchJoin()
+//                .leftJoin(orders).on(orders.id.eq(orderProductInfo.orderId)).fetchJoin()
+//                .leftJoin(orderDeliverPlace).on(orders.id.eq(orderDeliverPlace.orderId))
+//                .leftJoin(coupon).on(coupon.id.eq(orders.couponId)).fetchJoin()
+//                .leftJoin(store).on(store.id.eq(product.storeId)).fetchJoin()
+//                .leftJoin(storeInfo).on(storeInfo.storeId.eq(store.id)).fetchJoin()
+//                .where(orderProductInfo.state.eq(OrderProductState.FINAL_CONFIRM))
+//                .orderBy(orderProductInfo.orderId.desc())
+//                .orderBy(product.storeId.asc())
+//                .transform(
+//                        groupBy(orders.id, store.id)
+//                                .list(Projections.fields(SettlementOrderDto.class,
+//                                        orders.id.as("orderId"),
+//                                        list(Projections.fields(SettlementStoreDto.class,
+//                                                storeInfo.name.as("partnerName"),
+//                                                list(Projections.fields(SettlementProductOptionItemDto.class,
+//                                                        product.id.as("productId"))
+//                                                ))
+//                                        ))
+//                                )
+//                );
+//    }
+@Override
+public List<SettlementOrderDto> getExcelRawDataWithNotSettled2() {
+
+    return queryFactory
+            .selectFrom(orderProductInfo)
+            .leftJoin(optionItem).on(orderProductInfo.optionItemId.eq(optionItem.id))
+            .leftJoin(product).on(product.id.eq(orderProductInfo.productId))
+            .leftJoin(orders).on(orders.id.eq(orderProductInfo.orderId))
+            .leftJoin(orderDeliverPlace).on(orders.id.eq(orderDeliverPlace.orderId))
+            .leftJoin(coupon).on(coupon.id.eq(orders.couponId))
+            .leftJoin(store).on(store.id.eq(product.storeId))
+            .leftJoin(storeInfo).on(storeInfo.storeId.eq(store.id))
+            .where(orderProductInfo.state.eq(OrderProductState.FINAL_CONFIRM))
+            .orderBy(orderProductInfo.orderId.desc())
+            .orderBy(product.storeId.asc())
+            .transform(
+                    groupBy(orders.id, store.id)
+                            .list(Projections.fields(SettlementOrderDto.class,
+                                    orders.id.as("orderId"),
+                                    list(Projections.fields(SettlementStoreDto.class,
+                                            store.id.as("storeId"),
+                                            storeInfo.name.as("partnerName"),
+                                            list(Projections.fields(SettlementProductOptionItemDto.class,
+                                                    product.title.as("productName"),
+                                                    optionItem.name.as("optionItemName"),
+                                                    product.id.as("productId")
+                                            )).as("productOptionItemDtos")
+                                    )).as("settlementStoreDtos")
+                            ))
+            );
     }
 }

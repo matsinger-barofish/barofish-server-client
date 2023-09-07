@@ -44,4 +44,13 @@ class OrderProductInfoRepositoryImplTest {
 
         // then
     }
+
+    @Test
+    void settlementExcepTest() {
+        // given
+        settlementQueryService.getSettlementExcel2();
+        // when
+
+        // then
+    }
 }

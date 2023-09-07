@@ -3,32 +3,28 @@ package com.matsinger.barofishserver.settlement.application;
 import com.matsinger.barofishserver.coupon.application.CouponQueryService;
 import com.matsinger.barofishserver.coupon.domain.Coupon;
 import com.matsinger.barofishserver.deliver.application.DeliveryQueryService;
-import com.matsinger.barofishserver.deliver.domain.DeliveryCompany;
-import com.matsinger.barofishserver.deliver.repository.DeliveryCompanyRepository;
 import com.matsinger.barofishserver.order.application.OrderQueryService;
 import com.matsinger.barofishserver.order.application.OrderService;
 import com.matsinger.barofishserver.order.domain.OrderDeliverPlace;
 import com.matsinger.barofishserver.order.domain.Orders;
 import com.matsinger.barofishserver.order.orderprductinfo.domain.OrderProductInfo;
 import com.matsinger.barofishserver.order.orderprductinfo.repository.OrderProductInfoRepository;
-import com.matsinger.barofishserver.order.repository.OrderRepository;
 import com.matsinger.barofishserver.product.domain.Product;
 import com.matsinger.barofishserver.product.option.application.OptionQueryService;
 import com.matsinger.barofishserver.product.option.domain.Option;
 import com.matsinger.barofishserver.product.optionitem.application.OptionItemQueryService;
 import com.matsinger.barofishserver.product.optionitem.domain.OptionItem;
-import com.matsinger.barofishserver.product.optionitem.repository.OptionItemRepository;
 import com.matsinger.barofishserver.settlement.domain.Settlement;
 import com.matsinger.barofishserver.settlement.domain.SettlementState;
 import com.matsinger.barofishserver.settlement.dto.OrderSettlementExcelDto;
 import com.matsinger.barofishserver.settlement.dto.SettlementExcelDownloadRawDto;
+import com.matsinger.barofishserver.settlement.dto.SettlementOrderDto;
 import com.matsinger.barofishserver.settlement.repository.SettlementRepository;
 import com.matsinger.barofishserver.store.application.StoreService;
 import com.matsinger.barofishserver.store.domain.StoreInfo;
 import com.matsinger.barofishserver.user.application.UserQueryService;
 import com.matsinger.barofishserver.user.domain.User;
 import com.matsinger.barofishserver.userinfo.domain.UserInfo;
-import com.querydsl.core.Tuple;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -37,7 +33,6 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @RequiredArgsConstructor
@@ -160,8 +155,15 @@ public class SettlementQueryService {
 
     @Transactional(readOnly = true)
     public List<SettlementExcelDownloadRawDto> getSettlementExcel() {
-        List<SettlementExcelDownloadRawDto> excelRawDataWithNotSettled = orderProductInfoRepository.getExcelRawDataWithNotSettled();
+        List<SettlementExcelDownloadRawDto> excelRawDataWithNotSettled = orderProductInfoRepository.getExcelRawDataWithNotSettled1();
         System.out.println(excelRawDataWithNotSettled.get(0).toString());
         return excelRawDataWithNotSettled;
+    }
+
+    @Transactional(readOnly = true)
+    public List<SettlementOrderDto> getSettlementExcel2() {
+        List<SettlementOrderDto> excelRawDataWithNotSettled2 = orderProductInfoRepository.getExcelRawDataWithNotSettled2();
+        System.out.println(excelRawDataWithNotSettled2.get(0).toString());
+        return excelRawDataWithNotSettled2;
     }
 }

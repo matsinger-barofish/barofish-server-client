@@ -1,0 +1,36 @@
+SettlementOrderDto{
+  orderId=
+  '2309050240510028',
+  couponName=
+  'null',
+  couponDiscount=0,
+  usePoint=0,
+  finalPaymentPrice=0,
+  settlementStoreDtos=[
+  SettlementStoreDto
+  {
+    partnerName=
+    'test1',
+    deliveryFeeSum=0,
+    totalPriceSum=0,
+    totalOrderPrice=0,
+    couponName=
+    'null',
+    couponDiscount=0,
+    usePoint=0,
+    finalPaymentPrice=0
+  },
+  SettlementStoreDto
+  {
+    partnerName=
+    'test1',
+    deliveryFeeSum=0,
+    totalPriceSum=0,
+    totalOrderPrice=0,
+    couponName=
+    'null',
+    couponDiscount=0,
+    usePoint=0,
+    finalPaymentPrice=0
+  }
+]}
