@@ -160,8 +160,14 @@ public class SettlementQueryService {
 
     @Transactional(readOnly = true)
     public List<SettlementStoreDto> getSettlementExcel2() {
-        List<SettlementStoreDto> excelRawDataWithNotSettled2 = orderProductInfoRepository.getExcelRawDataWithNotSettled2();
-        System.out.println(excelRawDataWithNotSettled2.toString());
-        return excelRawDataWithNotSettled2;
+        // TODO: 쿼리 한번으로 필요한 데이터 다 뽑아오기
+        List<SettlementStoreDto> settlementStoreDtos = orderProductInfoRepository.getExcelRawDataWithNotSettled2();
+
+        for (SettlementStoreDto storeDto : settlementStoreDtos) {
+
+        }
+
+        System.out.println(settlementStoreDtos.toString());
+        return settlementStoreDtos;
     }
 }

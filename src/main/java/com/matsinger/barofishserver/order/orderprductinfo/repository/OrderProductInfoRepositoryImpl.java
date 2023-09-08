@@ -150,7 +150,6 @@ public List<SettlementStoreDto> getExcelRawDataWithNotSettled2() {
 
                                     list(Projections.fields(
                                             SettlementProductOptionItemDto.class,
-                                            optionItem.id.as("optionItemId"),
                                             product.title.as("productName"),
                                             optionItem.name.as("optionItemName"),
                                             orderProductInfo.state.as("orderProductInfoState"),

@@ -23,7 +23,9 @@ public class SettlementStoreDto {
     @Override
     public String toString() {
         return "SettlementStoreDto{" +
-                "partnerName='" + partnerName + '\'' +
+                "orderId='" + orderId + '\'' +
+                ", storeId=" + storeId +
+                ", partnerName='" + partnerName + '\'' +
                 ", deliveryFeeSum=" + deliveryFeeSum +
                 ", totalPriceSum=" + totalPriceSum +
                 ", settlementProductOptionItemDtos=" + settlementProductOptionItemDtos +

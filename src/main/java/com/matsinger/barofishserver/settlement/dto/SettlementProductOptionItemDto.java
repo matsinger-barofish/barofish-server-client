@@ -13,7 +13,6 @@ import java.sql.Timestamp;
 @AllArgsConstructor
 public class SettlementProductOptionItemDto {
 
-    private int optionItemId;
     private String productName;                             // 상품명
     private String optionItemName;                          // 옵션명
     private OrderProductState orderProductInfoState;        // 주문상태
