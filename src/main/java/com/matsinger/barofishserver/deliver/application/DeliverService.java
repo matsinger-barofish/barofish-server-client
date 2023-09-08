@@ -1,5 +1,9 @@
 package com.matsinger.barofishserver.deliver.application;
 
+import com.matsinger.barofishserver.admin.log.application.AdminLogCommandService;
+import com.matsinger.barofishserver.admin.log.application.AdminLogQueryService;
+import com.matsinger.barofishserver.admin.log.domain.AdminLog;
+import com.matsinger.barofishserver.admin.log.domain.AdminLogType;
 import com.matsinger.barofishserver.deliver.domain.DeliveryCompany;
 import com.matsinger.barofishserver.deliver.repository.DeliveryCompanyRepository;
 import com.matsinger.barofishserver.deliver.domain.Deliver;
@@ -7,6 +11,7 @@ import com.matsinger.barofishserver.order.application.OrderService;
 import com.matsinger.barofishserver.order.orderprductinfo.domain.OrderProductInfo;
 import com.matsinger.barofishserver.order.orderprductinfo.domain.OrderProductState;
 import com.matsinger.barofishserver.product.application.ProductService;
+import com.matsinger.barofishserver.product.domain.Product;
 import com.matsinger.barofishserver.user.deliverplace.repository.DeliverPlaceRepository;
 import com.matsinger.barofishserver.user.dto.UserJoinReq;
 import com.matsinger.barofishserver.user.deliverplace.DeliverPlace;
@@ -38,6 +43,9 @@ public class DeliverService {
     private final DeliverPlaceRepository deliverPlaceRepository;
     private final Common util;
     private final DeliveryCompanyRepository deliveryCompanyRepository;
+    private final AdminLogQueryService adminLogQueryService;
+    private final AdminLogCommandService adminLogCommandService;
+    private final Common utils;
 
     public List<Deliver.Company> selectDeliverCompanyList() {
         List<DeliveryCompany> deliveryCompanies = deliveryCompanyRepository.findAll();
@@ -115,6 +123,13 @@ public class DeliverService {
                 info.setState(OrderProductState.DELIVERY_DONE);
                 info.setDeliveryDoneAt(util.now());
                 orderService.updateOrderProductInfo(new ArrayList<>(List.of(info)));
+                Product product = productService.selectProduct(info.getProductId());
+                String content = product.getTitle() + " 주문이 배송 완료 처리되었습니다.";
+                AdminLog
+                        adminLog =
+                        AdminLog.builder().id(adminLogQueryService.getAdminLogId()).adminId(1).type(AdminLogType.ORDER).targetId(
+                                info.getOrderId()).content(content).createdAt(utils.now()).build();
+                adminLogCommandService.saveAdminLog(adminLog);
             }
         }
     }

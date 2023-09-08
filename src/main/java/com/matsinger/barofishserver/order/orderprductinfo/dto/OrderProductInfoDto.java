@@ -22,6 +22,7 @@ public class OrderProductInfoDto {
     private com.matsinger.barofishserver.product.optionitem.dto.OptionItemDto optionItem;
     private OrderProductState state;
     private Integer settlePrice;
+    private Integer originPrice;
     private int price;
     private int amount;
     private int deliveryFee;

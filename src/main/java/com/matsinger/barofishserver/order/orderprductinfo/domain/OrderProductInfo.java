@@ -40,6 +40,9 @@ public class OrderProductInfo {
     @Column(name = "settle_price")
     private Integer settlePrice;
     @Basic
+    @Column(name = "origin_price")
+    private Integer originPrice;
+    @Basic
     @Column(name = "price", nullable = false)
     private int price;
     @Basic
