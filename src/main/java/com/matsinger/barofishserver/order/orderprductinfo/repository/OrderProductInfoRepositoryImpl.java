@@ -3,13 +3,11 @@ package com.matsinger.barofishserver.order.orderprductinfo.repository;
 import com.matsinger.barofishserver.order.orderprductinfo.domain.OrderProductInfo;
 import com.matsinger.barofishserver.order.orderprductinfo.domain.OrderProductState;
 import com.matsinger.barofishserver.settlement.dto.SettlementExcelDownloadRawDto;
-import com.matsinger.barofishserver.settlement.dto.SettlementOrderDto;
+import com.matsinger.barofishserver.settlement.dto.SettlementOrderRawDto;
 import com.matsinger.barofishserver.settlement.dto.SettlementProductOptionItemDto;
-import com.matsinger.barofishserver.settlement.dto.SettlementStoreDto;
 import com.querydsl.core.types.ExpressionUtils;
 import com.querydsl.core.types.Projections;
 import com.querydsl.core.types.dsl.Expressions;
-import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
@@ -17,6 +15,7 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 import static com.matsinger.barofishserver.coupon.domain.QCoupon.coupon;
+import static com.matsinger.barofishserver.deliver.domain.QDeliveryCompany.deliveryCompany;
 import static com.matsinger.barofishserver.order.domain.QOrderDeliverPlace.orderDeliverPlace;
 import static com.matsinger.barofishserver.order.domain.QOrders.orders;
 import static com.matsinger.barofishserver.order.orderprductinfo.domain.QOrderProductInfo.orderProductInfo;
@@ -122,7 +121,7 @@ public class OrderProductInfoRepositoryImpl implements OrderProductInfoRepositor
 //                );
 //    }
 @Override
-public List<SettlementStoreDto> getExcelRawDataWithNotSettled2() {
+public List<SettlementOrderRawDto> getExcelRawDataWithNotSettled2() {
 
     return queryFactory
             .selectFrom(orderProductInfo)
@@ -135,18 +134,25 @@ public List<SettlementStoreDto> getExcelRawDataWithNotSettled2() {
             .leftJoin(storeInfo).on(storeInfo.storeId.eq(store.id))
             .leftJoin(user).on(orders.userId.eq(user.id))
             .leftJoin(userInfo).on(userInfo.userId.eq(user.id))
+            .leftJoin(deliveryCompany).on(orderProductInfo.deliverCompanyCode.eq(deliveryCompany.code))
             .where(orderProductInfo.state.eq(OrderProductState.FINAL_CONFIRM))
 //            .orderBy(orderProductInfo.orderId.desc())
 //            .orderBy(product.storeId.asc())
             .transform(
                     groupBy(orders.id, store.id)
                             .list(Projections.fields(
-                                    SettlementStoreDto.class,
+                                    SettlementOrderRawDto.class,
                                     orders.id.as("orderId"),
+                                    ExpressionUtils.as(Expressions.constant(0), "finalOrderPrice"),
+                                    coupon.title.as("couponName"),
+                                    coupon.amount.as("couponDiscount"),
+                                    orders.usePoint.as("usePoint"),
+                                    ExpressionUtils.as(Expressions.constant(0), "orderDeliveryFeeSum"),
+                                    // 위는 order 끝나면 출력, 밑은 store 끝나면 출력
                                     store.id.as("storeId"),
                                     storeInfo.name.as("partnerName"),
-                                    ExpressionUtils.as(Expressions.constant(0), "deliveryFeeSum"),
-                                    ExpressionUtils.as(Expressions.constant(0), "totalPriceSum"),
+                                    ExpressionUtils.as(Expressions.constant(0), "storeDeliveryFeeSum"),
+                                    ExpressionUtils.as(Expressions.constant(0), "storeTotalPriceSum"),
 
                                     list(Projections.fields(
                                             SettlementProductOptionItemDto.class,
@@ -158,11 +164,11 @@ public List<SettlementStoreDto> getExcelRawDataWithNotSettled2() {
                                             product.needTaxation.as("isTaxFree"),
                                             optionItem.purchasePrice.as("purchasePrice"),
                                             ExpressionUtils.as(Expressions.constant(0), "commissionPrice"),
-                                            ExpressionUtils.as(Expressions.constant(0), "sellingPrice"),
+                                            orderProductInfo.price.as("sellingPrice"),
                                             orderProductInfo.deliveryFee.as("deliveryFee"),
                                             orderProductInfo.amount.as("quantity"),
                                             ExpressionUtils.as(Expressions.constant(0), "totalPrice"),
-                                            ExpressionUtils.as(Expressions.constant(0), "finalPaymentPrice"),
+//                                            ExpressionUtils.as(Expressions.constant(0), "finalPaymentPrice"),
                                             orders.paymentWay.as("paymentWay"),
                                             storeInfo.settlementRate.as("settlementRate"),
                                             ExpressionUtils.as(Expressions.constant(0), "settlementPrice"),
@@ -173,7 +179,7 @@ public List<SettlementStoreDto> getExcelRawDataWithNotSettled2() {
                                             userInfo.email.as("email"),
                                             ExpressionUtils.as(Expressions.constant(orderDeliverPlace.address + " " + orderDeliverPlace.addressDetail), "address"),
                                             orderDeliverPlace.deliverMessage.as("deliverMessage"),
-                                            ExpressionUtils.as(Expressions.constant(""), "deliveryCompany"),
+                                            deliveryCompany.name.as("deliveryCompany"),
                                             orderProductInfo.invoiceCode.as("invoiceCode")
                                     )).as("settlementProductOptionItemDtos")
                             ))

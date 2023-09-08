@@ -8,6 +8,12 @@ import lombok.NoArgsConstructor;
 
 import java.sql.Timestamp;
 
+/**
+ * DB에서 조회 후 따로 계산해서 set해줘야함
+ * commissionPrice
+ * totalPrice
+ * settlementPrice
+ */
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
@@ -25,7 +31,7 @@ public class SettlementProductOptionItemDto {
     private int deliveryFee;                                // 배송비                                  개별 | 파트너끝
     private int quantity;                                   // 수량
     private int totalPrice;                                 // 총 금액(원) (판매가 * 수량) - 배송비         개별 | 파트너끝
-    private int finalPaymentPrice;                           // 최종결제금액(원) 총 금액 - 쿠폰할인 - 포인트    개별 | 파트너끝 | 주문끝
+//    private int finalPaymentPrice;                           // 최종결제금액(원) 총 금액 - 쿠폰할인 - 포인트    개별 | 파트너끝 | 주문끝
     private OrderPaymentWay paymentWay;                     // 결제수단
     private Float settlementRate;                           // 정산비율
     private int settlementPrice;                            // 정산금액(원)
@@ -39,14 +45,23 @@ public class SettlementProductOptionItemDto {
     private String deliveryCompany;                         // 택배사
     private String invoiceCode;                             // 운송장번호
 
+    public void setCommissionPrice(int commissionPrice) {
+        this.commissionPrice = commissionPrice;
+    }
+    public void setTotalPrice(int totalPrice) {
+        this.totalPrice = totalPrice;
+    }
+    public void setSettlementPrice(int settlementPrice) {
+        this.settlementPrice = settlementPrice;
+    }
     @Override
     public String toString() {
         return "SettlementProductOptionItemDto{" +
+                "productName='" + productName + '\'' +
+                ", optionItemName='" + optionItemName + '\'' +
                 ", orderProductInfoState=" + orderProductInfoState +
                 ", orderedAt=" + orderedAt +
                 ", finalConfirmedAt=" + finalConfirmedAt +
-                ", productName='" + productName + '\'' +
-                ", optionItemName='" + optionItemName + '\'' +
                 ", isTaxFree=" + isTaxFree +
                 ", purchasePrice=" + purchasePrice +
                 ", commissionPrice=" + commissionPrice +
@@ -54,8 +69,7 @@ public class SettlementProductOptionItemDto {
                 ", deliveryFee=" + deliveryFee +
                 ", quantity=" + quantity +
                 ", totalPrice=" + totalPrice +
-                ", finalPaymentPrice=" + finalPaymentPrice +
-                ", PaymentWay='" + paymentWay + '\'' +
+                ", paymentWay=" + paymentWay +
                 ", settlementRate=" + settlementRate +
                 ", settlementPrice=" + settlementPrice +
                 ", settlementState=" + settlementState +

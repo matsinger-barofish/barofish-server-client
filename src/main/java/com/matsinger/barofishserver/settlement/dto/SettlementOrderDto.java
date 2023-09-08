@@ -1,23 +1,31 @@
 package com.matsinger.barofishserver.settlement.dto;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
+import org.w3c.dom.stylesheets.LinkStyle;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Getter
-@NoArgsConstructor
-@AllArgsConstructor
+@Setter
+@Builder @NoArgsConstructor @AllArgsConstructor
 public class SettlementOrderDto {
-
     private String orderId;
     private String couponName;
     private int couponDiscount;
     private int usePoint;
-    private int finalPaymentPrice;                           // 최종결제금액(원) 총 금액 - 쿠폰할인 - 포인트    개별 | 파트너끝 | 주문끝
+    private int orderDeliveryFeeSum = 0;
 
-    private List<SettlementStoreDto> settlementStoreDtos;
+    @Builder.Default
+    private List<SettlementStoreDto> settlementStoreDtos = new ArrayList<>();
+
+    public void addStoreInSameOrder(SettlementStoreDto storeDto) {
+        settlementStoreDtos.add(storeDto);
+    }
+
+    public void addDeliveryFee(int storeDeliveryFeeSum) {
+        this.orderDeliveryFeeSum += storeDeliveryFeeSum;
+    }
 
     @Override
     public String toString() {
@@ -26,7 +34,7 @@ public class SettlementOrderDto {
                 ", couponName='" + couponName + '\'' +
                 ", couponDiscount=" + couponDiscount +
                 ", usePoint=" + usePoint +
-                ", finalPaymentPrice=" + finalPaymentPrice +
+                ", orderDeliveryFeeSum=" + orderDeliveryFeeSum +
                 ", settlementStoreDtos=" + settlementStoreDtos +
                 '}';
     }

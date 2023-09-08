@@ -31,6 +31,7 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @RequiredArgsConstructor
@@ -159,15 +160,70 @@ public class SettlementQueryService {
     }
 
     @Transactional(readOnly = true)
-    public List<SettlementStoreDto> getSettlementExcel2() {
-        // TODO: 쿼리 한번으로 필요한 데이터 다 뽑아오기
-        List<SettlementStoreDto> settlementStoreDtos = orderProductInfoRepository.getExcelRawDataWithNotSettled2();
+    public List<SettlementOrderRawDto> getSettlementExcel2() {
+        List<SettlementOrderRawDto> settlementOrderRawDtos = orderProductInfoRepository.getExcelRawDataWithNotSettled2();
 
-        for (SettlementStoreDto storeDto : settlementStoreDtos) {
+        List<SettlementOrderDto> settlementDtos = new ArrayList<>();
 
+        int orderDeliveryFeeSum = 0;
+        String orderId = "";
+
+        List<SettlementStoreDto> settlementStoreDtos = new ArrayList<>();
+        for (int i = 0; i < settlementOrderRawDtos.size(); i++) {
+            SettlementOrderRawDto orderRawDto = settlementOrderRawDtos.get(i);
+            orderId = orderRawDto.getOrderId();
+
+            int storeDeliveryFeeSum = 0;
+            int storeTotalPriceSum = 0;
+
+            SettlementOrderDto settlementOrderDto = new SettlementOrderDto();
+            SettlementStoreDto settlementStoreDto = new SettlementStoreDto();
+            List<SettlementProductOptionItemDto> storeItems = new ArrayList<>();
+            for (SettlementProductOptionItemDto optionItemDto : orderRawDto.getSettlementProductOptionItemDtos()) {
+                int sellingPrice = optionItemDto.getSellingPrice();
+                int purchasePrice = optionItemDto.getPurchasePrice();
+                int deliveryFee = optionItemDto.getDeliveryFee();
+
+                int commissionPrice = purchasePrice - sellingPrice;
+                int totalPrice = (sellingPrice * optionItemDto.getQuantity()) - deliveryFee;
+                int settlementPrice = purchasePrice + deliveryFee;
+                optionItemDto.setCommissionPrice(commissionPrice);
+                optionItemDto.setTotalPrice(totalPrice);
+                optionItemDto.setSettlementPrice(settlementPrice);
+
+                settlementStoreDto.addDeliveryFee(deliveryFee);
+                settlementStoreDto.addPrice(totalPrice);
+
+                storeItems.add(optionItemDto);
+            }
+
+            settlementStoreDto.setStoreId(orderRawDto.getStoreId());
+            settlementStoreDto.setPartnerName(orderRawDto.getPartnerName());
+            settlementStoreDto.setStoreOptionItemDtos(storeItems);
+
+            settlementOrderDto.addDeliveryFee(storeDeliveryFeeSum);
+
+            if (i >= 1) {
+                if (settlementOrderRawDtos.get(i - 1).getOrderId()
+                    .equals(
+                    settlementOrderRawDtos.get(i).getOrderId())) {
+
+                    settlementDtos.get(settlementDtos.size() - 1).addStoreInSameOrder(settlementStoreDto);
+                    continue;
+                }
+            }
+
+            settlementOrderDto.setOrderId(orderRawDto.getOrderId());
+            settlementOrderDto.setCouponName(orderRawDto.getCouponName());
+            settlementOrderDto.setCouponDiscount(orderRawDto.getCouponDiscount());
+            settlementOrderDto.setUsePoint(orderRawDto.getUsePoint());
+            settlementOrderDto.addDeliveryFee(storeDeliveryFeeSum);
+            settlementOrderDto.addStoreInSameOrder(settlementStoreDto);
+
+            settlementDtos.add(settlementOrderDto);
         }
 
-        System.out.println(settlementStoreDtos.toString());
-        return settlementStoreDtos;
+        System.out.println(settlementDtos.toString());
+        return settlementOrderRawDtos;
     }
 }
