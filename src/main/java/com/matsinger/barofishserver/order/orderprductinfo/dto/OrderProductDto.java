@@ -28,6 +28,7 @@ public class OrderProductDto {
     private OrderProductState state;
     private String optionName;
     private OptionItemDto optionItem;
+    private Integer originPrice;
     private Integer price;
     private Integer amount;
     private String deliverCompany;

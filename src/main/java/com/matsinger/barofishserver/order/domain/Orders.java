@@ -40,6 +40,9 @@ public class Orders {
     @Column(name = "orderer_tel")
     private String ordererTel;
     @Basic
+    @Column(name = "origin_total_price")
+    private Integer originTotalPrice;
+    @Basic
     @Column(name = "total_price", nullable = false)
     private int totalPrice;
     @Basic

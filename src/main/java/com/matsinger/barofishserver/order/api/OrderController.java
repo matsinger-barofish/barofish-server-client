@@ -350,6 +350,7 @@ public class OrderController {
             List<OrderProductInfo> infos = new ArrayList<>();
             List<OptionItem> optionItems = new ArrayList<>();
             int taxFreeAmount = 0;
+            int productPrice = 0;
             for (OrderProductReq productReq : data.getProducts()) {
                 Product product = productService.selectProduct(productReq.getProductId());
                 StoreInfo storeInfo = storeService.selectStoreInfo(product.getStoreId());
@@ -375,6 +376,7 @@ public class OrderController {
                     return res.throwError("최대 주문 수량을 초과하였습니다.", "INPUT_CHECK_REQUIRED");
                 optionItem.reduceAmount(productReq.getAmount());
                 int price = orderService.getProductPrice(product, productReq.getOptionId(), productReq.getAmount());
+                productPrice += price;
                 taxFreeAmount += productReq.getTaxFreeAmount() != null ? productReq.getTaxFreeAmount() : 0;
                 Integer
                         deliveryFee =
@@ -386,8 +388,9 @@ public class OrderController {
                 infos.add(OrderProductInfo.builder().optionItemId(optionItem.getId()).orderId(orderId).productId(
                         productReq.getProductId()).state(OrderProductState.WAIT_DEPOSIT).settlePrice(storeInfo.getSettlementRate() !=
                         null ? (int) ((storeInfo.getSettlementRate() / 100.) *
-                        optionItem.getPurchasePrice()) : optionItem.getPurchasePrice()).price(price).amount(productReq.getAmount()).isSettled(
-                        false).deliveryFee(deliveryFee).taxFreeAmount(productReq.getTaxFreeAmount()).isTaxFree(!product.getNeedTaxation()).build());
+                        optionItem.getPurchasePrice()) : optionItem.getPurchasePrice()).originPrice(optionItem.getDiscountPrice()).price(
+                        price).amount(productReq.getAmount()).isSettled(false).deliveryFee(deliveryFee).taxFreeAmount(
+                        productReq.getTaxFreeAmount()).isTaxFree(!product.getNeedTaxation()).build());
             }
             infos.forEach(i -> {
                 List<OrderProductInfo> sameStoreOrderInfos = infos.stream().filter(v -> {
@@ -406,10 +409,11 @@ public class OrderController {
                 }
             });
             if (coupon != null) {
-                if (data.getTotalPrice() < coupon.getMinPrice())
+                if (productPrice < coupon.getMinPrice())
                     return res.throwError("쿠폰 최소 금액에 맞지 않습니다.", "INPUT_CHECK_REQUIRED");
                 couponQueryService.checkValidCoupon(coupon.getId(), userId);
             }
+            int originTotalPrice = infos.stream().mapToInt(OrderProductInfo::getPrice).sum();
             int
                     totalPrice =
                     infos.stream().mapToInt(v -> v.getPrice() + v.getDeliveryFee()).sum() -
@@ -435,7 +439,7 @@ public class OrderController {
                             tel).bankHolder(vBankRefundInfo != null ? vBankRefundInfo.getBankHolder() : null).bankCode(
                             vBankRefundInfo != null ? vBankRefundInfo.getBankCode() : null).bankName(vBankRefundInfo !=
                             null ? vBankRefundInfo.getBankName() : null).bankAccount(vBankRefundInfo !=
-                            null ? vBankRefundInfo.getBankAccount() : null).build();
+                            null ? vBankRefundInfo.getBankAccount() : null).originTotalPrice(originTotalPrice).build();
 
             Orders result = orderService.orderProduct(order, infos, orderDeliverPlace);
 
@@ -741,6 +745,15 @@ public class OrderController {
             Integer adminId = null;
             if (tokenInfo.get().getType().equals(TokenAuthType.ADMIN)) adminId = tokenInfo.get().getId();
             OrderProductInfo info = orderService.selectOrderProductInfo(orderProductInfoId);
+            if (!info.getState().equals(OrderProductState.PAYMENT_DONE)) {
+                if (info.getState().equals(OrderProductState.DELIVERY_READY) ||
+                        info.getState().equals(OrderProductState.ON_DELIVERY))
+                    return res.throwError("이미 발송 준비 처리된 주문입니다.", "NOT_ALLOWED");
+                if (info.getState().equals(OrderProductState.DELIVERY_DONE) ||
+                        info.getState().equals(OrderProductState.FINAL_CONFIRM))
+                    return res.throwError("이미 배송 완료된 주문입니다.", "NOT_ALLOWED");
+                return res.throwError("발송 처리 불가능한 상품입니다.", "NOT_ALLOWED");
+            }
             info.setState(OrderProductState.DELIVERY_READY);
             orderService.updateOrderProductInfo(new ArrayList<>(List.of(info)));
             if (adminId != null) {

@@ -117,7 +117,7 @@ public class OrderService {
                     opi.getDeliverCompanyCode()).deliverCompany(deliveryCompany.map(DeliveryCompany::getName).orElse(
                     null)).invoiceCode(opi.getInvoiceCode()).cancelReason(opi.getCancelReason()).cancelReasonContent(opi.getCancelReasonContent()).isReviewWritten(
                     isWritten).deliverFeeType(product.getDeliverFeeType()).minOrderPrice(product.getMinOrderPrice()).finalConfirmedAt(
-                    opi.getFinalConfirmedAt()).needTaxation(product.getNeedTaxation()).build();
+                    opi.getFinalConfirmedAt()).needTaxation(product.getNeedTaxation()).originPrice(opi.getOriginPrice()).build();
         }).filter(Objects::nonNull).toList();
         String couponName = null;
         if (order.getCouponId() != null) {
@@ -129,7 +129,7 @@ public class OrderService {
                 deliverPlace.convert2Dto()).paymentWay(order.getPaymentWay()).productInfos(orderProductDtos).couponDiscount(
                 order.getCouponDiscount()).usePoint(order.getUsePoint()).ordererName(order.getOrdererName()).ordererTel(
                 order.getOrdererTel()).couponName(couponName).bankHolder(order.getBankHolder()).bankAccount(order.getBankAccount()).bankCode(
-                order.getBankCode()).bankName(order.getBankName()).build();
+                order.getBankCode()).bankName(order.getBankName()).originTotalPrice(order.getOriginTotalPrice()).build();
     }
 
     public OrderDeliverPlace selectDeliverPlace(String orderId) {
@@ -489,7 +489,8 @@ public class OrderService {
                 info.getCancelReason()).deliverCompanyCode(info.getDeliverCompanyCode()).invoiceCode(info.getInvoiceCode()).isSettled(
                 info.getIsSettled()).settledAt(info.getSettledAt()).product(productService.convert2ListDto(info.getProduct())).order(
                 orderDto).settlementRate(storeInfo.getSettlementRate()).deliverFeeType(product.getDeliverFeeType()).needTaxation(
-                product.getNeedTaxation()).deliverCompany(deliveryCompany.map(DeliveryCompany::getName).orElse(null)).build();
+                product.getNeedTaxation()).deliverCompany(deliveryCompany.map(DeliveryCompany::getName).orElse(null)).originPrice(
+                info.getOriginPrice()).build();
     }
 
 

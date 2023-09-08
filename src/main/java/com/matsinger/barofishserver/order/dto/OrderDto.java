@@ -23,6 +23,7 @@ public class OrderDto {
     String ordererName;
     String ordererTel;
     OrderPaymentWay paymentWay;
+    Integer originTotalPrice;
     Integer totalAmount;
     Integer couponDiscount;
     String couponName;
