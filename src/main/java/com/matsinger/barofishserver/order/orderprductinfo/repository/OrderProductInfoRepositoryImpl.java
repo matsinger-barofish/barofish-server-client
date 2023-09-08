@@ -122,11 +122,10 @@ public class OrderProductInfoRepositoryImpl implements OrderProductInfoRepositor
 //                );
 //    }
 @Override
-public List<SettlementOrderDto> getExcelRawDataWithNotSettled2() {
+public List<SettlementStoreDto> getExcelRawDataWithNotSettled2() {
 
     return queryFactory
-            .select()
-            .from(orderProductInfo)
+            .selectFrom(orderProductInfo)
             .leftJoin(optionItem).on(orderProductInfo.optionItemId.eq(optionItem.id))
             .leftJoin(product).on(product.id.eq(orderProductInfo.productId))
             .leftJoin(orders).on(orders.id.eq(orderProductInfo.orderId))
@@ -137,19 +136,24 @@ public List<SettlementOrderDto> getExcelRawDataWithNotSettled2() {
             .leftJoin(user).on(orders.userId.eq(user.id))
             .leftJoin(userInfo).on(userInfo.userId.eq(user.id))
             .where(orderProductInfo.state.eq(OrderProductState.FINAL_CONFIRM))
-            .orderBy(orderProductInfo.orderId.desc())
-            .orderBy(product.storeId.asc())
+//            .orderBy(orderProductInfo.orderId.desc())
+//            .orderBy(product.storeId.asc())
             .transform(
                     groupBy(orders.id, store.id)
                             .list(Projections.fields(
-                                    SettlementOrderDto.class,
+                                    SettlementStoreDto.class,
                                     orders.id.as("orderId"),
+                                    store.id.as("storeId"),
+                                    storeInfo.name.as("partnerName"),
+                                    ExpressionUtils.as(Expressions.constant(0), "deliveryFeeSum"),
+                                    ExpressionUtils.as(Expressions.constant(0), "totalPriceSum"),
+
                                     list(Projections.fields(
                                             SettlementProductOptionItemDto.class,
                                             optionItem.id.as("optionItemId"),
                                             product.title.as("productName"),
                                             optionItem.name.as("optionItemName"),
-                                            orderProductInfo.state.as("orderProductState"),
+                                            orderProductInfo.state.as("orderProductInfoState"),
                                             orders.orderedAt.as("orderedAt"),
                                             orderProductInfo.finalConfirmedAt.as("finalConfirmedAt"),
                                             product.needTaxation.as("isTaxFree"),
@@ -161,7 +165,7 @@ public List<SettlementOrderDto> getExcelRawDataWithNotSettled2() {
                                             ExpressionUtils.as(Expressions.constant(0), "totalPrice"),
                                             ExpressionUtils.as(Expressions.constant(0), "finalPaymentPrice"),
                                             orders.paymentWay.as("paymentWay"),
-                                            ExpressionUtils.as(Expressions.constant(0), "settlementRate"),
+                                            storeInfo.settlementRate.as("settlementRate"),
                                             ExpressionUtils.as(Expressions.constant(0), "settlementPrice"),
                                             orderProductInfo.isSettled.as("settlementState"),
                                             orderProductInfo.settledAt.as("settledAt"),
@@ -172,7 +176,7 @@ public List<SettlementOrderDto> getExcelRawDataWithNotSettled2() {
                                             orderDeliverPlace.deliverMessage.as("deliverMessage"),
                                             ExpressionUtils.as(Expressions.constant(""), "deliveryCompany"),
                                             orderProductInfo.invoiceCode.as("invoiceCode")
-                                    )).as("settlementStoreDtos")
+                                    )).as("settlementProductOptionItemDtos")
                             ))
             );
     }

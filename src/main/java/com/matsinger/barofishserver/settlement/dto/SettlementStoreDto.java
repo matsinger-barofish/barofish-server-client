@@ -12,6 +12,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class SettlementStoreDto {
+    private String orderId;
     private int storeId;                                    // 파트너 아이디
     private String partnerName;                             // 파트너
     private int deliveryFeeSum;                             // 배송비 합                               개별 | 파트너끝

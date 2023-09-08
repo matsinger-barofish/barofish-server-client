@@ -16,9 +16,7 @@ import com.matsinger.barofishserver.product.optionitem.application.OptionItemQue
 import com.matsinger.barofishserver.product.optionitem.domain.OptionItem;
 import com.matsinger.barofishserver.settlement.domain.Settlement;
 import com.matsinger.barofishserver.settlement.domain.SettlementState;
-import com.matsinger.barofishserver.settlement.dto.OrderSettlementExcelDto;
-import com.matsinger.barofishserver.settlement.dto.SettlementExcelDownloadRawDto;
-import com.matsinger.barofishserver.settlement.dto.SettlementOrderDto;
+import com.matsinger.barofishserver.settlement.dto.*;
 import com.matsinger.barofishserver.settlement.repository.SettlementRepository;
 import com.matsinger.barofishserver.store.application.StoreService;
 import com.matsinger.barofishserver.store.domain.StoreInfo;
@@ -161,9 +159,8 @@ public class SettlementQueryService {
     }
 
     @Transactional(readOnly = true)
-    public List<SettlementOrderDto> getSettlementExcel2() {
-        // TODO:
-        List<SettlementOrderDto> excelRawDataWithNotSettled2 = orderProductInfoRepository.getExcelRawDataWithNotSettled2();
+    public List<SettlementStoreDto> getSettlementExcel2() {
+        List<SettlementStoreDto> excelRawDataWithNotSettled2 = orderProductInfoRepository.getExcelRawDataWithNotSettled2();
         System.out.println(excelRawDataWithNotSettled2.toString());
         return excelRawDataWithNotSettled2;
     }
