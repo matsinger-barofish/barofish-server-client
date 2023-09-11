@@ -919,5 +919,5 @@ public interface ProductRepository extends JpaRepository<Product, Integer>, JpaS
 
     List<Product> findAllByPromotionEndAtBefore(Timestamp now);
 
-    List<Product> findAllByPromotionStartAtAfter(Timestamp now);
+    List<Product> findAllByPromotionStartAtBefore(Timestamp now);
 }

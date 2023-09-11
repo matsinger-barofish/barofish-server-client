@@ -117,6 +117,10 @@ public class Product {
     @Column(name = "item_code")
     private String itemCode;
 
+    public void setPointRate(Float pointRate) {
+        this.pointRate = pointRate / 100;
+    }
+
     public int getId() {
         return id;
     }

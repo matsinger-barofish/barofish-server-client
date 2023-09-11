@@ -624,7 +624,7 @@ public class ProductService {
     }
 
     public void updateProductStateActiveSupposedToStartPromotion() {
-        List<Product> products = productRepository.findAllByPromotionStartAtAfter(utils.now());
+        List<Product> products = productRepository.findAllByPromotionStartAtBefore(utils.now());
         products.forEach(v -> v.setState(ProductState.ACTIVE));
         productRepository.saveAll(products);
     }
