@@ -6,6 +6,7 @@ import com.matsinger.barofishserver.notification.application.NotificationCommand
 import com.matsinger.barofishserver.notification.dto.NotificationMessage;
 import com.matsinger.barofishserver.notification.dto.NotificationMessageType;
 import com.matsinger.barofishserver.order.domain.OrderPaymentWay;
+import com.matsinger.barofishserver.order.dto.GetCancelPriceDto;
 import com.matsinger.barofishserver.order.dto.VBankRefundInfo;
 import com.matsinger.barofishserver.order.orderprductinfo.domain.OrderCancelReason;
 import com.matsinger.barofishserver.order.orderprductinfo.domain.OrderProductInfo;
@@ -92,7 +93,10 @@ public class PortOneCallbackHandler {
                         if (!orderService.checkProductCanDeliver(order.getDeliverPlace(), info)) {
                             int cancelPrice = 0;
                             try {
-                                cancelPrice = orderService.getCancelPrice(order, List.of(info));
+                                GetCancelPriceDto
+                                        cancelData =
+                                        orderService.getCancelPrice(order, List.of(info));
+                                cancelPrice = cancelData.getCancelPrice();
                             } catch (Exception e) {
                                 System.out.println(e);
                             }

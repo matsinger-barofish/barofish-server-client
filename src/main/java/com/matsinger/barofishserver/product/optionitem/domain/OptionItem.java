@@ -59,12 +59,12 @@ public class OptionItem {
     private Integer maxAvailableAmount;
 
 
-    public void reduceAmount(int amount) throws Exception {
+    public void reduceAmount(int amount) {
         if (this.amount != null) {
             int reducedValue = this.amount - amount;
             if (reducedValue < 0) {
                 String errorMessage = String.format("'%s' 상품의 재고가 부족합니다.", this.name);
-                throw new Exception(errorMessage);
+                throw new Error(errorMessage);
             }
 //            this.amount = reducedValue;
         }
