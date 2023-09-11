@@ -40,6 +40,9 @@ public class OrderProductInfo {
     @Column(name = "settle_price")
     private Integer settlePrice;
     @Basic
+    @Column(name = "origin_price")
+    private Integer originPrice;
+    @Basic
     @Column(name = "price", nullable = false)
     private int price;
     @Basic
@@ -82,6 +85,9 @@ public class OrderProductInfo {
     @Basic
     @Column(name = "tax_free_amount", nullable = true)
     private Integer taxFreeAmount;
+    @Basic
+    @Column(name = "is_tax_free", nullable = false)
+    private Boolean isTaxFree;
 
     @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     @JsonBackReference

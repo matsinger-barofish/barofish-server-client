@@ -356,6 +356,7 @@ public class ProductController {
                     itemData.setName(name);
                     if (itemData.getIsRepresent() != null && itemData.getIsRepresent()) existRepresent = true;
                     if (itemData.getDiscountPrice() == null) itemData.setDiscountPrice(0);
+                    if (itemData.getOriginPrice() == null) itemData.setOriginPrice(0);
                     // return res.throwError("할인(판매) 가격을 입력해주세요.", "INPUT_CHECK_REQUIRED");
                     if (itemData.getAmount() == null) itemData.setAmount(null);
                     // return res.throwError("개수를 입력해주세요.", "INPUT_CHECK_REQUIRED");
@@ -393,9 +394,8 @@ public class ProductController {
             product.setExpectedDeliverDay(data.getExpectedDeliverDay() != null ? data.getExpectedDeliverDay() : 0);
             product.setDeliveryInfo(deliveryInfo != null ? deliveryInfo : "");
             product.setImages("");
-            product.setPointRate(0.0F);
             product.setDescriptionImages("");
-            product.setPointRate(data.getPointRate());
+            product.setPointRate(data.getPointRate() != null ? data.getPointRate() : 0.0F);
             product.setState(adminId == null ? ProductState.INACTIVE_PARTNER : ProductState.ACTIVE);
             product.setRepresentOptionItemId(null);
             product.setNeedTaxation(data.getNeedTaxation() != null ? data.getNeedTaxation() : true);
@@ -573,7 +573,6 @@ public class ProductController {
                     data.getFilterValues() != null ? data.getFilterValues().stream().map(v -> {
                         try {
                             String valueName = utils.validateString(v.getValue(), 50L, "필터 값");
-                            System.out.println(v.getCompareFilterId());
                             compareFilterQueryService.selectCompareFilter(v.getCompareFilterId());
                             return ProductFilterValue.builder().productId(product.getId()).compareFilterId(v.getCompareFilterId()).value(
                                     valueName).build();
@@ -610,7 +609,8 @@ public class ProductController {
                                 String name = utils.validateString(itemData.getData().getName(), 100L, "옵션 이름");
                                 itemData.getData().setName(name);
                                 if (itemData.getData().getDiscountPrice() == null)
-                                    return res.throwError("할인(판매) 가격을 입력해주세요.", "INPUT_CHECK_REQUIRED");
+                                    itemData.getData().setDiscountPrice(0);
+//                                    return res.throwError("할인(판매) 가격을 입력해주세요.", "INPUT_CHECK_REQUIRED");
                                 if (itemData.getData().getAmount() == null)
                                     return res.throwError("개수를 입력해주세요.", "INPUT_CHECK_REQUIRED");
                                 if (itemData.getData().getPurchasePrice() == null)
