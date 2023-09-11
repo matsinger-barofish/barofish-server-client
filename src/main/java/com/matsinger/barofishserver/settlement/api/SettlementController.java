@@ -132,19 +132,6 @@ public class SettlementController {
                 jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN, TokenAuthType.PARTNER), auth);
         if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
         try {
-            Specification<OrderProductInfo> spec = (root, query, builder) -> {
-                List<Predicate> predicates = new ArrayList<>();
-                if (storeId != null) predicates.add(builder.equal(root.get("product").get("storeId"), storeId));
-                if (isSettled != null) predicates.add(builder.equal(root.get("isSettled"), isSettled));
-                if (settledAtS != null) predicates.add(builder.greaterThan(root.get("settledAt"), settledAtS));
-                if (settledAtE != null) predicates.add(builder.lessThan(root.get("settledAt"), settledAtE));
-                if (tokenInfo.get().getType().equals(TokenAuthType.PARTNER)) {
-                    predicates.add(builder.equal(root.get("product").get("storeId"), tokenInfo.get().getId()));
-                }
-                predicates.add(builder.equal(root.get("state"), OrderProductState.FINAL_CONFIRM));
-                return builder.and(predicates.toArray(new Predicate[0]));
-            };
-            PageRequest pageRequest = PageRequest.of(page, take, Sort.by(orderType, orderBy.label));
 
             if (tokenInfo.get().getType().equals(TokenAuthType.PARTNER)) {
                 List<SettlementOrderDto> result = settlementQueryService.createOrderSettlementResponse(tokenInfo.get().getId());

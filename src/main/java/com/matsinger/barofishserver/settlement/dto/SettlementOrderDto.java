@@ -14,6 +14,7 @@ public class SettlementOrderDto {
     private String couponName;
     private int couponDiscount;
     private int usePoint;
+    @Builder.Default
     private int orderDeliveryFeeSum = 0;
 
     @Builder.Default
