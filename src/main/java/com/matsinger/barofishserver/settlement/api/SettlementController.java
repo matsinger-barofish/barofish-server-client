@@ -1,5 +1,6 @@
 package com.matsinger.barofishserver.settlement.api;
 
+import com.google.firebase.messaging.LightSettings;
 import com.matsinger.barofishserver.admin.log.application.AdminLogCommandService;
 import com.matsinger.barofishserver.admin.log.application.AdminLogQueryService;
 import com.matsinger.barofishserver.admin.log.domain.AdminLog;
@@ -116,16 +117,16 @@ public class SettlementController {
     }
 
     @GetMapping("/order/list/download")
-    public ResponseEntity<CustomResponse<Page<OrderSettlementExcelDto>>> selectSettlementOrderListDownload(@RequestHeader(value = "Authorization") Optional<String> auth,
-                                                                                               @RequestParam(value = "page", required = false, defaultValue = "0") Integer page,
-                                                                                               @RequestParam(value = "take", required = false, defaultValue = "10") Integer take,
-                                                                                               @RequestParam(value = "orderby", required = false, defaultValue = "isSettled") OrderProductInfoOrderBy orderBy,
-                                                                                               @RequestParam(value = "orderType", required = false, defaultValue = "DESC") Sort.Direction orderType,
-                                                                                               @RequestParam(value = "isSettled", required = false) Boolean isSettled,
-                                                                                               @RequestParam(value = "storeId", required = false) Integer storeId,
-                                                                                               @RequestParam(value = "settledAtS", required = false) Timestamp settledAtS,
-                                                                                               @RequestParam(value = "settledAtE", required = false) Timestamp settledAtE) {
-        CustomResponse<Page<OrderSettlementExcelDto>> res = new CustomResponse<>();
+    public ResponseEntity<CustomResponse<List<SettlementOrderDto>>> selectSettlementOrderListDownload(@RequestHeader(value = "Authorization") Optional<String> auth,
+                                                                                                              @RequestParam(value = "page", required = false, defaultValue = "0") Integer page,
+                                                                                                              @RequestParam(value = "take", required = false, defaultValue = "10") Integer take,
+                                                                                                              @RequestParam(value = "orderby", required = false, defaultValue = "isSettled") OrderProductInfoOrderBy orderBy,
+                                                                                                              @RequestParam(value = "orderType", required = false, defaultValue = "DESC") Sort.Direction orderType,
+                                                                                                              @RequestParam(value = "isSettled", required = false) Boolean isSettled,
+                                                                                                              @RequestParam(value = "storeId", required = false) Integer storeId,
+                                                                                                              @RequestParam(value = "settledAtS", required = false) Timestamp settledAtS,
+                                                                                                              @RequestParam(value = "settledAtE", required = false) Timestamp settledAtE) {
+        CustomResponse<List<SettlementOrderDto>> res = new CustomResponse<>();
         Optional<TokenInfo>
                 tokenInfo =
                 jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN, TokenAuthType.PARTNER), auth);
@@ -145,9 +146,13 @@ public class SettlementController {
             };
             PageRequest pageRequest = PageRequest.of(page, take, Sort.by(orderType, orderBy.label));
 
-            Page<OrderProductInfo> infos = orderService.selectOrderProductInfoList(spec, pageRequest);
+            if (tokenInfo.get().getType().equals(TokenAuthType.PARTNER)) {
+                List<SettlementOrderDto> result = settlementQueryService.createOrderSettlementResponse(tokenInfo.get().getId());
+                res.setData(Optional.of(result));
+                return ResponseEntity.ok(res);
+            }
 
-            Page<OrderSettlementExcelDto> result = settlementQueryService.createOrderSettlementResponse(infos);
+            List<SettlementOrderDto> result = settlementQueryService.createOrderSettlementResponse(null);
             res.setData(Optional.of(result));
             return ResponseEntity.ok(res);
         } catch (Exception e) {

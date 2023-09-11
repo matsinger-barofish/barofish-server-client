@@ -12,7 +12,5 @@ public interface OrderProductInfoRepositoryCustom {
 
     OrderProductInfo findByIdQ(int orderProductInfoId);
 
-    List<SettlementExcelDownloadRawDto> getExcelRawDataWithNotSettled1();
-
-    List<SettlementOrderRawDto> getExcelRawDataWithNotSettled2();
+    List<SettlementOrderRawDto> getExcelRawDataWithNotSettled(Integer storeId);
 }

@@ -2,12 +2,12 @@
   SettlementOrderDto
   {
     orderId=
-    '2309081950380001',
+    '2309081956430003',
     couponName=
     '테스트쿠폰',
     couponDiscount=5000,
     usePoint=0,
-    orderDeliveryFeeSum=0,
+    orderDeliveryFeeSum=3000,
     settlementStoreDtos=
   [
     SettlementStoreDto
@@ -16,63 +16,24 @@
       partnerName=
       'storeA',
       storeDeliveryFeeSum=3000,
-      storeTotalPriceSum=57000,
+      storeTotalPriceSum=63000,
       storeOptionItemDtos=
     [
       SettlementProductOptionItemDto
       {
         productName=
-        'productAA',
+        'productAC',
         optionItemName=
-        'option_itemAAAA',
+        'option_itemACAB',
         orderProductInfoState=FINAL_CONFIRM,
         orderedAt=2023-09-08
-        10: 50
+        10: 56
         :
-        38.0,
+        43.0,
         finalConfirmedAt=null,
         isTaxFree=false,
         purchasePrice=8000,
-        commissionPrice=-2000,
-        sellingPrice=10000,
-        deliveryFee=3000,
-        quantity=1,
-        totalPrice=7000,
-        paymentWay=CARD,
-        settlementRate=13.2,
-        settlementPrice=11000,
-        settlementState=false,
-        settledAt=null,
-        customerName=
-        'test',
-        phoneNumber=
-        '01012341234',
-        email=
-        'test10@gmail.com',
-        address=
-        'orderDeliverPlace.address orderDeliverPlace.addressDetail',
-        deliverMessage=
-        '테스트입니다.',
-        deliveryCompany=
-        'null',
-        invoiceCode=
-        'null'
-      },
-      SettlementProductOptionItemDto
-      {
-        productName=
-        'productAA',
-        optionItemName=
-        'option_itemAAAB',
-        orderProductInfoState=FINAL_CONFIRM,
-        orderedAt=2023-09-08
-        10: 50
-        :
-        38.0,
-        finalConfirmedAt=null,
-        isTaxFree=false,
-        purchasePrice=8000,
-        commissionPrice=-2000,
+        commissionPrice=2000,
         sellingPrice=10000,
         deliveryFee=0,
         quantity=1,
@@ -89,85 +50,9 @@
         email=
         'test10@gmail.com',
         address=
-        'orderDeliverPlace.address orderDeliverPlace.addressDetail',
-        deliverMessage=
-        '테스트입니다.',
-        deliveryCompany=
-        'null',
-        invoiceCode=
-        'null'
-      },
-      SettlementProductOptionItemDto
-      {
-        productName=
-        'productAB',
-        optionItemName=
-        'option_itemABBA',
-        orderProductInfoState=FINAL_CONFIRM,
-        orderedAt=2023-09-08
-        10: 50
-        :
-        38.0,
-        finalConfirmedAt=null,
-        isTaxFree=false,
-        purchasePrice=8000,
-        commissionPrice=-2000,
-        sellingPrice=10000,
-        deliveryFee=0,
-        quantity=1,
-        totalPrice=10000,
-        paymentWay=CARD,
-        settlementRate=13.2,
-        settlementPrice=8000,
-        settlementState=false,
-        settledAt=null,
-        customerName=
-        'test',
-        phoneNumber=
-        '01012341234',
-        email=
-        'test10@gmail.com',
-        address=
-        'orderDeliverPlace.address orderDeliverPlace.addressDetail',
-        deliverMessage=
-        '테스트입니다.',
-        deliveryCompany=
-        'null',
-        invoiceCode=
-        'null'
-      },
-      SettlementProductOptionItemDto
-      {
-        productName=
-        'productAB',
-        optionItemName=
-        'option_itemABBB',
-        orderProductInfoState=FINAL_CONFIRM,
-        orderedAt=2023-09-08
-        10: 50
-        :
-        38.0,
-        finalConfirmedAt=null,
-        isTaxFree=false,
-        purchasePrice=8000,
-        commissionPrice=-2000,
-        sellingPrice=10000,
-        deliveryFee=0,
-        quantity=1,
-        totalPrice=10000,
-        paymentWay=CARD,
-        settlementRate=13.2,
-        settlementPrice=8000,
-        settlementState=false,
-        settledAt=null,
-        customerName=
-        'test',
-        phoneNumber=
-        '01012341234',
-        email=
-        'test10@gmail.com',
-        address=
-        'orderDeliverPlace.address orderDeliverPlace.addressDetail',
+        '테스트',
+        addressDetail=
+        '테스트',
         deliverMessage=
         '테스트입니다.',
         deliveryCompany=
@@ -183,13 +68,13 @@
         'option_itemACAA',
         orderProductInfoState=FINAL_CONFIRM,
         orderedAt=2023-09-08
-        10: 50
+        10: 56
         :
-        38.0,
+        43.0,
         finalConfirmedAt=null,
         isTaxFree=false,
         purchasePrice=8000,
-        commissionPrice=-2000,
+        commissionPrice=2000,
         sellingPrice=10000,
         deliveryFee=0,
         quantity=1,
@@ -206,7 +91,9 @@
         email=
         'test10@gmail.com',
         address=
-        'orderDeliverPlace.address orderDeliverPlace.addressDetail',
+        '테스트',
+        addressDetail=
+        '테스트',
         deliverMessage=
         '테스트입니다.',
         deliveryCompany=
@@ -217,18 +104,18 @@
       SettlementProductOptionItemDto
       {
         productName=
-        'productAC',
+        'productAB',
         optionItemName=
-        'option_itemACAB',
+        'option_itemABBB',
         orderProductInfoState=FINAL_CONFIRM,
         orderedAt=2023-09-08
-        10: 50
+        10: 56
         :
-        38.0,
+        43.0,
         finalConfirmedAt=null,
         isTaxFree=false,
         purchasePrice=8000,
-        commissionPrice=-2000,
+        commissionPrice=2000,
         sellingPrice=10000,
         deliveryFee=0,
         quantity=1,
@@ -245,44 +132,117 @@
         email=
         'test10@gmail.com',
         address=
-        'orderDeliverPlace.address orderDeliverPlace.addressDetail',
+        '테스트',
+        addressDetail=
+        '테스트',
         deliverMessage=
         '테스트입니다.',
         deliveryCompany=
         'null',
         invoiceCode=
         'null'
-      }
-    ]
-  },
-    SettlementStoreDto
-    {
-      storeId=10001,
-      partnerName=
-      'storeB',
-      storeDeliveryFeeSum=3000,
-      storeTotalPriceSum=57000,
-      storeOptionItemDtos=
-    [
+      },
       SettlementProductOptionItemDto
       {
         productName=
-        'productBA',
+        'productAB',
         optionItemName=
-        'option_itemBAAA',
+        'option_itemABBA',
         orderProductInfoState=FINAL_CONFIRM,
         orderedAt=2023-09-08
-        10: 50
+        10: 56
         :
-        38.0,
+        43.0,
         finalConfirmedAt=null,
         isTaxFree=false,
         purchasePrice=8000,
-        commissionPrice=-2000,
+        commissionPrice=2000,
+        sellingPrice=10000,
+        deliveryFee=0,
+        quantity=1,
+        totalPrice=10000,
+        paymentWay=CARD,
+        settlementRate=13.2,
+        settlementPrice=8000,
+        settlementState=false,
+        settledAt=null,
+        customerName=
+        'test',
+        phoneNumber=
+        '01012341234',
+        email=
+        'test10@gmail.com',
+        address=
+        '테스트',
+        addressDetail=
+        '테스트',
+        deliverMessage=
+        '테스트입니다.',
+        deliveryCompany=
+        'null',
+        invoiceCode=
+        'null'
+      },
+      SettlementProductOptionItemDto
+      {
+        productName=
+        'productAA',
+        optionItemName=
+        'option_itemAAAB',
+        orderProductInfoState=FINAL_CONFIRM,
+        orderedAt=2023-09-08
+        10: 56
+        :
+        43.0,
+        finalConfirmedAt=null,
+        isTaxFree=false,
+        purchasePrice=8000,
+        commissionPrice=2000,
+        sellingPrice=10000,
+        deliveryFee=0,
+        quantity=1,
+        totalPrice=10000,
+        paymentWay=CARD,
+        settlementRate=13.2,
+        settlementPrice=8000,
+        settlementState=false,
+        settledAt=null,
+        customerName=
+        'test',
+        phoneNumber=
+        '01012341234',
+        email=
+        'test10@gmail.com',
+        address=
+        '테스트',
+        addressDetail=
+        '테스트',
+        deliverMessage=
+        '테스트입니다.',
+        deliveryCompany=
+        'null',
+        invoiceCode=
+        'null'
+      },
+      SettlementProductOptionItemDto
+      {
+        productName=
+        'productAA',
+        optionItemName=
+        'option_itemAAAA',
+        orderProductInfoState=FINAL_CONFIRM,
+        orderedAt=2023-09-08
+        10: 56
+        :
+        43.0,
+        finalConfirmedAt=null,
+        isTaxFree=false,
+        purchasePrice=8000,
+        commissionPrice=2000,
         sellingPrice=10000,
         deliveryFee=3000,
         quantity=1,
-        totalPrice=7000,
+        totalPrice=13000,
         paymentWay=CARD,
         settlementRate=13.2,
         settlementPrice=11000,
@@ -295,202 +255,9 @@
         email=
         'test10@gmail.com',
         address=
-        'orderDeliverPlace.address orderDeliverPlace.addressDetail',
-        deliverMessage=
-        '테스트입니다.',
-        deliveryCompany=
-        'null',
-        invoiceCode=
-        'null'
-      },
-      SettlementProductOptionItemDto
-      {
-        productName=
-        'productBA',
-        optionItemName=
-        'option_itemBAAB',
-        orderProductInfoState=FINAL_CONFIRM,
-        orderedAt=2023-09-08
-        10: 50
-        :
-        38.0,
-        finalConfirmedAt=null,
-        isTaxFree=false,
-        purchasePrice=8000,
-        commissionPrice=-2000,
-        sellingPrice=10000,
-        deliveryFee=0,
-        quantity=1,
-        totalPrice=10000,
-        paymentWay=CARD,
-        settlementRate=13.2,
-        settlementPrice=8000,
-        settlementState=false,
-        settledAt=null,
-        customerName=
-        'test',
-        phoneNumber=
-        '01012341234',
-        email=
-        'test10@gmail.com',
-        address=
-        'orderDeliverPlace.address orderDeliverPlace.addressDetail',
-        deliverMessage=
-        '테스트입니다.',
-        deliveryCompany=
-        'null',
-        invoiceCode=
-        'null'
-      },
-      SettlementProductOptionItemDto
-      {
-        productName=
-        'productBB',
-        optionItemName=
-        'option_itemBBBA',
-        orderProductInfoState=FINAL_CONFIRM,
-        orderedAt=2023-09-08
-        10: 50
-        :
-        38.0,
-        finalConfirmedAt=null,
-        isTaxFree=false,
-        purchasePrice=8000,
-        commissionPrice=-2000,
-        sellingPrice=10000,
-        deliveryFee=0,
-        quantity=1,
-        totalPrice=10000,
-        paymentWay=CARD,
-        settlementRate=13.2,
-        settlementPrice=8000,
-        settlementState=false,
-        settledAt=null,
-        customerName=
-        'test',
-        phoneNumber=
-        '01012341234',
-        email=
-        'test10@gmail.com',
-        address=
-        'orderDeliverPlace.address orderDeliverPlace.addressDetail',
-        deliverMessage=
-        '테스트입니다.',
-        deliveryCompany=
-        'null',
-        invoiceCode=
-        'null'
-      },
-      SettlementProductOptionItemDto
-      {
-        productName=
-        'productBB',
-        optionItemName=
-        'option_itemBBBB',
-        orderProductInfoState=FINAL_CONFIRM,
-        orderedAt=2023-09-08
-        10: 50
-        :
-        38.0,
-        finalConfirmedAt=null,
-        isTaxFree=false,
-        purchasePrice=8000,
-        commissionPrice=-2000,
-        sellingPrice=10000,
-        deliveryFee=0,
-        quantity=1,
-        totalPrice=10000,
-        paymentWay=CARD,
-        settlementRate=13.2,
-        settlementPrice=8000,
-        settlementState=false,
-        settledAt=null,
-        customerName=
-        'test',
-        phoneNumber=
-        '01012341234',
-        email=
-        'test10@gmail.com',
-        address=
-        'orderDeliverPlace.address orderDeliverPlace.addressDetail',
-        deliverMessage=
-        '테스트입니다.',
-        deliveryCompany=
-        'null',
-        invoiceCode=
-        'null'
-      },
-      SettlementProductOptionItemDto
-      {
-        productName=
-        'productBC',
-        optionItemName=
-        'option_itemBCAA',
-        orderProductInfoState=FINAL_CONFIRM,
-        orderedAt=2023-09-08
-        10: 50
-        :
-        38.0,
-        finalConfirmedAt=null,
-        isTaxFree=false,
-        purchasePrice=8000,
-        commissionPrice=-2000,
-        sellingPrice=10000,
-        deliveryFee=0,
-        quantity=1,
-        totalPrice=10000,
-        paymentWay=CARD,
-        settlementRate=13.2,
-        settlementPrice=8000,
-        settlementState=false,
-        settledAt=null,
-        customerName=
-        'test',
-        phoneNumber=
-        '01012341234',
-        email=
-        'test10@gmail.com',
-        address=
-        'orderDeliverPlace.address orderDeliverPlace.addressDetail',
-        deliverMessage=
-        '테스트입니다.',
-        deliveryCompany=
-        'null',
-        invoiceCode=
-        'null'
-      },
-      SettlementProductOptionItemDto
-      {
-        productName=
-        'productBC',
-        optionItemName=
-        'option_itemACAB',
-        orderProductInfoState=FINAL_CONFIRM,
-        orderedAt=2023-09-08
-        10: 50
-        :
-        38.0,
-        finalConfirmedAt=null,
-        isTaxFree=false,
-        purchasePrice=8000,
-        commissionPrice=-2000,
-        sellingPrice=10000,
-        deliveryFee=0,
-        quantity=1,
-        totalPrice=10000,
-        paymentWay=CARD,
-        settlementRate=13.2,
-        settlementPrice=8000,
-        settlementState=false,
-        settledAt=null,
-        customerName=
-        'test',
-        phoneNumber=
-        '01012341234',
-        email=
-        'test10@gmail.com',
-        address=
-        'orderDeliverPlace.address orderDeliverPlace.addressDetail',
+        '테스트',
+        addressDetail=
+        '테스트',
         deliverMessage=
         '테스트입니다.',
         deliveryCompany=
@@ -505,12 +272,12 @@
   SettlementOrderDto
   {
     orderId=
-    '2309081956430003',
+    '2309081950380001',
     couponName=
     '테스트쿠폰',
     couponDiscount=5000,
     usePoint=0,
-    orderDeliveryFeeSum=0,
+    orderDeliveryFeeSum=3000,
     settlementStoreDtos=
   [
     SettlementStoreDto
@@ -519,9 +286,50 @@
       partnerName=
       'storeA',
       storeDeliveryFeeSum=3000,
-      storeTotalPriceSum=57000,
+      storeTotalPriceSum=63000,
       storeOptionItemDtos=
     [
+      SettlementProductOptionItemDto
+      {
+        productName=
+        'productAA',
+        optionItemName=
+        'option_itemAAAB',
+        orderProductInfoState=FINAL_CONFIRM,
+        orderedAt=2023-09-08
+        10: 50
+        :
+        38.0,
+        finalConfirmedAt=null,
+        isTaxFree=false,
+        purchasePrice=8000,
+        commissionPrice=2000,
+        sellingPrice=10000,
+        deliveryFee=0,
+        quantity=1,
+        totalPrice=10000,
+        paymentWay=CARD,
+        settlementRate=13.2,
+        settlementPrice=8000,
+        settlementState=false,
+        settledAt=null,
+        customerName=
+        'test',
+        phoneNumber=
+        '01012341234',
+        email=
+        'test10@gmail.com',
+        address=
+        '테스트',
+        addressDetail=
+        '테스트',
+        deliverMessage=
+        '테스트입니다.',
+        deliveryCompany=
+        'null',
+        invoiceCode=
+        'null'
+      },
       SettlementProductOptionItemDto
       {
         productName=
@@ -530,17 +338,17 @@
         'option_itemAAAA',
         orderProductInfoState=FINAL_CONFIRM,
         orderedAt=2023-09-08
-        10: 56
+        10: 50
         :
-        43.0,
+        38.0,
         finalConfirmedAt=null,
         isTaxFree=false,
         purchasePrice=8000,
-        commissionPrice=-2000,
+        commissionPrice=2000,
         sellingPrice=10000,
         deliveryFee=3000,
         quantity=1,
-        totalPrice=7000,
+        totalPrice=13000,
         paymentWay=CARD,
         settlementRate=13.2,
         settlementPrice=11000,
@@ -553,7 +361,9 @@
         email=
         'test10@gmail.com',
         address=
-        'orderDeliverPlace.address orderDeliverPlace.addressDetail',
+        '테스트',
+        addressDetail=
+        '테스트',
         deliverMessage=
         '테스트입니다.',
         deliveryCompany=
@@ -564,18 +374,18 @@
       SettlementProductOptionItemDto
       {
         productName=
-        'productAA',
+        'productAC',
         optionItemName=
-        'option_itemAAAB',
+        'option_itemACAB',
         orderProductInfoState=FINAL_CONFIRM,
         orderedAt=2023-09-08
-        10: 56
+        10: 50
         :
-        43.0,
+        38.0,
         finalConfirmedAt=null,
         isTaxFree=false,
         purchasePrice=8000,
-        commissionPrice=-2000,
+        commissionPrice=2000,
         sellingPrice=10000,
         deliveryFee=0,
         quantity=1,
@@ -592,85 +402,9 @@
         email=
         'test10@gmail.com',
         address=
-        'orderDeliverPlace.address orderDeliverPlace.addressDetail',
-        deliverMessage=
-        '테스트입니다.',
-        deliveryCompany=
-        'null',
-        invoiceCode=
-        'null'
-      },
-      SettlementProductOptionItemDto
-      {
-        productName=
-        'productAB',
-        optionItemName=
-        'option_itemABBA',
-        orderProductInfoState=FINAL_CONFIRM,
-        orderedAt=2023-09-08
-        10: 56
-        :
-        43.0,
-        finalConfirmedAt=null,
-        isTaxFree=false,
-        purchasePrice=8000,
-        commissionPrice=-2000,
-        sellingPrice=10000,
-        deliveryFee=0,
-        quantity=1,
-        totalPrice=10000,
-        paymentWay=CARD,
-        settlementRate=13.2,
-        settlementPrice=8000,
-        settlementState=false,
-        settledAt=null,
-        customerName=
-        'test',
-        phoneNumber=
-        '01012341234',
-        email=
-        'test10@gmail.com',
-        address=
-        'orderDeliverPlace.address orderDeliverPlace.addressDetail',
-        deliverMessage=
-        '테스트입니다.',
-        deliveryCompany=
-        'null',
-        invoiceCode=
-        'null'
-      },
-      SettlementProductOptionItemDto
-      {
-        productName=
-        'productAB',
-        optionItemName=
-        'option_itemABBB',
-        orderProductInfoState=FINAL_CONFIRM,
-        orderedAt=2023-09-08
-        10: 56
-        :
-        43.0,
-        finalConfirmedAt=null,
-        isTaxFree=false,
-        purchasePrice=8000,
-        commissionPrice=-2000,
-        sellingPrice=10000,
-        deliveryFee=0,
-        quantity=1,
-        totalPrice=10000,
-        paymentWay=CARD,
-        settlementRate=13.2,
-        settlementPrice=8000,
-        settlementState=false,
-        settledAt=null,
-        customerName=
-        'test',
-        phoneNumber=
-        '01012341234',
-        email=
-        'test10@gmail.com',
-        address=
-        'orderDeliverPlace.address orderDeliverPlace.addressDetail',
+        '테스트',
+        addressDetail=
+        '테스트',
         deliverMessage=
         '테스트입니다.',
         deliveryCompany=
@@ -686,13 +420,13 @@
         'option_itemACAA',
         orderProductInfoState=FINAL_CONFIRM,
         orderedAt=2023-09-08
-        10: 56
+        10: 50
         :
-        43.0,
+        38.0,
         finalConfirmedAt=null,
         isTaxFree=false,
         purchasePrice=8000,
-        commissionPrice=-2000,
+        commissionPrice=2000,
         sellingPrice=10000,
         deliveryFee=0,
         quantity=1,
@@ -709,7 +443,9 @@
         email=
         'test10@gmail.com',
         address=
-        'orderDeliverPlace.address orderDeliverPlace.addressDetail',
+        '테스트',
+        addressDetail=
+        '테스트',
         deliverMessage=
         '테스트입니다.',
         deliveryCompany=
@@ -720,18 +456,18 @@
       SettlementProductOptionItemDto
       {
         productName=
-        'productAC',
+        'productAB',
         optionItemName=
-        'option_itemACAB',
+        'option_itemABBB',
         orderProductInfoState=FINAL_CONFIRM,
         orderedAt=2023-09-08
-        10: 56
+        10: 50
         :
-        43.0,
+        38.0,
         finalConfirmedAt=null,
         isTaxFree=false,
         purchasePrice=8000,
-        commissionPrice=-2000,
+        commissionPrice=2000,
         sellingPrice=10000,
         deliveryFee=0,
         quantity=1,
@@ -748,57 +484,9 @@
         email=
         'test10@gmail.com',
         address=
-        'orderDeliverPlace.address orderDeliverPlace.addressDetail',
-        deliverMessage=
-        '테스트입니다.',
-        deliveryCompany=
-        'null',
-        invoiceCode=
-        'null'
-      }
-    ]
-  },
-    SettlementStoreDto
-    {
-      storeId=10001,
-      partnerName=
-      'storeB',
-      storeDeliveryFeeSum=3000,
-      storeTotalPriceSum=57000,
-      storeOptionItemDtos=
-    [
-      SettlementProductOptionItemDto
-      {
-        productName=
-        'productBA',
-        optionItemName=
-        'option_itemBAAA',
-        orderProductInfoState=FINAL_CONFIRM,
-        orderedAt=2023-09-08
-        10: 56
-        :
-        43.0,
-        finalConfirmedAt=null,
-        isTaxFree=false,
-        purchasePrice=8000,
-        commissionPrice=-2000,
-        sellingPrice=10000,
-        deliveryFee=3000,
-        quantity=1,
-        totalPrice=7000,
-        paymentWay=CARD,
-        settlementRate=13.2,
-        settlementPrice=11000,
-        settlementState=false,
-        settledAt=null,
-        customerName=
-        'test',
-        phoneNumber=
-        '01012341234',
-        email=
-        'test10@gmail.com',
-        address=
-        'orderDeliverPlace.address orderDeliverPlace.addressDetail',
+        '테스트',
+        addressDetail=
+        '테스트',
         deliverMessage=
         '테스트입니다.',
         deliveryCompany=
@@ -809,18 +497,18 @@
       SettlementProductOptionItemDto
       {
         productName=
-        'productBA',
+        'productAB',
         optionItemName=
-        'option_itemBAAB',
+        'option_itemABBA',
         orderProductInfoState=FINAL_CONFIRM,
         orderedAt=2023-09-08
-        10: 56
+        10: 50
         :
-        43.0,
+        38.0,
         finalConfirmedAt=null,
         isTaxFree=false,
         purchasePrice=8000,
-        commissionPrice=-2000,
+        commissionPrice=2000,
         sellingPrice=10000,
         deliveryFee=0,
         quantity=1,
@@ -837,163 +525,9 @@
         email=
         'test10@gmail.com',
         address=
-        'orderDeliverPlace.address orderDeliverPlace.addressDetail',
-        deliverMessage=
-        '테스트입니다.',
-        deliveryCompany=
-        'null',
-        invoiceCode=
-        'null'
-      },
-      SettlementProductOptionItemDto
-      {
-        productName=
-        'productBB',
-        optionItemName=
-        'option_itemBBBA',
-        orderProductInfoState=FINAL_CONFIRM,
-        orderedAt=2023-09-08
-        10: 56
-        :
-        43.0,
-        finalConfirmedAt=null,
-        isTaxFree=false,
-        purchasePrice=8000,
-        commissionPrice=-2000,
-        sellingPrice=10000,
-        deliveryFee=0,
-        quantity=1,
-        totalPrice=10000,
-        paymentWay=CARD,
-        settlementRate=13.2,
-        settlementPrice=8000,
-        settlementState=false,
-        settledAt=null,
-        customerName=
-        'test',
-        phoneNumber=
-        '01012341234',
-        email=
-        'test10@gmail.com',
-        address=
-        'orderDeliverPlace.address orderDeliverPlace.addressDetail',
-        deliverMessage=
-        '테스트입니다.',
-        deliveryCompany=
-        'null',
-        invoiceCode=
-        'null'
-      },
-      SettlementProductOptionItemDto
-      {
-        productName=
-        'productBB',
-        optionItemName=
-        'option_itemBBBB',
-        orderProductInfoState=FINAL_CONFIRM,
-        orderedAt=2023-09-08
-        10: 56
-        :
-        43.0,
-        finalConfirmedAt=null,
-        isTaxFree=false,
-        purchasePrice=8000,
-        commissionPrice=-2000,
-        sellingPrice=10000,
-        deliveryFee=0,
-        quantity=1,
-        totalPrice=10000,
-        paymentWay=CARD,
-        settlementRate=13.2,
-        settlementPrice=8000,
-        settlementState=false,
-        settledAt=null,
-        customerName=
-        'test',
-        phoneNumber=
-        '01012341234',
-        email=
-        'test10@gmail.com',
-        address=
-        'orderDeliverPlace.address orderDeliverPlace.addressDetail',
-        deliverMessage=
-        '테스트입니다.',
-        deliveryCompany=
-        'null',
-        invoiceCode=
-        'null'
-      },
-      SettlementProductOptionItemDto
-      {
-        productName=
-        'productBC',
-        optionItemName=
-        'option_itemBCAA',
-        orderProductInfoState=FINAL_CONFIRM,
-        orderedAt=2023-09-08
-        10: 56
-        :
-        43.0,
-        finalConfirmedAt=null,
-        isTaxFree=false,
-        purchasePrice=8000,
-        commissionPrice=-2000,
-        sellingPrice=10000,
-        deliveryFee=0,
-        quantity=1,
-        totalPrice=10000,
-        paymentWay=CARD,
-        settlementRate=13.2,
-        settlementPrice=8000,
-        settlementState=false,
-        settledAt=null,
-        customerName=
-        'test',
-        phoneNumber=
-        '01012341234',
-        email=
-        'test10@gmail.com',
-        address=
-        'orderDeliverPlace.address orderDeliverPlace.addressDetail',
-        deliverMessage=
-        '테스트입니다.',
-        deliveryCompany=
-        'null',
-        invoiceCode=
-        'null'
-      },
-      SettlementProductOptionItemDto
-      {
-        productName=
-        'productBC',
-        optionItemName=
-        'option_itemACAB',
-        orderProductInfoState=FINAL_CONFIRM,
-        orderedAt=2023-09-08
-        10: 56
-        :
-        43.0,
-        finalConfirmedAt=null,
-        isTaxFree=false,
-        purchasePrice=8000,
-        commissionPrice=-2000,
-        sellingPrice=10000,
-        deliveryFee=0,
-        quantity=1,
-        totalPrice=10000,
-        paymentWay=CARD,
-        settlementRate=13.2,
-        settlementPrice=8000,
-        settlementState=false,
-        settledAt=null,
-        customerName=
-        'test',
-        phoneNumber=
-        '01012341234',
-        email=
-        'test10@gmail.com',
-        address=
-        'orderDeliverPlace.address orderDeliverPlace.addressDetail',
+        '테스트',
+        addressDetail=
+        '테스트',
         deliverMessage=
         '테스트입니다.',
         deliveryCompany=

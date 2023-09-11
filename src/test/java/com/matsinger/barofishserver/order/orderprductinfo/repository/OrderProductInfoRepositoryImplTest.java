@@ -2,6 +2,7 @@ package com.matsinger.barofishserver.order.orderprductinfo.repository;
 
 import com.matsinger.barofishserver.order.orderprductinfo.domain.OrderProductInfo;
 import com.matsinger.barofishserver.settlement.application.SettlementQueryService;
+import com.matsinger.barofishserver.settlement.dto.SettlementOrderDto;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -35,20 +36,11 @@ class OrderProductInfoRepositoryImplTest {
         assertThat(findOrderProductInfo.getId()).isEqualTo(1);
     }
 
-    @DisplayName("OrderProductInfo에 다른 데이블을 조인해서 가져오는 경우 타입을 어떻게 받아야 하는지 테스트")
-    @Test
-    void joinFormTest() {
-        // given
-        settlementQueryService.getSettlementExcel();
-        // when
-
-        // then
-    }
-
     @Test
     void settlementExcepTest() {
         // given
-        settlementQueryService.getSettlementExcel2();
+        List<SettlementOrderDto> orderSettlementResponse = settlementQueryService.createOrderSettlementResponse(10000);
+        System.out.println(orderSettlementResponse);
         // when
 
         // then

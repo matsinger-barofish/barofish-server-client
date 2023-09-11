@@ -41,6 +41,7 @@ public class SettlementProductOptionItemDto {
     private String phoneNumber;                             // 연락처
     private String email;                                   // 이메일
     private String address;                                 // 주소
+    private String addressDetail;                           // 주소 상세
     private String deliverMessage;                          // 배송메세지
     private String deliveryCompany;                         // 택배사
     private String invoiceCode;                             // 운송장번호
@@ -54,6 +55,7 @@ public class SettlementProductOptionItemDto {
     public void setSettlementPrice(int settlementPrice) {
         this.settlementPrice = settlementPrice;
     }
+
     @Override
     public String toString() {
         return "SettlementProductOptionItemDto{" +
@@ -78,6 +80,7 @@ public class SettlementProductOptionItemDto {
                 ", phoneNumber='" + phoneNumber + '\'' +
                 ", email='" + email + '\'' +
                 ", address='" + address + '\'' +
+                ", addressDetail='" + addressDetail + '\'' +
                 ", deliverMessage='" + deliverMessage + '\'' +
                 ", deliveryCompany='" + deliveryCompany + '\'' +
                 ", invoiceCode='" + invoiceCode + '\'' +

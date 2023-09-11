@@ -1,19 +1,13 @@
 package com.matsinger.barofishserver.settlement.application;
 
 import com.matsinger.barofishserver.coupon.application.CouponQueryService;
-import com.matsinger.barofishserver.coupon.domain.Coupon;
 import com.matsinger.barofishserver.deliver.application.DeliveryQueryService;
 import com.matsinger.barofishserver.order.application.OrderQueryService;
 import com.matsinger.barofishserver.order.application.OrderService;
-import com.matsinger.barofishserver.order.domain.OrderDeliverPlace;
-import com.matsinger.barofishserver.order.domain.Orders;
 import com.matsinger.barofishserver.order.orderprductinfo.domain.OrderProductInfo;
 import com.matsinger.barofishserver.order.orderprductinfo.repository.OrderProductInfoRepository;
-import com.matsinger.barofishserver.product.domain.Product;
 import com.matsinger.barofishserver.product.option.application.OptionQueryService;
-import com.matsinger.barofishserver.product.option.domain.Option;
 import com.matsinger.barofishserver.product.optionitem.application.OptionItemQueryService;
-import com.matsinger.barofishserver.product.optionitem.domain.OptionItem;
 import com.matsinger.barofishserver.settlement.domain.Settlement;
 import com.matsinger.barofishserver.settlement.domain.SettlementState;
 import com.matsinger.barofishserver.settlement.dto.*;
@@ -21,8 +15,6 @@ import com.matsinger.barofishserver.settlement.repository.SettlementRepository;
 import com.matsinger.barofishserver.store.application.StoreService;
 import com.matsinger.barofishserver.store.domain.StoreInfo;
 import com.matsinger.barofishserver.user.application.UserQueryService;
-import com.matsinger.barofishserver.user.domain.User;
-import com.matsinger.barofishserver.userinfo.domain.UserInfo;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -89,79 +81,9 @@ public class SettlementQueryService {
         return totalPrice;
     }
 
-    public Page<OrderSettlementExcelDto> createOrderSettlementResponse(Page<OrderProductInfo> request) {
-
-        return  request.map(productInfo -> {
-            Orders findOrder = orderQueryService.findById(productInfo.getOrderId());
-            OptionItem findOptionItem = optionItemQueryService.findById(productInfo.getOptionItemId());
-            Option findOption = optionQueryService.findById(findOptionItem.getOptionId());
-            Product findProduct = productInfo.getProduct();
-            StoreInfo findStoreInfo = findProduct.getStore().getStoreInfo();
-            Coupon findCoupon = couponQueryService.findById(findOrder.getCouponId());
-            OrderDeliverPlace findDeliverPlace = findOrder.getDeliverPlace();
-            User findUser = userQueryService.findById(findOrder.getUserId());
-            UserInfo findUserInfo = findUser.getUserInfo();
-
-            int discountPrice = findOptionItem.getDiscountPrice();
-            int quantity = productInfo.getAmount();
-            int deliveryFee = productInfo.getDeliveryFee();
-
-            int orderAmount = discountPrice * quantity + deliveryFee;
-
-            int couponDiscount = findOrder.getCouponDiscount();
-            Integer usePoint = findOrder.getUsePoint();
-//            int finalSettlementAmount = orderAmount - couponDiscount - usePoint;
-            double settlementRate = (double) findStoreInfo.getSettlementRate() / 100;
-
-            double settlementAmount = (double) (discountPrice * quantity) * (1 - settlementRate);
-
-//            return OrderSettlementExcelDto.builder()
-//                    .productId(productInfo.getProductId())
-//                    .orderId(findOrder.getId())
-//                    .orderProductState(productInfo.getState())
-//                    .orderAt(findOrder.getOrderedAt())
-//                    .finalConfirmDate() //
-//                    .storeName(findProduct.getStore().getName())
-//                    .productName(findProduct.getTitle())
-//                    .optionName(findOptionItem.getName())
-//                    .needTaxation(findProduct.getNeedTaxation())
-//                    .purchasePrice(findOptionItem.getPurchasePrice())
-//                    .commission() //
-//                    .sellingPrice() //
-//                    .deliveryFee(deliveryFee)
-//                    .quantity(quantity)
-//                    .orderAmount(discountPrice * quantity + deliveryFee)
-//                    .totalOrderAmount()..
-//                    .paymentMethod(findOrder.getPaymentWay())
-//                    .settlementRatio(settlementRate)
-//                    .couponName(findCoupon.getTitle())
-//                    .couponDiscount(findCoupon.getAmount())
-//                    .usePoint(findOrder.getUsePoint())
-//                    .settlementAmount(settlementAmount)
-//                    .settlementState()..
-//                    .settledAt(productInfo.getSettledAt())
-//                    .customerName(findDeliverPlace.getReceiverName())
-//                    .customerPhoneNumber(findDeliverPlace.getTel())
-//                    .customerEmail(findUserInfo.getEmail())
-//                    .customerAddress(findDeliverPlace.getAddress())
-//                    .deliveryMessage(findDeliverPlace.getDeliverMessage())
-//                    .deliveryCompany(findStoreInfo.getDeliverCompany())
-//                    .trackingNumber(productInfo.getInvoiceCode())
-//                    .build();
-            return OrderSettlementExcelDto.builder().build();
-        });
-    }
-
     @Transactional(readOnly = true)
-    public List<SettlementExcelDownloadRawDto> getSettlementExcel() {
-        List<SettlementExcelDownloadRawDto> excelRawDataWithNotSettled = orderProductInfoRepository.getExcelRawDataWithNotSettled1();
-        System.out.println(excelRawDataWithNotSettled.get(0).toString());
-        return excelRawDataWithNotSettled;
-    }
-
-    @Transactional(readOnly = true)
-    public List<SettlementOrderRawDto> getSettlementExcel2() {
-        List<SettlementOrderRawDto> settlementOrderRawDtos = orderProductInfoRepository.getExcelRawDataWithNotSettled2();
+    public List<SettlementOrderDto> createOrderSettlementResponse(Integer storeId) {
+        List<SettlementOrderRawDto> settlementOrderRawDtos = orderProductInfoRepository.getExcelRawDataWithNotSettled(storeId);
 
         List<SettlementOrderDto> settlementDtos = new ArrayList<>();
 
@@ -171,12 +93,7 @@ public class SettlementQueryService {
         List<SettlementStoreDto> settlementStoreDtos = new ArrayList<>();
         for (int i = 0; i < settlementOrderRawDtos.size(); i++) {
             SettlementOrderRawDto orderRawDto = settlementOrderRawDtos.get(i);
-            orderId = orderRawDto.getOrderId();
 
-            int storeDeliveryFeeSum = 0;
-            int storeTotalPriceSum = 0;
-
-            SettlementOrderDto settlementOrderDto = new SettlementOrderDto();
             SettlementStoreDto settlementStoreDto = new SettlementStoreDto();
             List<SettlementProductOptionItemDto> storeItems = new ArrayList<>();
             for (SettlementProductOptionItemDto optionItemDto : orderRawDto.getSettlementProductOptionItemDtos()) {
@@ -184,8 +101,10 @@ public class SettlementQueryService {
                 int purchasePrice = optionItemDto.getPurchasePrice();
                 int deliveryFee = optionItemDto.getDeliveryFee();
 
-                int commissionPrice = purchasePrice - sellingPrice;
-                int totalPrice = (sellingPrice * optionItemDto.getQuantity()) - deliveryFee;
+
+
+                int commissionPrice = sellingPrice - purchasePrice;
+                int totalPrice = (sellingPrice * optionItemDto.getQuantity()) + deliveryFee;
                 int settlementPrice = purchasePrice + deliveryFee;
                 optionItemDto.setCommissionPrice(commissionPrice);
                 optionItemDto.setTotalPrice(totalPrice);
@@ -201,29 +120,31 @@ public class SettlementQueryService {
             settlementStoreDto.setPartnerName(orderRawDto.getPartnerName());
             settlementStoreDto.setStoreOptionItemDtos(storeItems);
 
-            settlementOrderDto.addDeliveryFee(storeDeliveryFeeSum);
 
+            // 같은 주문일 때 settlementOrderDto에 settlementStoreDto 추가
+            SettlementOrderDto settlementOrderDto = new SettlementOrderDto();
             if (i >= 1) {
                 if (settlementOrderRawDtos.get(i - 1).getOrderId()
                     .equals(
                     settlementOrderRawDtos.get(i).getOrderId())) {
 
+                    settlementDtos.get(settlementDtos.size() - 1).addDeliveryFee(settlementStoreDto.getStoreDeliveryFeeSum());
                     settlementDtos.get(settlementDtos.size() - 1).addStoreInSameOrder(settlementStoreDto);
                     continue;
                 }
             }
 
+            // 같은 주문이 아닐 때 settlementDtos에 새로운 settlementOrderDto 추
             settlementOrderDto.setOrderId(orderRawDto.getOrderId());
             settlementOrderDto.setCouponName(orderRawDto.getCouponName());
             settlementOrderDto.setCouponDiscount(orderRawDto.getCouponDiscount());
             settlementOrderDto.setUsePoint(orderRawDto.getUsePoint());
-            settlementOrderDto.addDeliveryFee(storeDeliveryFeeSum);
+            settlementOrderDto.addDeliveryFee(settlementStoreDto.getStoreDeliveryFeeSum());
             settlementOrderDto.addStoreInSameOrder(settlementStoreDto);
 
             settlementDtos.add(settlementOrderDto);
         }
 
-        System.out.println(settlementDtos.toString());
-        return settlementOrderRawDtos;
+        return settlementDtos;
     }
 }
