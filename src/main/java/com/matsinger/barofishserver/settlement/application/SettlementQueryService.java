@@ -86,40 +86,20 @@ public class SettlementQueryService {
         List<SettlementOrderRawDto> settlementOrderRawDtos = orderProductInfoRepository.getExcelRawDataWithNotSettled(storeId);
 
         List<SettlementOrderDto> settlementDtos = new ArrayList<>();
-
-        int orderDeliveryFeeSum = 0;
-        String orderId = "";
-
-        List<SettlementStoreDto> settlementStoreDtos = new ArrayList<>();
         for (int i = 0; i < settlementOrderRawDtos.size(); i++) {
             SettlementOrderRawDto orderRawDto = settlementOrderRawDtos.get(i);
 
             SettlementStoreDto settlementStoreDto = new SettlementStoreDto();
             List<SettlementProductOptionItemDto> storeItems = new ArrayList<>();
             for (SettlementProductOptionItemDto optionItemDto : orderRawDto.getSettlementProductOptionItemDtos()) {
-                int sellingPrice = optionItemDto.getSellingPrice();
-                int purchasePrice = optionItemDto.getPurchasePrice();
-                int deliveryFee = optionItemDto.getDeliveryFee();
-
-
-
-                int commissionPrice = sellingPrice - purchasePrice;
-                int totalPrice = (sellingPrice * optionItemDto.getQuantity()) + deliveryFee;
-                int settlementPrice = purchasePrice + deliveryFee;
-                optionItemDto.setCommissionPrice(commissionPrice);
-                optionItemDto.setTotalPrice(totalPrice);
-                optionItemDto.setSettlementPrice(settlementPrice);
-
-                settlementStoreDto.addDeliveryFee(deliveryFee);
-                settlementStoreDto.addPrice(totalPrice);
-
+                
+                calculateOptionItemData(optionItemDto, settlementStoreDto);
                 storeItems.add(optionItemDto);
             }
 
             settlementStoreDto.setStoreId(orderRawDto.getStoreId());
             settlementStoreDto.setPartnerName(orderRawDto.getPartnerName());
             settlementStoreDto.setStoreOptionItemDtos(storeItems);
-
 
             // 같은 주문일 때 settlementOrderDto에 settlementStoreDto 추가
             SettlementOrderDto settlementOrderDto = new SettlementOrderDto();
@@ -134,7 +114,7 @@ public class SettlementQueryService {
                 }
             }
 
-            // 같은 주문이 아닐 때 settlementDtos에 새로운 settlementOrderDto 추
+            // 같은 주문이 아닐 때 settlementDtos에 새로운 settlementOrderDto 추가
             settlementOrderDto.setOrderId(orderRawDto.getOrderId());
             settlementOrderDto.setCouponName(orderRawDto.getCouponName());
             settlementOrderDto.setCouponDiscount(orderRawDto.getCouponDiscount());
@@ -146,5 +126,21 @@ public class SettlementQueryService {
         }
 
         return settlementDtos;
+    }
+
+    private void calculateOptionItemData(SettlementProductOptionItemDto optionItemDto, SettlementStoreDto settlementStoreDto) {
+        int sellingPrice = optionItemDto.getSellingPrice();
+        int purchasePrice = optionItemDto.getPurchasePrice();
+        int deliveryFee = optionItemDto.getDeliveryFee();
+
+        int commissionPrice = sellingPrice - purchasePrice;
+        int totalPrice = (sellingPrice * optionItemDto.getQuantity()) + deliveryFee;
+        int settlementPrice = purchasePrice + deliveryFee;
+        optionItemDto.setCommissionPrice(commissionPrice);
+        optionItemDto.setTotalPrice(totalPrice);
+        optionItemDto.setSettlementPrice(settlementPrice);
+
+        settlementStoreDto.addDeliveryFee(deliveryFee);
+        settlementStoreDto.addPrice(totalPrice);
     }
 }

@@ -88,7 +88,7 @@ public class OrderProductInfoRepositoryImpl implements OrderProductInfoRepositor
                                                 product.needTaxation.as("isTaxFree"),
                                                 optionItem.purchasePrice.as("purchasePrice"),
                                                 ExpressionUtils.as(Expressions.constant(0), "commissionPrice"),
-                                                orderProductInfo.price.as("sellingPrice"),
+                                                orderProductInfo.originPrice.as("sellingPrice"),
                                                 orderProductInfo.deliveryFee.as("deliveryFee"),
                                                 orderProductInfo.amount.as("quantity"),
                                                 ExpressionUtils.as(Expressions.constant(0), "totalPrice"),
