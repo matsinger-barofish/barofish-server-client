@@ -33,7 +33,6 @@ import com.matsinger.barofishserver.review.dto.ReviewTotalStatistic;
 import com.matsinger.barofishserver.review.repository.ReviewRepository;
 import com.matsinger.barofishserver.searchFilter.application.SearchFilterQueryService;
 import com.matsinger.barofishserver.searchFilter.domain.ProductSearchFilterMap;
-import com.matsinger.barofishserver.searchFilter.domain.SearchFilter;
 import com.matsinger.barofishserver.searchFilter.domain.SearchFilterField;
 import com.matsinger.barofishserver.searchFilter.dto.SearchFilterFieldDto;
 import com.matsinger.barofishserver.searchFilter.repository.ProductSearchFilterMapRepository;
@@ -624,7 +623,7 @@ public class ProductService {
     }
 
     public void updateProductStateActiveSupposedToStartPromotion() {
-        List<Product> products = productRepository.findAllByPromotionStartAtBefore(utils.now());
+        List<Product> products = productRepository.findAllByPromotionStartAtBeforeAndPromotionEndAtAfter(utils.now(), utils.now());
         products.forEach(v -> v.setState(ProductState.ACTIVE));
         productRepository.saveAll(products);
     }
