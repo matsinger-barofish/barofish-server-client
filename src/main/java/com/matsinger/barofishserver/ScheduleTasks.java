@@ -39,12 +39,12 @@ public class ScheduleTasks {
         userCommandService.deleteWithdrawUserList();
     }
 
-    @Scheduled(cron = "0 */10 * * * *")
+    @Scheduled(cron = "0 */5 * * * *")
     public void updatePassedPromotionProductInactive() {
         productService.updatePassedPromotionProductInactive();
     }
 
-    @Scheduled(cron = "0 */10 * * * *")
+    @Scheduled(cron = "0 */5 * * * *")
     public void updateProductStateActiveSupposedToStartPromotion() {
         productService.updateProductStateActiveSupposedToStartPromotion();
     }
