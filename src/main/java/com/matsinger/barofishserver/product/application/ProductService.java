@@ -622,4 +622,10 @@ public class ProductService {
         products.forEach(v -> v.setState(ProductState.INACTIVE));
         productRepository.saveAll(products);
     }
+
+    public void updateProductStateActiveSupposedToStartPromotion() {
+        List<Product> products = productRepository.findAllByPromotionStartAtAfter(utils.now());
+        products.forEach(v -> v.setState(ProductState.ACTIVE));
+        productRepository.saveAll(products);
+    }
 }

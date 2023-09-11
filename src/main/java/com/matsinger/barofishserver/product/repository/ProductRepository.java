@@ -918,4 +918,6 @@ public interface ProductRepository extends JpaRepository<Product, Integer>, JpaS
     List<Product> selectProductOtherCustomerBuy(@Param("productIds") List<Integer> productIds);
 
     List<Product> findAllByPromotionEndAtBefore(Timestamp now);
+
+    List<Product> findAllByPromotionStartAtAfter(Timestamp now);
 }

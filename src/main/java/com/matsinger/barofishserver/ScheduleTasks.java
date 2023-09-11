@@ -43,4 +43,9 @@ public class ScheduleTasks {
     public void updatePassedPromotionProductInactive() {
         productService.updatePassedPromotionProductInactive();
     }
+
+    @Scheduled(cron = "0 */10 * * * *")
+    public void updateProductStateActiveSupposedToStartPromotion() {
+        productService.updateProductStateActiveSupposedToStartPromotion();
+    }
 }
