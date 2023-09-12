@@ -18,6 +18,7 @@ public class SettlementOrderRawDto {
 
     private int storeId;                                    // 파트너 아이디
     private String partnerName;                             // 파트너
+    private Float settlementRate;                           // 정산비율
     private int storeDeliveryFeeSum;                        // 배송비 합                               개별 | 파트너끝
     private int storeTotalPriceSum;                         // 총 금액(원) (판매가 * 수량) - 배송비         개별 | 파트너끝
 

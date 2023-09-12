@@ -14,6 +14,7 @@ import com.matsinger.barofishserver.order.orderprductinfo.dto.OrderProductInfoDt
 import com.matsinger.barofishserver.order.orderprductinfo.domain.OrderProductState;
 import com.matsinger.barofishserver.product.application.ProductService;
 import com.matsinger.barofishserver.settlement.application.SettlementCommandService;
+import com.matsinger.barofishserver.settlement.application.SettlementExcelService;
 import com.matsinger.barofishserver.settlement.application.SettlementQueryService;
 import com.matsinger.barofishserver.settlement.dto.*;
 import com.matsinger.barofishserver.settlement.domain.SettlementOrderBy;
@@ -26,6 +27,7 @@ import com.matsinger.barofishserver.store.domain.StoreInfo;
 import com.matsinger.barofishserver.utils.Common;
 import com.matsinger.barofishserver.utils.CustomResponse;
 import jakarta.persistence.criteria.Predicate;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -33,6 +35,7 @@ import lombok.RequiredArgsConstructor;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.data.domain.Page;
@@ -43,6 +46,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.sql.Timestamp;
+import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.util.*;
 
@@ -59,6 +63,7 @@ public class SettlementController {
     private final Common utils;
     private final AdminLogCommandService adminLogCommandService;
     private final AdminLogQueryService adminLogQueryService;
+    private final SettlementExcelService settlementExcelService;
 
 
     @GetMapping("/")
@@ -119,30 +124,55 @@ public class SettlementController {
 
     @GetMapping("/order/list/download")
     public ResponseEntity<CustomResponse<List<SettlementOrderDto>>> selectSettlementOrderListDownload(@RequestHeader(value = "Authorization") Optional<String> auth,
-                                                                                                              @RequestParam(value = "page", required = false, defaultValue = "0") Integer page,
-                                                                                                              @RequestParam(value = "take", required = false, defaultValue = "10") Integer take,
-                                                                                                              @RequestParam(value = "orderby", required = false, defaultValue = "isSettled") OrderProductInfoOrderBy orderBy,
-                                                                                                              @RequestParam(value = "orderType", required = false, defaultValue = "DESC") Sort.Direction orderType,
-                                                                                                              @RequestParam(value = "isSettled", required = false) Boolean isSettled,
-                                                                                                              @RequestParam(value = "storeId", required = false) Integer storeId,
-                                                                                                              @RequestParam(value = "settledAtS", required = false) Timestamp settledAtS,
-                                                                                                              @RequestParam(value = "settledAtE", required = false) Timestamp settledAtE) {
+                                                                                                      @RequestParam(value = "page", required = false, defaultValue = "0") Integer page,
+                                                                                                      @RequestParam(value = "take", required = false, defaultValue = "10") Integer take,
+                                                                                                      @RequestParam(value = "orderby", required = false, defaultValue = "isSettled") OrderProductInfoOrderBy orderBy,
+                                                                                                      @RequestParam(value = "orderType", required = false, defaultValue = "DESC") Sort.Direction orderType,
+                                                                                                      @RequestParam(value = "isSettled", required = false) Boolean isSettled,
+                                                                                                      @RequestParam(value = "storeId", required = false) Integer storeId,
+                                                                                                      @RequestParam(value = "settledAtS", required = false) Timestamp settledAtS,
+                                                                                                      @RequestParam(value = "settledAtE", required = false) Timestamp settledAtE,
+                                                                                                      HttpServletResponse httpServletResponse) {
         CustomResponse<List<SettlementOrderDto>> res = new CustomResponse<>();
         Optional<TokenInfo>
                 tokenInfo =
                 jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN, TokenAuthType.PARTNER), auth);
+
+        httpServletResponse.setContentType("ms-vnd/excel");
+        String nowDate = new SimpleDateFormat("yyyyMMdd").format(Timestamp.valueOf(LocalDateTime.now()));
+        String fileName = nowDate + ".xlsx";
+        httpServletResponse.setHeader("Content-Disposition", "attachment;filename=" + fileName);
+
         if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
         try {
 
             if (tokenInfo.get().getType().equals(TokenAuthType.PARTNER)) {
                 List<SettlementOrderDto> result = settlementQueryService.createOrderSettlementResponse(tokenInfo.get().getId());
-                res.setData(Optional.of(result));
-                return ResponseEntity.ok(res);
+
+                Workbook workbook = settlementExcelService.settlementExcelDownload(result);
+                try {
+                    workbook.write(httpServletResponse.getOutputStream());
+                } catch (Exception e) {
+                    e.getMessage();
+                } finally {
+                    workbook.close();
+                }
+//                res.setData(Optional.of(result));
+//                return ResponseEntity.ok(res);
             }
 
             List<SettlementOrderDto> result = settlementQueryService.createOrderSettlementResponse(null);
-            res.setData(Optional.of(result));
+            Workbook workbook = settlementExcelService.settlementExcelDownload(result);
+            try {
+                workbook.write(httpServletResponse.getOutputStream());
+            } catch (Exception e) {
+                e.getMessage();
+            } finally {
+                workbook.close();
+            }
             return ResponseEntity.ok(res);
+//            res.setData(Optional.of(result));
+//            return ResponseEntity.ok(res);
         } catch (Exception e) {
             return res.defaultError(e);
         }

@@ -33,7 +33,6 @@ public class SettlementProductOptionItemDto {
     private int totalPrice;                                 // 총 금액(원) (판매가 * 수량) - 배송비         개별 | 파트너끝
 //    private int finalPaymentPrice;                           // 최종결제금액(원) 총 금액 - 쿠폰할인 - 포인트    개별 | 파트너끝 | 주문끝
     private OrderPaymentWay paymentWay;                     // 결제수단
-    private Float settlementRate;                           // 정산비율
     private int settlementPrice;                            // 정산금액(원)
     private boolean settlementState;                        // 정산상태
     private Timestamp settledAt;                            // 정산일시
@@ -72,7 +71,6 @@ public class SettlementProductOptionItemDto {
                 ", quantity=" + quantity +
                 ", totalPrice=" + totalPrice +
                 ", paymentWay=" + paymentWay +
-                ", settlementRate=" + settlementRate +
                 ", settlementPrice=" + settlementPrice +
                 ", settlementState=" + settlementState +
                 ", settledAt=" + settledAt +

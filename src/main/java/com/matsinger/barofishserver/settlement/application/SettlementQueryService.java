@@ -100,6 +100,7 @@ public class SettlementQueryService {
             settlementStoreDto.setStoreId(orderRawDto.getStoreId());
             settlementStoreDto.setPartnerName(orderRawDto.getPartnerName());
             settlementStoreDto.setStoreOptionItemDtos(storeItems);
+            settlementStoreDto.setSettlementRate(orderRawDto.getSettlementRate());
 
             // 같은 주문일 때 settlementOrderDto에 settlementStoreDto 추가
             SettlementOrderDto settlementOrderDto = new SettlementOrderDto();

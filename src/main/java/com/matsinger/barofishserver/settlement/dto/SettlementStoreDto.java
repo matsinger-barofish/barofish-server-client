@@ -12,6 +12,7 @@ public class SettlementStoreDto {
 
     private int storeId;                                    // 파트너 아이디
     private String partnerName;                             // 파트너
+    private Float settlementRate;                           // 정산비율
     @Builder.Default
     private int storeDeliveryFeeSum = 0;                        // 배송비 합                               개별 | 파트너끝
     @Builder.Default
