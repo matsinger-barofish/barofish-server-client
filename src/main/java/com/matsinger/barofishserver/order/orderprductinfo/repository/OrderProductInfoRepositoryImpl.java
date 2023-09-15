@@ -81,6 +81,7 @@ public class OrderProductInfoRepositoryImpl implements OrderProductInfoRepositor
 
                                         list(Projections.fields(
                                                 SettlementProductOptionItemDto.class,
+                                                product.id.as("productId"),
                                                 product.title.as("productName"),
                                                 optionItem.name.as("optionItemName"),
                                                 orderProductInfo.state.as("orderProductInfoState"),

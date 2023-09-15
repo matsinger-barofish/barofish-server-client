@@ -11,6 +11,7 @@ import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.streaming.SXSSFWorkbook;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.stereotype.Service;
 
 import java.sql.Timestamp;
@@ -22,17 +23,17 @@ import java.util.List;
 public class SettlementExcelService {
 
     public Workbook settlementExcelDownload(List<SettlementOrderDto> settlementOrderDtos) {
-        Workbook workbook = new SXSSFWorkbook();
+        Workbook workbook = new XSSFWorkbook();
         Sheet sheet = workbook.createSheet("바로피쉬 정산");
         Row row = null;
         Cell cell = null;
         int rowNum = 0;
 
-        String[] headers = {"상품번호", "주문번호", "주문상태", "주문일", "구매확정일", "파트너", "상품명", "옵션명", "과세여부", "공급가(원)", "수수료가(원)", "판매가", "배송비", "수량", "총 금액(원)", "총 주문금액", "쿠폰명", "쿠폰할인", "포인트", "최종결제금액(원)", "결제수단", "정산 비율(%)", "정산금액(원)", "정산상태", "정산일시", "주문인", "연락처", "이메일", "주소", "배송메세지", "택배사", "운송장번호"};
+        String[] headers = {"상품번호", "주문번호", "주문상태", "주문일", "구매확정일", "파트너", "상품명", "옵션명", "과세여부", "공급가(원)", "수수료가(원)", "판매가", "배송비", "수량", "총 금액(원)", "총 주문금액", "쿠폰명", "쿠폰할인", "포인트", "최종결제금액(원)", "결제수단", "정산 비율(%)", "정산금액(원)", "정산상태", "정산일시", "수령인", "연락처", "이메일", "주소", "배송메세지", "택배사", "운송장번호"};
 
         // Header 설정
+        row = sheet.createRow(rowNum++);
         for (int i = 0; i < headers.length; i++) {
-            row = sheet.createRow(rowNum++);
             cell = row.createCell(i);
             cell.setCellValue(headers[i]);
         }
@@ -51,85 +52,88 @@ public class SettlementExcelService {
                     row = sheet.createRow(rowNum++);
 
                     cell = row.createCell(0);
-                    cell.setCellValue(orderId);
+                    cell.setCellValue(optionItemDto.getProductId());
 
                     cell = row.createCell(1);
-                    cell.setCellValue(optionItemDto.getOrderProductInfoState() == OrderProductState.FINAL_CONFIRM ? "구매확정" : null);
+                    cell.setCellValue(orderId);
 
                     cell = row.createCell(2);
-                    cell.setCellValue(new SimpleDateFormat("yyyy.MM.dd").format(optionItemDto.getOrderedAt()));
+                    cell.setCellValue(optionItemDto.getOrderProductInfoState() == OrderProductState.FINAL_CONFIRM ? "구매확정" : null);
 
                     cell = row.createCell(3);
-                    cell.setCellValue(new SimpleDateFormat("yyyy.MM.dd").format(optionItemDto.getFinalConfirmedAt()));
+                    cell.setCellValue(optionItemDto.getOrderedAt() != null ? new SimpleDateFormat("yyyy.MM.dd").format(optionItemDto.getOrderedAt()) : null);
 
                     cell = row.createCell(4);
-                    cell.setCellValue(partnerName);
+                    cell.setCellValue(optionItemDto.getFinalConfirmedAt() != null ? new SimpleDateFormat("yyyy.MM.dd").format(optionItemDto.getFinalConfirmedAt()) : null);
 
                     cell = row.createCell(5);
-                    cell.setCellValue(optionItemDto.getProductName());
+                    cell.setCellValue(partnerName);
 
                     cell = row.createCell(6);
-                    cell.setCellValue(optionItemDto.getOptionItemName());
+                    cell.setCellValue(optionItemDto.getProductName());
 
                     cell = row.createCell(7);
-                    cell.setCellValue(optionItemDto.isTaxFree() == true ? "비과세" : "과세");
+                    cell.setCellValue(optionItemDto.getOptionItemName());
 
                     cell = row.createCell(8);
-                    cell.setCellValue(optionItemDto.getPurchasePrice());
+                    cell.setCellValue(optionItemDto.isTaxFree() == true ? "비과세" : "과세");
 
                     cell = row.createCell(9);
-                    cell.setCellValue(optionItemDto.getCommissionPrice());
+                    cell.setCellValue(optionItemDto.getPurchasePrice());
 
                     cell = row.createCell(10);
-                    cell.setCellValue(optionItemDto.getSellingPrice());
+                    cell.setCellValue(optionItemDto.getCommissionPrice());
 
                     cell = row.createCell(11);
-                    cell.setCellValue(optionItemDto.getDeliveryFee());
+                    cell.setCellValue(optionItemDto.getSellingPrice());
 
                     cell = row.createCell(12);
-                    cell.setCellValue(optionItemDto.getQuantity());
+                    cell.setCellValue(optionItemDto.getDeliveryFee());
 
                     cell = row.createCell(13);
+                    cell.setCellValue(optionItemDto.getQuantity());
+
+                    cell = row.createCell(14);
                     cell.setCellValue(optionItemDto.getTotalPrice());
 
-                    cell = row.createCell(18);
+                    cell = row.createCell(20);
                     cell.setCellValue(OrderPaymentWay.findByOrderPaymentWay(optionItemDto.getPaymentWay()));
 
-                    cell = row.createCell(19);
-                    cell.setCellValue(settlementRate);
-
-                    cell = row.createCell(20);
-                    cell.setCellValue(optionItemDto.getSettlementPrice());
-
                     cell = row.createCell(21);
-                    cell.setCellValue(optionItemDto.isSettlementState() ? "정산완료" : "정산예정");
+                    cell.setCellValue(settlementRate + "%");
 
                     cell = row.createCell(22);
+                    cell.setCellValue(optionItemDto.getSettlementPrice());
+
+                    cell = row.createCell(23);
+                    cell.setCellValue(optionItemDto.isSettlementState() ? "정산완료" : "정산예정");
+
+                    cell = row.createCell(24);
                     String settledAt = null;
                     if (optionItemDto.getSettledAt() != null) {
                         settledAt = new SimpleDateFormat("yyyy.MM.dd").format(optionItemDto.getSettledAt());
                     }
                     cell.setCellValue(settledAt);
 
-                    cell = row.createCell(23);
+                    cell = row.createCell(25);
                     cell.setCellValue(optionItemDto.getCustomerName());
 
-                    cell = row.createCell(24);
+                    cell = row.createCell(26);
                     cell.setCellValue(optionItemDto.getPhoneNumber());
 
-                    cell = row.createCell(25);
+                    cell = row.createCell(27);
                     cell.setCellValue(optionItemDto.getEmail());
 
-                    cell = row.createCell(26);
+                    cell = row.createCell(28);
                     cell.setCellValue(optionItemDto.getAddress() + " " + optionItemDto.getAddressDetail());
 
-                    cell = row.createCell(27);
+                    cell = row.createCell(29);
                     cell.setCellValue(optionItemDto.getDeliverMessage());
 
-                    cell = row.createCell(28);
+                    cell = row.createCell(30);
                     cell.setCellValue(optionItemDto.getDeliveryCompany());
 
-                    cell = row.createCell(29);
+                    cell = row.createCell(31);
                     cell.setCellValue(optionItemDto.getInvoiceCode());
                 }
                 row = sheet.createRow(rowNum++);

@@ -123,7 +123,7 @@ public class SettlementController {
     }
 
     @GetMapping("/order/list/download")
-    public ResponseEntity<CustomResponse<List<SettlementOrderDto>>> selectSettlementOrderListDownload(@RequestHeader(value = "Authorization") Optional<String> auth,
+    public void selectSettlementOrderListDownload(@RequestHeader(value = "Authorization") Optional<String> auth,
                                                                                                       @RequestParam(value = "page", required = false, defaultValue = "0") Integer page,
                                                                                                       @RequestParam(value = "take", required = false, defaultValue = "10") Integer take,
                                                                                                       @RequestParam(value = "orderby", required = false, defaultValue = "isSettled") OrderProductInfoOrderBy orderBy,
@@ -140,10 +140,12 @@ public class SettlementController {
 
         httpServletResponse.setContentType("ms-vnd/excel");
         String nowDate = new SimpleDateFormat("yyyyMMdd").format(Timestamp.valueOf(LocalDateTime.now()));
-        String fileName = nowDate + ".xlsx";
+        String fileName = nowDate + "_barofish_settlement.xlsx";
         httpServletResponse.setHeader("Content-Disposition", "attachment;filename=" + fileName);
+//        httpServletResponse.setHeader("Content-Disposition", "attachment;filename=barofish_settlement.xlsx");
 
-        if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
+//        if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
+        if (tokenInfo == null) throw new IllegalArgumentException("인증이 필요합니다.");
         try {
 
             if (tokenInfo.get().getType().equals(TokenAuthType.PARTNER)) {
@@ -170,11 +172,11 @@ public class SettlementController {
             } finally {
                 workbook.close();
             }
-            return ResponseEntity.ok(res);
+//            return ResponseEntity.ok(res);
 //            res.setData(Optional.of(result));
 //            return ResponseEntity.ok(res);
         } catch (Exception e) {
-            return res.defaultError(e);
+            throw new IllegalArgumentException(e);
         }
     }
 
