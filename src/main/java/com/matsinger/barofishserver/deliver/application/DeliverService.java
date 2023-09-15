@@ -7,7 +7,11 @@ import com.matsinger.barofishserver.admin.log.domain.AdminLogType;
 import com.matsinger.barofishserver.deliver.domain.DeliveryCompany;
 import com.matsinger.barofishserver.deliver.repository.DeliveryCompanyRepository;
 import com.matsinger.barofishserver.deliver.domain.Deliver;
+import com.matsinger.barofishserver.notification.application.NotificationCommandService;
+import com.matsinger.barofishserver.notification.dto.NotificationMessage;
+import com.matsinger.barofishserver.notification.dto.NotificationMessageType;
 import com.matsinger.barofishserver.order.application.OrderService;
+import com.matsinger.barofishserver.order.domain.Orders;
 import com.matsinger.barofishserver.order.orderprductinfo.domain.OrderProductInfo;
 import com.matsinger.barofishserver.order.orderprductinfo.domain.OrderProductState;
 import com.matsinger.barofishserver.product.application.ProductService;
@@ -46,6 +50,7 @@ public class DeliverService {
     private final AdminLogQueryService adminLogQueryService;
     private final AdminLogCommandService adminLogCommandService;
     private final Common utils;
+    private final NotificationCommandService notificationCommandService;
 
     public List<Deliver.Company> selectDeliverCompanyList() {
         List<DeliveryCompany> deliveryCompanies = deliveryCompanyRepository.findAll();
@@ -123,7 +128,17 @@ public class DeliverService {
                 info.setState(OrderProductState.DELIVERY_DONE);
                 info.setDeliveryDoneAt(util.now());
                 orderService.updateOrderProductInfo(new ArrayList<>(List.of(info)));
+
                 Product product = productService.selectProduct(info.getProductId());
+
+                Orders findOrder = orderService.selectOrder(info.getOrderId());
+                notificationCommandService.sendFcmToUser(
+                        findOrder.getUserId(),
+                        NotificationMessageType.DELIVER_DONE,
+                        NotificationMessage
+                                .builder().productName(product.getTitle())
+                                .build());
+
                 String content = product.getTitle() + " 주문이 배송 완료 처리되었습니다.";
                 AdminLog
                         adminLog =
