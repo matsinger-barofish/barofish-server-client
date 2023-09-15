@@ -9,6 +9,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 
 import java.sql.Timestamp;
+import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @SpringBootTest
@@ -38,6 +40,5 @@ class ProductServiceTest {
         for (Product product : allByPromotionEndAtBefore) {
             System.out.println("안녕이 나와야 함 -> " + product.getTitle());
         }
-
     }
 }

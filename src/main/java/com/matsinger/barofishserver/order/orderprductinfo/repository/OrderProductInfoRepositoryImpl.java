@@ -75,11 +75,13 @@ public class OrderProductInfoRepositoryImpl implements OrderProductInfoRepositor
                                         // 위는 order 끝나면 출력, 밑은 store 끝나면 출력
                                         store.id.as("storeId"),
                                         storeInfo.name.as("partnerName"),
+                                        storeInfo.settlementRate.as("settlementRate"),
                                         ExpressionUtils.as(Expressions.constant(0), "storeDeliveryFeeSum"),
                                         ExpressionUtils.as(Expressions.constant(0), "storeTotalPriceSum"),
 
                                         list(Projections.fields(
                                                 SettlementProductOptionItemDto.class,
+                                                product.id.as("productId"),
                                                 product.title.as("productName"),
                                                 optionItem.name.as("optionItemName"),
                                                 orderProductInfo.state.as("orderProductInfoState"),
@@ -93,7 +95,6 @@ public class OrderProductInfoRepositoryImpl implements OrderProductInfoRepositor
                                                 orderProductInfo.amount.as("quantity"),
                                                 ExpressionUtils.as(Expressions.constant(0), "totalPrice"),
                                                 orders.paymentWay.as("paymentWay"),
-                                                storeInfo.settlementRate.as("settlementRate"),
                                                 ExpressionUtils.as(Expressions.constant(0), "settlementPrice"),
                                                 orderProductInfo.isSettled.as("settlementState"),
                                                 orderProductInfo.settledAt.as("settledAt"),
