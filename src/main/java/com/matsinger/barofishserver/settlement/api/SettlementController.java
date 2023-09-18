@@ -27,6 +27,7 @@ import com.matsinger.barofishserver.store.domain.StoreInfo;
 import com.matsinger.barofishserver.utils.Common;
 import com.matsinger.barofishserver.utils.CustomResponse;
 import jakarta.persistence.criteria.Predicate;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.Builder;
 import lombok.Getter;
@@ -45,6 +46,9 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.*;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
@@ -132,25 +136,28 @@ public class SettlementController {
                                                                                                       @RequestParam(value = "storeId", required = false) Integer storeId,
                                                                                                       @RequestParam(value = "settledAtS", required = false) Timestamp settledAtS,
                                                                                                       @RequestParam(value = "settledAtE", required = false) Timestamp settledAtE,
-                                                                                                      HttpServletResponse httpServletResponse) {
+                                                                                                      HttpServletRequest httpServletRequest,
+                                                                                                      HttpServletResponse httpServletResponse) throws UnsupportedEncodingException {
         CustomResponse<List<SettlementOrderDto>> res = new CustomResponse<>();
         Optional<TokenInfo>
                 tokenInfo =
                 jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN, TokenAuthType.PARTNER), auth);
 
-        httpServletResponse.setContentType("ms-vnd/excel");
-        String nowDate = new SimpleDateFormat("yyyyMMdd").format(Timestamp.valueOf(LocalDateTime.now()));
-        String fileName = nowDate + "_barofish_settlement.xlsx";
-        httpServletResponse.setHeader("Content-Disposition", "attachment;filename=" + fileName);
-//        httpServletResponse.setHeader("Content-Disposition", "attachment;filename=barofish_settlement.xlsx");
-
-//        if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
         if (tokenInfo == null) throw new IllegalArgumentException("인증이 필요합니다.");
+
+//        String nowDate = new SimpleDateFormat("yyyyMMdd").format(Timestamp.valueOf(LocalDateTime.now()));
+        String nowDate = new SimpleDateFormat("yyyyMMdd").format(Calendar.getInstance().getTime());
+        String fileName = nowDate + "_바로피쉬_정산.xlsx";
+
+        httpServletResponse.setHeader("Content-Disposition", "attachment; filename=" + URLEncoder.encode(fileName, StandardCharsets.UTF_8));
+        httpServletResponse.setHeader("Content-Transfer-Encoding", "binary;");
+//        httpServletResponse.setContentType("ms-vnd/excel");
+        httpServletResponse.setContentType("application/octet-stream");
+
         try {
 
             if (tokenInfo.get().getType().equals(TokenAuthType.PARTNER)) {
                 List<SettlementOrderDto> result = settlementQueryService.createOrderSettlementResponse(tokenInfo.get().getId());
-
                 Workbook workbook = settlementExcelService.settlementExcelDownload(result);
                 try {
                     workbook.write(httpServletResponse.getOutputStream());
@@ -158,6 +165,9 @@ public class SettlementController {
                     e.getMessage();
                 } finally {
                     workbook.close();
+                    httpServletResponse.getOutputStream().flush();
+                    httpServletResponse.getOutputStream().close();
+
                 }
 //                res.setData(Optional.of(result));
 //                return ResponseEntity.ok(res);
@@ -171,6 +181,9 @@ public class SettlementController {
                 e.getMessage();
             } finally {
                 workbook.close();
+                // 버퍼에 남아있는 출력스트림을 출력, 출력 스트림을 닫아줌
+                httpServletResponse.getOutputStream().flush();
+                httpServletResponse.getOutputStream().close();
             }
 //            return ResponseEntity.ok(res);
 //            res.setData(Optional.of(result));
