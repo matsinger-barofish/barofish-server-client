@@ -341,7 +341,7 @@ public class ReviewController {
             if (tokenInfo.isPresent() &&
                     tokenInfo.get().getType().equals(TokenAuthType.USER) &&
                     review.getUserId() != tokenInfo.get().getId())
-                return res.throwError("타인의 레뷰는 삭제할 수 없습니다.", "NOT_ALLOWED");
+                return res.throwError("타인의 리뷰는 삭제할 수 없습니다.", "NOT_ALLOWED");
             else if (tokenInfo.isPresent() &&
                     tokenInfo.get().getType().equals(TokenAuthType.PARTNER) &&
                     review.getStore().getId() != tokenInfo.get().getId())

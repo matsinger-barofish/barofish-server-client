@@ -114,4 +114,9 @@ public class ReviewQueryService {
     public Boolean checkReviewWritten(Integer userId, Integer productId, Integer orderProductInfoId) {
         return reviewRepository.existsByUserIdAndProductIdAndOrderProductInfoId(userId, productId, orderProductInfoId);
     }
+
+    public Review findById(Integer id) {
+        return reviewRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("후기를 찾을 수 없습니다."));
+    }
 }
