@@ -1,5 +1,6 @@
 package com.matsinger.barofishserver.settlement.api;
 
+import com.amazonaws.util.IOUtils;
 import com.google.firebase.messaging.LightSettings;
 import com.matsinger.barofishserver.admin.log.application.AdminLogCommandService;
 import com.matsinger.barofishserver.admin.log.application.AdminLogQueryService;
@@ -39,6 +40,7 @@ import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.apache.xmlbeans.impl.common.IOUtil;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -145,49 +147,35 @@ public class SettlementController {
 
         if (tokenInfo == null) throw new IllegalArgumentException("인증이 필요합니다.");
 
-//        String nowDate = new SimpleDateFormat("yyyyMMdd").format(Timestamp.valueOf(LocalDateTime.now()));
         String nowDate = new SimpleDateFormat("yyyyMMdd").format(Calendar.getInstance().getTime());
-        String fileName = nowDate + "_바로피쉬_정산.xlsx";
+//        String fileName = nowDate + "_바로피쉬_정산.xlsx";
+        String fileName = nowDate + "_barofish_settlement.xlsx";
 
-        httpServletResponse.setHeader("Content-Disposition", "attachment; filename=" + URLEncoder.encode(fileName, StandardCharsets.UTF_8));
-        httpServletResponse.setHeader("Content-Transfer-Encoding", "binary;");
+        httpServletResponse.setHeader("Content-Disposition", "attachment;filename=" + URLEncoder.encode(fileName, StandardCharsets.UTF_8));
+//        httpServletResponse.setHeader("Content-Transfer-Encoding", "binary;");
 //        httpServletResponse.setContentType("ms-vnd/excel");
         httpServletResponse.setContentType("application/octet-stream");
 
         try {
-
+            List<SettlementOrderDto> result = null;
             if (tokenInfo.get().getType().equals(TokenAuthType.PARTNER)) {
-                List<SettlementOrderDto> result = settlementQueryService.createOrderSettlementResponse(tokenInfo.get().getId());
-                Workbook workbook = settlementExcelService.settlementExcelDownload(result);
-                try {
-                    workbook.write(httpServletResponse.getOutputStream());
-                } catch (Exception e) {
-                    e.getMessage();
-                } finally {
-                    workbook.close();
-                    httpServletResponse.getOutputStream().flush();
-                    httpServletResponse.getOutputStream().close();
-
-                }
-//                res.setData(Optional.of(result));
-//                return ResponseEntity.ok(res);
+                result = settlementQueryService.createOrderSettlementResponse(tokenInfo.get().getId());
             }
 
-            List<SettlementOrderDto> result = settlementQueryService.createOrderSettlementResponse(null);
-            Workbook workbook = settlementExcelService.settlementExcelDownload(result);
+            if (tokenInfo.get().getType().equals(TokenAuthType.ADMIN)) {
+                result = settlementQueryService.createOrderSettlementResponse(null);
+            }
+
+            ByteArrayInputStream stream = settlementExcelService.settlementExcelDownload(result);
             try {
-                workbook.write(httpServletResponse.getOutputStream());
+                IOUtils.copy(stream, httpServletResponse.getOutputStream());
             } catch (Exception e) {
                 e.getMessage();
             } finally {
-                workbook.close();
-                // 버퍼에 남아있는 출력스트림을 출력, 출력 스트림을 닫아줌
-                httpServletResponse.getOutputStream().flush();
+                // , 출력 스트림을 닫아줌
                 httpServletResponse.getOutputStream().close();
             }
-//            return ResponseEntity.ok(res);
-//            res.setData(Optional.of(result));
-//            return ResponseEntity.ok(res);
+
         } catch (Exception e) {
             throw new IllegalArgumentException(e);
         }
