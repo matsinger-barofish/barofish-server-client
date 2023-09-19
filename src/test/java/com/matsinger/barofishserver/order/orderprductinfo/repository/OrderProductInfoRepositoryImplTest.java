@@ -2,6 +2,7 @@ package com.matsinger.barofishserver.order.orderprductinfo.repository;
 
 import com.matsinger.barofishserver.settlement.application.SettlementQueryService;
 import com.matsinger.barofishserver.settlement.dto.SettlementOrderDto;
+import com.matsinger.barofishserver.settlement.dto.TempDto;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -25,7 +26,8 @@ class OrderProductInfoRepositoryImplTest {
         // given
         int orderProductInfoId = 1;
         // when
-        orderProductInfoRepository.queryTest(orderProductInfoId);
+        List<TempDto> tempDtos = orderProductInfoRepository.queryTest(orderProductInfoId);
+        System.out.println("tempDtos = " + tempDtos);
         // then
     }
 

@@ -1,9 +1,9 @@
 package com.matsinger.barofishserver.order.orderprductinfo.repository;
 
 import com.matsinger.barofishserver.order.orderprductinfo.domain.OrderProductState;
-import com.matsinger.barofishserver.review.domain.Review;
 import com.matsinger.barofishserver.settlement.dto.SettlementOrderRawDto;
 import com.matsinger.barofishserver.settlement.dto.SettlementProductOptionItemDto;
+import com.matsinger.barofishserver.settlement.dto.TempDto;
 import com.querydsl.core.types.ExpressionUtils;
 import com.querydsl.core.types.Projections;
 import com.querydsl.core.types.dsl.BooleanExpression;
@@ -37,14 +37,17 @@ public class OrderProductInfoRepositoryImpl implements OrderProductInfoRepositor
     private final JPAQueryFactory queryFactory;
 
     @Override
-    public List<Review> queryTest(int orderProductInfoId) {
+    public List<TempDto> queryTest(int orderProductInfoId) {
         return queryFactory
-                .select(review)
+                .select(
+                        Projections.fields(TempDto.class,
+                                reviewLike.reviewId.count().as("reviewLike"),
+                                review.id.as("reviewId"))
+                )
                 .from(review)
                 .leftJoin(reviewLike).on(review.id.eq(reviewLike.reviewId))
                 .groupBy(review.id)
                 .fetch();
-
     }
 
     @Override
