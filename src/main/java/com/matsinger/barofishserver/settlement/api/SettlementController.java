@@ -129,6 +129,7 @@ public class SettlementController {
     }
 
     @GetMapping("/order/list/download")
+    @CrossOrigin(value = ("*"), exposedHeaders = {"Content-Disposition"})
     public void selectSettlementOrderListDownload(@RequestHeader(value = "Authorization") Optional<String> auth,
                                                                                                       @RequestParam(value = "page", required = false, defaultValue = "0") Integer page,
                                                                                                       @RequestParam(value = "take", required = false, defaultValue = "10") Integer take,
