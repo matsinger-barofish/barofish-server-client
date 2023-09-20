@@ -1,22 +1,21 @@
 package com.matsinger.barofishserver.review.dto.v2;
 
-import com.matsinger.barofishserver.review.dto.ReviewDto;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import org.springframework.data.domain.Page;
 
 import java.util.List;
 
+@Getter
+@Builder @AllArgsConstructor @NoArgsConstructor
 public class ProductReviewDto {
 
     private Integer productId;
-    private ProductDtoInReview productDto;
-    private Integer reviewCount;
-    private Integer tasteSum;
-    private Integer freshSum;
-    private Integer priceSum;
-    private Integer packingSum;
-    private Integer sizeSum;
-    private List<ReviewDtoV2> reviewDtos;
-    private StoreDtoInReview storeDto;
+    private Long reviewCount;
 
+    private List<ReviewEvaluationSummaryDto> evaluationSummaryDtos;
 
-
+    private Page<ReviewDtoV2> pagedReviews;
 }

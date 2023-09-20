@@ -4,6 +4,7 @@ import com.matsinger.barofishserver.order.orderprductinfo.application.OrderProdu
 import com.matsinger.barofishserver.product.application.ProductQueryService;
 import com.matsinger.barofishserver.review.domain.*;
 import com.matsinger.barofishserver.review.dto.v2.ReviewDtoV2;
+import com.matsinger.barofishserver.review.dto.v2.ReviewEvaluationSummaryDto;
 import com.matsinger.barofishserver.review.repository.ReviewEvaluationRepository;
 import com.matsinger.barofishserver.review.repository.ReviewLikeRepository;
 import com.matsinger.barofishserver.review.repository.ReviewRepository;
@@ -16,14 +17,11 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.annotation.PostConstruct;
 import java.sql.Timestamp;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -106,8 +104,9 @@ class ReviewQueryServiceTest {
                 .userId(10001)
                 .reviewId(review1.getId())
                 .build());
+        PageRequest pageRequest = PageRequest.of(0, 10);
         // when
-        List<ReviewDtoV2> productReviews = reviewRepositoryImpl.getProductReviews(10000, ReviewOrderByType.BEST);
+        List<ReviewDtoV2> productReviews = reviewRepositoryImpl.getPagedProductReviews(10000, ReviewOrderByType.BEST, pageRequest);
 
         // then
         assertThat(productReviews.get(0).getLikeSum()).isEqualTo(1);
@@ -121,8 +120,9 @@ class ReviewQueryServiceTest {
                 .userId(10001)
                 .reviewId(review1.getId())
                 .build());
+        PageRequest pageRequest = PageRequest.of(0, 10);
         // when
-        List<ReviewDtoV2> productReviews = reviewRepositoryImpl.getProductReviews(10000, ReviewOrderByType.RECENT);
+        List<ReviewDtoV2> productReviews = reviewRepositoryImpl.getPagedProductReviews(10000, ReviewOrderByType.RECENT, pageRequest);
 
         // then
         assertThat(productReviews.get(0).getLikeSum()).isEqualTo(0);
@@ -133,11 +133,43 @@ class ReviewQueryServiceTest {
     @Test
     void getProductReviewsExceptDeletedReviews() {
         // given
-        Review.builder()
-                .id(review2.getId() + 1)
-                .build();
+        Review createdReview3 = reviewRepository.save(Review.builder()
+                .productId(10000)
+                .storeId(10000)
+                .userId(10000)
+                .orderProductInfoId(10001)
+                .images("[]")
+                .content("test")
+                .createdAt(Timestamp.valueOf(LocalDateTime.now()))
+                .isDeleted(true)
+                .build());
+        ReviewEvaluation createdReviewEvaluation3 = reviewEvaluationRepository.save(ReviewEvaluation.builder()
+                .reviewId(createdReview3.getId())
+                .evaluation(ReviewEvaluationType.TASTE)
+                .build());
+        PageRequest pageRequest = PageRequest.of(0, 10);
         // when
-
+        List<ReviewDtoV2> productReviews = reviewRepositoryImpl.getPagedProductReviews(10000, ReviewOrderByType.BEST, pageRequest);
         // then
+        assertThat(productReviews.size()).isEqualTo(2);
+    }
+
+    @DisplayName("리뷰의 맛, 포장 등 evaluation의 합계를 집계할 수 있다.")
+    @Test
+    void testMethodNameHere() {
+        // given
+
+        // when
+        List<ReviewEvaluationSummaryDto> productReviewEvaluations = reviewRepositoryImpl.getProductReviewEvaluations(10000);
+
+        ReviewEvaluationSummaryDto targetDto = null;
+        for (ReviewEvaluationSummaryDto productReviewEvaluation : productReviewEvaluations) {
+            System.out.println("productReviewEvaluation = " + productReviewEvaluation);
+            if (productReviewEvaluation.getEvaluationType().equals(ReviewEvaluationType.TASTE)) {
+                targetDto = productReviewEvaluation;
+            }
+        }
+        // then
+        assertThat(targetDto.getEvaluationSum()).isEqualTo(2);
     }
 }

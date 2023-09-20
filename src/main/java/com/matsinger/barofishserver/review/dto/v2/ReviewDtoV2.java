@@ -4,17 +4,18 @@ import com.matsinger.barofishserver.grade.domain.Grade;
 import lombok.Getter;
 
 import java.sql.Timestamp;
+import java.util.List;
 
 @Getter
 public class ReviewDtoV2 {
 
-    private String userId;
+    private Integer userId;
     private String userName;
     private String userGrade;
     private String productName;
     private String reviewContent;
     private Timestamp createdAt;
-    private String image;
+    private String images;
     private Long likeSum;
 
     @Override
@@ -26,7 +27,7 @@ public class ReviewDtoV2 {
                 ", productName='" + productName + '\'' +
                 ", reviewContent='" + reviewContent + '\'' +
                 ", createdAt=" + createdAt +
-                ", image='" + image + '\'' +
+                ", images=" + images +
                 ", likeSum=" + likeSum +
                 '}';
     }
