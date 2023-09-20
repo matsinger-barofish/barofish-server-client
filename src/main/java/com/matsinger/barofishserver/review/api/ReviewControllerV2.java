@@ -34,8 +34,9 @@ public class ReviewControllerV2 {
             if (tokenInfo.get().getType().equals(TokenAuthType.USER)) {
 
             }
+            return new ResponseEntity<>(null);
         } catch (Exception e) {
-
+            return new ResponseEntity<>(null);
         }
     }
 }

@@ -7,8 +7,12 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
+
 @Repository
 public interface ReviewRepositoryCustom {
 
     Page<ReviewDtoV2> getReviewsWithProduct(Integer productId, ReviewOrderByType orderType, Pageable pageable);
+
+    List<ReviewDtoV2> getProductReviews(int productId, ReviewOrderByType orderType);
 }

@@ -15,5 +15,19 @@ public class ReviewDtoV2 {
     private String reviewContent;
     private Timestamp createdAt;
     private String image;
-    private Integer likeSum;
+    private Long likeSum;
+
+    @Override
+    public String toString() {
+        return "ReviewDtoV2{" +
+                "userId='" + userId + '\'' +
+                ", userName='" + userName + '\'' +
+                ", userGrade='" + userGrade + '\'' +
+                ", productName='" + productName + '\'' +
+                ", reviewContent='" + reviewContent + '\'' +
+                ", createdAt=" + createdAt +
+                ", image='" + image + '\'' +
+                ", likeSum=" + likeSum +
+                '}';
+    }
 }

@@ -2,11 +2,12 @@ package com.matsinger.barofishserver.review.application;
 
 import com.matsinger.barofishserver.order.orderprductinfo.application.OrderProductInfoQueryService;
 import com.matsinger.barofishserver.product.application.ProductQueryService;
-import com.matsinger.barofishserver.review.domain.Review;
-import com.matsinger.barofishserver.review.domain.ReviewEvaluation;
-import com.matsinger.barofishserver.review.domain.ReviewEvaluationType;
+import com.matsinger.barofishserver.review.domain.*;
+import com.matsinger.barofishserver.review.dto.v2.ReviewDtoV2;
 import com.matsinger.barofishserver.review.repository.ReviewEvaluationRepository;
+import com.matsinger.barofishserver.review.repository.ReviewLikeRepository;
 import com.matsinger.barofishserver.review.repository.ReviewRepository;
+import com.matsinger.barofishserver.review.repository.ReviewRepositoryImpl;
 import com.matsinger.barofishserver.store.application.StoreQueryService;
 import com.matsinger.barofishserver.user.application.UserQueryService;
 import jakarta.persistence.EntityManager;
@@ -22,6 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.PostConstruct;
 import java.sql.Timestamp;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -35,6 +37,8 @@ class ReviewQueryServiceTest {
     private ReviewRepository reviewRepository;
     @Autowired
     private ReviewEvaluationRepository reviewEvaluationRepository;
+    @Autowired private ReviewLikeRepository reviewLikeRepository;
+
     @Autowired
     private ReviewCommandService reviewCommandService;
     @Autowired
@@ -47,6 +51,8 @@ class ReviewQueryServiceTest {
     private OrderProductInfoQueryService orderProductInfoQueryService;
     @Autowired
     private ReviewQueryService reviewQueryService;
+    @Autowired private ReviewRepositoryImpl reviewRepositoryImpl;
+
 
     @Autowired
     private EntityManager em;
@@ -54,16 +60,16 @@ class ReviewQueryServiceTest {
     private Review review1;
     private Review review2;
 
-    @PostConstruct
+    @BeforeEach
     public void ReviewCommandServiceTest() {
         Review createdReview = reviewRepository.save(Review.builder()
-                .productId(10001)
+                .productId(10000)
                 .storeId(10000)
                 .userId(10000)
-                .orderProductInfoId(1)
+                .orderProductInfoId(10000)
                 .images("[]")
                 .content("test")
-                .createdAt(Timestamp.valueOf(LocalDateTime.now()))
+                .createdAt(Timestamp.valueOf(LocalDateTime.now().minusDays(1)))
                 .isDeleted(false)
                 .build());
         ReviewEvaluation createdReviewEvaluation = reviewEvaluationRepository.save(ReviewEvaluation.builder()
@@ -72,10 +78,10 @@ class ReviewQueryServiceTest {
                 .build());
 
         Review createdReview2 = reviewRepository.save(Review.builder()
-                .productId(10001)
+                .productId(10000)
                 .storeId(10000)
                 .userId(10000)
-                .orderProductInfoId(1)
+                .orderProductInfoId(10001)
                 .images("[]")
                 .content("test")
                 .createdAt(Timestamp.valueOf(LocalDateTime.now()))
@@ -86,24 +92,52 @@ class ReviewQueryServiceTest {
                 .evaluation(ReviewEvaluationType.TASTE)
                 .build());
 
+        LocalDateTime now = LocalDateTime.now();
+
         this.review1 = createdReview;
         this.review2 = createdReview2;
     }
 
-    @DisplayName("리뷰의 상태가 삭제로 변경되면 리뷰 화면에서 보이지 않는다.")
+    @DisplayName("리뷰를 리뷰 좋아요 수와 함께 가져올 수 있다.")
     @Test
-    void 상태가_삭제로_변경된_리뷰_불러오지_않는지_테스트() {
+    void getProductReviewsWithReviewLikeOrderByReviewLike() {
         // given
-        review1.setIsDeleted(true);
-//        reviewRepository.save(review1);
-
-        PageRequest pageRequest = PageRequest.of(0, 10);
+        reviewLikeRepository.save(ReviewLike.builder()
+                .userId(10001)
+                .reviewId(review1.getId())
+                .build());
         // when
-        Page<Review> reviews = reviewQueryService.findAllByProductIdAndIsDeletedOrderByCreatedAtDesc(10000, false, pageRequest);
-        // then
-        System.out.println("reviews = " + reviews.stream().toList());
+        List<ReviewDtoV2> productReviews = reviewRepositoryImpl.getProductReviews(10000, ReviewOrderByType.BEST);
 
-        List<Review> reviews2 = reviewRepository.findAll();
-        System.out.println("reviews2 = " + reviews2.stream().toList());
+        // then
+        assertThat(productReviews.get(0).getLikeSum()).isEqualTo(1);
+        assertThat(productReviews.get(1).getLikeSum()).isEqualTo(0);
+    }
+
+    @DisplayName("리뷰를 최신순으로 정렬할 수 있다.")
+    @Test
+    void getProductReviewsWithReviewLikeOrderByCreatedAt() {
+        reviewLikeRepository.save(ReviewLike.builder()
+                .userId(10001)
+                .reviewId(review1.getId())
+                .build());
+        // when
+        List<ReviewDtoV2> productReviews = reviewRepositoryImpl.getProductReviews(10000, ReviewOrderByType.RECENT);
+
+        // then
+        assertThat(productReviews.get(0).getLikeSum()).isEqualTo(0);
+        assertThat(productReviews.get(1).getLikeSum()).isEqualTo(1);
+    }
+
+    @DisplayName("리뷰가 삭제 처리된 경우 조회되지 않아야 한다.")
+    @Test
+    void getProductReviewsExceptDeletedReviews() {
+        // given
+        Review.builder()
+                .id(review2.getId() + 1)
+                .build();
+        // when
+
+        // then
     }
 }
