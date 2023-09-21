@@ -68,6 +68,10 @@ public class Review {
     @Column(name = "is_deleted", nullable = false)
     private boolean isDeleted;
 
+    public void setIsDeleted(boolean isDeleted) {
+        this.isDeleted = isDeleted;
+    }
+
     public void setImages(String images) {
         this.images = images;
     }

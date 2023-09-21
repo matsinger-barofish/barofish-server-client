@@ -3,7 +3,9 @@ package com.matsinger.barofishserver.review.api;
 import com.matsinger.barofishserver.jwt.JwtService;
 import com.matsinger.barofishserver.jwt.TokenAuthType;
 import com.matsinger.barofishserver.jwt.TokenInfo;
+import com.matsinger.barofishserver.review.application.ReviewCommandService;
 import com.matsinger.barofishserver.review.application.ReviewQueryService;
+import com.matsinger.barofishserver.review.domain.Review;
 import com.matsinger.barofishserver.review.domain.ReviewOrderByType;
 import com.matsinger.barofishserver.review.dto.v2.ProductReviewDto;
 import com.matsinger.barofishserver.utils.CustomResponse;
@@ -23,13 +25,14 @@ public class ReviewControllerV2 {
 
     private final JwtService jwt;
     private final ReviewQueryService reviewQueryService;
+    private final ReviewCommandService reviewCommandService;
 
     @GetMapping("/product/{id}")
     public ResponseEntity<CustomResponse<ProductReviewDto>> getReviews(@PathVariable("id") Integer productId,
-                                                                             @RequestHeader(value = "Authorization") Optional<String> auth,
-                                                                             @RequestParam(value = "orderType", required = false, defaultValue = "RECENT") ReviewOrderByType orderType,
-                                                                             @RequestParam(value = "page", required = false, defaultValue = "0") Integer page,
-                                                                             @RequestParam(value = "take", required = false, defaultValue = "10") Integer take) {
+                                                                       @RequestHeader(value = "Authorization") Optional<String> auth,
+                                                                       @RequestParam(value = "orderType", required = false, defaultValue = "RECENT") ReviewOrderByType orderType,
+                                                                       @RequestParam(value = "page", required = false, defaultValue = "0") Integer page,
+                                                                       @RequestParam(value = "take", required = false, defaultValue = "10") Integer take) {
         Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ALLOW), auth);
         PageRequest pageRequest = PageRequest.of(page, take);
         CustomResponse<ProductReviewDto> res = new CustomResponse<>();
@@ -48,4 +51,35 @@ public class ReviewControllerV2 {
             return res.defaultError(e);
         }
     }
+
+    @PostMapping("/{id}")
+    public ResponseEntity<CustomResponse<Boolean>> deleteReviewByUser(@RequestHeader(value = "Authorization") Optional<String> auth,
+                                                                      @PathVariable("id") Integer reviewId) {
+        CustomResponse<Boolean> res = new CustomResponse<>();
+        Optional<TokenInfo>
+                tokenInfo =
+                jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER, TokenAuthType.PARTNER, TokenAuthType.ADMIN),
+                        auth);
+        if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
+
+        try {
+            Review review = reviewQueryService.selectReview(reviewId);
+            if (tokenInfo.isPresent() &&
+                    tokenInfo.get().getType().equals(TokenAuthType.USER) &&
+                    review.getUserId() != tokenInfo.get().getId())
+                return res.throwError("타인의 리뷰는 삭제할 수 없습니다.", "NOT_ALLOWED");
+            else if (tokenInfo.isPresent() &&
+                    tokenInfo.get().getType().equals(TokenAuthType.PARTNER) &&
+                    review.getStore().getId() != tokenInfo.get().getId())
+                return res.throwError("타 상점의 리뷰입니다.", "NOT_ALLOWED");
+
+            review.setIsDeleted(true);
+            res.setData(Optional.ofNullable(true));
+            return ResponseEntity.ok(res);
+        } catch (Exception e) {
+            return res.defaultError(e);
+        }
+    }
+
+
 }
