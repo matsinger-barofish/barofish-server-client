@@ -3,15 +3,21 @@ package com.matsinger.barofishserver.review.application;
 import com.matsinger.barofishserver.review.domain.Review;
 import com.matsinger.barofishserver.review.domain.ReviewEvaluation;
 import com.matsinger.barofishserver.review.domain.ReviewEvaluationType;
+import com.matsinger.barofishserver.review.domain.ReviewOrderByType;
 import com.matsinger.barofishserver.review.dto.ReviewStatistic;
 import com.matsinger.barofishserver.review.dto.ReviewTotalStatistic;
+import com.matsinger.barofishserver.review.dto.v2.ProductReviewDto;
+import com.matsinger.barofishserver.review.dto.v2.ReviewDtoV2;
+import com.matsinger.barofishserver.review.dto.v2.ReviewEvaluationSummaryDto;
 import com.matsinger.barofishserver.review.repository.ReviewEvaluationRepository;
 import com.matsinger.barofishserver.review.repository.ReviewLikeRepository;
 import com.matsinger.barofishserver.review.repository.ReviewRepository;
+import com.matsinger.barofishserver.review.repository.ReviewRepositoryImpl;
 import jakarta.persistence.Tuple;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -26,6 +32,7 @@ public class ReviewQueryService {
     private final ReviewRepository reviewRepository;
     private final ReviewEvaluationRepository evaluationRepository;
     private final ReviewLikeRepository reviewLikeRepository;
+    private final ReviewRepositoryImpl reviewRepositoryImpl;
 
     public List<ReviewEvaluationType> selectReviewEvaluations(Integer reviewId) {
         return evaluationRepository.findAllByReviewId(reviewId).stream().map(ReviewEvaluation::getEvaluation).toList();
@@ -113,5 +120,29 @@ public class ReviewQueryService {
 
     public Boolean checkReviewWritten(Integer userId, Integer productId, Integer orderProductInfoId) {
         return reviewRepository.existsByUserIdAndProductIdAndOrderProductInfoId(userId, productId, orderProductInfoId);
+    }
+
+    public ProductReviewDto getPagedProductReviewInfo(Integer productId, ReviewOrderByType orderType, PageRequest pageRequest) {
+
+        List<ReviewDtoV2> pagedProductReviews = reviewRepositoryImpl.getPagedProductReviews(productId, orderType, pageRequest);
+        Long totalReviewCount = reviewRepositoryImpl.getProductReviewCount(productId);
+
+        PageImpl<ReviewDtoV2> pagedReviews = new PageImpl<>(pagedProductReviews, pageRequest, totalReviewCount);
+
+        List<ReviewEvaluationSummaryDto> productReviewEvaluations = reviewRepositoryImpl.getProductReviewEvaluations(productId);
+
+        return ProductReviewDto.builder()
+                .productId(productId)
+                .reviewCount(totalReviewCount)
+                .evaluationSummaryDtos(productReviewEvaluations)
+                .pagedReviews(pagedReviews)
+                .build();
+    }
+
+
+
+    public Review findById(Integer id) {
+        return reviewRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("후기를 찾을 수 없습니다."));
     }
 }

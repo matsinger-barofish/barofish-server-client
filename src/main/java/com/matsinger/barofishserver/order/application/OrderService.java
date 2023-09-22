@@ -34,6 +34,7 @@ import com.matsinger.barofishserver.product.difficultDeliverAddress.domain.Diffi
 import com.matsinger.barofishserver.product.domain.ProductDeliverFeeType;
 import com.matsinger.barofishserver.product.optionitem.domain.OptionItem;
 import com.matsinger.barofishserver.product.domain.Product;
+import com.matsinger.barofishserver.product.optionitem.dto.OptionItemDto;
 import com.matsinger.barofishserver.review.application.ReviewQueryService;
 import com.matsinger.barofishserver.store.application.StoreService;
 import com.matsinger.barofishserver.store.domain.StoreInfo;
@@ -94,22 +95,29 @@ public class OrderService {
         }
         List<OrderProductInfo>
                 infos =
-                productSpec == null ? selectOrderProductInfoListWithOrderId(order.getId()) : selectOrderProductInfoList(
-                        productSpec);
+                productSpec == null
+                        ? selectOrderProductInfoListWithOrderId(order.getId())
+                        : selectOrderProductInfoList(productSpec);
+
         List<OrderProductDto> orderProductDtos = infos.stream().map(opi -> {
             // OrderProductOption option =
             // optionRepository.findFirstByOrderProductId(opi.getId());
             Product product = productService.selectProduct(opi.getProductId());
             StoreInfo storeInfo = storeService.selectStoreInfo(product.getStoreId());
+
             if (storeId != null && storeId != storeInfo.getStoreId()) return null;
+
+            Optional<DeliveryCompany> deliveryCompany =
+                    opi.getDeliverCompanyCode() != null
+                            ? deliveryCompanyRepository.findById(opi.getDeliverCompanyCode())
+                            : Optional.empty();
+
             OptionItem optionItem = productService.selectOptionItem(opi.getOptionItemId());
-            Optional<DeliveryCompany>
-                    deliveryCompany =
-                    opi.getDeliverCompanyCode() !=
-                            null ? deliveryCompanyRepository.findById(opi.getDeliverCompanyCode()) : Optional.empty();
-            com.matsinger.barofishserver.product.optionitem.dto.OptionItemDto optionItemDto = optionItem.convert2Dto();
+            OptionItemDto optionItemDto = optionItem.convert2Dto();
             optionItemDto.setPointRate(product.getPointRate());
+
             Boolean isWritten = reviewQueryService.checkReviewWritten(order.getUserId(), product.getId(), opi.getId());
+
             return OrderProductDto.builder().id(opi.getId()).storeId(storeInfo.getStoreId()).optionItem(optionItemDto).product(
                     productService.convert2ListDto(productService.selectProduct(opi.getProductId()))).optionName(
                     optionItem.getName()).amount(opi.getAmount()).state(opi.getState()).price(opi.getPrice()).storeName(

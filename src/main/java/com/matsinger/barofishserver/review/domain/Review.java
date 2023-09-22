@@ -62,8 +62,15 @@ public class Review {
     @Column(name = "created_at", nullable = false)
     private Timestamp createdAt;
 
+    @Column(name = "is_deleted", nullable = false)
+    private boolean isDeleted;
+
     @OneToMany(mappedBy = "review")
     private List<ReviewEvaluation> evaluations;
+
+    public void setIsDeleted(boolean isDeleted) {
+        this.isDeleted = isDeleted;
+    }
 
     public void setImages(String images) {
         this.images = images;

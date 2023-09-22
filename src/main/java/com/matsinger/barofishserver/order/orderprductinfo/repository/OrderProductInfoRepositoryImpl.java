@@ -1,11 +1,9 @@
 package com.matsinger.barofishserver.order.orderprductinfo.repository;
 
-import com.matsinger.barofishserver.order.orderprductinfo.domain.OrderProductInfo;
 import com.matsinger.barofishserver.order.orderprductinfo.domain.OrderProductState;
-import com.matsinger.barofishserver.settlement.dto.SettlementExcelDownloadRawDto;
 import com.matsinger.barofishserver.settlement.dto.SettlementOrderRawDto;
 import com.matsinger.barofishserver.settlement.dto.SettlementProductOptionItemDto;
-import com.querydsl.core.BooleanBuilder;
+import com.matsinger.barofishserver.settlement.dto.TempDto;
 import com.querydsl.core.types.ExpressionUtils;
 import com.querydsl.core.types.Projections;
 import com.querydsl.core.types.dsl.BooleanExpression;
@@ -13,7 +11,6 @@ import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
-import org.springframework.util.StringUtils;
 
 import java.util.List;
 
@@ -24,6 +21,8 @@ import static com.matsinger.barofishserver.order.domain.QOrders.orders;
 import static com.matsinger.barofishserver.order.orderprductinfo.domain.QOrderProductInfo.orderProductInfo;
 import static com.matsinger.barofishserver.product.domain.QProduct.product;
 import static com.matsinger.barofishserver.product.optionitem.domain.QOptionItem.optionItem;
+import static com.matsinger.barofishserver.review.domain.QReview.review;
+import static com.matsinger.barofishserver.review.domain.QReviewLike.reviewLike;
 import static com.matsinger.barofishserver.store.domain.QStore.store;
 import static com.matsinger.barofishserver.store.domain.QStoreInfo.storeInfo;
 import static com.matsinger.barofishserver.user.domain.QUser.user;
@@ -38,10 +37,17 @@ public class OrderProductInfoRepositoryImpl implements OrderProductInfoRepositor
     private final JPAQueryFactory queryFactory;
 
     @Override
-    public OrderProductInfo findByIdQ(int orderProductInfoId) {
-        return queryFactory.selectFrom(orderProductInfo)
-                .where(orderProductInfo.id.eq(orderProductInfoId))
-                .fetchOne();
+    public List<TempDto> queryTest(int orderProductInfoId) {
+        return queryFactory
+                .select(
+                        Projections.fields(TempDto.class,
+                                reviewLike.reviewId.count().as("reviewLike"),
+                                review.id.as("reviewId"))
+                )
+                .from(review)
+                .leftJoin(reviewLike).on(review.id.eq(reviewLike.reviewId))
+                .groupBy(review.id)
+                .fetch();
     }
 
     @Override

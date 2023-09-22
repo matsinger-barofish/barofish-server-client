@@ -7,6 +7,7 @@ import com.matsinger.barofishserver.compare.domain.SaveProductId;
 import com.matsinger.barofishserver.inquiry.domain.Inquiry;
 import com.matsinger.barofishserver.inquiry.repository.InquiryRepository;
 import com.matsinger.barofishserver.product.domain.Product;
+import com.matsinger.barofishserver.product.domain.ProductSortBy;
 import com.matsinger.barofishserver.product.domain.SimpleProductDto;
 import com.matsinger.barofishserver.product.dto.ProductListDto;
 import com.matsinger.barofishserver.product.optionitem.domain.OptionItem;
@@ -16,6 +17,7 @@ import com.matsinger.barofishserver.product.productfilter.domain.ProductFilterVa
 import com.matsinger.barofishserver.product.productfilter.dto.ProductFilterValueDto;
 import com.matsinger.barofishserver.product.productfilter.repository.ProductFilterRepository;
 import com.matsinger.barofishserver.product.repository.ProductRepository;
+import com.matsinger.barofishserver.product.repository.ProductRepositoryImpl;
 import com.matsinger.barofishserver.review.application.ReviewQueryService;
 import com.matsinger.barofishserver.review.repository.ReviewRepository;
 import com.matsinger.barofishserver.review.dto.ReviewTotalStatistic;
@@ -28,6 +30,8 @@ import com.matsinger.barofishserver.store.application.StoreService;
 import com.matsinger.barofishserver.store.domain.StoreInfo;
 import lombok.RequiredArgsConstructor;
 import org.jetbrains.annotations.NotNull;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -51,6 +55,7 @@ public class ProductQueryService {
     private final SearchFilterFieldRepository searchFilterFieldRepository;
     private final SaveProductRepository saveProductRepository;
     private final InquiryRepository inquiryRepository;
+    private final ProductRepositoryImpl productRepositoryImpl;
 
     public ProductListDto createProductListDtos(Integer id) {
         Product findProduct = productRepository.findById(id).orElseThrow(() -> {
@@ -155,4 +160,13 @@ public class ProductQueryService {
         return productRepository.findById(productId)
                                 .orElseThrow(() -> new IllegalArgumentException("상품 정보를 찾을 수 없습니다."));
     }
+
+    public Page<ProductListDto> getPagedProducts(PageRequest pageRequest, ProductSortBy sortBy, String categoryIds,
+                                 String filterFieldIds, Integer curationId, String keyword,
+                                 Integer storeId, int userId) {
+
+        return productRepositoryImpl.getProducts(pageRequest, sortBy, userId);
+    }
+
+
 }
