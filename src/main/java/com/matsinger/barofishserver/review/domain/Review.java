@@ -68,6 +68,13 @@ public class Review {
     @OneToMany(mappedBy = "review")
     private List<ReviewEvaluation> evaluations;
 
+    @Column(name = "is_deleted", nullable = false)
+    private boolean isDeleted;
+
+    public void setIsDeleted(boolean isDeleted) {
+        this.isDeleted = isDeleted;
+    }
+
     public void setImages(String images) {
         this.images = images;
     }

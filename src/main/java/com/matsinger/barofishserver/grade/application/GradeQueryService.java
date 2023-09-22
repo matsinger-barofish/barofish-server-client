@@ -13,6 +13,7 @@ import java.util.List;
 @Service
 public class GradeQueryService {
     private final GradeRepository gradeRepository;
+
     public List<Grade> selectGradeList() {
         return gradeRepository.findAll();
     }

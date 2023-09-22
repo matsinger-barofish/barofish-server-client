@@ -20,22 +20,25 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
-import java.util.Calendar;
-import java.util.List;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest
 @ActiveProfiles("local")
 @Transactional
 class ReviewCommandServiceTest {
-    @Autowired private ReviewRepository reviewRepository;
-    @Autowired private ReviewEvaluationRepository reviewEvaluationRepository;
-    @Autowired private ReviewCommandService reviewCommandService;
-    @Autowired private ProductQueryService productQueryService;
-    @Autowired private StoreQueryService storeQueryService;
-    @Autowired private UserQueryService userQueryService;
-    @Autowired private OrderProductInfoQueryService orderProductInfoQueryService;
+    @Autowired
+    private ReviewRepository reviewRepository;
+    @Autowired
+    private ReviewEvaluationRepository reviewEvaluationRepository;
+    @Autowired
+    private ReviewCommandService reviewCommandService;
+    @Autowired
+    private ProductQueryService productQueryService;
+    @Autowired
+    private StoreQueryService storeQueryService;
+    @Autowired
+    private UserQueryService userQueryService;
+    @Autowired
+    private OrderProductInfoQueryService orderProductInfoQueryService;
 
     private Review review1;
     private Review review2;
@@ -85,15 +88,5 @@ class ReviewCommandServiceTest {
 
         // then
         Assertions.assertThat(isDeleted).isEqualTo(true);
-    }
-
-    @DisplayName("리뷰의 상태가 삭제로 변경되면 리뷰 화면에서 보이지 않는다.")
-    @Test
-    void 상태가_삭제로_변경된_리뷰_불러오지_않는지_테스트() {
-        // given
-
-        // when
-
-        // then
     }
 }

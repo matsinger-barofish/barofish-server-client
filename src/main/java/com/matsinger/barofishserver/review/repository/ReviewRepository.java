@@ -74,4 +74,5 @@ public interface ReviewRepository extends JpaRepository<Review, Integer>, JpaSpe
                                                             Integer orderProductInfoId);
 
     void deleteAllByUserIdIn(List<Integer> userIds);
+
 }
