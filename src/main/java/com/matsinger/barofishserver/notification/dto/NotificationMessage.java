@@ -29,7 +29,7 @@ public class NotificationMessage {
             case PAYMENT_DONE -> String.format("<strong>%s</strong> 상품의 결제가 완료되었습니다.", this.productName);
             case DELIVER_READY -> String.format("주문하신 <strong>%s</strong> 상품의 배송 준비가 완료되었습니다.", this.productName);
             case DELIVER_START ->
-                    String.format("주문하신 <strong>%s</strong> 상품의 배송이 시작되었습니다. 빠르고 신선하게 배송해드릴게요 :)", this.productName);
+                    String.format("주문하신 <strong>%s</strong> 상품의 배송이 시작되었습니다. 빠르고 신선하게 배송해 드릴게요 :)", this.productName);
             case DELIVER_DONE ->
                     String.format("주문하신 <strong>%s</strong> 상품의 배송을 완료하였습니다. 이용해주셔서 감사합니다.", this.productName);
             case ORDER_CANCEL -> this.isCanceledByRegion != null && this.isCanceledByRegion ? String.format(

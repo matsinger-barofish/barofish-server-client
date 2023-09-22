@@ -129,6 +129,7 @@ public class SettlementController {
     }
 
     @GetMapping("/order/list/download")
+    @CrossOrigin(value = ("*"), exposedHeaders = {"Content-Disposition"})
     public void selectSettlementOrderListDownload(@RequestHeader(value = "Authorization") Optional<String> auth,
                                                                                                       @RequestParam(value = "page", required = false, defaultValue = "0") Integer page,
                                                                                                       @RequestParam(value = "take", required = false, defaultValue = "10") Integer take,
@@ -151,10 +152,10 @@ public class SettlementController {
 //        String fileName = nowDate + "_바로피쉬_정산.xlsx";
         String fileName = nowDate + "_barofish_settlement.xlsx";
 
-        httpServletResponse.setHeader("Content-Disposition", "attachment;filename=" + URLEncoder.encode(fileName, StandardCharsets.UTF_8));
+        httpServletResponse.setHeader("Content-Disposition", "attachment; filename=" + URLEncoder.encode(fileName, StandardCharsets.UTF_8));
 //        httpServletResponse.setHeader("Content-Transfer-Encoding", "binary;");
 //        httpServletResponse.setContentType("ms-vnd/excel");
-        httpServletResponse.setContentType("application/octet-stream");
+        httpServletResponse.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
 
         try {
             List<SettlementOrderDto> result = null;

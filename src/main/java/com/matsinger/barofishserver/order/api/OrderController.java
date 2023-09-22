@@ -940,7 +940,7 @@ public class OrderController {
             Product product = productService.selectProduct(info.getProductId());
             Grade grade = userInfo.getGrade();
             float pointRate = product.getPointRate() != null ? product.getPointRate() : 0;
-            Integer point = (int) (Math.floor(info.getPrice() * ((pointRate + grade.getPointRate()) / 100.)));
+            Integer point = (int) (Math.floor(info.getPrice() * ((pointRate + grade.getPointRate()))));
             userInfo.setPoint(userInfo.getPoint() + point);
             info.setState(OrderProductState.FINAL_CONFIRM);
             info.setFinalConfirmedAt(utils.now());

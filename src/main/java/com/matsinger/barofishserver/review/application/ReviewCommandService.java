@@ -8,6 +8,7 @@ import com.matsinger.barofishserver.review.repository.ReviewLikeRepository;
 import com.matsinger.barofishserver.review.repository.ReviewRepository;
 import com.matsinger.barofishserver.siteInfo.application.SiteInfoQueryService;
 import com.matsinger.barofishserver.siteInfo.domain.SiteInformation;
+import com.matsinger.barofishserver.store.application.StoreQueryService;
 import com.matsinger.barofishserver.store.application.StoreService;
 import com.matsinger.barofishserver.store.dto.SimpleStore;
 import com.matsinger.barofishserver.userinfo.domain.UserInfo;
@@ -30,6 +31,7 @@ public class ReviewCommandService {
     private final ReportRepository reportRepository;
     private final StoreService storeService;
     private final SiteInfoQueryService siteInfoQueryService;
+    private final ReviewQueryService reviewQueryService;
 
     public void likeReview(Integer userId, Integer reviewId) {
         reviewLikeRepository.save(ReviewLike.builder().userId(userId).reviewId(reviewId).build());
@@ -102,10 +104,13 @@ public class ReviewCommandService {
     @Transactional
     public Boolean deleteReview(Integer reviewId) {
         try {
-            reportRepository.deleteAllByReviewId(reviewId);
-            evaluationRepository.deleteAllByReviewId(reviewId);
-            reviewLikeRepository.deleteAllByReviewId(reviewId);
-            reviewRepository.deleteById(reviewId);
+//            reportRepository.deleteAllByReviewId(reviewId);
+//            evaluationRepository.deleteAllByReviewId(reviewId);
+//            reviewLikeRepository.deleteAllByReviewId(reviewId);
+//            reviewRepository.deleteById(reviewId);
+
+            Review findReview = reviewQueryService.findById(reviewId);
+            findReview.setIsDeleted(true);
             return true;
         } catch (Exception e) {
             return false;
