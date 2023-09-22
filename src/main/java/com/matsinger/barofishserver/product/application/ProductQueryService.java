@@ -161,9 +161,7 @@ public class ProductQueryService {
                                 .orElseThrow(() -> new IllegalArgumentException("상품 정보를 찾을 수 없습니다."));
     }
 
-    public Page<ProductListDto> getPagedProducts(PageRequest pageRequest, ProductSortBy sortBy, String categoryIds,
-                                 String filterFieldIds, Integer curationId, String keyword,
-                                 Integer storeId, int userId) {
+    public Page<ProductListDto> getPagedProducts(PageRequest pageRequest, ProductSortBy sortBy, int userId) {
 
         return productRepositoryImpl.getProducts(pageRequest, sortBy, userId);
     }
