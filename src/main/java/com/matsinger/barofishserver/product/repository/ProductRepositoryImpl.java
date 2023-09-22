@@ -53,7 +53,7 @@ public class ProductRepositoryImpl implements ProductRepositoryCustom {
                                 product.minOrderPrice.as("minOrderPrice"),
                                 storeInfo.profileImage.as("storeImage"),
                                 product.deliverFeeType.as("deliverFeeType"),
-                                category.parentCategory.as("parentCategoryId"),
+                                category.parentCategory.id.as("parentCategoryId"),
                                 ExpressionUtils.as(Expressions.constant(new ArrayList<>()), "filterValues")
                         ))
                 .from(product)
