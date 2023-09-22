@@ -155,7 +155,7 @@ public class SettlementController {
         httpServletResponse.setHeader("Content-Disposition", "attachment; filename=" + URLEncoder.encode(fileName, StandardCharsets.UTF_8));
 //        httpServletResponse.setHeader("Content-Transfer-Encoding", "binary;");
 //        httpServletResponse.setContentType("ms-vnd/excel");
-        httpServletResponse.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+        httpServletResponse.setContentType("application/octet-stream");
 
         try {
             List<SettlementOrderDto> result = null;
