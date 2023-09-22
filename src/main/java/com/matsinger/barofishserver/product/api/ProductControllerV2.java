@@ -62,7 +62,17 @@ public class ProductControllerV2 {
     public ResponseEntity<CustomResponse<Page<ProductListDto>>> selectProductListByUser(@RequestHeader(value = "Authorization", required = false) Optional<String> auth,
                                                                                         @RequestParam(value = "page", defaultValue = "1") Integer page,
                                                                                         @RequestParam(value = "take", defaultValue = "10") Integer take,
-                                                                                        @RequestParam(value = "sortby", defaultValue = "RECOMMEND", required = false) ProductSortBy sortBy) {
+                                                                                        @RequestParam(value = "sortby", defaultValue = "RECOMMEND", required = false) ProductSortBy sortBy,
+                                                                                        @RequestParam(value = "categoryIds", required = false) String categoryIds,
+                                                                                        @RequestParam(value = "filterFieldIds", required = false) String filterFieldIds,
+                                                                                        @RequestParam(value = "typeIds", required = false) String typeIds,
+                                                                                        @RequestParam(value = "locationIds", required = false) String locationIds,
+                                                                                        @RequestParam(value = "processIds", required = false) String processIds,
+                                                                                        @RequestParam(value = "usageIds", required = false) String usageIds,
+                                                                                        @RequestParam(value = "storageIds", required = false) String storageIds,
+                                                                                        @RequestParam(value = "curationId", required = false) Integer curationId,
+                                                                                        @RequestParam(value = "keyword", required = false, defaultValue = "") String keyword,
+                                                                                        @RequestParam(value = "storeId", required = false) Integer storeId) {
 
         CustomResponse<Page<ProductListDto>> res = new CustomResponse<>();
         Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ALLOW), auth);
