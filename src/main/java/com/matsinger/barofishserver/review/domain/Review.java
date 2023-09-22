@@ -68,9 +68,6 @@ public class Review {
     @OneToMany(mappedBy = "review")
     private List<ReviewEvaluation> evaluations;
 
-    @Column(name = "is_deleted", nullable = false)
-    private boolean isDeleted;
-
     public void setIsDeleted(boolean isDeleted) {
         this.isDeleted = isDeleted;
     }
@@ -80,10 +77,6 @@ public class Review {
     }
     public void setContent(String content) {
         this.content = content;
-    }
-
-    public void setIsDeleted(boolean isDeleted) {
-        this.isDeleted = isDeleted;
     }
 
     public ReviewDto convert2Dto() {
