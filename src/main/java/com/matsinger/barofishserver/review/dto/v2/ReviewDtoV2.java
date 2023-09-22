@@ -16,7 +16,12 @@ public class ReviewDtoV2 {
     private String reviewContent;
     private Timestamp createdAt;
     private String images;
+    private String[] imageUrls;
     private Long likeSum;
+
+    public void setImageUrls(String[] imageUrls) {
+        this.imageUrls = imageUrls;
+    }
 
     @Override
     public String toString() {
