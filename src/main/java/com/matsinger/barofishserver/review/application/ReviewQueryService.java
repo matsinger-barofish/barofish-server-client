@@ -129,6 +129,14 @@ public class ReviewQueryService {
 
         PageImpl<ReviewDtoV2> pagedReviews = new PageImpl<>(pagedProductReviews, pageRequest, totalReviewCount);
 
+        for (ReviewDtoV2 pagedReview : pagedReviews) {
+            String imageUrls = pagedReview.getImages();
+            String processedUrls = imageUrls.substring(1, imageUrls.length() - 1);
+            String[] parsedUrls = processedUrls.split(", ");
+
+            pagedReview.setImageUrls(parsedUrls);
+        }
+
         List<ReviewEvaluationSummaryDto> productReviewEvaluations = reviewRepositoryImpl.getProductReviewEvaluations(productId);
 
         return ProductReviewDto.builder()
@@ -138,8 +146,6 @@ public class ReviewQueryService {
                 .pagedReviews(pagedReviews)
                 .build();
     }
-
-
 
     public Review findById(Integer id) {
         return reviewRepository.findById(id)

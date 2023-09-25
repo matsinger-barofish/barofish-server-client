@@ -3,21 +3,25 @@ package com.matsinger.barofishserver.review.application;
 import com.matsinger.barofishserver.report.repository.ReportRepository;
 import com.matsinger.barofishserver.review.domain.*;
 import com.matsinger.barofishserver.review.dto.ReviewDto;
+import com.matsinger.barofishserver.review.dto.UpdateReviewReq;
 import com.matsinger.barofishserver.review.repository.ReviewEvaluationRepository;
 import com.matsinger.barofishserver.review.repository.ReviewLikeRepository;
 import com.matsinger.barofishserver.review.repository.ReviewRepository;
 import com.matsinger.barofishserver.siteInfo.application.SiteInfoQueryService;
 import com.matsinger.barofishserver.siteInfo.domain.SiteInformation;
-import com.matsinger.barofishserver.store.application.StoreQueryService;
 import com.matsinger.barofishserver.store.application.StoreService;
 import com.matsinger.barofishserver.store.dto.SimpleStore;
 import com.matsinger.barofishserver.userinfo.domain.UserInfo;
 import com.matsinger.barofishserver.userinfo.repository.UserInfoRepository;
+import com.matsinger.barofishserver.utils.S3.S3Uploader;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 @RequiredArgsConstructor
@@ -32,6 +36,7 @@ public class ReviewCommandService {
     private final StoreService storeService;
     private final SiteInfoQueryService siteInfoQueryService;
     private final ReviewQueryService reviewQueryService;
+    private final S3Uploader s3;
 
     public void likeReview(Integer userId, Integer reviewId) {
         reviewLikeRepository.save(ReviewLike.builder().userId(userId).reviewId(reviewId).build());
@@ -128,4 +133,53 @@ public class ReviewCommandService {
                         reviewEvaluationType).build()).toList();
         evaluationRepository.saveAll(data);
     }
+
+    @Transactional
+    public Boolean update(Integer id, UpdateReviewReq data, List<MultipartFile> images) throws Exception {
+
+        deleteAndSetEvaluations(id, data);
+
+        Review findReview = reviewQueryService.findById(id);
+
+        deleteExistingImagesAndSetNewImages(images, findReview);
+
+        if (!data.getContent().isEmpty()) {
+            findReview.setContent(data.getContent());
+        }
+
+        return true;
+    }
+
+    private void deleteAndSetEvaluations(Integer id, UpdateReviewReq data) {
+        if (data.getEvaluations() != null) {
+            evaluationRepository.deleteAllByReviewId(id);
+
+            List<ReviewEvaluation> evaluations = data.getEvaluations().stream().map(
+                    reviewEvaluationType -> ReviewEvaluation.builder()
+                            .reviewId(id)
+                            .evaluation(reviewEvaluationType)
+                            .build()
+            ).toList();
+
+            evaluationRepository.saveAll(evaluations);
+        }
+    }
+
+    private void deleteExistingImagesAndSetNewImages(List<MultipartFile> images, Review findReview) throws Exception {
+        if (!images.isEmpty()) {
+            String processedUrls = findReview.getImages().substring(1, findReview.getImages().length() - 1);
+            String[] parsedUrls = processedUrls.split(", ");
+
+            for (String parsedUrl : parsedUrls) {
+                s3.deleteFile(parsedUrl.replace("https://barofish-dev.s3.ap-northeast-2.amazonaws.com/", ""));
+            }
+
+            String imgUrls = s3.uploadFiles(
+                    images,
+                    new ArrayList<>(Arrays.asList("review", String.valueOf(findReview.getId())))
+            ).toString();
+            findReview.setImages(imgUrls);
+        }
+    }
+
 }

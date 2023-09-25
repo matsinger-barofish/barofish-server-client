@@ -16,6 +16,7 @@ public class ReviewDtoV2 {
     private String reviewContent;
     private Timestamp createdAt;
     private String images;
+    private String[] imageUrls;
     private Long likeSum;
 
     @Override
@@ -30,5 +31,9 @@ public class ReviewDtoV2 {
                 ", images=" + images +
                 ", likeSum=" + likeSum +
                 '}';
+    }
+
+    public void setImageUrls(String[] imageUrls) {
+        this.imageUrls = imageUrls;
     }
 }
