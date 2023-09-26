@@ -23,21 +23,4 @@ public class ReviewDtoV2 {
         this.imageUrls = imageUrls;
     }
 
-    @Override
-    public String toString() {
-        return "ReviewDtoV2{" +
-                "userId='" + userId + '\'' +
-                ", userName='" + userName + '\'' +
-                ", userGrade='" + userGrade + '\'' +
-                ", productName='" + productName + '\'' +
-                ", reviewContent='" + reviewContent + '\'' +
-                ", createdAt=" + createdAt +
-                ", images=" + images +
-                ", likeSum=" + likeSum +
-                '}';
-    }
-
-    public void setImageUrls(String[] imageUrls) {
-        this.imageUrls = imageUrls;
-    }
 }
