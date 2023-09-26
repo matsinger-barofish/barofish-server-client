@@ -1,6 +1,10 @@
 package com.matsinger.barofishserver.product.application;
 
+import com.matsinger.barofishserver.category.domain.Category;
+import com.matsinger.barofishserver.category.repository.CategoryRepository;
 import com.matsinger.barofishserver.product.domain.Product;
+import com.matsinger.barofishserver.product.domain.ProductDeliverFeeType;
+import com.matsinger.barofishserver.product.domain.ProductState;
 import com.matsinger.barofishserver.product.repository.ProductRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -21,6 +25,7 @@ class ProductServiceTest {
     private ProductService productService;
     @Autowired
     private ProductRepository productRepository;
+    @Autowired private CategoryRepository categoryRepository;
 
     @DisplayName("상품의 프로모션 기간이 지난 경우 쿼리 테스트")
     @Test
@@ -40,5 +45,35 @@ class ProductServiceTest {
         for (Product product : allByPromotionEndAtBefore) {
             System.out.println("안녕이 나와야 함 -> " + product.getTitle());
         }
+    }
+
+    @DisplayName("상품의 적립률이 퍼센트로 온 경우 /100으로 DB에 저장돼야 한다.")
+    @Test
+    void productPointRateTest() {
+        // given
+        Category findCategory = categoryRepository.findById(2).get();
+        Product createdProduct = Product.builder()
+                .storeId(10000)
+                .category(findCategory)
+                .state(ProductState.ACTIVE)
+                .images("[]")
+                .title("테스트 상품")
+                .originPrice(0)
+                .discountRate(0)
+                .deliveryInfo("")
+                .deliverFeeType(ProductDeliverFeeType.FREE)
+                .minOrderPrice(0)
+                .descriptionImages("")
+                .expectedDeliverDay(1)
+                .needTaxation(false)
+                .representOptionItemId(10000)
+                .deliverBoxPerAmount(0)
+                .createdAt(Timestamp.valueOf(LocalDateTime.now()))
+                .build();
+        createdProduct.setPointRate( (float) 10);
+        productRepository.save(createdProduct);
+        // when
+
+        // then
     }
 }

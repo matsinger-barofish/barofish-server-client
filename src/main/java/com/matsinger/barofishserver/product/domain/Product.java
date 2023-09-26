@@ -7,6 +7,7 @@ import com.matsinger.barofishserver.review.domain.Review;
 import com.matsinger.barofishserver.store.domain.Store;
 import com.matsinger.barofishserver.store.domain.StoreDeliverFeeType;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Max;
 import lombok.*;
 import org.hibernate.annotations.ColumnDefault;
 
@@ -67,9 +68,12 @@ public class Product {
     @Basic
     @Column(name = "expected_deliver_day", nullable = false)
     private int expectedDeliverDay;
+
     @Basic
+    @Max(value = (long) 0.1, message = "상품 적립 포인트는 10퍼센트를 초과할 수 없습니다.")
     @Column(name = "point_rate", nullable = true)
     private Float pointRate;
+
     @Basic
     @Column(name = "represent_item_id", nullable = true)
     private Integer representOptionItemId;
