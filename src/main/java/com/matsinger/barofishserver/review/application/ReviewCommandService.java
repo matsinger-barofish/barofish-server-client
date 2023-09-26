@@ -135,11 +135,14 @@ public class ReviewCommandService {
     }
 
     @Transactional
-    public Boolean update(Integer id, UpdateReviewReq data, List<MultipartFile> images) throws Exception {
+    public Boolean update(Integer userId, Integer reviewId, UpdateReviewReq data, List<MultipartFile> images) throws Exception {
 
-        deleteAndSetEvaluations(id, data);
+        Review findReview = reviewQueryService.findById(reviewId);
+        if (findReview.getUserId() != userId) {
+            throw new IllegalArgumentException("타인의 리뷰입니다.");
+        }
 
-        Review findReview = reviewQueryService.findById(id);
+        deleteAndSetEvaluations(reviewId, data);
 
         deleteExistingImagesAndSetNewImages(images, findReview);
 
@@ -166,7 +169,7 @@ public class ReviewCommandService {
     }
 
     private void deleteExistingImagesAndSetNewImages(List<MultipartFile> images, Review findReview) throws Exception {
-        if (!images.isEmpty()) {
+        if (images != null) {
             String processedUrls = findReview.getImages().substring(1, findReview.getImages().length() - 1);
             String[] parsedUrls = processedUrls.split(", ");
 
@@ -181,5 +184,4 @@ public class ReviewCommandService {
             findReview.setImages(imgUrls);
         }
     }
-
 }

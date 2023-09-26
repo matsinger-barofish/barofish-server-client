@@ -88,23 +88,14 @@ public class ReviewControllerV2 {
     public ResponseEntity<CustomResponse<Object>> updateReview(@RequestHeader(value = "Authorization") Optional<String> auth,
                                                                   @PathVariable("id") Integer id,
                                                                   @RequestPart(value = "data") UpdateReviewReq data,
-                                                                  @RequestPart(value = "images") List<MultipartFile> images) {
+                                                                  @RequestPart(value = "images", required = false) List<MultipartFile> images) {
         CustomResponse<Object> res = new CustomResponse<>();
         Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth);
         if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
         try {
             Integer userId = tokenInfo.get().getId();
 
-            reviewCommandService.update(id, data, images);
-
-            Review review = reviewQueryService.selectReview(id);
-            if (review.getUserId() != userId) return res.throwError("타인의 리뷰입니다.", "NOT_ALLOWED");
-            if (data.getContent() != null) {
-                if (data.getContent().length() == 0) return res.throwError("리뷰 내용을 입력해주세요.", "INPUT_CHECK_REQUIRED");
-                review.setContent(data.getContent());
-            }
-
-            Boolean isUpdated = reviewCommandService.update(id, data, images);
+            Boolean isUpdated = reviewCommandService.update(userId, id, data, images);
 
             res.setData(Optional.ofNullable(isUpdated));
             return ResponseEntity.ok(res);
