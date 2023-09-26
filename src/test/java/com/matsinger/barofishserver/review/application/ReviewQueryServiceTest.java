@@ -172,4 +172,18 @@ class ReviewQueryServiceTest {
         // then
         assertThat(targetDto.getEvaluationSum()).isEqualTo(2);
     }
+
+    @DisplayName("sample test")
+    @Test
+    void test() {
+        // given
+        String images = "[https://barofish-prod.s3.ap-northeast-2.amazonaws.com/review/3/20230902_141313_1694000525711.jpg, https://barofish-prod.s3.ap-northeast-2.amazonaws.com/review/3/20230902_142225_1694000526141.jpg]";
+        String processedImages = images.substring(1, images.length()-1);
+        System.out.println("processedImages = " + processedImages);
+        String[] parsedImages = processedImages.split(", ");
+        System.out.println("parsedImages = " + parsedImages.toString());
+        // when
+
+        // then
+    }
 }
