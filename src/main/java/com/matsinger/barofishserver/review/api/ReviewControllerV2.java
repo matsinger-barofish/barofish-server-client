@@ -95,9 +95,9 @@ public class ReviewControllerV2 {
         try {
             Integer userId = tokenInfo.get().getId();
 
-            Boolean isUpdated = reviewCommandService.update(userId, id, data, images);
+            Integer updatedReviewId = reviewCommandService.update(userId, id, data, images);
 
-            res.setData(Optional.ofNullable(isUpdated));
+            res.setData(Optional.ofNullable(updatedReviewId));
             return ResponseEntity.ok(res);
         } catch (Exception e) {
             return res.defaultError(e);

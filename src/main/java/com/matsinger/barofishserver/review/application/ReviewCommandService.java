@@ -135,7 +135,7 @@ public class ReviewCommandService {
     }
 
     @Transactional
-    public Boolean update(Integer userId, Integer reviewId, UpdateReviewReq data, List<MultipartFile> images) throws Exception {
+    public Integer update(Integer userId, Integer reviewId, UpdateReviewReq data, List<MultipartFile> images) throws Exception {
 
         Review findReview = reviewQueryService.findById(reviewId);
         if (findReview.getUserId() != userId) {
@@ -150,7 +150,7 @@ public class ReviewCommandService {
             findReview.setContent(data.getContent());
         }
 
-        return true;
+        return findReview.getId();
     }
 
     private void deleteAndSetEvaluations(Integer id, UpdateReviewReq data) {
