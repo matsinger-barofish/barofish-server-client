@@ -35,6 +35,15 @@ public class S3Uploader {
         return this.s3Url;
     }
 
+    public List<String> uploadFiles(List<MultipartFile> files, ArrayList<String> path) throws Exception {
+        List<String> fileUrls = new ArrayList<>();
+        for (MultipartFile file : files) {
+            String imageUrl = upload(file, path);
+            fileUrls.add(imageUrl);
+        }
+        return fileUrls;
+    }
+
     // MultipartFile을 전달받아 File로 전환한 후 S3에 업로드
     public String upload(MultipartFile multipartFile, ArrayList<String> dirName) throws Exception {
         if (multipartFile.getContentType().startsWith("image") && !validateImageType(multipartFile))
@@ -42,20 +51,6 @@ public class S3Uploader {
         File uploadFile = convert(multipartFile)
                 .orElseThrow(() -> new IllegalArgumentException("MultipartFile -> File 전환 실패"));
         return upload(uploadFile, dirName);
-    }
-
-    public String upload(File uploadFile, ArrayList<String> dirName) {
-        String fileName = String.join("/", dirName) + "/" + buildFileName(uploadFile.getName());
-        String uploadImageUrl = putS3(uploadFile, fileName);
-        removeNewFile(uploadFile); // 로컬에 생성된 File 삭제 (MultipartFile -> File 전환 하며 로컬에 파일 생성됨)
-        return uploadImageUrl; // 업로드된 파일의 S3 URL 주소 반환
-    }
-
-    private String putS3(File uploadFile, String fileName) {
-        amazonS3Client.putObject(new PutObjectRequest(bucket, fileName, uploadFile).withCannedAcl(
-                CannedAccessControlList.PublicRead) // PublicRead 권한으로 업로드 됨
-        );
-        return amazonS3Client.getUrl(bucket, fileName).toString();
     }
 
     private Optional<File> convert(MultipartFile file) throws IOException {
@@ -69,6 +64,35 @@ public class S3Uploader {
         return Optional.empty();
     }
 
+    public String upload(File uploadFile, ArrayList<String> dirName) {
+        String fileName = String.join("/", dirName) + "/" + buildFileName(uploadFile.getName());
+        String uploadImageUrl = putS3(uploadFile, fileName);
+        removeNewFile(uploadFile); // 로컬에 생성된 File 삭제 (MultipartFile -> File 전환 하며 로컬에 파일 생성됨)
+        return uploadImageUrl; // 업로드된 파일의 S3 URL 주소 반환
+    }
+
+    private String putS3(File uploadFile, String fileName) {
+        amazonS3Client.putObject(
+                new PutObjectRequest(bucket, fileName, uploadFile)
+                .withCannedAcl(CannedAccessControlList.PublicRead) // PublicRead 권한으로 업로드 됨
+        );
+        return amazonS3Client.getUrl(bucket, fileName).toString();
+    }
+
+    public void deleteFile(String filePath) {
+        try {
+            if (isExists(filePath)) {
+                amazonS3Client.deleteObject(this.bucket, filePath);
+            }
+        } catch (Exception e) {
+            log.info("{} 파일을 삭제하는데 실패했습니다.", filePath);
+        }
+    }
+
+    public boolean isExists(String filePath) {
+        return amazonS3Client.doesObjectExist(bucket, filePath);
+    }
+
     private void removeNewFile(File targetFile) {
         if (targetFile.delete()) {
         } else {
@@ -78,15 +102,6 @@ public class S3Uploader {
     public Boolean validateImageType(MultipartFile file) throws IOException {
         List<String> allowedImageType = List.of("image/jpeg", "image/png", "image/webp", "image/gif", "image/svg+xml");
         return allowedImageType.contains(file.getContentType());
-    }
-
-    public List<String> uploadFiles(List<MultipartFile> files, ArrayList<String> path) throws Exception {
-        List<String> fileUrls = new ArrayList<>();
-        for (MultipartFile file : files) {
-            String imageUrl = upload(file, path);
-            fileUrls.add(imageUrl);
-        }
-        return fileUrls;
     }
 
     public List<String> parseListData(String data) {

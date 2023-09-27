@@ -280,8 +280,9 @@ public class ReviewController {
             }
             if (existingImages != null || newImages != null) {
                 List<String> imgUrls = existingImages;
-                if (newImages != null) existingImages.addAll(s3.uploadFiles(newImages,
-                        new ArrayList<>(Arrays.asList("review", String.valueOf(id)))));
+                if (newImages != null) existingImages.addAll(
+                        s3.uploadFiles(newImages, new ArrayList<>(Arrays.asList("review", String.valueOf(id))))
+                );
                 review.setImages(imgUrls.toString());
             }
             review = reviewCommandService.updateReview(review);

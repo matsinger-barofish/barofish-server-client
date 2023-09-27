@@ -7,16 +7,18 @@ import com.matsinger.barofishserver.review.application.ReviewCommandService;
 import com.matsinger.barofishserver.review.application.ReviewQueryService;
 import com.matsinger.barofishserver.review.domain.Review;
 import com.matsinger.barofishserver.review.domain.ReviewOrderByType;
+import com.matsinger.barofishserver.review.dto.ReviewDto;
+import com.matsinger.barofishserver.review.dto.UpdateReviewReq;
 import com.matsinger.barofishserver.review.dto.v2.ProductReviewDto;
 import com.matsinger.barofishserver.utils.CustomResponse;
+import com.matsinger.barofishserver.utils.S3.S3Uploader;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 
 @RestController
 @RequiredArgsConstructor
@@ -26,6 +28,7 @@ public class ReviewControllerV2 {
     private final JwtService jwt;
     private final ReviewQueryService reviewQueryService;
     private final ReviewCommandService reviewCommandService;
+    private final S3Uploader s3;
 
     @GetMapping("/product/{id}")
     public ResponseEntity<CustomResponse<ProductReviewDto>> getReviews(@PathVariable("id") Integer productId,
@@ -53,8 +56,8 @@ public class ReviewControllerV2 {
     }
 
     @PostMapping("/{id}")
-    public ResponseEntity<CustomResponse<Boolean>> deleteReviewByUser(@RequestHeader(value = "Authorization") Optional<String> auth,
-                                                                      @PathVariable("id") Integer reviewId) {
+    public ResponseEntity<CustomResponse<Boolean>> deleteReview(@RequestHeader(value = "Authorization") Optional<String> auth,
+                                                                @PathVariable("id") Integer reviewId) {
         CustomResponse<Boolean> res = new CustomResponse<>();
         Optional<TokenInfo>
                 tokenInfo =
@@ -81,5 +84,23 @@ public class ReviewControllerV2 {
         }
     }
 
+    @PostMapping("/update/{id}")
+    public ResponseEntity<CustomResponse<Object>> updateReview(@RequestHeader(value = "Authorization") Optional<String> auth,
+                                                                  @PathVariable("id") Integer id,
+                                                                  @RequestPart(value = "data") UpdateReviewReq data,
+                                                                  @RequestPart(value = "images", required = false) List<MultipartFile> images) {
+        CustomResponse<Object> res = new CustomResponse<>();
+        Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth);
+        if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
+        try {
+            Integer userId = tokenInfo.get().getId();
 
+            Integer updatedReviewId = reviewCommandService.update(userId, id, data, images);
+
+            res.setData(Optional.ofNullable(updatedReviewId));
+            return ResponseEntity.ok(res);
+        } catch (Exception e) {
+            return res.defaultError(e);
+        }
+    }
 }

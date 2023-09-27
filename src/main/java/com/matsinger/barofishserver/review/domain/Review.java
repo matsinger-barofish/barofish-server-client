@@ -76,6 +76,9 @@ public class Review {
         this.images = images;
     }
     public void setContent(String content) {
+        if (content == null) {
+            throw new IllegalArgumentException("리뷰 내용을 입력해주세요.");
+        }
         this.content = content;
     }
 
