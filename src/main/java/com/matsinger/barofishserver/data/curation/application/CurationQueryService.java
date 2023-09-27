@@ -2,6 +2,7 @@ package com.matsinger.barofishserver.data.curation.application;
 
 import com.matsinger.barofishserver.data.curation.domain.Curation;
 import com.matsinger.barofishserver.data.curation.domain.CurationProductMap;
+import com.matsinger.barofishserver.data.curation.domain.CurationState;
 import com.matsinger.barofishserver.data.curation.repository.CurationProductMapRepository;
 import com.matsinger.barofishserver.data.curation.repository.CurationRepository;
 import com.matsinger.barofishserver.product.domain.Product;
@@ -30,6 +31,10 @@ public class CurationQueryService {
 
     public List<Curation> selectCurations() {
         return curationRepository.findAll(Sort.by(Sort.Direction.ASC, "sortNo"));
+    }
+
+    public List<Curation> selectCurationState(CurationState state) {
+        return curationRepository.findAllByState(state, Sort.by(Sort.Direction.ASC, "sortNo"));
     }
 
     public List<Product> selectCurationProducts(Integer curationId) {
