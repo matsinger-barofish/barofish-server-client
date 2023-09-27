@@ -106,8 +106,16 @@ public class Curation {
     }
 
     public CurationDto convert2Dto() {
-        return CurationDto.builder().id(this.getId()).shortName(this.getShortName()).title(this.getTitle()).image(this.getImage()).sortNo(
-                this.getSortNo()).type(this.getType()).description(this.getDescription()).build();
+        return CurationDto.builder()
+                .id(this.getId())
+                .shortName(this.getShortName())
+                .title(this.getTitle())
+                .image(this.getImage())
+                .sortNo(this.getSortNo())
+                .type(this.getType())
+                .description(this.getDescription())
+                .state(this.state)
+                .build();
     }
 
     @Override
