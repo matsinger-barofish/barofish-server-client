@@ -3,6 +3,7 @@ package com.matsinger.barofishserver.product.repository;
 import com.matsinger.barofishserver.product.domain.ProductSortBy;
 import com.matsinger.barofishserver.product.domain.ProductState;
 import com.matsinger.barofishserver.product.dto.ProductListDto;
+import com.matsinger.barofishserver.product.dto.ProductListDtoV2;
 import com.querydsl.core.types.ExpressionUtils;
 import com.querydsl.core.types.Order;
 import com.querydsl.core.types.OrderSpecifier;
@@ -25,6 +26,7 @@ import static com.matsinger.barofishserver.product.optionitem.domain.QOptionItem
 import static com.matsinger.barofishserver.review.domain.QReview.review;
 import static com.matsinger.barofishserver.store.domain.QStoreInfo.storeInfo;
 import static com.matsinger.barofishserver.category.domain.QCategory.category;
+import static com.querydsl.core.group.GroupBy.groupBy;
 
 @Repository
 @RequiredArgsConstructor
@@ -33,12 +35,12 @@ public class ProductRepositoryImpl implements ProductRepositoryCustom {
     private final JPAQueryFactory queryFactory;
 
     @Override
-    public Page<ProductListDto> getProducts(Pageable pageable, ProductSortBy sortBy, int userId) {
+    public Page<ProductListDtoV2> getProducts(Pageable pageable, ProductSortBy sortBy, String keyword) {
 
         OrderSpecifier[] orderSpecifiers = createProductSortSpecifier(sortBy);
 
-        List<ProductListDto> results = queryFactory.select(
-                        Projections.fields(ProductListDto.class,
+        List<ProductListDtoV2> results = queryFactory.select(
+                        Projections.fields(ProductListDtoV2.class,
                                 product.id.as("id"),
                                 product.state.as("state"),
                                 product.images.as("image"),
@@ -46,7 +48,7 @@ public class ProductRepositoryImpl implements ProductRepositoryCustom {
                                 product.needTaxation.as("isNeedTaxation"),
                                 optionItem.discountPrice.as("discountPrice"),
                                 optionItem.originPrice.as("originPrice"),
-                                ExpressionUtils.as(Expressions.constant(0), "reviewCount"),
+//                                ExpressionUtils.as(Expressions.constant(0), "reviewCount"),
                                 ExpressionUtils.as(Expressions.constant(false), "isLike"),
                                 storeInfo.storeId.as("storeId"),
                                 storeInfo.name.as("storeName"),
@@ -54,7 +56,8 @@ public class ProductRepositoryImpl implements ProductRepositoryCustom {
                                 storeInfo.profileImage.as("storeImage"),
                                 product.deliverFeeType.as("deliverFeeType"),
                                 category.parentCategory.id.as("parentCategoryId"),
-                                ExpressionUtils.as(Expressions.constant(new ArrayList<>()), "filterValues")
+                                ExpressionUtils.as(Expressions.constant(new ArrayList<>()), "filterValues"),
+                                review.isDeleted.eq(false).count().as("reviewCount")
                         ))
                 .from(product)
                 .leftJoin(optionItem).on(optionItem.id.eq(product.representOptionItemId))
@@ -65,8 +68,9 @@ public class ProductRepositoryImpl implements ProductRepositoryCustom {
                 .leftJoin(curationProductMap).on(curationProductMap.product.eq(product))
                 .groupBy(product.id)
                 .orderBy(orderSpecifiers)
-                .where(product.state.eq(ProductState.ACTIVE),
-                        review.isDeleted.eq(false))
+                .where(product.state.eq(ProductState.ACTIVE)
+//                        review.isDeleted.eq(false),
+                        .and(product.title.contains(keyword)))
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
                 .fetch();
@@ -75,6 +79,56 @@ public class ProductRepositoryImpl implements ProductRepositoryCustom {
 
         return new PageImpl<>(results, pageable, resultCount);
     }
+
+//    @Override
+//    public Page<ProductListDto> getProductsV2(Pageable pageable, ProductSortBy sortBy, String keyword) {
+//
+//        OrderSpecifier[] orderSpecifiers = createProductSortSpecifier(sortBy);
+//
+//        List<ProductListDto> results = queryFactory.select(
+//                        )
+//                .from(product)
+//                .leftJoin(optionItem).on(optionItem.id.eq(product.representOptionItemId))
+//                .leftJoin(storeInfo).on(product.storeId.eq(storeInfo.storeId))
+//                .leftJoin(category).on(product.category.id.eq(category.id))
+//                .leftJoin(orderProductInfo).on(orderProductInfo.productId.eq(product.id))
+//                .leftJoin(review).on(review.productId.eq(product.id))
+//                .leftJoin(curationProductMap).on(curationProductMap.product.eq(product))
+//                .orderBy(orderSpecifiers)
+//                .where(product.state.eq(ProductState.ACTIVE),
+//                        review.isDeleted.eq(false),
+//                        product.title.contains(keyword))
+//                .offset(pageable.getOffset())
+//                .limit(pageable.getPageSize())
+//                .transform(
+//                        groupBy(product.id)
+//                                .list(
+//                                        Projections.fields(ProductListDto.class,
+//                                                product.id.as("id"),
+//                                                product.state.as("state"),
+//                                                product.images.as("image"),
+//                                                product.title.as("title"),
+//                                                product.needTaxation.as("isNeedTaxation"),
+//                                                optionItem.discountPrice.as("discountPrice"),
+//                                                optionItem.originPrice.as("originPrice"),
+//                                                ExpressionUtils.as(Expressions.constant(0), "reviewCount"),
+//                                                ExpressionUtils.as(Expressions.constant(false), "isLike"),
+//                                                storeInfo.storeId.as("storeId"),
+//                                                storeInfo.name.as("storeName"),
+//                                                product.minOrderPrice.as("minOrderPrice"),
+//                                                storeInfo.profileImage.as("storeImage"),
+//                                                product.deliverFeeType.as("deliverFeeType"),
+//                                                category.parentCategory.id.as("parentCategoryId"),
+//                                                ExpressionUtils.as(Expressions.constant(new ArrayList<>()), "filterValues"),
+//                                                review.isDeleted.eq(false).count().as("reviewCount")
+//                                        )
+//                                )
+//                );
+//
+//        long resultCount = results.size();
+//
+//        return new PageImpl<>(results, pageable, resultCount);
+//    }
 
     private OrderSpecifier[] createProductSortSpecifier(ProductSortBy sortBy) {
 
