@@ -85,7 +85,7 @@ public class ReviewControllerV2 {
     }
 
     @PostMapping("/update/{id}")
-    public ResponseEntity<CustomResponse<Object>> updateReview(@RequestHeader(value = "Authorization") Optional<String> auth,
+    public ResponseEntity<CustomResponse<Object>> updateReviewV2(@RequestHeader(value = "Authorization") Optional<String> auth,
                                                                   @PathVariable("id") Integer id,
                                                                   @RequestPart(value = "data") UpdateReviewReq data,
                                                                   @RequestPart(value = "images", required = false) List<MultipartFile> images) {
