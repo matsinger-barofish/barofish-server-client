@@ -16,7 +16,7 @@ class AdminServiceTest {
     @Test
     void test() {
         // givend
-        String password = "qwer123$";
+        String password = "barofish1!";
         String hashedPassword = BCrypt.hashpw(password, BCrypt.gensalt());
         // when
 
