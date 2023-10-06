@@ -3,8 +3,7 @@ package com.matsinger.barofishserver.data.curation.domain;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.matsinger.barofishserver.data.curation.dto.CurationDto;
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -13,6 +12,7 @@ import java.util.Objects;
 @Entity
 @Getter
 @Setter
+@Builder @NoArgsConstructor @AllArgsConstructor
 @Table(name = "curation", schema = "barofish_dev", catalog = "")
 public class Curation {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -44,6 +44,10 @@ public class Curation {
     @OneToMany(mappedBy = "curation", cascade = CascadeType.ALL)
     @JsonBackReference
     private List<CurationProductMap> curationProductMaps = new ArrayList<>();
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "state", nullable = false, length = 10)
+    private CurationState state;
 
     public int getId() {
         return id;
@@ -102,8 +106,16 @@ public class Curation {
     }
 
     public CurationDto convert2Dto() {
-        return CurationDto.builder().id(this.getId()).shortName(this.getShortName()).title(this.getTitle()).image(this.getImage()).sortNo(
-                this.getSortNo()).type(this.getType()).description(this.getDescription()).build();
+        return CurationDto.builder()
+                .id(this.getId())
+                .shortName(this.getShortName())
+                .title(this.getTitle())
+                .image(this.getImage())
+                .sortNo(this.getSortNo())
+                .type(this.getType())
+                .description(this.getDescription())
+                .state(this.state)
+                .build();
     }
 
     @Override

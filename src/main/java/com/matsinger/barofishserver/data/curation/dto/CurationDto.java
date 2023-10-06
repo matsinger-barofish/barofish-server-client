@@ -1,5 +1,6 @@
 package com.matsinger.barofishserver.data.curation.dto;
 
+import com.matsinger.barofishserver.data.curation.domain.CurationState;
 import com.matsinger.barofishserver.data.curation.domain.CurationType;
 import com.matsinger.barofishserver.product.dto.ProductListDto;
 
@@ -21,5 +22,6 @@ public class CurationDto {
     private String description;
     private CurationType type;
     private Integer sortNo;
+    private CurationState state;
     private List<ProductListDto> products;
 }

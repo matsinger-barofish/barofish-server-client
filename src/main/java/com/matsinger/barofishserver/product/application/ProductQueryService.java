@@ -10,6 +10,7 @@ import com.matsinger.barofishserver.product.domain.Product;
 import com.matsinger.barofishserver.product.domain.ProductSortBy;
 import com.matsinger.barofishserver.product.domain.SimpleProductDto;
 import com.matsinger.barofishserver.product.dto.ProductListDto;
+import com.matsinger.barofishserver.product.dto.ProductListDtoV2;
 import com.matsinger.barofishserver.product.optionitem.domain.OptionItem;
 import com.matsinger.barofishserver.product.optionitem.repository.OptionItemRepository;
 import com.matsinger.barofishserver.product.productfilter.application.ProductFilterService;
@@ -161,9 +162,9 @@ public class ProductQueryService {
                                 .orElseThrow(() -> new IllegalArgumentException("상품 정보를 찾을 수 없습니다."));
     }
 
-    public Page<ProductListDto> getPagedProducts(PageRequest pageRequest, ProductSortBy sortBy, int userId) {
+    public Page<ProductListDtoV2> getPagedProducts(PageRequest pageRequest, ProductSortBy sortBy, String keyword) {
 
-        return productRepositoryImpl.getProducts(pageRequest, sortBy, userId);
+        return productRepositoryImpl.getProducts(pageRequest, sortBy, keyword);
     }
 
 

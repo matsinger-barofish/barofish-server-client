@@ -15,6 +15,7 @@ import com.matsinger.barofishserver.product.application.ProductService;
 import com.matsinger.barofishserver.product.difficultDeliverAddress.application.DifficultDeliverAddressCommandService;
 import com.matsinger.barofishserver.product.domain.ProductSortBy;
 import com.matsinger.barofishserver.product.dto.ProductListDto;
+import com.matsinger.barofishserver.product.dto.ProductListDtoV2;
 import com.matsinger.barofishserver.product.productfilter.application.ProductFilterService;
 import com.matsinger.barofishserver.search.application.SearchKeywordQueryService;
 import com.matsinger.barofishserver.searchFilter.application.SearchFilterQueryService;
@@ -25,11 +26,9 @@ import com.matsinger.barofishserver.utils.S3.S3Uploader;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
@@ -59,22 +58,22 @@ public class ProductControllerV2 {
     private final S3Uploader s3;
 
     @GetMapping("/list")
-    public ResponseEntity<CustomResponse<Page<ProductListDto>>> selectProductListByUser(@RequestHeader(value = "Authorization", required = false) Optional<String> auth,
-                                                                                        @RequestParam(value = "page", defaultValue = "1") Integer page,
-                                                                                        @RequestParam(value = "take", defaultValue = "10") Integer take,
-                                                                                        @RequestParam(value = "sortby", defaultValue = "RECOMMEND", required = false) ProductSortBy sortBy,
-                                                                                        @RequestParam(value = "categoryIds", required = false) String categoryIds,
-                                                                                        @RequestParam(value = "filterFieldIds", required = false) String filterFieldIds,
-                                                                                        @RequestParam(value = "typeIds", required = false) String typeIds,
-                                                                                        @RequestParam(value = "locationIds", required = false) String locationIds,
-                                                                                        @RequestParam(value = "processIds", required = false) String processIds,
-                                                                                        @RequestParam(value = "usageIds", required = false) String usageIds,
-                                                                                        @RequestParam(value = "storageIds", required = false) String storageIds,
-                                                                                        @RequestParam(value = "curationId", required = false) Integer curationId,
-                                                                                        @RequestParam(value = "keyword", required = false, defaultValue = "") String keyword,
-                                                                                        @RequestParam(value = "storeId", required = false) Integer storeId) {
+    public ResponseEntity<CustomResponse<Object>> selectProductListByUserV2(@RequestHeader(value = "Authorization", required = false) Optional<String> auth,
+                                                                                          @RequestParam(value = "page", defaultValue = "1") Integer page,
+                                                                                          @RequestParam(value = "take", defaultValue = "10") Integer take,
+                                                                                          @RequestParam(value = "sortby", defaultValue = "RECOMMEND", required = false) ProductSortBy sortBy,
+                                                                                          @RequestParam(value = "categoryIds", required = false) String categoryIds,
+                                                                                          @RequestParam(value = "filterFieldIds", required = false) String filterFieldIds,
+                                                                                          @RequestParam(value = "typeIds", required = false) String typeIds,
+                                                                                          @RequestParam(value = "locationIds", required = false) String locationIds,
+                                                                                          @RequestParam(value = "processIds", required = false) String processIds,
+                                                                                          @RequestParam(value = "usageIds", required = false) String usageIds,
+                                                                                          @RequestParam(value = "storageIds", required = false) String storageIds,
+                                                                                          @RequestParam(value = "curationId", required = false) Integer curationId,
+                                                                                          @RequestParam(value = "keyword", required = false, defaultValue = "") String keyword,
+                                                                                          @RequestParam(value = "storeId", required = false) Integer storeId) {
 
-        CustomResponse<Page<ProductListDto>> res = new CustomResponse<>();
+        CustomResponse<Object> res = new CustomResponse<>();
         Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ALLOW), auth);
 
         try {
@@ -83,8 +82,8 @@ public class ProductControllerV2 {
                 userId = tokenInfo.get().getId();
             }
 
-            PageRequest pageRequest = PageRequest.of(page, take);
-            Page<ProductListDto> result = productQueryService.getPagedProducts(pageRequest, sortBy, userId);
+            PageRequest pageRequest = PageRequest.of(page - 1, take);
+            Page<ProductListDtoV2> result = productQueryService.getPagedProducts(pageRequest, sortBy, keyword);
 
             res.setData(Optional.ofNullable(result));
             return ResponseEntity.ok(res);

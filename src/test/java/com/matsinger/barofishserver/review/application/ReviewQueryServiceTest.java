@@ -17,6 +17,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
@@ -173,15 +174,20 @@ class ReviewQueryServiceTest {
         assertThat(targetDto.getEvaluationSum()).isEqualTo(2);
     }
 
-    @DisplayName("sample test")
+    @DisplayName("스토어 기준으로 판매하는 상품들을 도움돼요 순으로 정렬할 수 있다.")
     @Test
-    void test() {
+    void storeProductReviewOrderByBestTest() {
         // given
-        String images = "[https://barofish-prod.s3.ap-northeast-2.amazonaws.com/review/3/20230902_141313_1694000525711.jpg, https://barofish-prod.s3.ap-northeast-2.amazonaws.com/review/3/20230902_142225_1694000526141.jpg]";
-        String processedImages = images.substring(1, images.length()-1);
-        System.out.println("processedImages = " + processedImages);
-        String[] parsedImages = processedImages.split(", ");
-        System.out.println("parsedImages = " + parsedImages.toString());
+        int productId = 10000;
+        PageRequest pageRequest = PageRequest.of(0, 10);
+        System.out.println("=== productReviews ===");
+        Page<Review> productReviews = reviewQueryService.selectReviewListOrderedBestWithProductId(productId, pageRequest);
+        System.out.println("=== productReviews ===");
+
+        int storeId = 10000;
+        System.out.println("=== storeReviews ===");
+        Page<Review> storeReviews = reviewQueryService.selectReviewListOrderedBestWithStoreId(storeId, pageRequest);
+        System.out.println("=== storeReviews ===");
         // when
 
         // then

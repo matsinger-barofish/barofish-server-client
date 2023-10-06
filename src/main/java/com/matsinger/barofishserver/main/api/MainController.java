@@ -4,6 +4,7 @@ import com.matsinger.barofishserver.banner.application.BannerQueryService;
 import com.matsinger.barofishserver.banner.domain.Banner;
 import com.matsinger.barofishserver.data.curation.application.CurationQueryService;
 import com.matsinger.barofishserver.data.curation.domain.Curation;
+import com.matsinger.barofishserver.data.curation.domain.CurationState;
 import com.matsinger.barofishserver.data.curation.dto.CurationDto;
 import com.matsinger.barofishserver.data.topbar.application.TopBarQueryService;
 import com.matsinger.barofishserver.data.topbar.domain.TopBar;
@@ -74,7 +75,7 @@ public class MainController {
             if (tokenInfo != null && tokenInfo.isPresent() && tokenInfo.get().getType().equals(TokenAuthType.USER))
                 userId = tokenInfo.get().getId();
             else {userId = null;}
-            List<Curation> curations = curationQueryService.selectCurations();
+            List<Curation> curations = curationQueryService.selectCurationState(CurationState.ACTIVE);
             List<CurationDto> curationDtos = new ArrayList<>();
             for (Curation curation : curations) {
                 List<Product>
