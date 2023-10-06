@@ -280,8 +280,9 @@ public class ReviewController {
             }
             if (existingImages != null || newImages != null) {
                 List<String> imgUrls = existingImages;
-                if (newImages != null) existingImages.addAll(s3.uploadFiles(newImages,
-                        new ArrayList<>(Arrays.asList("review", String.valueOf(id)))));
+                if (newImages != null) existingImages.addAll(
+                        s3.uploadFiles(newImages, new ArrayList<>(Arrays.asList("review", String.valueOf(id))))
+                );
                 review.setImages(imgUrls.toString());
             }
             review = reviewCommandService.updateReview(review);
@@ -341,7 +342,7 @@ public class ReviewController {
             if (tokenInfo.isPresent() &&
                     tokenInfo.get().getType().equals(TokenAuthType.USER) &&
                     review.getUserId() != tokenInfo.get().getId())
-                return res.throwError("타인의 레뷰는 삭제할 수 없습니다.", "NOT_ALLOWED");
+                return res.throwError("타인의 리뷰는 삭제할 수 없습니다.", "NOT_ALLOWED");
             else if (tokenInfo.isPresent() &&
                     tokenInfo.get().getType().equals(TokenAuthType.PARTNER) &&
                     review.getStore().getId() != tokenInfo.get().getId())

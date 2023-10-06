@@ -29,4 +29,8 @@ public class Grade {
     @Basic
     @Column(name = "min_order_count", nullable = false)
     private Integer minOrderCount;
+
+    public void setPointRate(Float pointRate) {
+        this.pointRate = pointRate / 100;
+    }
 }

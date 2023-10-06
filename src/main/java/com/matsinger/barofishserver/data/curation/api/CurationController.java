@@ -2,10 +2,7 @@ package com.matsinger.barofishserver.data.curation.api;
 
 import com.matsinger.barofishserver.data.curation.application.CurationCommandService;
 import com.matsinger.barofishserver.data.curation.application.CurationQueryService;
-import com.matsinger.barofishserver.data.curation.domain.Curation;
-import com.matsinger.barofishserver.data.curation.domain.CurationOrderBy;
-import com.matsinger.barofishserver.data.curation.domain.CurationProductMap;
-import com.matsinger.barofishserver.data.curation.domain.CurationType;
+import com.matsinger.barofishserver.data.curation.domain.*;
 import com.matsinger.barofishserver.data.curation.dto.CurationDeleteProductReq;
 import com.matsinger.barofishserver.data.curation.dto.CurationDto;
 import com.matsinger.barofishserver.data.curation.dto.SortCurationReq;
@@ -136,7 +133,8 @@ public class CurationController {
                                                                    @RequestPart(value = "shortName", required = false) String shortName,
                                                                    @RequestPart(value = "title", required = false) String title,
                                                                    @RequestPart(value = "description", required = false) String description,
-                                                                   @RequestPart(value = "type", required = false) CurationType type) {
+                                                                   @RequestPart(value = "type", required = false) CurationType type,
+                                                                   @RequestPart(value = "state", required = false) CurationState state) {
         CustomResponse<Curation> res = new CustomResponse<>();
         Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
         if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
@@ -159,6 +157,8 @@ public class CurationController {
                 description = util.validateString(description, 200L, "설명");
                 curation.setDescription(description);
                 curation.setType(type);
+                if (state == null) return res.throwError("상태를 입력해 주세요.", "INPUT_CHECK_REQUIRED");
+                curation.setState(state);
             }
             curation.setSortNo(curationQueryService.selectMaxSortNo());
             Curation data = curationCommandService.add(curation);
@@ -176,8 +176,13 @@ public class CurationController {
                                                                    @RequestPart(value = "shortName", required = false) String shortName,
                                                                    @RequestPart(value = "title", required = false) String title,
                                                                    @RequestPart(value = "description", required = false) String description,
-                                                                   @RequestPart(value = "type", required = false) CurationType type) {
+                                                                   @RequestPart(value = "type", required = false) CurationType type,
+                                                                   @RequestPart(value = "state", required = false)CurationState state) {
         CustomResponse<Curation> res = new CustomResponse<>();
+
+        Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
+        if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
+
         try {
             Curation curation = curationQueryService.selectCuration(id);
             if (file != null) {
@@ -199,6 +204,9 @@ public class CurationController {
             }
             if (type != null) {
                 curation.setType(type);
+            }
+            if (state != null) {
+                curation.setState(state);
             }
             curationCommandService.update(curation);
             return ResponseEntity.ok(res);

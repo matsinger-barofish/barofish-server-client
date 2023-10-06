@@ -29,7 +29,7 @@ public interface ReviewRepository extends JpaRepository<Review, Integer>, JpaSpe
 
     @Query(value = "SELECT r.*\n" +
             "FROM review r\n" +
-            "         JOIN review_like rl ON r.id = rl.review_id\n" +
+            "         LEFT JOIN review_like rl ON r.id = rl.review_id\n" +
             "WHERE store_id = :storeId\n" +
             "GROUP BY r.id\n" +
             "ORDER BY COUNT( rl.user_id ) DESC\n", countQuery = "SELECT COUNT(*)\n" +
@@ -74,4 +74,5 @@ public interface ReviewRepository extends JpaRepository<Review, Integer>, JpaSpe
                                                             Integer orderProductInfoId);
 
     void deleteAllByUserIdIn(List<Integer> userIds);
+
 }

@@ -45,3 +45,4 @@ out/
 *.sql
 http/
 src/main/resources/sql/
+build/generated/

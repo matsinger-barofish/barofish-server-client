@@ -79,7 +79,6 @@ public class OrderController {
     private final JwtService jwt;
     private final Common utils;
 
-
     @GetMapping("/point-rule")
     public ResponseEntity<CustomResponse<PointRuleRes>> selectPointRule(@RequestHeader(value = "Authorization") Optional<String> auth) {
         CustomResponse<PointRuleRes> res = new CustomResponse<>();
@@ -519,8 +518,6 @@ public class OrderController {
     }
 
     // 결제 취소
-
-
     @PostMapping("/cancel/{orderProductInfoId}")
     public ResponseEntity<CustomResponse<Boolean>> cancelOrderByUser(@RequestHeader(value = "Authorization") Optional<String> auth,
                                                                      @PathVariable("orderProductInfoId") Integer orderProductInfoId,
@@ -754,11 +751,18 @@ public class OrderController {
                     return res.throwError("이미 배송 완료된 주문입니다.", "NOT_ALLOWED");
                 return res.throwError("발송 처리 불가능한 상품입니다.", "NOT_ALLOWED");
             }
-            info.setState(OrderProductState.DELIVERY_READY);
-            orderService.updateOrderProductInfo(new ArrayList<>(List.of(info)));
+
             if (adminId != null) {
+                Orders findOrder = orderService.selectOrder(info.getOrderId());
+                info.setState(OrderProductState.DELIVERY_READY);
+                orderService.updateOrderProductInfo(new ArrayList<>(List.of(info)));
+
                 Product product = productService.selectProduct(info.getProductId());
-                String content = product.getTitle() + " 주문이 발송 준비 처리되었습니다.";
+                notificationCommandService.sendFcmToUser(findOrder.getUserId(),
+                        NotificationMessageType.DELIVER_READY,
+                        NotificationMessage.builder().productName(product.getTitle()).build());
+
+                String content = product.getTitle() + " 주문이 배송 준비 처리되었습니다.";
                 AdminLog
                         adminLog =
                         AdminLog.builder().id(adminLogQueryService.getAdminLogId()).adminId(adminId).type(AdminLogType.ORDER).targetId(
@@ -773,8 +777,6 @@ public class OrderController {
     }
 
     // 발송 처리
-
-
     @PostMapping("/process-deliver/{orderProductInfoId}")
     public ResponseEntity<CustomResponse<Boolean>> processDeliverStart(@RequestHeader(value = "Authorization") Optional<String> auth,
                                                                        @PathVariable("orderProductInfoId") Integer orderProductInfoId,
@@ -805,7 +807,7 @@ public class OrderController {
             Orders order = orderService.selectOrder(info.getOrderId());
             Product product = productService.selectProduct(info.getProductId());
             notificationCommandService.sendFcmToUser(order.getUserId(),
-                    NotificationMessageType.DELIVER_READY,
+                    NotificationMessageType.DELIVER_START,
                     NotificationMessage.builder().productName(product.getTitle()).build());
             if (adminId != null) {
                 String content = product.getTitle() + " 주문이 발송 처리 되었습니다.";
@@ -823,8 +825,6 @@ public class OrderController {
     }
 
     // 교환 신청
-
-
     @PostMapping("/change/{orderProductInfoId}")
     public ResponseEntity<CustomResponse<Boolean>> requestChangeProduct(@RequestHeader(value = "Authorization") Optional<String> auth,
                                                                         @PathVariable("orderProductInfoId") Integer orderProductInfoId,
@@ -939,7 +939,7 @@ public class OrderController {
             Product product = productService.selectProduct(info.getProductId());
             Grade grade = userInfo.getGrade();
             float pointRate = product.getPointRate() != null ? product.getPointRate() : 0;
-            Integer point = (int) (Math.floor(info.getPrice() * ((pointRate + grade.getPointRate()) / 100.)));
+            Integer point = (int) (Math.floor(info.getPrice() * ((pointRate + grade.getPointRate()))));
             userInfo.setPoint(userInfo.getPoint() + point);
             info.setState(OrderProductState.FINAL_CONFIRM);
             info.setFinalConfirmedAt(utils.now());

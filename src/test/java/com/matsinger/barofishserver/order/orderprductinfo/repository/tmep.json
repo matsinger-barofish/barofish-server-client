@@ -1,0 +1,47 @@
+{
+  "isSuccess": true,
+  "code": null,
+  "data": [
+    {
+      "orderId": "Order123",          // 주문번호
+      "couponName": "CouponXYZ",      // 쿠폰명
+      "couponDiscount": 5,            // 쿠폰할인
+      "usePoint": 20,                 // 포인트
+      "orderDeliveryFeeSum": 10,      // 주문 배송비 합계
+      "settlementStoreDtos": [
+        {
+          "storeId": 1,
+          "partnerName": "Partner 1", // 파트너
+          "storeDeliveryFeeSum": 10,  // 파트너 배송비 합계
+          "storeTotalPriceSum": 100,  // 파트너 총 금액 합계
+          "storeOptionItemDtos": [
+            {
+              "productName": "Product 1",                             // 상품명
+              "optionItemName": "Option A",                           // 옵션명
+              "orderProductInfoState": "ORDERED",                     // 주문상태
+              "orderedAt": "2023-09-11T12:34:56Z",                    // 주문일
+              "finalConfirmedAt": "2023-09-12T10:00:00Z",               // 구매 확정일
+              "isTaxFree": false,                                     // 과세여부
+              "purchasePrice": 50,                                    // 공급가(원)
+              "commissionPrice": 10,                                  // 수수료가(원) | 공급가 - 판매가
+              "sellingPrice": 60,                                     // 판매가 | 공급가 / (1 - 정산비율)
+              "deliveryFee": 5,                                       // 배송비                                  개별 | 파트너끝
+              "quantity": 2,                                          // 수량
+              "totalPrice": 120,                                      // 총 금액(원) (판매가 * 수량) - 배송비         개별 | 파트너끝
+              "paymentWay": "CREDIT_CARD",                            // 결제수단
+              "settlementRate": 0.9,                                  // 정산비율
+              "settlementPrice": 108,                                 // 정산금액(원)
+              "settlementState": true,                                // 정산상태
+              "settledAt": "2023-09-13T14:00:00Z",                    // 정산일시
+              "customerName": "John Doe",                             // 주문인
+              "phoneNumber": "123-456-7890",                          // 연락처
+              "email": "john.doe@example.com",                        // 이메일
+              "address": "123 Main St",                               // 주소
+              "addressDetail": "Apt 4B",                              // 주소 상세
+              "deliverMessage": "Please leave at the front door",     // 배송메세지
+              "deliveryCompany": "Delivery Express",                  // 택배사
+              "invoiceCode": "DE123456789"                            // 운송장번호
+            }, .. ], // storeOptionItemDtos 반복
+        }, ..], // settlementStoreDtos 반복
+    }, ..], // settlementOrderDtos 반복
+}

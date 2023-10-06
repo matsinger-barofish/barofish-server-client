@@ -62,13 +62,23 @@ public class Review {
     @Column(name = "created_at", nullable = false)
     private Timestamp createdAt;
 
+    @Column(name = "is_deleted", nullable = false)
+    private boolean isDeleted;
+
     @OneToMany(mappedBy = "review")
     private List<ReviewEvaluation> evaluations;
+
+    public void setIsDeleted(boolean isDeleted) {
+        this.isDeleted = isDeleted;
+    }
 
     public void setImages(String images) {
         this.images = images;
     }
     public void setContent(String content) {
+        if (content == null) {
+            throw new IllegalArgumentException("리뷰 내용을 입력해주세요.");
+        }
         this.content = content;
     }
 

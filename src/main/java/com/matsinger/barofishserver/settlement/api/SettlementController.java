@@ -1,5 +1,7 @@
 package com.matsinger.barofishserver.settlement.api;
 
+import com.amazonaws.util.IOUtils;
+import com.google.firebase.messaging.LightSettings;
 import com.matsinger.barofishserver.admin.log.application.AdminLogCommandService;
 import com.matsinger.barofishserver.admin.log.application.AdminLogQueryService;
 import com.matsinger.barofishserver.admin.log.domain.AdminLog;
@@ -13,6 +15,7 @@ import com.matsinger.barofishserver.order.orderprductinfo.dto.OrderProductInfoDt
 import com.matsinger.barofishserver.order.orderprductinfo.domain.OrderProductState;
 import com.matsinger.barofishserver.product.application.ProductService;
 import com.matsinger.barofishserver.settlement.application.SettlementCommandService;
+import com.matsinger.barofishserver.settlement.application.SettlementExcelService;
 import com.matsinger.barofishserver.settlement.application.SettlementQueryService;
 import com.matsinger.barofishserver.settlement.dto.*;
 import com.matsinger.barofishserver.settlement.domain.SettlementOrderBy;
@@ -25,6 +28,8 @@ import com.matsinger.barofishserver.store.domain.StoreInfo;
 import com.matsinger.barofishserver.utils.Common;
 import com.matsinger.barofishserver.utils.CustomResponse;
 import jakarta.persistence.criteria.Predicate;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -32,8 +37,10 @@ import lombok.RequiredArgsConstructor;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.apache.xmlbeans.impl.common.IOUtil;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -41,7 +48,11 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.*;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.sql.Timestamp;
+import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.util.*;
 
@@ -58,6 +69,7 @@ public class SettlementController {
     private final Common utils;
     private final AdminLogCommandService adminLogCommandService;
     private final AdminLogQueryService adminLogQueryService;
+    private final SettlementExcelService settlementExcelService;
 
 
     @GetMapping("/")
@@ -117,43 +129,59 @@ public class SettlementController {
     }
 
     @GetMapping("/order/list/download")
-    public ResponseEntity<CustomResponse<Page<OrderSettlementExcelDto>>> selectSettlementOrderListDownload(@RequestHeader(value = "Authorization") Optional<String> auth,
-                                                                                                           @RequestParam(value = "page", required = false, defaultValue = "0") Integer page,
-                                                                                                           @RequestParam(value = "take", required = false, defaultValue = "10") Integer take,
-                                                                                                           @RequestParam(value = "orderby", required = false, defaultValue = "isSettled") OrderProductInfoOrderBy orderBy,
-                                                                                                           @RequestParam(value = "orderType", required = false, defaultValue = "DESC") Sort.Direction orderType,
-                                                                                                           @RequestParam(value = "isSettled", required = false) Boolean isSettled,
-                                                                                                           @RequestParam(value = "storeId", required = false) Integer storeId,
-                                                                                                           @RequestParam(value = "settledAtS", required = false) Timestamp settledAtS,
-                                                                                                           @RequestParam(value = "settledAtE", required = false) Timestamp settledAtE) {
-        CustomResponse<Page<OrderSettlementExcelDto>> res = new CustomResponse<>();
+    @CrossOrigin(value = ("*"), exposedHeaders = {"Content-Disposition"})
+    public void selectSettlementOrderListDownload(@RequestHeader(value = "Authorization") Optional<String> auth,
+                                                                                                      @RequestParam(value = "page", required = false, defaultValue = "0") Integer page,
+                                                                                                      @RequestParam(value = "take", required = false, defaultValue = "10") Integer take,
+                                                                                                      @RequestParam(value = "orderby", required = false, defaultValue = "isSettled") OrderProductInfoOrderBy orderBy,
+                                                                                                      @RequestParam(value = "orderType", required = false, defaultValue = "DESC") Sort.Direction orderType,
+                                                                                                      @RequestParam(value = "isSettled", required = false) Boolean isSettled,
+                                                                                                      @RequestParam(value = "storeId", required = false) Integer storeId,
+                                                                                                      @RequestParam(value = "settledAtS", required = false) Timestamp settledAtS,
+                                                                                                      @RequestParam(value = "settledAtE", required = false) Timestamp settledAtE,
+                                                                                                      HttpServletRequest httpServletRequest,
+                                                                                                      HttpServletResponse httpServletResponse) throws UnsupportedEncodingException {
+        CustomResponse<List<SettlementOrderDto>> res = new CustomResponse<>();
         Optional<TokenInfo>
                 tokenInfo =
                 jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN, TokenAuthType.PARTNER), auth);
-        if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
+
+        if (tokenInfo == null) throw new IllegalArgumentException("인증이 필요합니다.");
+
+        String nowDate = new SimpleDateFormat("yyyyMMdd").format(Calendar.getInstance().getTime());
+//        String fileName = nowDate + "_바로피쉬_정산.xlsx";
+        String fileName = nowDate + "_barofish_settlement.xlsx";
+
+        httpServletResponse.setHeader("Content-Disposition", "attachment;filename=" + URLEncoder.encode(fileName, StandardCharsets.UTF_8));
+//        httpServletResponse.setHeader("Content-Transfer-Encoding", "binary;");
+//        httpServletResponse.setContentType("ms-vnd/excel");
+        httpServletResponse.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+
         try {
-            Specification<OrderProductInfo> spec = (root, query, builder) -> {
-                List<Predicate> predicates = new ArrayList<>();
-                if (storeId != null) predicates.add(builder.equal(root.get("product").get("storeId"), storeId));
-                if (isSettled != null) predicates.add(builder.equal(root.get("isSettled"), isSettled));
-                if (settledAtS != null) predicates.add(builder.greaterThan(root.get("settledAt"), settledAtS));
-                if (settledAtE != null) predicates.add(builder.lessThan(root.get("settledAt"), settledAtE));
-                if (tokenInfo.get().getType().equals(TokenAuthType.PARTNER))
-                    predicates.add(builder.equal(root.get("product").get("storeId"), tokenInfo.get().getId()));
-                predicates.add(builder.equal(root.get("state"), OrderProductState.FINAL_CONFIRM));
-                return builder.and(predicates.toArray(new Predicate[0]));
-            };
-            PageRequest pageRequest = PageRequest.of(page, take, Sort.by(orderType, orderBy.label));
+            List<SettlementOrderDto> result = null;
+            if (tokenInfo.get().getType().equals(TokenAuthType.PARTNER)) {
+                result = settlementQueryService.createOrderSettlementResponse(tokenInfo.get().getId());
+            }
 
-            Page<OrderProductInfo> infos = orderService.selectOrderProductInfoList(spec, pageRequest);
+            if (tokenInfo.get().getType().equals(TokenAuthType.ADMIN)) {
+                result = settlementQueryService.createOrderSettlementResponse(null);
+            }
 
-            Page<OrderSettlementExcelDto> result = settlementQueryService.createOrderSettlementResponse(infos);
-            res.setData(Optional.of(result));
-            return ResponseEntity.ok(res);
+            ByteArrayInputStream stream = settlementExcelService.settlementExcelDownload(result);
+            try {
+                IOUtils.copy(stream, httpServletResponse.getOutputStream());
+            } catch (Exception e) {
+                e.getMessage();
+            } finally {
+                // , 출력 스트림을 닫아줌
+                httpServletResponse.getOutputStream().close();
+            }
+
         } catch (Exception e) {
-            return res.defaultError(e);
+            throw new IllegalArgumentException(e);
         }
     }
+
     @GetMapping("/log")
     public ResponseEntity<CustomResponse<Page<SettlementDto>>> selectSettlementLogs(@RequestHeader(value = "Authorization") Optional<String> auth,
                                                                                     @RequestParam(value = "page", required = false, defaultValue = "0") Integer page,
