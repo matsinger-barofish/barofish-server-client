@@ -280,20 +280,20 @@ public class ReviewController {
                 reviewCommandService.addReviewEvaluationList(review.getId(), data.getEvaluations());
             }
 
-            if (existingImages.isEmpty() && newImages.isEmpty()) {
+            if (existingImages == null && newImages == null) {
                 for (String imageUrl : review.getImageUrls()) {
                     s3.deleteFile(imageUrl);
                 }
                 review.setImages("[]");
             }
 
-            if (existingImages.isEmpty()&& !newImages.isEmpty()) {
+            if (existingImages == null && newImages != null) {
                 List<String> imageUrls = new ArrayList<>();
                 imageUrls.addAll(s3.uploadFiles(newImages, new ArrayList<>(Arrays.asList("review", String.valueOf(id)))));
                 review.setImages(imageUrls.toString());
             }
 
-            if (!existingImages.isEmpty()&& !newImages.isEmpty()) {
+            if (existingImages != null && newImages != null) {
                 List<String> newImageUrls = new ArrayList<>();
 
                 for (String imageUrl : existingImages) {
