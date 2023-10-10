@@ -287,10 +287,18 @@ public class ReviewController {
                 review.setImages("[]");
             }
 
-            if (existingImages == null && newImages != null) {
-                List<String> imageUrls = new ArrayList<>();
-                imageUrls.addAll(s3.uploadFiles(newImages, new ArrayList<>(Arrays.asList("review", String.valueOf(id)))));
-                review.setImages(imageUrls.toString());
+            if (existingImages != null && newImages == null) {
+                List<String> newImageUrls = new ArrayList<>();
+
+                for (String imageUrl : existingImages) {
+                    List<String> convertedUrls = Arrays.stream(review.getImageUrls()).toList();
+                    if (!convertedUrls.contains(imageUrl)) {
+                        s3.deleteFile("review/" + id + "/" + imageUrl);
+                        continue;
+                    }
+                    newImageUrls.add(imageUrl);
+                }
+                review.setImages(newImageUrls.toString());
             }
 
             if (existingImages != null && newImages != null) {
