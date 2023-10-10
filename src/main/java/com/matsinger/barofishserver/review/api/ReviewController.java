@@ -286,13 +286,13 @@ public class ReviewController {
                 }
             }
 
-            if (existingImages == null && !newImages.isEmpty()) {
+            if (existingImages == null && newImages != null) {
                 List<String> imageUrls = new ArrayList<>();
                 imageUrls.addAll(s3.uploadFiles(newImages, new ArrayList<>(Arrays.asList("review", String.valueOf(id)))));
                 review.setImages(imageUrls.toString());
             }
 
-            if (!existingImages.isEmpty() && !newImages.isEmpty()) {
+            if (existingImages != null && newImages != null) {
                 List<String> newImageUrls = new ArrayList<>();
 
                 for (String imageUrl : existingImages) {
