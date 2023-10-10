@@ -282,8 +282,9 @@ public class ReviewController {
 
             if (existingImages == null && newImages == null) {
                 for (String imageUrl : review.getImageUrls()) {
-                    s3.deleteFile("review/" + id + "/" + imageUrl);
+                    s3.deleteFile(imageUrl);
                 }
+                review.setImages("[]");
             }
 
             if (existingImages == null && newImages != null) {
