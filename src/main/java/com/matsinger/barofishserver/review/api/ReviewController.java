@@ -279,13 +279,37 @@ public class ReviewController {
                 reviewCommandService.deleteReviewWithReviewId(review.getId());
                 reviewCommandService.addReviewEvaluationList(review.getId(), data.getEvaluations());
             }
-            if (existingImages != null || newImages != null) {
-                List<String> imgUrls = existingImages;
-                if (newImages != null) existingImages.addAll(
-                        s3.uploadFiles(newImages, new ArrayList<>(Arrays.asList("review", String.valueOf(id))))
-                );
-                review.setImages(imgUrls.toString());
+
+            if (existingImages.isEmpty() && newImages.isEmpty()) {
+                for (String imageUrl : review.getImageUrls()) {
+                    s3.deleteFile("review/" + id + "/" + imageUrl);
+                }
             }
+
+            if (existingImages.isEmpty() && !newImages.isEmpty()) {
+                List<String> imageUrls = new ArrayList<>();
+                imageUrls.addAll(s3.uploadFiles(newImages, new ArrayList<>(Arrays.asList("review", String.valueOf(id)))));
+                review.setImages(imageUrls.toString());
+            }
+
+            if (!existingImages.isEmpty() && !newImages.isEmpty()) {
+                List<String> newImageUrls = new ArrayList<>();
+
+                for (String imageUrl : existingImages) {
+                    List<String> convertedUrls = Arrays.stream(review.getImageUrls()).toList();
+                    if (!convertedUrls.contains(imageUrl)) {
+                        s3.deleteFile("review/" + id + "/" + imageUrl);
+                        continue;
+                    }
+                    newImageUrls.add(imageUrl);
+                }
+
+                List<String> uploadedImageUrls = s3.uploadFiles(newImages, new ArrayList<>(Arrays.asList("review", String.valueOf(id))));
+                newImageUrls.addAll(uploadedImageUrls);
+
+                review.setImages(newImageUrls.toString());
+            }
+
             review = reviewCommandService.updateReview(review);
             res.setData(Optional.ofNullable(reviewCommandService.convert2Dto(review)));
             return ResponseEntity.ok(res);
