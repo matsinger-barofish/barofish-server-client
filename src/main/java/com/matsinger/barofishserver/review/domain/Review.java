@@ -88,4 +88,10 @@ public class Review {
                         1).split(",")).content(this.content).createdAt(this.createdAt).evaluations(this.evaluations !=
                 null ? this.evaluations.stream().map(ReviewEvaluation::getEvaluation).toList() : null).build();
     }
+
+    public String[] getImageUrls() {
+        String substring = this.images.substring(1, images.length() - 1);
+        String[] parsedUrls = substring.split(", ");
+        return parsedUrls;
+    }
 }
