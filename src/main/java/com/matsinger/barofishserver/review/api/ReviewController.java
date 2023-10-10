@@ -289,9 +289,9 @@ public class ReviewController {
 
             if (existingImages != null && newImages == null) {
                 List<String> newImageUrls = new ArrayList<>();
+                List<String> convertedUrls = Arrays.stream(review.getImageUrls()).toList();
 
                 for (String imageUrl : existingImages) {
-                    List<String> convertedUrls = Arrays.stream(review.getImageUrls()).toList();
                     if (!convertedUrls.contains(imageUrl)) {
                         s3.deleteFile("review/" + id + "/" + imageUrl);
                         continue;
@@ -303,9 +303,9 @@ public class ReviewController {
 
             if (existingImages != null && newImages != null) {
                 List<String> newImageUrls = new ArrayList<>();
+                List<String> convertedUrls = Arrays.stream(review.getImageUrls()).toList();
 
                 for (String imageUrl : existingImages) {
-                    List<String> convertedUrls = Arrays.stream(review.getImageUrls()).toList();
                     if (!convertedUrls.contains(imageUrl)) {
                         s3.deleteFile("review/" + id + "/" + imageUrl);
                         continue;
