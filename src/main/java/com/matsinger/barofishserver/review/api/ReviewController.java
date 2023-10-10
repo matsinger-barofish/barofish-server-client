@@ -31,6 +31,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -257,12 +258,12 @@ public class ReviewController {
     }
 
 
-    @PostMapping("/update/{id}")
+    @PostMapping(value = "/update/{id}")
     public ResponseEntity<CustomResponse<ReviewDto>> updateReview(@RequestHeader(value = "Authorization") Optional<String> auth,
                                                                   @PathVariable("id") Integer id,
                                                                   @RequestPart(value = "data") UpdateReviewReq data,
-                                                                  @RequestPart(value = "existImages") List<String> existingImages,
-                                                                  @RequestPart(value = "newImages") List<MultipartFile> newImages) {
+                                                                  @RequestPart(value = "existImages", required = false) List<String> existingImages,
+                                                                  @RequestPart(value = "newImages", required = false) List<MultipartFile> newImages) {
         CustomResponse<ReviewDto> res = new CustomResponse<>();
         Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth);
         if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");

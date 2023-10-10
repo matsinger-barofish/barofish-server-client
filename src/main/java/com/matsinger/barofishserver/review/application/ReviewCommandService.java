@@ -122,6 +122,7 @@ public class ReviewCommandService {
         }
     }
 
+    @Transactional
     public void deleteReviewWithReviewId(Integer reviewId) {
         evaluationRepository.deleteAllByReviewId(reviewId);
     }
