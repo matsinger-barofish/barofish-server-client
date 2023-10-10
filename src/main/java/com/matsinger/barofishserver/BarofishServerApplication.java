@@ -14,5 +14,4 @@ public class BarofishServerApplication {
 		SpringApplication.run(BarofishServerApplication.class, args);
 	}
 
-
 }
