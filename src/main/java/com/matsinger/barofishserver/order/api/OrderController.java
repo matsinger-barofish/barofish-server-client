@@ -80,6 +80,7 @@ public class OrderController {
     private final Common utils;
 
 
+
     @GetMapping("/point-rule")
     public ResponseEntity<CustomResponse<PointRuleRes>> selectPointRule(@RequestHeader(value = "Authorization") Optional<String> auth) {
         CustomResponse<PointRuleRes> res = new CustomResponse<>();
