@@ -264,6 +264,7 @@ public class ReviewController {
                                                                   @RequestPart(value = "data") UpdateReviewReq data,
                                                                   @RequestPart(value = "existImages", required = false) List<String> existingImages,
                                                                   @RequestPart(value = "newImages", required = false) List<MultipartFile> newImages) {
+
         CustomResponse<ReviewDto> res = new CustomResponse<>();
         Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth);
         if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
