@@ -12,6 +12,7 @@ import com.matsinger.barofishserver.review.dto.UpdateReviewReq;
 import com.matsinger.barofishserver.review.dto.v2.ProductReviewDto;
 import com.matsinger.barofishserver.review.dto.v2.ReviewDtoV2;
 import com.matsinger.barofishserver.review.dto.v2.StoreReviewDto;
+import com.matsinger.barofishserver.review.dto.v2.UserReviewDto;
 import com.matsinger.barofishserver.utils.CustomResponse;
 import com.matsinger.barofishserver.utils.S3.S3Uploader;
 import lombok.RequiredArgsConstructor;
@@ -110,6 +111,27 @@ public class ReviewControllerV2 {
         try {
             StoreReviewDto pagedStoreReviewDto = reviewQueryService.getPagedProductSumStoreReviewInfo(storeId, orderType, pageRequest);
             res.setData(Optional.of(pagedStoreReviewDto));
+            return ResponseEntity.ok(res);
+
+        } catch (Exception e) {
+            return res.defaultError(e);
+        }
+    }
+
+    @GetMapping("/my")
+    public ResponseEntity<CustomResponse<UserReviewDto>> selectMyReviewListV2(@RequestHeader(value = "Authorization") Optional<String> auth,
+                                                                            @RequestParam(value = "orderType", required = false, defaultValue = "RECENT") ReviewOrderByType orderType,
+                                                                            @RequestParam(value = "page", required = false, defaultValue = "0") Integer page,
+                                                                            @RequestParam(value = "take", required = false, defaultValue = "10") Integer take) {
+        CustomResponse<UserReviewDto> res = new CustomResponse<>();
+        Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth);
+        if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
+        Integer userId = tokenInfo.get().getId();
+
+        PageRequest pageRequest = PageRequest.of(page, take);
+        try {
+            UserReviewDto pagedUserReview = reviewQueryService.getPagedUserReview(userId, orderType, pageRequest);
+            res.setData(Optional.of(pagedUserReview));
             return ResponseEntity.ok(res);
 
         } catch (Exception e) {

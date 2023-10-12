@@ -19,4 +19,8 @@ public interface ReviewRepositoryCustom {
     List<ReviewDtoV2> getPagedProductSumStoreReviews(Integer storeId, ReviewOrderByType orderCondition, Pageable pageable);
 
     List<ReviewEvaluationSummaryDto> getProductSumStoreReviewEvaluations(Integer storeId);
+
+    Long getUserReviewCount(Integer userId);
+
+    List<ReviewDtoV2> getPagedUserReview(Integer userId, ReviewOrderByType orderType, PageRequest pageRequest);
 }

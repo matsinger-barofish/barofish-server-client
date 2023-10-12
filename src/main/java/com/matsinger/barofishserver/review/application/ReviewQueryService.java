@@ -6,10 +6,7 @@ import com.matsinger.barofishserver.review.domain.ReviewEvaluationType;
 import com.matsinger.barofishserver.review.domain.ReviewOrderByType;
 import com.matsinger.barofishserver.review.dto.ReviewStatistic;
 import com.matsinger.barofishserver.review.dto.ReviewTotalStatistic;
-import com.matsinger.barofishserver.review.dto.v2.ProductReviewDto;
-import com.matsinger.barofishserver.review.dto.v2.ReviewDtoV2;
-import com.matsinger.barofishserver.review.dto.v2.ReviewEvaluationSummaryDto;
-import com.matsinger.barofishserver.review.dto.v2.StoreReviewDto;
+import com.matsinger.barofishserver.review.dto.v2.*;
 import com.matsinger.barofishserver.review.repository.ReviewEvaluationRepository;
 import com.matsinger.barofishserver.review.repository.ReviewLikeRepository;
 import com.matsinger.barofishserver.review.repository.ReviewRepository;
@@ -162,6 +159,21 @@ public class ReviewQueryService {
                 .storeId(storeId)
                 .reviewCount(totalReviewCount)
                 .evaluationSummaryDtos(productSumStoreReviewEvaluations)
+                .pagedReviews(pagedReviews)
+                .build();
+    }
+
+    public UserReviewDto getPagedUserReview(Integer userId, ReviewOrderByType orderType, PageRequest pageRequest) {
+
+        Long totalReviewCount = reviewRepositoryImpl.getUserReviewCount(userId);
+        List<ReviewDtoV2> pagedUserReviews = reviewRepositoryImpl.getPagedUserReview(userId, orderType, pageRequest);
+
+        PageImpl<ReviewDtoV2> pagedReviews = new PageImpl<>(pagedUserReviews, pageRequest, totalReviewCount);
+        convertStringImageUrlsToArray(pagedReviews);
+
+        return UserReviewDto.builder()
+                .userId(userId)
+                .reviewCount(totalReviewCount)
                 .pagedReviews(pagedReviews)
                 .build();
     }
