@@ -220,10 +220,10 @@ public class Product {
                 null ? this.category.convert2Dto() : null).expectedDeliverDay(this.getExpectedDeliverDay()).images(this.images.substring(
                 1,
                 images.length() -
-                        1).split(",")).title(title).state(this.getState()).originPrice(originPrice).deliveryInfo(
+                        1).split(", ")).title(title).state(this.getState()).originPrice(originPrice).deliveryInfo(
                 deliveryInfo).description(descriptionImages).descriptionImages(descriptionImages.substring(1,
                 descriptionImages.length() -
-                        1).split(",")).representOptionItemId(this.representOptionItemId).deliverBoxPerAmount(this.getDeliverBoxPerAmount()).createdAt(
+                        1).split(", ")).representOptionItemId(this.representOptionItemId).deliverBoxPerAmount(this.getDeliverBoxPerAmount()).createdAt(
                 this.getCreatedAt()).pointRate(this.getPointRate()).promotionStartAt(this.promotionStartAt).promotionEndAt(
                 this.promotionEndAt).build();
     }
