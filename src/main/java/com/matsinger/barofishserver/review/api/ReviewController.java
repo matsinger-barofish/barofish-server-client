@@ -24,14 +24,11 @@ import com.matsinger.barofishserver.utils.S3.S3Uploader;
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.JoinType;
 import jakarta.persistence.criteria.Predicate;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -262,7 +259,7 @@ public class ReviewController {
     public ResponseEntity<CustomResponse<ReviewDto>> updateReview(@RequestHeader(value = "Authorization") Optional<String> auth,
                                                                   @PathVariable("id") Integer id,
                                                                   @RequestPart(value = "data") UpdateReviewReq data,
-                                                                  @RequestPart(value = "existImages", required = false) List<String> existingImages,
+                                                                  @RequestPart(value = "imageUrlsToRemain", required = false) List<String> imageUrlsToRemain,
                                                                   @RequestPart(value = "newImages", required = false) List<MultipartFile> newImages) {
 
         CustomResponse<ReviewDto> res = new CustomResponse<>();
@@ -281,40 +278,33 @@ public class ReviewController {
                 reviewCommandService.addReviewEvaluationList(review.getId(), data.getEvaluations());
             }
 
-            if (existingImages == null && newImages == null) {
-                for (String imageUrl : review.getImageUrls()) {
-                    s3.deleteFile(imageUrl);
+            if (imageUrlsToRemain == null && newImages != null) {
+                if (!review.getImageUrls().isEmpty()) {
+                    for (String imageUrl : review.getImageUrls()) {
+                        s3.deleteFile(imageUrl);
+                    }
+                    review.setImages("[]");
                 }
-                review.setImages("[]");
+                List<String> uploadedImageUrls = s3.uploadFiles(newImages, new ArrayList<>(Arrays.asList("review", String.valueOf(id))));
+                review.setImages(uploadedImageUrls.toString());
             }
 
-            if (existingImages != null && newImages == null) {
-                List<String> newImageUrls = new ArrayList<>();
-                ArrayList<String> convertedUrls = new ArrayList<>(Arrays.stream(review.getImageUrls()).toList());
-
-                for (String imageUrl : existingImages) {
-                    boolean isRemoved = convertedUrls.remove(imageUrl);
-                    if (isRemoved == false) {
-                        s3.deleteFile("review/" + id + "/" + imageUrl);
-                        continue;
+            if (imageUrlsToRemain == null && newImages == null) {
+                if (!review.getImageUrls().isEmpty()) {
+                    for (String imageUrl : review.getImageUrls()) {
+                        s3.deleteFile(imageUrl);
                     }
-                    newImageUrls.add(imageUrl);
+                    review.setImages("[]");
                 }
+            }
+
+            if (imageUrlsToRemain != null && newImages == null) {
+                List<String> newImageUrls = deleteImagesAndReturnRemainingImageUrls(id, review, imageUrlsToRemain);
                 review.setImages(newImageUrls.toString());
             }
 
-            if (existingImages != null && newImages != null) {
-                List<String> newImageUrls = new ArrayList<>();
-                List<String> convertedUrls = Arrays.stream(review.getImageUrls()).toList();
-
-                for (String imageUrl : existingImages) {
-                    boolean isRemoved = convertedUrls.remove(imageUrl);
-                    if (isRemoved == false) {
-                        s3.deleteFile("review/" + id + "/" + imageUrl);
-                        continue;
-                    }
-                    newImageUrls.add(imageUrl);
-                }
+            if (imageUrlsToRemain != null && newImages != null) {
+                List<String> newImageUrls = deleteImagesAndReturnRemainingImageUrls(id, review, imageUrlsToRemain);
 
                 List<String> uploadedImageUrls = s3.uploadFiles(newImages, new ArrayList<>(Arrays.asList("review", String.valueOf(id))));
                 newImageUrls.addAll(uploadedImageUrls);
@@ -328,6 +318,22 @@ public class ReviewController {
         } catch (Exception e) {
             return res.defaultError(e);
         }
+    }
+
+    private List<String> deleteImagesAndReturnRemainingImageUrls (Integer id, Review review, List<String> imageUrlsToRemain) {
+        ArrayList<String> ImageUrlsToRemain = new ArrayList<>();
+        ArrayList<String> reviewImageUrls = review.getImageUrls();
+
+        for (String imageUrlToRemain : imageUrlsToRemain) {
+            boolean isRemoved = reviewImageUrls.remove(imageUrlToRemain);
+            if (isRemoved) {
+                ImageUrlsToRemain.add(imageUrlToRemain);
+            }
+        }
+        for (String imageUrlToDelete : reviewImageUrls) {
+            s3.deleteFile("review/" + id + "/" + imageUrlToDelete);
+        }
+        return ImageUrlsToRemain;
     }
 
     @PostMapping("/like/{id}")
