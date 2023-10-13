@@ -211,7 +211,7 @@ public class Product {
 
     public ProductListDto convert2ListDto() {
         return ProductListDto.builder().id(this.id).image(this.images.substring(1,
-                images.length() - 1).split(",")[0]).originPrice(this.originPrice).title(this.title).build();
+                images.length() - 1).split(", ")[0]).originPrice(this.originPrice).title(this.title).build();
     }
 
     public SimpleProductDto convert2SimpleDto() {
