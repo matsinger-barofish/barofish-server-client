@@ -29,7 +29,7 @@ public interface CouponRepository extends JpaRepository<Coupon, Integer>, JpaSpe
             "\'ACTIVE\' " +
             "AND" +
             " c.start_at < NOW( )\n" +
-            "  AND NOW( ) < c.end_at", nativeQuery = true)
+            "  AND (NOW( ) < c.end_at OR c.end_at is null)", nativeQuery = true)
     List<Coupon> selectDownloadedCoupon(@Param("userId") Integer userId);
 
     @Query(value = "SELECT c.*\n" +
