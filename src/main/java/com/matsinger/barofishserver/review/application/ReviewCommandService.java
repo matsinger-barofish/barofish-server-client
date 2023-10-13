@@ -81,6 +81,8 @@ public class ReviewCommandService {
     }
 
     public ReviewDto convert2Dto(Review review, Integer userId) {
+        System.out.println("### convert2Dto is called");
+        System.out.println("### userId = " + userId);
         ReviewDto dto = review.convert2Dto();
         UserInfo
                 userDto =

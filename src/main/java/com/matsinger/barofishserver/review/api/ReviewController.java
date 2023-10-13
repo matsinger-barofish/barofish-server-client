@@ -267,7 +267,7 @@ public class ReviewController {
         System.out.println("### reviewId = " + id);
         boolean imageUrlsToRemainIsNull = imageUrlsToRemain == null;
         boolean newImagesIsNull = newImages == null;
-        System.out.println("### imageUrlsToRemain is null = " + imageUrlsToRemainIsNull + " | newImages.isEmpty is null = " + newImagesIsNull);
+        System.out.println("### imageUrlsToRemain is null = " + imageUrlsToRemainIsNull + " | newImages is null = " + newImagesIsNull);
 
         CustomResponse<ReviewDto> res = new CustomResponse<>();
         Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth);
