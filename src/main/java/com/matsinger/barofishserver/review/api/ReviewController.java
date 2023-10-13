@@ -161,8 +161,11 @@ public class ReviewController {
                                                                                          @RequestParam(value = "orderType", required = false, defaultValue = "RECENT") ReviewOrderByType orderType,
                                                                                          @RequestParam(value = "page", required = false, defaultValue = "0") Integer page,
                                                                                          @RequestParam(value = "take", required = false, defaultValue = "10") Integer take) {
+        System.out.println("### GET /product/{id} is called");
+        System.out.println("### Authorization = " + auth.get());
         CustomResponse<Page<ReviewDto>> res = new CustomResponse<>();
         Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ALLOW), auth);
+        System.out.println("### userId = " + tokenInfo.get().getId());
         try {
             PageRequest pageRequest = PageRequest.of(page, take);
             Page<Review>
