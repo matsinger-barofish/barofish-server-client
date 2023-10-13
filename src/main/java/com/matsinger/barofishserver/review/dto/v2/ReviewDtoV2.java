@@ -1,10 +1,8 @@
 package com.matsinger.barofishserver.review.dto.v2;
 
-import com.matsinger.barofishserver.grade.domain.Grade;
 import lombok.Getter;
 
 import java.sql.Timestamp;
-import java.util.List;
 
 @Getter
 public class ReviewDtoV2 {
@@ -12,6 +10,7 @@ public class ReviewDtoV2 {
     private Integer userId;
     private String userName;
     private String userGrade;
+    private Integer productId;
     private String productName;
     private String reviewContent;
     private Timestamp createdAt;
