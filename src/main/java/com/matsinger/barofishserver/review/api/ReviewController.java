@@ -161,11 +161,8 @@ public class ReviewController {
                                                                                          @RequestParam(value = "orderType", required = false, defaultValue = "RECENT") ReviewOrderByType orderType,
                                                                                          @RequestParam(value = "page", required = false, defaultValue = "0") Integer page,
                                                                                          @RequestParam(value = "take", required = false, defaultValue = "10") Integer take) {
-        System.out.println("### GET /product/{id} is called");
-        System.out.println("### Authorization = " + auth.get());
         CustomResponse<Page<ReviewDto>> res = new CustomResponse<>();
         Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ALLOW), auth);
-        System.out.println("### userId = " + tokenInfo.get().getId());
         try {
             PageRequest pageRequest = PageRequest.of(page, take);
             Page<Review>
@@ -263,12 +260,6 @@ public class ReviewController {
                                                                   @RequestPart(value = "data") UpdateReviewReq data,
                                                                   @RequestPart(value = "imageUrlsToRemain", required = false) List<String> imageUrlsToRemain,
                                                                   @RequestPart(value = "newImages", required = false) List<MultipartFile> newImages) {
-        System.out.println("### POST = /update/{id} is called");
-        System.out.println("### reviewId = " + id);
-        boolean imageUrlsToRemainIsNull = imageUrlsToRemain == null;
-        boolean newImagesIsNull = newImages == null;
-        System.out.println("### imageUrlsToRemain is null = " + imageUrlsToRemainIsNull + " | newImages is null = " + newImagesIsNull);
-
         CustomResponse<ReviewDto> res = new CustomResponse<>();
         Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth);
         if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
