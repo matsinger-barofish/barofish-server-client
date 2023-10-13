@@ -260,7 +260,9 @@ public class ReviewController {
                                                                   @RequestPart(value = "data") UpdateReviewReq data,
                                                                   @RequestPart(value = "imageUrlsToRemain", required = false) List<String> imageUrlsToRemain,
                                                                   @RequestPart(value = "newImages", required = false) List<MultipartFile> newImages) {
-
+        System.out.println("### POST = /update/{id} is called");
+        System.out.println("### reviewId = " + id);
+        System.out.println("imageUrlsToRemain = " + imageUrlsToRemain.toString());
         CustomResponse<ReviewDto> res = new CustomResponse<>();
         Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth);
         if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
