@@ -81,6 +81,7 @@ public class S3Uploader {
 
     public void deleteFile(String filePath) {
         String parsedUrl = filePath.split(s3Url + "/")[1];
+
         try {
             if (isExists(parsedUrl)) {
                 amazonS3Client.deleteObject(this.bucket, parsedUrl);

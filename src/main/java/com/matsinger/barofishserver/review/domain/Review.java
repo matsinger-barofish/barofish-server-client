@@ -87,7 +87,7 @@ public class Review {
     public ReviewDto convert2Dto() {
         return ReviewDto.builder().id(this.id).store(this.store.getStoreInfo().convert2Dto()).images(images.substring(1,
                 images.length() -
-                        1).split(",")).content(this.content).createdAt(this.createdAt).evaluations(this.evaluations !=
+                        1).split(", ")).content(this.content).createdAt(this.createdAt).evaluations(this.evaluations !=
                 null ? this.evaluations.stream().map(ReviewEvaluation::getEvaluation).toList() : null).build();
     }
 

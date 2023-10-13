@@ -260,13 +260,6 @@ public class ReviewController {
                                                                   @RequestPart(value = "data") UpdateReviewReq data,
                                                                   @RequestPart(value = "imageUrlsToRemain", required = false) List<String> imageUrlsToRemain,
                                                                   @RequestPart(value = "newImages", required = false) List<MultipartFile> newImages) {
-        System.out.println("### POST = /update/{id} is called");
-        System.out.println("### reviewId = " + id);
-        boolean imageUrlsToRemainIsNull = imageUrlsToRemain == null;
-        boolean newImagesIsNull = newImages == null;
-        System.out.println("### imageUrlsToRemain is null = " + imageUrlsToRemainIsNull + " | newImages is null = " + newImagesIsNull);
-        System.out.println("### imageUrlsToRemain = " + imageUrlsToRemain);
-
         CustomResponse<ReviewDto> res = new CustomResponse<>();
         Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth);
         System.out.println("userId = " + tokenInfo.get().getId());
@@ -274,7 +267,6 @@ public class ReviewController {
         try {
             Integer userId = tokenInfo.get().getId();
             Review review = reviewQueryService.selectReview(id);
-            System.out.println("### review.getUrl = " + review.getImageUrls());
             if (review.getUserId() != userId) return res.throwError("타인의 리뷰입니다.", "NOT_ALLOWED");
             if (data.getContent() != null) {
                 if (data.getContent().length() == 0) return res.throwError("리뷰 내용을 입력해주세요.", "INPUT_CHECK_REQUIRED");
