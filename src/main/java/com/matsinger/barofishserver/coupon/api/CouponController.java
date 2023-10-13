@@ -139,7 +139,6 @@ public class CouponController {
         }
     }
 
-
     @GetMapping("/downloaded")
     public ResponseEntity<CustomResponse<List<Coupon>>> selectDownloadedCoupon(@RequestHeader(value = "Authorization") Optional<String> auth) {
         CustomResponse<List<Coupon>> res = new CustomResponse<>();
