@@ -114,6 +114,7 @@ public class Curation {
                 .sortNo(this.getSortNo())
                 .type(this.getType())
                 .description(this.getDescription())
+                .state(this.state)
 //                .state(this.state)
                 .build();
     }
