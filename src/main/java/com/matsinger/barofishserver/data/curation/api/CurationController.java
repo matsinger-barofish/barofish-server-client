@@ -157,8 +157,9 @@ public class CurationController {
                 description = util.validateString(description, 200L, "설명");
                 curation.setDescription(description);
                 curation.setType(type);
-//                if (state == null) return res.throwError("상태를 입력해 주세요.", "INPUT_CHECK_REQUIRED");
-//                curation.setState(state);
+                if (state != null) {
+                curation.setState(state);
+                }
             }
             curation.setSortNo(curationQueryService.selectMaxSortNo());
             Curation data = curationCommandService.add(curation);
