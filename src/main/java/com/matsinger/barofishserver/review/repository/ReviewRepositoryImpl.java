@@ -16,7 +16,9 @@ import org.springframework.stereotype.Repository;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.matsinger.barofishserver.order.orderprductinfo.domain.QOrderProductInfo.orderProductInfo;
 import static com.matsinger.barofishserver.product.domain.QProduct.product;
+import static com.matsinger.barofishserver.product.optionitem.domain.QOptionItem.optionItem;
 import static com.matsinger.barofishserver.review.domain.QReview.review;
 import static com.matsinger.barofishserver.review.domain.QReviewEvaluation.reviewEvaluation;
 import static com.matsinger.barofishserver.review.domain.QReviewLike.*;
@@ -40,19 +42,25 @@ public class ReviewRepositoryImpl implements ReviewRepositoryCustom {
                         Projections.fields(ReviewDtoV2.class,
                                 userInfo.userId.as("userId"),
                                 userInfo.name.as("userName"),
+                                userInfo.nickname.as("userNickname"),
                                 grade.name.as("userGrade"),
                                 product.id.as("productId"),
                                 product.title.as("productName"),
+                                product.images.as("productImage"),
+                                optionItem.originPrice.as("originPrice"),
+                                optionItem.discountPrice.as("discountPrice"),
                                 review.content.as("reviewContent"),
                                 review.createdAt.as("createdAt"),
                                 review.images.as("images"),
                                 reviewLike.reviewId.count().as("likeSum")
-                ))
+                        ))
                 .from(review)
                 .leftJoin(reviewLike).on(review.id.eq(reviewLike.reviewId))
                 .leftJoin(userInfo).on(review.userId.eq(userInfo.userId))
                 .leftJoin(grade).on(grade.eq(userInfo.grade))
                 .leftJoin(product).on(product.id.eq(review.productId))
+                .leftJoin(orderProductInfo).on(orderProductInfo.id.eq(review.orderProductInfoId))
+                .leftJoin(optionItem).on(orderProductInfo.optionItemId.eq(optionItem.id))
                 .where(product.id.eq(productId), review.isDeleted.eq(false))
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
@@ -103,6 +111,9 @@ public class ReviewRepositoryImpl implements ReviewRepositoryCustom {
                         grade.name.as("userGrade"),
                         product.id.as("productId"),
                         product.title.as("productName"),
+                        product.images.as("productImage"),
+                        optionItem.originPrice.as("originPrice"),
+                        optionItem.discountPrice.as("discountPrice"),
                         review.content.as("reviewContent"),
                         review.createdAt.as("createdAt"),
                         review.images.as("images"),
@@ -113,6 +124,8 @@ public class ReviewRepositoryImpl implements ReviewRepositoryCustom {
                 .leftJoin(userInfo).on(review.userId.eq(userInfo.userId))
                 .leftJoin(grade).on(userInfo.grade.eq(grade))
                 .leftJoin(product).on(product.id.eq(review.productId))
+                .leftJoin(orderProductInfo).on(orderProductInfo.id.eq(review.orderProductInfoId))
+                .leftJoin(optionItem).on(orderProductInfo.optionItemId.eq(optionItem.id))
                 .where(storeInfo.storeId.eq(storeId), product.state.eq(ProductState.ACTIVE), review.isDeleted.eq(false))
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
@@ -174,6 +187,9 @@ public class ReviewRepositoryImpl implements ReviewRepositoryCustom {
                         grade.name.as("userGrade"),
                         product.id.as("productId"),
                         product.title.as("productName"),
+                        product.images.as("productImage"),
+                        optionItem.originPrice.as("originPrice"),
+                        optionItem.discountPrice.as("discountPrice"),
                         review.content.as("reviewContent"),
                         review.createdAt.as("createdAt"),
                         review.images.as("images"),
@@ -183,6 +199,8 @@ public class ReviewRepositoryImpl implements ReviewRepositoryCustom {
                 .leftJoin(reviewLike).on(review.id.eq(reviewLike.reviewId))
                 .leftJoin(userInfo).on(userInfo.userId.eq(userId))
                 .leftJoin(product).on(product.id.eq(review.productId))
+                .leftJoin(orderProductInfo).on(orderProductInfo.id.eq(review.orderProductInfoId))
+                .leftJoin(optionItem).on(orderProductInfo.optionItemId.eq(optionItem.id))
                 .leftJoin(grade).on(userInfo.grade.eq(grade))
                 .where(userInfo.userId.eq(userId), product.state.eq(ProductState.ACTIVE), review.isDeleted.eq(false))
                 .orderBy(reviewOrderSpecifier)

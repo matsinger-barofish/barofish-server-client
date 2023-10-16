@@ -185,6 +185,9 @@ public class ReviewQueryService {
             String[] parsedUrls = processedUrls.split(", ");
 
             pagedReview.setImageUrls(parsedUrls);
+
+            String productImage = pagedReview.getProductImage();
+            pagedReview.setProductImage(productImage.substring(1, productImage.length() - 1));
         }
     }
 }
