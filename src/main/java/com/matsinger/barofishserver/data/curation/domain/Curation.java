@@ -46,7 +46,7 @@ public class Curation {
     private List<CurationProductMap> curationProductMaps = new ArrayList<>();
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "state", nullable = false, length = 10)
+    @Column(name = "state", length = 10)
     private CurationState state;
 
     public int getId() {
@@ -114,7 +114,7 @@ public class Curation {
                 .sortNo(this.getSortNo())
                 .type(this.getType())
                 .description(this.getDescription())
-                .state(this.state)
+//                .state(this.state)
                 .build();
     }
 
