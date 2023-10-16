@@ -24,11 +24,11 @@ public class HolidayController {
     private final HolidayQueryService holidayQueryService;
 
     @GetMapping("")
-    public ResponseEntity<CustomResponse<Object>> getAnniversary(@RequestParam(value = "Authrization") Optional<String> auth,
-                                                                 @RequestParam(value = "take", required = false, defaultValue = "10") Integer take,
-                                                                 @RequestParam(value = "page", required = false, defaultValue = "1") Integer page,
-                                                                 @RequestParam(value = "year") String year,
-                                                                 @RequestParam(value = "month") String month) {
+    public ResponseEntity<CustomResponse<Object>> getHolidays(@RequestParam(value = "Authrization") Optional<String> auth,
+                                                              @RequestParam(value = "take", required = false, defaultValue = "10") Integer take,
+                                                              @RequestParam(value = "page", required = false, defaultValue = "1") Integer page,
+                                                              @RequestParam(value = "year") String year,
+                                                              @RequestParam(value = "month") String month) {
         CustomResponse<Object> res = new CustomResponse<>();
 
         Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
@@ -39,7 +39,8 @@ public class HolidayController {
         PageRequest pageRequest = PageRequest.of(page, take);
 
         try {
-            holidayQueryService.getOpenDataAnniversaryInfoResponse(year, month, pageRequest);
+            Holidays holidays = holidayQueryService.getOpenDataHolidayInfoResponse(year, month, pageRequest);
+
             return ResponseEntity.ok(null);
         } catch(Exception e) {
             return res.defaultError(e);

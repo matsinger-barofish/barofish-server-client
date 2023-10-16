@@ -17,7 +17,6 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.util.ArrayList;
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -28,7 +27,7 @@ public class HolidayQueryService {
 
 //    public void get
 
-    public Holidays getOpenDataAnniversaryInfoResponse(String year, String month, PageRequest pageRequest) throws IOException {
+    public Holidays getOpenDataHolidayInfoResponse(String year, String month, PageRequest pageRequest) throws IOException {
 
         StringBuilder urlBuilder = new StringBuilder(targetUrl); /*URL*/
 

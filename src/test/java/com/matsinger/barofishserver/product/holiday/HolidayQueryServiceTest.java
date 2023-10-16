@@ -1,6 +1,5 @@
 package com.matsinger.barofishserver.product.holiday;
 
-import org.json.JSONObject;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,9 +21,20 @@ class HolidayQueryServiceTest {
     @Test
     void testMethodNameHere() throws IOException {
         // given
-        Holidays holidays = holidayQueryService.getOpenDataAnniversaryInfoResponse("2023", "10", PageRequest.of(0, 28));
+        Holidays holidays = holidayQueryService.getOpenDataHolidayInfoResponse("2023", "10", PageRequest.of(0, 28));
+        System.out.println(holidays.toString());
 
         // when
+        // then
+    }
+
+    @DisplayName("오늘이 12월 마지막주이면 내년 1월 첫째주 공휴일 데이터를 불러올 수 있다.")
+    @Test
+    void apiConditionTest() {
+        // given
+
+        // when
+
         // then
     }
 }
