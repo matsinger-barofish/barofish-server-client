@@ -1,5 +1,6 @@
 package com.matsinger.barofishserver.review.repository;
 
+import com.matsinger.barofishserver.product.domain.ProductState;
 import com.matsinger.barofishserver.review.domain.ReviewOrderByType;
 import com.matsinger.barofishserver.review.dto.v2.ReviewDtoV2;
 import com.matsinger.barofishserver.review.dto.v2.ReviewEvaluationSummaryDto;
@@ -8,7 +9,7 @@ import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.core.types.Projections;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 
@@ -19,6 +20,7 @@ import static com.matsinger.barofishserver.product.domain.QProduct.product;
 import static com.matsinger.barofishserver.review.domain.QReview.review;
 import static com.matsinger.barofishserver.review.domain.QReviewEvaluation.reviewEvaluation;
 import static com.matsinger.barofishserver.review.domain.QReviewLike.*;
+import static com.matsinger.barofishserver.store.domain.QStoreInfo.storeInfo;
 import static com.matsinger.barofishserver.userinfo.domain.QUserInfo.userInfo;
 import static com.matsinger.barofishserver.grade.domain.QGrade.grade;
 import static com.querydsl.core.group.GroupBy.groupBy;
@@ -31,7 +33,7 @@ public class ReviewRepositoryImpl implements ReviewRepositoryCustom {
 
     @Override
     public List<ReviewDtoV2> getPagedProductReviews(int productId, ReviewOrderByType orderCondition, Pageable pageable) {
-        OrderSpecifier[] orderSpecifiers = createProductReviewOrderSpecifier(orderCondition);
+        OrderSpecifier[] orderSpecifiers = createReviewOrderSpecifier(orderCondition);
 
         return queryFactory
                 .select(
@@ -39,6 +41,7 @@ public class ReviewRepositoryImpl implements ReviewRepositoryCustom {
                                 userInfo.userId.as("userId"),
                                 userInfo.name.as("userName"),
                                 grade.name.as("userGrade"),
+                                product.id.as("productId"),
                                 product.title.as("productName"),
                                 review.content.as("reviewContent"),
                                 review.createdAt.as("createdAt"),
@@ -86,7 +89,106 @@ public class ReviewRepositoryImpl implements ReviewRepositoryCustom {
                 .fetch();
     }
 
-    private OrderSpecifier[] createProductReviewOrderSpecifier(ReviewOrderByType orderType) {
+
+
+    @Override
+    public List<ReviewDtoV2> getPagedProductSumStoreReviews(Integer storeId, ReviewOrderByType orderCondition, Pageable pageable) {
+        OrderSpecifier[] orderSpecifiers = createReviewOrderSpecifier(orderCondition);
+
+        return queryFactory
+                .select(Projections.fields(
+                        ReviewDtoV2.class,
+                        userInfo.userId.as("userId"),
+                        userInfo.name.as("userName"),
+                        grade.name.as("userGrade"),
+                        product.id.as("productId"),
+                        product.title.as("productName"),
+                        review.content.as("reviewContent"),
+                        review.createdAt.as("createdAt"),
+                        review.images.as("images"),
+                        reviewLike.reviewId.count().as("likeSum")
+                )).from(review)
+                .leftJoin(storeInfo).on(storeInfo.storeId.eq(review.storeId))
+                .leftJoin(reviewLike).on(review.id.eq(reviewLike.reviewId))
+                .leftJoin(userInfo).on(review.userId.eq(userInfo.userId))
+                .leftJoin(grade).on(userInfo.grade.eq(grade))
+                .leftJoin(product).on(product.id.eq(review.productId))
+                .where(storeInfo.storeId.eq(storeId), product.state.eq(ProductState.ACTIVE), review.isDeleted.eq(false))
+                .offset(pageable.getOffset())
+                .limit(pageable.getPageSize())
+                .groupBy(review.id)
+                .orderBy(orderSpecifiers)
+                .fetch();
+    }
+
+    public Long getStoreProductReviewCount(Integer storeId) {
+        Long reviewCount = queryFactory
+                .select(review.count())
+                .from(review)
+                .leftJoin(product).on(review.productId.eq(product.id))
+                .where(review.storeId.eq(storeId), review.isDeleted.eq(false), product.state.eq(ProductState.ACTIVE))
+                .fetchOne();
+
+        return reviewCount;
+    }
+
+    @Override
+    public List<ReviewEvaluationSummaryDto> getProductSumStoreReviewEvaluations(Integer storeId) {
+
+        return queryFactory
+                .select(Projections.fields(
+                        ReviewEvaluationSummaryDto.class,
+                        reviewEvaluation.evaluation.as("evaluationType"),
+                        reviewEvaluation.evaluation.count().as("evaluationSum")
+                ))
+                .from(storeInfo)
+                .leftJoin(product).on(product.storeId.eq(storeInfo.storeId))
+                .leftJoin(review).on(review.productId.eq(product.id))
+                .leftJoin(reviewEvaluation).on(review.id.eq(reviewEvaluation.reviewId))
+                .where(storeInfo.storeId.eq(storeId), product.state.eq(ProductState.ACTIVE), review.isDeleted.eq(false))
+                .groupBy(reviewEvaluation.evaluation)
+                .fetch();
+    }
+
+    @Override
+    public Long getUserReviewCount(Integer userId) {
+
+        return queryFactory
+                .select(review.count())
+                .from(review)
+                .leftJoin(product).on(review.productId.eq(product.id))
+                .where(review.userId.eq(userId), product.state.eq(ProductState.ACTIVE), review.isDeleted.eq(false))
+                .fetchOne();
+    }
+
+    @Override
+    public List<ReviewDtoV2> getPagedUserReview(Integer userId, ReviewOrderByType orderType, PageRequest pageRequest) {
+        OrderSpecifier[] reviewOrderSpecifier = createReviewOrderSpecifier(orderType);
+
+        return queryFactory
+                .select(Projections.fields(
+                        ReviewDtoV2.class,
+                        userInfo.userId.as("userId"),
+                        userInfo.name.as("userName"),
+                        grade.name.as("userGrade"),
+                        product.id.as("productId"),
+                        product.title.as("productName"),
+                        review.content.as("reviewContent"),
+                        review.createdAt.as("createdAt"),
+                        review.images.as("images"),
+                        reviewLike.reviewId.count().as("likeSum")
+                ))
+                .from(review)
+                .leftJoin(reviewLike).on(review.id.eq(reviewLike.reviewId))
+                .leftJoin(userInfo).on(userInfo.userId.eq(userId))
+                .leftJoin(product).on(product.id.eq(review.productId))
+                .leftJoin(grade).on(userInfo.grade.eq(grade))
+                .where(userInfo.userId.eq(userId), product.state.eq(ProductState.ACTIVE), review.isDeleted.eq(false))
+                .orderBy(reviewOrderSpecifier)
+                .fetch();
+    }
+
+    private OrderSpecifier[] createReviewOrderSpecifier(ReviewOrderByType orderType) {
 
         List<OrderSpecifier> orderSpecifiers = new ArrayList<>();
 

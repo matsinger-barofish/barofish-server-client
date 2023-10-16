@@ -24,8 +24,6 @@ import com.matsinger.barofishserver.utils.S3.S3Uploader;
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.JoinType;
 import jakarta.persistence.criteria.Predicate;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -256,15 +254,15 @@ public class ReviewController {
 
     }
 
-
-    @PostMapping("/update/{id}")
+    @PostMapping(value = "/update/{id}")
     public ResponseEntity<CustomResponse<ReviewDto>> updateReview(@RequestHeader(value = "Authorization") Optional<String> auth,
                                                                   @PathVariable("id") Integer id,
                                                                   @RequestPart(value = "data") UpdateReviewReq data,
-                                                                  @RequestPart(value = "existImages") List<String> existingImages,
-                                                                  @RequestPart(value = "newImages") List<MultipartFile> newImages) {
+                                                                  @RequestPart(value = "imageUrlsToRemain", required = false) List<String> imageUrlsToRemain,
+                                                                  @RequestPart(value = "newImages", required = false) List<MultipartFile> newImages) {
         CustomResponse<ReviewDto> res = new CustomResponse<>();
         Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth);
+        System.out.println("userId = " + tokenInfo.get().getId());
         if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
         try {
             Integer userId = tokenInfo.get().getId();
@@ -278,19 +276,63 @@ public class ReviewController {
                 reviewCommandService.deleteReviewWithReviewId(review.getId());
                 reviewCommandService.addReviewEvaluationList(review.getId(), data.getEvaluations());
             }
-            if (existingImages != null || newImages != null) {
-                List<String> imgUrls = existingImages;
-                if (newImages != null) existingImages.addAll(
-                        s3.uploadFiles(newImages, new ArrayList<>(Arrays.asList("review", String.valueOf(id))))
-                );
-                review.setImages(imgUrls.toString());
+
+            if (imageUrlsToRemain == null && newImages != null) {
+                if (!review.getImageUrls().isEmpty()) {
+                    for (String imageUrl : review.getImageUrls()) {
+                        s3.deleteFile(imageUrl);
+                    }
+                    review.setImages("[]");
+                }
+                List<String> uploadedImageUrls = s3.uploadFiles(newImages, new ArrayList<>(Arrays.asList("review", String.valueOf(id))));
+                review.setImages(uploadedImageUrls.toString());
             }
+
+            if (imageUrlsToRemain == null && newImages == null) {
+                if (!review.getImageUrls().isEmpty()) {
+                    for (String imageUrl : review.getImageUrls()) {
+                        s3.deleteFile(imageUrl);
+                    }
+                    review.setImages("[]");
+                }
+            }
+
+            if (imageUrlsToRemain != null && newImages == null) {
+                List<String> newImageUrls = deleteImagesAndReturnRemainingImageUrls(id, review, imageUrlsToRemain);
+                review.setImages(newImageUrls.toString());
+            }
+
+            if (imageUrlsToRemain != null && newImages != null) {
+                List<String> newImageUrls = deleteImagesAndReturnRemainingImageUrls(id, review, imageUrlsToRemain);
+
+                List<String> uploadedImageUrls = s3.uploadFiles(newImages, new ArrayList<>(Arrays.asList("review", String.valueOf(id))));
+                newImageUrls.addAll(uploadedImageUrls);
+
+                review.setImages(newImageUrls.toString());
+            }
+
             review = reviewCommandService.updateReview(review);
             res.setData(Optional.ofNullable(reviewCommandService.convert2Dto(review)));
             return ResponseEntity.ok(res);
         } catch (Exception e) {
             return res.defaultError(e);
         }
+    }
+
+    private List<String> deleteImagesAndReturnRemainingImageUrls (Integer id, Review review, List<String> imageUrlsToRemain) {
+        ArrayList<String> ImageUrlsToRemain = new ArrayList<>();
+        ArrayList<String> reviewImageUrls = review.getImageUrls();
+
+        for (String imageUrlToRemain : imageUrlsToRemain) {
+            boolean isRemoved = reviewImageUrls.remove(imageUrlToRemain);
+            if (isRemoved) {
+                ImageUrlsToRemain.add(imageUrlToRemain);
+            }
+        }
+        for (String imageUrlToDelete : reviewImageUrls) {
+            s3.deleteFile("review/" + id + "/" + imageUrlToDelete);
+        }
+        return ImageUrlsToRemain;
     }
 
     @PostMapping("/like/{id}")
