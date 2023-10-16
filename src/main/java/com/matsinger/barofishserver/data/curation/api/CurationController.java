@@ -157,6 +157,9 @@ public class CurationController {
                 description = util.validateString(description, 200L, "설명");
                 curation.setDescription(description);
                 curation.setType(type);
+                if (state == null) {
+                    curation.setState(CurationState.INACTIVE);
+                }
                 if (state != null) {
                 curation.setState(state);
                 }
