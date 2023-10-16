@@ -13,6 +13,9 @@ public class ReviewDtoV2 {
     private String userGrade;
     private Integer productId;
     private String productName;
+    private int originPrice;
+    private int discountPrice;
+    private String productImage;
     private String reviewContent;
     private Timestamp createdAt;
     private String images;
@@ -24,4 +27,7 @@ public class ReviewDtoV2 {
         this.imageUrls = imageUrls;
     }
 
+    public void setProductImage(String parsedImageUrl) {
+        this.productImage = parsedImageUrl;
+    }
 }
