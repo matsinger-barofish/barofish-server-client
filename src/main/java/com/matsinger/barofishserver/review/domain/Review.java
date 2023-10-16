@@ -9,6 +9,8 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
@@ -85,7 +87,15 @@ public class Review {
     public ReviewDto convert2Dto() {
         return ReviewDto.builder().id(this.id).store(this.store.getStoreInfo().convert2Dto()).images(images.substring(1,
                 images.length() -
-                        1).split(",")).content(this.content).createdAt(this.createdAt).evaluations(this.evaluations !=
+                        1).split(", ")).content(this.content).createdAt(this.createdAt).evaluations(this.evaluations !=
                 null ? this.evaluations.stream().map(ReviewEvaluation::getEvaluation).toList() : null).build();
+    }
+
+    public ArrayList<String> getImageUrls() {
+        String substring = this.images.substring(1, images.length() - 1);
+        if (substring.isEmpty()) {
+            return new ArrayList<>();
+        }
+        return new ArrayList<>(Arrays.stream(substring.split(", ")).toList());
     }
 }

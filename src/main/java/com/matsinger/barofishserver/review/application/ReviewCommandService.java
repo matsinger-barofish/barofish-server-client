@@ -116,12 +116,14 @@ public class ReviewCommandService {
 
             Review findReview = reviewQueryService.findById(reviewId);
             findReview.setIsDeleted(true);
+            reviewRepository.save(findReview);
             return true;
         } catch (Exception e) {
             return false;
         }
     }
 
+    @Transactional
     public void deleteReviewWithReviewId(Integer reviewId) {
         evaluationRepository.deleteAllByReviewId(reviewId);
     }
