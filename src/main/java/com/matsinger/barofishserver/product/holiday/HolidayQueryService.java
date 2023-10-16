@@ -17,6 +17,8 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 
 @Service
 @RequiredArgsConstructor
@@ -60,7 +62,7 @@ public class HolidayQueryService {
         return createHolidays(sb.toString());
     }
 
-    public static Holidays createHolidays(String xml) {
+    public Holidays createHolidays(String xml) {
         JSONObject json = null;
 
         try {
@@ -96,5 +98,33 @@ public class HolidayQueryService {
                 .totalCount(holidayCount)
                 .holidays(holidays)
                 .build();
+    }
+
+    public void getThisAndNextWeeklyData() {
+        Calendar calendarOfThisWeek = Calendar.getInstance();
+        Date currentDate = new Date();
+        calendarOfThisWeek.setTime(currentDate);
+
+        int currentYear = calendarOfThisWeek.get(Calendar.YEAR);
+        int currentMonth = calendarOfThisWeek.get(Calendar.MONTH);
+        int currentWeek = calendarOfThisWeek.get(Calendar.WEEK_OF_YEAR);
+
+
+
+        // 만약 현재 월이 12월이고 현재 주가 마지막 주인 경우
+        if (currentMonth == Calendar.DECEMBER && currentWeek == calendarOfThisWeek.getActualMaximum(Calendar.WEEK_OF_YEAR)) {
+            // 내년 1월의 첫 주 데이터를 불러오는 로직을 여기에 추가합니다.
+            int nextYear = currentYear + 1;
+
+            // 1월의 첫 주의 데이터를 불러오는 예시 출력
+            Calendar calendarOfNextWeek = Calendar.getInstance();
+            Date nextWeeklyDate = new Date(7);
+            calendarOfNextWeek.setTime(nextWeeklyDate);
+
+//            int nextWeek = calendarOfNextWeek.get(Calendar.Wee)
+            System.out.println("내년 1월 첫 주 데이터를 불러옵니다.");
+        } else {
+            System.out.println("현재 날짜가 12월 마지막 주가 아니므로 작업을 수행하지 않습니다.");
+        }
     }
 }
