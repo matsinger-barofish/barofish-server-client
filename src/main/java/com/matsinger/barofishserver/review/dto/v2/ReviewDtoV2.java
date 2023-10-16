@@ -9,6 +9,7 @@ public class ReviewDtoV2 {
 
     private Integer userId;
     private String userName;
+    private String userNickname;
     private String userGrade;
     private Integer productId;
     private String productName;
