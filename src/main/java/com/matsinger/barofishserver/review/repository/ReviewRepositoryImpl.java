@@ -170,6 +170,7 @@ public class ReviewRepositoryImpl implements ReviewRepositoryCustom {
                         ReviewDtoV2.class,
                         userInfo.userId.as("userId"),
                         userInfo.name.as("userName"),
+                        userInfo.nickname.as("userNickname"),
                         grade.name.as("userGrade"),
                         product.id.as("productId"),
                         product.title.as("productName"),
