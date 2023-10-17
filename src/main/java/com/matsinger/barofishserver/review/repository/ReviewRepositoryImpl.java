@@ -205,6 +205,8 @@ public class ReviewRepositoryImpl implements ReviewRepositoryCustom {
                 .where(userInfo.userId.eq(userId), product.state.eq(ProductState.ACTIVE), review.isDeleted.eq(false))
                 .groupBy(review.id, reviewLike.reviewId)
                 .orderBy(reviewOrderSpecifier)
+                .offset(pageRequest.getOffset())
+                .limit(pageRequest.getPageSize())
                 .fetch();
     }
 
