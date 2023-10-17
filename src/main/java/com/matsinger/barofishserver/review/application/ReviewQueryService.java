@@ -178,7 +178,7 @@ public class ReviewQueryService {
                 .build();
     }
 
-    private static void convertStringImageUrlsToArray(PageImpl<ReviewDtoV2> pagedReviews) {
+    private void convertStringImageUrlsToArray(PageImpl<ReviewDtoV2> pagedReviews) {
         for (ReviewDtoV2 pagedReview : pagedReviews) {
             String imageUrls = pagedReview.getImages();
             String processedUrls = imageUrls.substring(1, imageUrls.length() - 1);
