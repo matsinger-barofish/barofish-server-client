@@ -7,6 +7,8 @@ import com.google.gson.JsonParser;
 import com.matsinger.barofishserver.product.weeksdate.Holiday;
 import com.matsinger.barofishserver.product.weeksdate.Holidays;
 import com.matsinger.barofishserver.product.weeksdate.domain.WeeksDate;
+import com.matsinger.barofishserver.product.weeksdate.repository.WeeksDateRepository;
+import com.matsinger.barofishserver.search.repository.SearchKeywordRepository;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
 import org.json.JSONObject;
@@ -31,6 +33,8 @@ public class WeeksDateQueryService {
 
     private final String targetUrl = "http://apis.data.go.kr/B090041/openapi/service/SpcdeInfoService/getHoliDeInfo";
     private final String serviceKey = "vB%2FBwyq3B9fqpHyq9BQQLLCOu715sRnjDN19qeZfbMmhrSt3qN1kf8q0bMaoCtF0Gu916jxJk6SX0%2B115ishrA%3D%3D";
+    
+    private final WeeksDateRepository weeksDateRepository;
 
     public void saveThisAndNextWeeksDate() throws IOException {
         Calendar calendar = Calendar.getInstance();
@@ -103,7 +107,7 @@ public class WeeksDateQueryService {
             calendar.add(Calendar.DATE, 1);
         }
 
-        weeksDates
+        weeksDateRepository.save()
     }
 
     /**
