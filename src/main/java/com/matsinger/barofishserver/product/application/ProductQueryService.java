@@ -36,6 +36,9 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -168,4 +171,31 @@ public class ProductQueryService {
     }
 
 
+    public void getExpectedArrivalDate(Integer productId) {
+        Product findProduct = findById(productId);
+
+        int expectedDeliverDay = findProduct.getExpectedDeliverDay();
+
+        int productForwardingTime = findProduct.getForwardingTime();
+        LocalTime localTime = LocalTime.of(productForwardingTime, 0, 0);
+
+        LocalDateTime forwardingTime = LocalDateTime.of(LocalDate.now(), localTime);
+        LocalDateTime now = LocalDateTime.of(LocalDate.now(), LocalTime.now());
+
+        boolean isNowBeforeForwardingTime = now.isBefore(forwardingTime);
+
+        if (expectedDeliverDay == 1) {
+            if (!isNowBeforeForwardingTime) {
+                expectedDeliverDay += 1;
+            }
+
+
+        }
+
+        if (expectedDeliverDay >= 2) {
+            if (!isNowBeforeForwardingTime) {
+                expectedDeliverDay += 1;
+            }
+        }
+    }
 }

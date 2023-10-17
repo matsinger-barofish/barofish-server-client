@@ -24,11 +24,15 @@ import com.matsinger.barofishserver.utils.Common;
 import com.matsinger.barofishserver.utils.CustomResponse;
 import com.matsinger.barofishserver.utils.S3.S3Uploader;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cglib.core.Local;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.Optional;
 import java.util.Set;
 
@@ -90,5 +94,14 @@ public class ProductControllerV2 {
         } catch (Exception e) {
             return res.defaultError(e);
         }
+    }
+
+    @GetMapping("/expectedArrivalDate/{id}")
+    public ResponseEntity<CustomResponse<Object>> getExpectedArrivalDate(@PathVariable(value = "id") Integer productId,
+                                                                         @RequestParam(value = "Authorization") Optional<String> auth) {
+        Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
+
+        productQueryService.getExpectedArrivalDate(productId);
+
     }
 }
