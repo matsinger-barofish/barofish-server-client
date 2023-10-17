@@ -64,7 +64,7 @@ public class ReviewRepositoryImpl implements ReviewRepositoryCustom {
                 .where(review.id.eq(productId)
                         .and(review.isDeleted.eq(false)))
                 .offset(pageable.getOffset())
-                .limit(pageable.getPageSize())정
+                .limit(pageable.getPageSize())
                 .groupBy(review.id, reviewLike.reviewId)
                 .orderBy(orderSpecifiers)
                 .fetch();

@@ -9,10 +9,13 @@ import com.matsinger.barofishserver.notification.application.NotificationCommand
 import com.matsinger.barofishserver.notification.dto.NotificationMessage;
 import com.matsinger.barofishserver.notification.dto.NotificationMessageType;
 import com.matsinger.barofishserver.order.orderprductinfo.repository.OrderProductInfoRepository;
+import com.matsinger.barofishserver.store.repository.StoreScrapRepository;
 import com.matsinger.barofishserver.user.application.UserCommandService;
 import com.matsinger.barofishserver.user.domain.User;
 import com.matsinger.barofishserver.user.domain.UserState;
+import com.matsinger.barofishserver.user.repository.UserRepository;
 import com.matsinger.barofishserver.userinfo.domain.UserInfo;
+import com.matsinger.barofishserver.userinfo.repository.UserInfoRepository;
 import com.matsinger.barofishserver.utils.Common;
 import jakarta.persistence.Tuple;
 import lombok.RequiredArgsConstructor;
@@ -28,10 +31,11 @@ import java.util.Optional;
 public class CouponCommandService {
     private final CouponUserMapRepository couponUserMapRepository;
     private final CouponRepository couponRepository;
-    private final UserCommandService userService;
+    private final UserRepository userRepository;
     private final NotificationCommandService notificationCommandService;
     private final OrderProductInfoRepository infoRepository;
     private final Common utils;
+    private final UserInfoRepository userInfoRepository;
 
     public void downloadCoupon(Integer userId, Integer couponId) {
         couponUserMapRepository.save(CouponUserMap.builder().couponId(couponId).userId(userId).isUsed(false).build());
@@ -52,10 +56,9 @@ public class CouponCommandService {
     public void sendCouponCreateNotification(Coupon coupon, List<Integer> userIds) {
         List<User>
                 users =
-                userIds == null ? userService.selectUserWithState(UserState.ACTIVE) : userService.selectUserListWithIds(
-                        userIds);
+                userIds == null ? userRepository.findAllByState(UserState.ACTIVE) : userRepository.findAllByIdIn(userIds);;
         for (User user : users) {
-            Optional<UserInfo> userInfo = userService.selectOptionalUserInfo(user.getId());
+            Optional<UserInfo> userInfo = userInfoRepository.findByUserId(user.getId());
             if (userInfo.isPresent()) notificationCommandService.sendFcmToUser(user.getId(),
                     NotificationMessageType.COUPON_ARRIVED,
                     NotificationMessage.builder().couponName(coupon.getTitle()).userName(userInfo.get().getNickname()).build());
