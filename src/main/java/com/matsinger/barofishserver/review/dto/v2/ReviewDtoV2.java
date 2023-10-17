@@ -22,6 +22,7 @@ public class ReviewDtoV2 {
     private String[] imageUrls;
     private Long likeSum;
 
+
     public void setImageUrls(String[] imageUrls) {
         this.imageUrls = imageUrls;
     }
