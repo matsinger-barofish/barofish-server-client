@@ -64,7 +64,7 @@ public class ReviewRepositoryImpl implements ReviewRepositoryCustom {
                 .where(product.id.eq(productId), review.isDeleted.eq(false))
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
-                .groupBy(review.id)
+                .groupBy(review.id, reviewLike.reviewId)
                 .orderBy(orderSpecifiers)
                 .fetch();
     }
@@ -129,7 +129,7 @@ public class ReviewRepositoryImpl implements ReviewRepositoryCustom {
                 .where(storeInfo.storeId.eq(storeId), product.state.eq(ProductState.ACTIVE), review.isDeleted.eq(false))
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
-                .groupBy(review.id)
+                .groupBy(review.id, reviewLike.reviewId)
                 .orderBy(orderSpecifiers)
                 .fetch();
     }
@@ -203,6 +203,7 @@ public class ReviewRepositoryImpl implements ReviewRepositoryCustom {
                 .leftJoin(optionItem).on(orderProductInfo.optionItemId.eq(optionItem.id))
                 .leftJoin(grade).on(userInfo.grade.eq(grade))
                 .where(userInfo.userId.eq(userId), product.state.eq(ProductState.ACTIVE), review.isDeleted.eq(false))
+                .groupBy(review.id, reviewLike.reviewId)
                 .orderBy(reviewOrderSpecifier)
                 .fetch();
     }
