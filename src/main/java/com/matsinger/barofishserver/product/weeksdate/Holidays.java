@@ -1,4 +1,4 @@
-package com.matsinger.barofishserver.product.holiday;
+package com.matsinger.barofishserver.product.weeksdate;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -13,6 +13,11 @@ public class Holidays {
 
     private int totalCount;
     private List<Holiday> holidays;
+
+    public void addHolidays(Holidays holidays) {
+        this.holidays.addAll(holidays.getHolidays());
+        this.totalCount += holidays.totalCount;
+    }
 
     @Override
     public String toString() {

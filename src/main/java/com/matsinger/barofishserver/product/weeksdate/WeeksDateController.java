@@ -1,8 +1,9 @@
-package com.matsinger.barofishserver.product.holiday;
+package com.matsinger.barofishserver.product.weeksdate;
 
 import com.matsinger.barofishserver.jwt.JwtService;
 import com.matsinger.barofishserver.jwt.TokenAuthType;
 import com.matsinger.barofishserver.jwt.TokenInfo;
+import com.matsinger.barofishserver.product.weeksdate.application.WeeksDateQueryService;
 import com.matsinger.barofishserver.utils.CustomResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
@@ -18,10 +19,10 @@ import java.util.Set;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/holiday")
-public class HolidayController {
+public class WeeksDateController {
 
     private final JwtService jwt;
-    private final HolidayQueryService holidayQueryService;
+    private final WeeksDateQueryService holidayQueryService;
 
     @GetMapping("")
     public ResponseEntity<CustomResponse<Object>> getHolidays(@RequestParam(value = "Authrization") Optional<String> auth,
@@ -39,7 +40,7 @@ public class HolidayController {
         PageRequest pageRequest = PageRequest.of(page, take);
 
         try {
-            Holidays holidays = holidayQueryService.getOpenDataHolidayInfoResponse(year, month, pageRequest);
+            Holidays holidays = holidayQueryService.getKoreanHolidays(year, month);
 
             return ResponseEntity.ok(null);
         } catch(Exception e) {
