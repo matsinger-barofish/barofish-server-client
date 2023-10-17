@@ -57,7 +57,7 @@ public class ReviewControllerV2 {
     @GetMapping("/product/{id}")
     public ResponseEntity<CustomResponse<ProductReviewDto>> getReviews(@PathVariable("id") Integer productId, @RequestHeader(value = "Authorization") Optional<String> auth, @RequestParam(value = "orderType", required = false, defaultValue = "RECENT") ReviewOrderByType orderType, @RequestParam(value = "page", required = false, defaultValue = "0") Integer page, @RequestParam(value = "take", required = false, defaultValue = "10") Integer take) {
         Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ALLOW), auth);
-        PageRequest pageRequest = PageRequest.of(page, take);
+        PageRequest pageRequest = PageRequest.of(page-1, take);
         CustomResponse<ProductReviewDto> res = new CustomResponse<>();
         try {
             if (tokenInfo.get().getType().equals(TokenAuthType.USER)) {
@@ -87,7 +87,7 @@ public class ReviewControllerV2 {
         Integer userId = null;
         if (tokenInfo.get().getType().equals(TokenAuthType.USER)) userId = tokenInfo.get().getId();
 
-        PageRequest pageRequest = PageRequest.of(page, take);
+        PageRequest pageRequest = PageRequest.of(page-1, take);
 
         try {
             StoreReviewDto pagedStoreReviewDto = reviewQueryService.getPagedProductSumStoreReviewInfo(storeId, orderType, pageRequest);
@@ -106,7 +106,7 @@ public class ReviewControllerV2 {
         if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
         Integer userId = tokenInfo.get().getId();
 
-        PageRequest pageRequest = PageRequest.of(page, take);
+        PageRequest pageRequest = PageRequest.of(page-1, take);
         try {
             UserReviewDto pagedUserReview = reviewQueryService.getPagedUserReview(userId, orderType, pageRequest);
             res.setData(Optional.of(pagedUserReview));
