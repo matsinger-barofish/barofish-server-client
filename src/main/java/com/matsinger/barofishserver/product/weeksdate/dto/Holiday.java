@@ -1,4 +1,4 @@
-package com.matsinger.barofishserver.product.weeksdate;
+package com.matsinger.barofishserver.product.weeksdate.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

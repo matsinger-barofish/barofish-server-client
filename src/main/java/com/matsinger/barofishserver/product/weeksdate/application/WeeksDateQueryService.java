@@ -4,13 +4,9 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import com.matsinger.barofishserver.product.weeksdate.Holiday;
-import com.matsinger.barofishserver.product.weeksdate.Holidays;
-import com.matsinger.barofishserver.product.weeksdate.domain.WeeksDate;
+import com.matsinger.barofishserver.product.weeksdate.dto.Holiday;
 import com.matsinger.barofishserver.product.weeksdate.repository.WeeksDateRepository;
-import com.matsinger.barofishserver.search.repository.SearchKeywordRepository;
 import lombok.RequiredArgsConstructor;
-import org.apache.commons.lang3.StringUtils;
 import org.json.JSONObject;
 import org.json.XML;
 import org.springframework.stereotype.Service;
@@ -21,10 +17,7 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLEncoder;
-import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
 import java.util.List;
 
 @Service
@@ -36,79 +29,7 @@ public class WeeksDateQueryService {
     
     private final WeeksDateRepository weeksDateRepository;
 
-    public void saveThisAndNextWeeksDate() throws IOException {
-        Calendar calendar = Calendar.getInstance();
-        Date currentDate = new Date();
-        calendar.setTime(currentDate);
 
-        int currentYear = calendar.get(Calendar.YEAR);
-        int currentMonth = calendar.get(Calendar.MONTH) + 1;
-
-        String paddedCurrentDate = StringUtils.leftPad(String.valueOf(currentMonth), 2, "0");
-        Holidays koreanHolidays = getKoreanHolidays(String.valueOf(currentYear), paddedCurrentDate);
-
-        if (currentMonth == 12) {
-            Holidays nextMonthHolidays = getKoreanHolidays(String.valueOf(currentYear + 1), "01");
-            koreanHolidays.addHolidays(nextMonthHolidays);
-        }
-
-        List<WeeksDate> weeksDates = new ArrayList<>();
-        for (int i=0; i<14; i++) {
-
-            LocalDate date = LocalDate.of(calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH) + 1, calendar.get(Calendar.DATE));
-            int dayOfTheWeek = calendar.get(Calendar.DAY_OF_WEEK); // 일 = 1, ... , 토 = 7
-
-            String dateDescription = "";
-            boolean isDeliveryCompanyHoliday = false;
-            if (dayOfTheWeek == 1) {
-                dateDescription = "일";
-                isDeliveryCompanyHoliday = true;
-            }
-            if (dayOfTheWeek == 2) {
-                dateDescription = "월";
-                isDeliveryCompanyHoliday = false;
-            }
-            if (dayOfTheWeek == 3) {
-                dateDescription = "화";
-                isDeliveryCompanyHoliday = false;
-            }
-            if (dayOfTheWeek == 4) {
-                dateDescription = "수";
-                isDeliveryCompanyHoliday = false;
-            }
-            if (dayOfTheWeek == 5) {
-                dateDescription = "목";
-                isDeliveryCompanyHoliday = false;
-            }
-            if (dayOfTheWeek == 6) {
-                dateDescription = "금";
-                isDeliveryCompanyHoliday = false;
-            }
-            if (dayOfTheWeek == 7) {
-                dateDescription = "토";
-                isDeliveryCompanyHoliday = false;
-            }
-
-            for (Holiday holiday : koreanHolidays.getHolidays()) {
-                if (holiday.sameDate(date.toString())) {
-                    dateDescription = holiday.getDateName();
-
-                }
-            }
-
-            weeksDates.add(
-                    WeeksDate.builder()
-                            .date(date.toString())
-                            .isDeliveryCompanyHoliday(isDeliveryCompanyHoliday)
-                            .description(dateDescription)
-                            .build()
-            );
-
-            calendar.add(Calendar.DATE, 1);
-        }
-
-        weeksDateRepository.save()
-    }
 
     /**
      *
@@ -117,7 +38,7 @@ public class WeeksDateQueryService {
      * @return
      * @throws IOException
      */
-    public Holidays getKoreanHolidays(String year, String month) throws IOException {
+    public List<Holiday> getKoreanHolidays(String year, String month) throws IOException {
 
         StringBuilder urlBuilder = new StringBuilder(targetUrl); /*URL*/
 
@@ -150,7 +71,7 @@ public class WeeksDateQueryService {
         return createHolidays(sb.toString());
     }
 
-    public Holidays createHolidays(String xml) {
+    public List<Holiday> createHolidays(String xml) {
         JSONObject json = null;
 
         try {
@@ -161,6 +82,9 @@ public class WeeksDateQueryService {
 
         JSONObject response = (JSONObject) json.get("response");
         JSONObject jsonBody = (JSONObject) response.get("body");
+        if ((int) jsonBody.get("totalCount") == 0) {
+            return new ArrayList<>();
+        }
         JSONObject itemsObject = (JSONObject) jsonBody.get("items");
         String items = (String) itemsObject.get("item").toString();
 
@@ -182,9 +106,6 @@ public class WeeksDateQueryService {
             );
         }
 
-        return Holidays.builder()
-                .totalCount(holidayCount)
-                .holidays(holidays)
-                .build();
+        return holidays;
     }
 }
