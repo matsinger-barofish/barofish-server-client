@@ -26,7 +26,7 @@ import java.util.Optional;
 @Service
 @Slf4j
 public class CouponCommandService {
-    private final CouponUserMapRepository mapRepository;
+    private final CouponUserMapRepository couponUserMapRepository;
     private final CouponRepository couponRepository;
     private final UserCommandService userService;
     private final NotificationCommandService notificationCommandService;
@@ -34,7 +34,7 @@ public class CouponCommandService {
     private final Common utils;
 
     public void downloadCoupon(Integer userId, Integer couponId) {
-        mapRepository.save(CouponUserMap.builder().couponId(couponId).userId(userId).isUsed(false).build());
+        couponUserMapRepository.save(CouponUserMap.builder().couponId(couponId).userId(userId).isUsed(false).build());
     }
 
     public Coupon addCoupon(Coupon coupon) {
@@ -63,18 +63,18 @@ public class CouponCommandService {
     }
 
     public void useCoupon(Integer couponId, Integer userId) {
-        Optional<CouponUserMap> map = mapRepository.findById(new CouponUserMapId(userId, couponId));
+        Optional<CouponUserMap> map = couponUserMapRepository.findById(new CouponUserMapId(userId, couponId));
         map.ifPresent(couponUserMap -> {
             couponUserMap.setIsUsed(true);
-            mapRepository.save(couponUserMap);
+            couponUserMapRepository.save(couponUserMap);
         });
     }
 
     public void unUseCoupon(Integer couponId, Integer userId) {
-        Optional<CouponUserMap> map = mapRepository.findById(new CouponUserMapId(userId, couponId));
+        Optional<CouponUserMap> map = couponUserMapRepository.findById(new CouponUserMapId(userId, couponId));
         map.ifPresent(couponUserMap -> {
             couponUserMap.setIsUsed(false);
-            mapRepository.save(couponUserMap);
+            couponUserMapRepository.save(couponUserMap);
         });
     }
 
@@ -90,11 +90,28 @@ public class CouponCommandService {
             CouponUserMap
                     couponUserMap =
                     CouponUserMap.builder().couponId(couponId).userId(userId).isUsed(false).build();
-            mapRepository.save(couponUserMap);
+            couponUserMapRepository.save(couponUserMap);
         }
     }
 
+    public void publishNewUserCoupon(Integer userId) {
+        Coupon signUpCoupon = couponRepository.findById(7)
+                .orElseThrow(() -> new IllegalArgumentException("회원가입 쿠폰을 찾을 수 없습니다."));
+
+        if (couponUserMapRepository.findById(
+                new CouponUserMapId(userId, signUpCoupon.getId())).isPresent()) {
+            throw new IllegalArgumentException("이미 회원가입 쿠폰을 발급 받으셨습니다.");
+        }
+        CouponUserMap userSignUpCoupon = CouponUserMap.builder()
+                .userId(userId)
+                .couponId(signUpCoupon.getId())
+                .isUsed(false)
+                .build();
+
+        couponUserMapRepository.save(userSignUpCoupon);
+    }
+
     public void addCouponUserMapList(List<CouponUserMap> couponUserMaps) {
-        mapRepository.saveAll(couponUserMaps);
+        couponUserMapRepository.saveAll(couponUserMaps);
     }
 }
