@@ -84,6 +84,7 @@ public class ReviewRepositoryImpl implements ReviewRepositoryCustom {
     @Override
     public List<ReviewEvaluationSummaryDto> getProductReviewEvaluations(int productId) {
 
+
         return queryFactory
                 .select(Projections.fields(
                         ReviewEvaluationSummaryDto.class,
