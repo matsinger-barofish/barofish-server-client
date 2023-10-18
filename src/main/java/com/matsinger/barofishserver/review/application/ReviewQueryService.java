@@ -190,15 +190,12 @@ public class ReviewQueryService {
                 String[] parsedProductImage = pagedReview.getProductImage().split(",");
                 String parsedProductImage2 = parsedProductImage[0];
                 String parsedProductImage3 = parsedProductImage2.replace("\"", "");
-                String parsedProductImage4 = parsedProductImage3.replace("[", "");
+                String parsedProductImage4 = parsedProductImage3.replace("[", "").replace("]", "");
                 pagedReview.setProductImage(parsedProductImage4);
             }
             if (pagedReview.getProductImage() == "[]") {
                 pagedReview.setProductImage(null);
             }
-
-            String productImage = pagedReview.getProductImage();
-            pagedReview.setProductImage(productImage.substring(1, productImage.length() - 1));
         }
     }
 }
