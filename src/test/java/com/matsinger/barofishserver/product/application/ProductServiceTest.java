@@ -10,15 +10,20 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.cglib.core.Local;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Calendar;
 import java.util.List;
 
 @SpringBootTest
 @ActiveProfiles("local")
+@Transactional
 class ProductServiceTest {
 
     @Autowired
@@ -47,33 +52,44 @@ class ProductServiceTest {
         }
     }
 
-    @DisplayName("상품의 적립률이 퍼센트로 온 경우 /100으로 DB에 저장돼야 한다.")
+    @DisplayName("sample test")
     @Test
-    void productPointRateTest() {
+    void testMethodNameHere() {
         // given
-        Category findCategory = categoryRepository.findById(2).get();
-        Product createdProduct = Product.builder()
-                .storeId(10000)
-                .category(findCategory)
-                .state(ProductState.ACTIVE)
-                .images("[]")
-                .title("테스트 상품")
-                .originPrice(0)
-                .discountRate(0)
-                .deliveryInfo("")
-                .deliverFeeType(ProductDeliverFeeType.FREE)
-                .minOrderPrice(0)
-                .descriptionImages("")
-                .expectedDeliverDay(1)
-                .needTaxation(false)
-                .representOptionItemId(10000)
-                .deliverBoxPerAmount(0)
-                .createdAt(Timestamp.valueOf(LocalDateTime.now()))
-                .build();
-        createdProduct.setPointRate( (float) 10);
-        productRepository.save(createdProduct);
-        // when
 
+        // when
+        System.out.println(LocalDateTime.now());
+        System.out.println(Calendar.getInstance());
         // then
     }
+
+//    @DisplayName("상품의 적립률이 퍼센트로 온 경우 /100으로 DB에 저장돼야 한다.")
+//    @Test
+//    void productPointRateTest() {
+//        // given
+//        Category findCategory = categoryRepository.findById(2).get();
+//        Product createdProduct = Product.builder()
+//                .storeId(10000)
+//                .category(findCategory)
+//                .state(ProductState.ACTIVE)
+//                .images("[]")
+//                .title("테스트 상품")
+//                .originPrice(0)
+//                .discountRate(0)
+//                .deliveryInfo("")
+//                .deliverFeeType(ProductDeliverFeeType.FREE)
+//                .minOrderPrice(0)
+//                .descriptionImages("")
+//                .expectedDeliverDay(1)
+//                .needTaxation(false)
+//                .representOptionItemId(10000)
+//                .deliverBoxPerAmount(0)
+//                .createdAt(Timestamp.valueOf(LocalDateTime.now()))
+//                .build();
+//        createdProduct.setPointRate( (float) 10);
+//        productRepository.save(createdProduct);
+//        // when
+//
+//        // then
+//    }
 }

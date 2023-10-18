@@ -179,19 +179,33 @@ public class OrderController {
                     predicates.add(builder.like(root.get("deliverPlace").get("address"), "%" + address + "%"));
                 if (postalCode != null)
                     predicates.add(builder.like(root.get("deliverPlace").get("postalCode"), "%" + postalCode + "%"));
-                if (orderAtS != null) predicates.add(builder.greaterThan(root.get("orderedAt"), orderAtS));
-                if (orderAtE != null) predicates.add(builder.lessThan(root.get("orderedAt"), orderAtE));
+                if (orderAtS != null) {
+                    Timestamp subtractedTime = Timestamp.valueOf(orderAtS.toLocalDateTime().minusHours(9)); // 프론트에서 +9시간 해서 와서 다시 -9시간 빼줌
+                    predicates.add(builder.greaterThan(root.get("orderedAt"), subtractedTime));
+                }
+                if (orderAtE != null) {
+                    Timestamp subtractedTime = Timestamp.valueOf(orderAtE.toLocalDateTime().minusHours(9)); // 프론트에서 +9시간 해서 와서 다시 -9시간 빼줌
+                    predicates.add(builder.lessThan(root.get("orderedAt"), orderAtE));
+                }
 
                 // query.groupBy(root.get("id"));
                 query.distinct(true);
+                Join<Orders, OrderProductInfo> t = root.join("productInfos", JoinType.INNER);
                 if (state != null) {
-                    predicates.add(root.get("productInfos").get("state").in(Arrays.stream(state.split(",")).map(
-                            OrderProductState::valueOf).toList()));
-                    Join<Orders, OrderProductInfo> t = root.join("productInfos", JoinType.INNER);
-                    predicates.add(builder.isNotNull(t.get("id")));
-                    predicates.add(builder.or(builder.notEqual(t.get("state"), OrderProductState.WAIT_DEPOSIT),
-                            builder.and(root.get("paymentWay").in(List.of(OrderPaymentWay.DEPOSIT,
-                                    OrderPaymentWay.VIRTUAL_ACCOUNT)))));
+//                    predicates.add(
+//                            root.get("productInfos").get("state").in(
+//                                    Arrays.stream(state.split(",")).map(OrderProductState::valueOf).toList())
+//                    );
+                    predicates.add(
+                            builder.and(
+                                    builder.or(
+                                        root.get("productInfos").get("state").in(Arrays.stream(state.split(",")).map(OrderProductState::valueOf).toList()),
+                                        builder.notEqual(t.get("state"), OrderProductState.WAIT_DEPOSIT),
+                                        builder.and(root.get("paymentWay").in(List.of(OrderPaymentWay.DEPOSIT, OrderPaymentWay.VIRTUAL_ACCOUNT)))
+                                    )
+                            )
+                    );
+
                     if (tokenInfo.get().getType().equals(TokenAuthType.PARTNER)) {
                         predicates.add(builder.equal(t.get("product").get("storeId"), tokenInfo.get().getId()));
                     }
