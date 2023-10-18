@@ -181,8 +181,14 @@ public class OrderController {
                     predicates.add(builder.like(root.get("deliverPlace").get("address"), "%" + address + "%"));
                 if (postalCode != null)
                     predicates.add(builder.like(root.get("deliverPlace").get("postalCode"), "%" + postalCode + "%"));
-                if (orderAtS != null) predicates.add(builder.greaterThan(root.get("orderedAt"), orderAtS));
-                if (orderAtE != null) predicates.add(builder.lessThan(root.get("orderedAt"), orderAtE));
+                if (orderAtS != null) {
+                    Timestamp subtractedTime = Timestamp.valueOf(orderAtS.toLocalDateTime().minusHours(9)); // 프론트에서 +9시간 해서 와서 다시 -9시간 빼줌
+                    predicates.add(builder.greaterThan(root.get("orderedAt"), subtractedTime));
+                }
+                if (orderAtE != null) {
+                    Timestamp subtractedTime = Timestamp.valueOf(orderAtE.toLocalDateTime().minusHours(9)); // 프론트에서 +9시간 해서 와서 다시 -9시간 빼줌
+                    predicates.add(builder.lessThan(root.get("orderedAt"), orderAtE));
+                }
 
                 // query.groupBy(root.get("id"));
                 query.distinct(true);
