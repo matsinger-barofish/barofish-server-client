@@ -196,9 +196,6 @@ public class ReviewQueryService {
             if (pagedReview.getProductImage() == "[]") {
                 pagedReview.setProductImage(null);
             }
-
-            String productImage = pagedReview.getProductImage();
-            pagedReview.setProductImage(productImage.substring(1, productImage.length() - 1));
         }
     }
 }
