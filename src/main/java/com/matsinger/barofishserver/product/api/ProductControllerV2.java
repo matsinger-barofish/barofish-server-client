@@ -103,5 +103,6 @@ public class ProductControllerV2 {
 
         productQueryService.getExpectedArrivalDate(productId);
 
+        return ResponseEntity.ok(null);
     }
 }

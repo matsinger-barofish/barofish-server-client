@@ -19,6 +19,7 @@ import com.matsinger.barofishserver.product.productfilter.dto.ProductFilterValue
 import com.matsinger.barofishserver.product.productfilter.repository.ProductFilterRepository;
 import com.matsinger.barofishserver.product.repository.ProductRepository;
 import com.matsinger.barofishserver.product.repository.ProductRepositoryImpl;
+import com.matsinger.barofishserver.product.weeksdate.application.WeeksDateQueryService;
 import com.matsinger.barofishserver.review.application.ReviewQueryService;
 import com.matsinger.barofishserver.review.repository.ReviewRepository;
 import com.matsinger.barofishserver.review.dto.ReviewTotalStatistic;
@@ -54,12 +55,13 @@ public class ProductQueryService {
     private final CompareFilterRepository compareFilterRepository;
     private final StoreInfoRepository storeInfoRepository;
     private final ProductSearchFilterMapRepository productSearchFilterMapRepository;
-    private final StoreService storeService;
-    private final ReviewQueryService reviewQueryService;
     private final SearchFilterFieldRepository searchFilterFieldRepository;
     private final SaveProductRepository saveProductRepository;
     private final InquiryRepository inquiryRepository;
+    private final StoreService storeService;
+    private final ReviewQueryService reviewQueryService;
     private final ProductRepositoryImpl productRepositoryImpl;
+    private final WeeksDateQueryService weekDateQueryService;
 
     public ProductListDto createProductListDtos(Integer id) {
         Product findProduct = productRepository.findById(id).orElseThrow(() -> {
@@ -173,10 +175,29 @@ public class ProductQueryService {
 
     public void getExpectedArrivalDate(Integer productId) {
         Product findProduct = findById(productId);
+        LocalDate.now();
 
-        int expectedDeliverDay = findProduct.getExpectedDeliverDay();
+        int expectedArrivalDate;
+        if (findProduct.getExpectedDeliverDay() == 1) {
+            expectedArrivalDate = calculateExpectedArrivalDate(findProduct.getForwardingTime(), findProduct.getExpectedDeliverDay());
+        }
 
-        int productForwardingTime = findProduct.getForwardingTime();
+
+
+//        if (expectedDeliverDay == 1) {
+//            if (!isNowBeforeForwardingTime) {
+//                expectedDeliverDay += 1;
+//            }
+//        }
+//
+//        if (expectedDeliverDay >= 2) {
+//            if (!isNowBeforeForwardingTime) {
+//                expectedDeliverDay += 1;
+//            }
+//        }
+    }
+
+    private int calculateExpectedArrivalDate(int productForwardingTime, int expectedDeliverDay) {
         LocalTime localTime = LocalTime.of(productForwardingTime, 0, 0);
 
         LocalDateTime forwardingTime = LocalDateTime.of(LocalDate.now(), localTime);
@@ -184,18 +205,6 @@ public class ProductQueryService {
 
         boolean isNowBeforeForwardingTime = now.isBefore(forwardingTime);
 
-        if (expectedDeliverDay == 1) {
-            if (!isNowBeforeForwardingTime) {
-                expectedDeliverDay += 1;
-            }
-
-
-        }
-
-        if (expectedDeliverDay >= 2) {
-            if (!isNowBeforeForwardingTime) {
-                expectedDeliverDay += 1;
-            }
-        }
+        return 0;
     }
 }
