@@ -191,7 +191,7 @@ public class ReviewQueryService {
                 String parsedProductImage2 = parsedProductImage[0];
                 String parsedProductImage3 = parsedProductImage2.replace("\"", "");
                 String parsedProductImage4 = parsedProductImage3.replace("[", "");
-                pagedReview.setProductImage(parsedProductImage4);
+                pagedReview.setProductImage("\"" + parsedProductImage4 + "\""); // 앞뒤가 잘리는 현상이 나타나서 임의의 문자열 앞뒤에 추가
             }
             if (pagedReview.getProductImage() == "[]") {
                 pagedReview.setProductImage(null);
