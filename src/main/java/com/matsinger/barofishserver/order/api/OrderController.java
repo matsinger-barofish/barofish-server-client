@@ -192,14 +192,22 @@ public class OrderController {
 
                 // query.groupBy(root.get("id"));
                 query.distinct(true);
+                Join<Orders, OrderProductInfo> t = root.join("productInfos", JoinType.INNER);
                 if (state != null) {
-                    predicates.add(root.get("productInfos").get("state").in(Arrays.stream(state.split(",")).map(
-                            OrderProductState::valueOf).toList()));
-                    Join<Orders, OrderProductInfo> t = root.join("productInfos", JoinType.INNER);
-                    predicates.add(builder.isNotNull(t.get("id")));
-                    predicates.add(builder.or(builder.notEqual(t.get("state"), OrderProductState.WAIT_DEPOSIT),
-                            builder.and(root.get("paymentWay").in(List.of(OrderPaymentWay.DEPOSIT,
-                                    OrderPaymentWay.VIRTUAL_ACCOUNT)))));
+//                    predicates.add(
+//                            root.get("productInfos").get("state").in(
+//                                    Arrays.stream(state.split(",")).map(OrderProductState::valueOf).toList())
+//                    );
+                    predicates.add(
+                            builder.and(
+                                    builder.or(
+                                        root.get("productInfos").get("state").in(Arrays.stream(state.split(",")).map(OrderProductState::valueOf).toList()),
+                                        builder.notEqual(t.get("state"), OrderProductState.WAIT_DEPOSIT),
+                                        builder.and(root.get("paymentWay").in(List.of(OrderPaymentWay.DEPOSIT, OrderPaymentWay.VIRTUAL_ACCOUNT)))
+                                    )
+                            )
+                    );
+
                     if (tokenInfo.get().getType().equals(TokenAuthType.PARTNER)) {
                         predicates.add(builder.equal(t.get("product").get("storeId"), tokenInfo.get().getId()));
                     }
