@@ -11,11 +11,13 @@ public class ReviewDtoV2 {
     private String userName;
     private String userNickname;
     private String userGrade;
+    private String storeName;
     private Integer productId;
     private String productName;
     private int originPrice;
     private int discountPrice;
     private String productImage;
+    private int reviewId;
     private String reviewContent;
     private Timestamp createdAt;
     private String images;
