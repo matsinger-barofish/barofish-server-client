@@ -143,6 +143,39 @@ public class UserCommandService {
         return createdUser.getId();
     }
 
+    @Transactional
+    public int addAppleUser(AppleJoinReq request, String phoneNumber, MultipartFile profileImage)
+            throws Exception {
+
+        utils.validateString(request.getName(), 20L, "이름");
+        utils.validateString(request.getNickname(), 50L, "닉네임");
+
+        User savedUser = userRepository.save(request.toUserEntity());
+
+        userAuthRepository.save(request.toUserAuthEntity(savedUser));
+
+        SiteInformation siteInformation = siteInfoQueryService.selectSiteInfo("INT_JOIN_POINT");
+        int point = Integer.parseInt(siteInformation.getContent());
+        Grade grade = gradeQueryService.selectGrade(1);
+        userInfoRepository.save(request.toUserInfoEntity(savedUser, "", phoneNumber, point, grade));
+
+        deliverPlaceRepository.save(request.toDeliveryPlaceEntity(savedUser, phoneNumber));
+
+        ArrayList<String> directoryElement = new ArrayList<>(Arrays.asList("user", String.valueOf(savedUser.getId())));
+        String profileImageUrl = s3.getS3Url() + "/default_profile.png";
+        if (profileImage != null) {
+            profileImageUrl = s3.upload(profileImage, directoryElement);
+            userInfoCommandService.setImageUrl(savedUser.getId(), profileImageUrl);
+            return savedUser.getId();
+        }
+
+        userInfoCommandService.setImageUrl(savedUser.getId(), profileImageUrl);
+
+        couponCommandService.publishNewUserCoupon(savedUser.getId());
+
+        return savedUser.getId();
+    }
+
     public DeliverPlace setAndSaveDeliverPlace(User user, UserInfo userInfo, UserJoinReq request) throws Exception {
 
         String address = utils.validateString(request.getAddress(), 100L, "주소");
@@ -412,39 +445,6 @@ public class UserCommandService {
 
     public List<UserInfo> selectUserInfoListWithIds(List<Integer> userIds) {
         return userInfoRepository.findAllByUserIdIn(userIds);
-    }
-
-    @Transactional
-    public int addAppleUser(AppleJoinReq request, String phoneNumber, MultipartFile profileImage)
-            throws Exception {
-
-        utils.validateString(request.getName(), 20L, "이름");
-        utils.validateString(request.getNickname(), 50L, "닉네임");
-
-        User savedUser = userRepository.save(request.toUserEntity());
-
-        userAuthRepository.save(request.toUserAuthEntity(savedUser));
-
-        SiteInformation siteInformation = siteInfoQueryService.selectSiteInfo("INT_JOIN_POINT");
-        int point = Integer.parseInt(siteInformation.getContent());
-        Grade grade = gradeQueryService.selectGrade(1);
-        userInfoRepository.save(request.toUserInfoEntity(savedUser, "", phoneNumber, point, grade));
-
-        deliverPlaceRepository.save(request.toDeliveryPlaceEntity(savedUser, phoneNumber));
-
-        ArrayList<String> directoryElement = new ArrayList<>(Arrays.asList("user", String.valueOf(savedUser.getId())));
-        String profileImageUrl = s3.getS3Url() + "/default_profile.png";
-        if (profileImage != null) {
-            profileImageUrl = s3.upload(profileImage, directoryElement);
-            userInfoCommandService.setImageUrl(savedUser.getId(), profileImageUrl);
-            return savedUser.getId();
-        }
-
-        userInfoCommandService.setImageUrl(savedUser.getId(), profileImageUrl);
-
-        couponCommandService.publishNewUserCoupon(savedUser.getId());
-
-        return savedUser.getId();
     }
 
     @Transactional

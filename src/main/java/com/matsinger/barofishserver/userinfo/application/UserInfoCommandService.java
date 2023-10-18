@@ -100,8 +100,17 @@ public class UserInfoCommandService {
 
         UserInfo
                 userInfo =
-                UserInfo.builder().userId(user.getId()).phone(fixedPhoneNumber).nickname(nickname).profileImage("").email(
-                        request.getEmail()).name(name).point(0).isAgreeMarketing(isAgreeMarketing).grade(grade).build();
+                UserInfo.builder()
+                        .userId(user.getId())
+                        .phone(fixedPhoneNumber)
+                        .nickname(nickname)
+                        .profileImage("")
+                        .email(request.getEmail())
+                        .name(name)
+                        .point(0)
+                        .isAgreeMarketing(isAgreeMarketing)
+                        .grade(grade)
+                        .build();
         userInfo.setUser(user);
         return userInfoRepository.save(userInfo);
     }
