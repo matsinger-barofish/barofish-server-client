@@ -44,11 +44,13 @@ public class ReviewRepositoryImpl implements ReviewRepositoryCustom {
                                 userInfo.name.as("userName"),
                                 userInfo.nickname.as("userNickname"),
                                 grade.name.as("userGrade"),
+                                storeInfo.name.as("storeName"),
                                 product.id.as("productId"),
                                 product.title.as("productName"),
                                 product.images.as("productImage"),
                                 optionItem.originPrice.as("originPrice"),
                                 optionItem.discountPrice.as("discountPrice"),
+                                review.id.as("reviewId"),
                                 review.content.as("reviewContent"),
                                 review.createdAt.as("createdAt"),
                                 review.images.as("images"),
@@ -59,6 +61,7 @@ public class ReviewRepositoryImpl implements ReviewRepositoryCustom {
                 .leftJoin(userInfo).on(review.userId.eq(userInfo.userId))
                 .leftJoin(grade).on(grade.eq(userInfo.grade))
                 .leftJoin(product).on(product.id.eq(review.productId))
+                .leftJoin(storeInfo).on(product.storeId.eq(storeInfo.storeId))
                 .leftJoin(orderProductInfo).on(orderProductInfo.id.eq(review.orderProductInfoId))
                 .leftJoin(optionItem).on(orderProductInfo.optionItemId.eq(optionItem.id))
                 .where(review.id.eq(productId)
@@ -112,11 +115,13 @@ public class ReviewRepositoryImpl implements ReviewRepositoryCustom {
                         userInfo.userId.as("userId"),
                         userInfo.name.as("userName"),
                         grade.name.as("userGrade"),
+                        storeInfo.name.as("storeName"),
                         product.id.as("productId"),
                         product.title.as("productName"),
                         product.images.as("productImage"),
                         optionItem.originPrice.as("originPrice"),
                         optionItem.discountPrice.as("discountPrice"),
+                        review.id.as("reviewId"),
                         review.content.as("reviewContent"),
                         review.createdAt.as("createdAt"),
                         review.images.as("images"),
@@ -196,11 +201,13 @@ public class ReviewRepositoryImpl implements ReviewRepositoryCustom {
                         userInfo.name.as("userName"),
                         userInfo.nickname.as("userNickname"),
                         grade.name.as("userGrade"),
+                        storeInfo.name.as("storeName"),
                         product.id.as("productId"),
                         product.title.as("productName"),
                         product.images.as("productImage"),
                         optionItem.originPrice.as("originPrice"),
                         optionItem.discountPrice.as("discountPrice"),
+                        review.id.as("reviewId"),
                         review.content.as("reviewContent"),
                         review.createdAt.as("createdAt"),
                         review.images.as("images"),
@@ -210,6 +217,7 @@ public class ReviewRepositoryImpl implements ReviewRepositoryCustom {
                 .leftJoin(reviewLike).on(review.id.eq(reviewLike.reviewId))
                 .leftJoin(userInfo).on(userInfo.userId.eq(userId))
                 .leftJoin(product).on(product.id.eq(review.productId))
+                .leftJoin(storeInfo).on(product.storeId.eq(storeInfo.storeId))
                 .leftJoin(orderProductInfo).on(orderProductInfo.id.eq(review.orderProductInfoId))
                 .leftJoin(optionItem).on(orderProductInfo.optionItemId.eq(optionItem.id))
                 .leftJoin(grade).on(userInfo.grade.eq(grade))
