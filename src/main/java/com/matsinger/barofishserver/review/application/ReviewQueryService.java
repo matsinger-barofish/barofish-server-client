@@ -178,13 +178,27 @@ public class ReviewQueryService {
                 .build();
     }
 
-    private static void convertStringImageUrlsToArray(PageImpl<ReviewDtoV2> pagedReviews) {
+    private void convertStringImageUrlsToArray(PageImpl<ReviewDtoV2> pagedReviews) {
         for (ReviewDtoV2 pagedReview : pagedReviews) {
             String imageUrls = pagedReview.getImages();
             String processedUrls = imageUrls.substring(1, imageUrls.length() - 1);
             String[] parsedUrls = processedUrls.split(", ");
 
             pagedReview.setImageUrls(parsedUrls);
+
+            if (!pagedReview.getProductImage().equals("[]") && !pagedReview.getProductImage().equals("")) {
+                String[] parsedProductImage = pagedReview.getProductImage().split(",");
+                String parsedProductImage2 = parsedProductImage[0];
+                String parsedProductImage3 = parsedProductImage2.replace("\"", "");
+                String parsedProductImage4 = parsedProductImage3.replace("[", "");
+                pagedReview.setProductImage(parsedProductImage4);
+            }
+            if (pagedReview.getProductImage() == "[]") {
+                pagedReview.setProductImage(null);
+            }
+
+            String productImage = pagedReview.getProductImage();
+            pagedReview.setProductImage(productImage.substring(1, productImage.length() - 1));
         }
     }
 }
