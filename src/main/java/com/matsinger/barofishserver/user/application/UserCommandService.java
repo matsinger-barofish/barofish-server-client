@@ -10,6 +10,7 @@ import com.matsinger.barofishserver.compare.domain.CompareSet;
 import com.matsinger.barofishserver.compare.repository.CompareItemRepository;
 import com.matsinger.barofishserver.compare.repository.CompareSetRepository;
 import com.matsinger.barofishserver.compare.repository.SaveProductRepository;
+import com.matsinger.barofishserver.coupon.application.CouponCommandService;
 import com.matsinger.barofishserver.coupon.domain.CouponUserMap;
 import com.matsinger.barofishserver.coupon.repository.CouponUserMapRepository;
 import com.matsinger.barofishserver.grade.application.GradeQueryService;
@@ -103,6 +104,7 @@ public class UserCommandService {
     private final GradeQueryService gradeQueryService;
     private final S3Uploader s3;
     private final Common utils;
+    private final CouponCommandService couponCommandService;
 
     @Transactional
     public SnsJoinLoginResponseDto createSnsUserAndSave(SnsJoinReq request) throws MalformedURLException {
@@ -116,6 +118,8 @@ public class UserCommandService {
         UserAuth createdUserAuth = userAuthCommandService.createUserAuth(request, user);
         Grade grade = gradeRepository.findById(1).orElseThrow(() -> new IllegalStateException("등급 정보를 찾을 수 없습니다."));
         userInfoCommandService.createAndSaveUserInfo(user, request, "", grade);
+        
+        couponCommandService.publishNewUserCoupon(user.getId());
 
         return SnsJoinLoginResponseDto.builder().userId(user.getId()).loginId(createdUserAuth.getLoginId()).build();
     }
@@ -134,7 +138,42 @@ public class UserCommandService {
         UserInfo createdUserInfo = userInfoCommandService.createAndSaveIdPwUserInfo(createdUser, request, findGrade);
 
         setAndSaveDeliverPlace(createdUser, createdUserInfo, request);
+
+        couponCommandService.publishNewUserCoupon(createdUser.getId());
         return createdUser.getId();
+    }
+
+    @Transactional
+    public int addAppleUser(AppleJoinReq request, String phoneNumber, MultipartFile profileImage)
+            throws Exception {
+
+        utils.validateString(request.getName(), 20L, "이름");
+        utils.validateString(request.getNickname(), 50L, "닉네임");
+
+        User savedUser = userRepository.save(request.toUserEntity());
+
+        userAuthRepository.save(request.toUserAuthEntity(savedUser));
+
+        SiteInformation siteInformation = siteInfoQueryService.selectSiteInfo("INT_JOIN_POINT");
+        int point = Integer.parseInt(siteInformation.getContent());
+        Grade grade = gradeQueryService.selectGrade(1);
+        userInfoRepository.save(request.toUserInfoEntity(savedUser, "", phoneNumber, point, grade));
+
+        deliverPlaceRepository.save(request.toDeliveryPlaceEntity(savedUser, phoneNumber));
+
+        ArrayList<String> directoryElement = new ArrayList<>(Arrays.asList("user", String.valueOf(savedUser.getId())));
+        String profileImageUrl = s3.getS3Url() + "/default_profile.png";
+        if (profileImage != null) {
+            profileImageUrl = s3.upload(profileImage, directoryElement);
+            userInfoCommandService.setImageUrl(savedUser.getId(), profileImageUrl);
+            return savedUser.getId();
+        }
+
+        userInfoCommandService.setImageUrl(savedUser.getId(), profileImageUrl);
+
+        couponCommandService.publishNewUserCoupon(savedUser.getId());
+
+        return savedUser.getId();
     }
 
     public DeliverPlace setAndSaveDeliverPlace(User user, UserInfo userInfo, UserJoinReq request) throws Exception {
@@ -406,37 +445,6 @@ public class UserCommandService {
 
     public List<UserInfo> selectUserInfoListWithIds(List<Integer> userIds) {
         return userInfoRepository.findAllByUserIdIn(userIds);
-    }
-
-    @Transactional
-    public int addAppleUser(AppleJoinReq request, String phoneNumber, MultipartFile profileImage)
-            throws Exception {
-
-        utils.validateString(request.getName(), 20L, "이름");
-        utils.validateString(request.getNickname(), 50L, "닉네임");
-
-        User savedUser = userRepository.save(request.toUserEntity());
-
-        userAuthRepository.save(request.toUserAuthEntity(savedUser));
-
-        SiteInformation siteInformation = siteInfoQueryService.selectSiteInfo("INT_JOIN_POINT");
-        int point = Integer.parseInt(siteInformation.getContent());
-        Grade grade = gradeQueryService.selectGrade(1);
-        userInfoRepository.save(request.toUserInfoEntity(savedUser, "", phoneNumber, point, grade));
-
-        deliverPlaceRepository.save(request.toDeliveryPlaceEntity(savedUser, phoneNumber));
-
-        ArrayList<String> directoryElement = new ArrayList<>(Arrays.asList("user", String.valueOf(savedUser.getId())));
-        String profileImageUrl = s3.getS3Url() + "/default_profile.png";
-        if (profileImage != null) {
-            profileImageUrl = s3.upload(profileImage, directoryElement);
-            userInfoCommandService.setImageUrl(savedUser.getId(), profileImageUrl);
-            return savedUser.getId();
-        }
-
-        userInfoCommandService.setImageUrl(savedUser.getId(), profileImageUrl);
-
-        return savedUser.getId();
     }
 
     @Transactional
