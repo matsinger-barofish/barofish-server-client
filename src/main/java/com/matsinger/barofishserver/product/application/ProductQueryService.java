@@ -13,13 +13,14 @@ import com.matsinger.barofishserver.product.dto.ProductListDto;
 import com.matsinger.barofishserver.product.dto.ProductListDtoV2;
 import com.matsinger.barofishserver.product.optionitem.domain.OptionItem;
 import com.matsinger.barofishserver.product.optionitem.repository.OptionItemRepository;
-import com.matsinger.barofishserver.product.productfilter.application.ProductFilterService;
 import com.matsinger.barofishserver.product.productfilter.domain.ProductFilterValue;
 import com.matsinger.barofishserver.product.productfilter.dto.ProductFilterValueDto;
 import com.matsinger.barofishserver.product.productfilter.repository.ProductFilterRepository;
 import com.matsinger.barofishserver.product.repository.ProductRepository;
 import com.matsinger.barofishserver.product.repository.ProductRepositoryImpl;
 import com.matsinger.barofishserver.product.weeksdate.application.WeeksDateQueryService;
+import com.matsinger.barofishserver.product.weeksdate.domain.WeeksDate;
+import com.matsinger.barofishserver.product.weeksdate.repository.WeeksDateRepository;
 import com.matsinger.barofishserver.review.application.ReviewQueryService;
 import com.matsinger.barofishserver.review.repository.ReviewRepository;
 import com.matsinger.barofishserver.review.dto.ReviewTotalStatistic;
@@ -62,6 +63,7 @@ public class ProductQueryService {
     private final ReviewQueryService reviewQueryService;
     private final ProductRepositoryImpl productRepositoryImpl;
     private final WeeksDateQueryService weekDateQueryService;
+    private final WeeksDateRepository weeksDateRepository;
 
     public ProductListDto createProductListDtos(Integer id) {
         Product findProduct = productRepository.findById(id).orElseThrow(() -> {
@@ -173,37 +175,46 @@ public class ProductQueryService {
     }
 
 
-    public void getExpectedArrivalDate(Integer productId) {
+    public int getExpectedArrivalDate(Integer productId) {
         Product findProduct = findById(productId);
-        LocalDate.now();
+        List<WeeksDate> weeksDatesWithHoliday = weeksDateRepository.findDatesBetweenStartDateAndEndDate(LocalDate.now(), LocalDate.now().plusWeeks(2));
 
         int expectedArrivalDate;
         if (findProduct.getExpectedDeliverDay() == 1) {
-            expectedArrivalDate = calculateExpectedArrivalDate(findProduct.getForwardingTime(), findProduct.getExpectedDeliverDay());
+            expectedArrivalDate = calculateExpectedArrivalDate(findProduct.getForwardingTime(), findProduct.getExpectedDeliverDay(), weeksDatesWithHoliday);
         }
 
 
 
-//        if (expectedDeliverDay == 1) {
-//            if (!isNowBeforeForwardingTime) {
-//                expectedDeliverDay += 1;
-//            }
-//        }
-//
-//        if (expectedDeliverDay >= 2) {
-//            if (!isNowBeforeForwardingTime) {
-//                expectedDeliverDay += 1;
-//            }
-//        }
+        if (expectedDeliverDay == 1) {
+            if (!isNowBeforeForwardingTime) {
+                expectedDeliverDay += 1;
+            }
+        }
+
+        if (expectedDeliverDay >= 2) {
+            if (!isNowBeforeForwardingTime) {
+                expectedDeliverDay += 1;
+            }
+        }
     }
 
-    private int calculateExpectedArrivalDate(int productForwardingTime, int expectedDeliverDay) {
+    private int calculateExpectedArrivalDate(int productForwardingTime, int productExpectedArrivalDate, List<WeeksDate> weeksDatesWithHoliday) {
         LocalTime localTime = LocalTime.of(productForwardingTime, 0, 0);
 
         LocalDateTime forwardingTime = LocalDateTime.of(LocalDate.now(), localTime);
         LocalDateTime now = LocalDateTime.of(LocalDate.now(), LocalTime.now());
 
         boolean isNowBeforeForwardingTime = now.isBefore(forwardingTime);
+
+        int expectedArrivalDate = 0;
+
+        for (WeeksDate weeksDate : weeksDatesWithHoliday) {
+
+            boolean isTodayHoliday = weeksDate.isDeliveryCompanyHoliday();
+        }
+
+
 
         return 0;
     }
