@@ -4,11 +4,12 @@ import com.matsinger.barofishserver.product.weeksdate.domain.WeeksDate;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
-import java.time.LocalDate;
 import java.util.List;
 
 @Repository
 public interface WeeksDateRepository extends JpaRepository<WeeksDate, String> {
+    WeeksDate findByDate(String date);
 
-    List<WeeksDate> findDatesBetweenStartDateAndEndDate(LocalDate startDate, LocalDate endDate);
+    List<WeeksDate> findByDateBetween(String startDate, String endDate);
+
 }

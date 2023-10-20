@@ -101,7 +101,9 @@ public class ProductControllerV2 {
                                                                          @RequestParam(value = "Authorization") Optional<String> auth) {
         Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
 
-        productQueryService.getExpectedArrivalDate(productId);
+        LocalDateTime now = LocalDateTime.now();
+
+        productQueryService.getExpectedArrivalDate(now, productId);
 
         return ResponseEntity.ok(null);
     }

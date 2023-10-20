@@ -66,22 +66,7 @@ public class WeeksDateCommandService {
         }
 
         weeksDateRepository.saveAll(weeksDates);
-//        compareExistingDateAndSave(date, date.plusDays(14), weeksDates);
     }
-
-//    private void compareExistingDateAndSave(LocalDate startDate, LocalDate endDate, List<WeeksDate> weeksDates) {
-//        List<WeeksDate> existingDates = weeksDateRepositoryImpl.getWeeksDate(startDate, endDate);
-//
-//        for (WeeksDate existingDate : existingDates) {
-//
-//            for (WeeksDate weeksDate : weeksDates) {
-//                if (weeksDate.getDate() == weeksDate.getDate()) {
-//                    weeksDateRepository.sa
-//                }
-//            }
-//
-//        }
-//    }
 
     private WeeksDate createWeeksDate(Calendar calendar, List<Holiday> koreanHolidays) {
         int dayOfTheWeek = calendar.get(Calendar.DAY_OF_WEEK); // 일 = 1, ... , 토 = 7

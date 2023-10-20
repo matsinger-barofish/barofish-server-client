@@ -9,6 +9,7 @@ import com.matsinger.barofishserver.inquiry.repository.InquiryRepository;
 import com.matsinger.barofishserver.product.domain.Product;
 import com.matsinger.barofishserver.product.domain.ProductSortBy;
 import com.matsinger.barofishserver.product.domain.SimpleProductDto;
+import com.matsinger.barofishserver.product.dto.ExpectedArrivalDateResponse;
 import com.matsinger.barofishserver.product.dto.ProductListDto;
 import com.matsinger.barofishserver.product.dto.ProductListDtoV2;
 import com.matsinger.barofishserver.product.optionitem.domain.OptionItem;
@@ -41,6 +42,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -175,47 +177,79 @@ public class ProductQueryService {
     }
 
 
-    public int getExpectedArrivalDate(Integer productId) {
+    public ExpectedArrivalDateResponse getExpectedArrivalDate(LocalDateTime now, Integer productId) {
         Product findProduct = findById(productId);
-        List<WeeksDate> weeksDatesWithHoliday = weeksDateRepository.findDatesBetweenStartDateAndEndDate(LocalDate.now(), LocalDate.now().plusWeeks(2));
+        List<WeeksDate> weeksDatesWithHoliday = weeksDateRepository.findByDateBetween(
+                DateTimeFormatter.ofPattern("yyyyMMdd").format(LocalDate.now()),
+                DateTimeFormatter.ofPattern("yyyyMMdd").format(LocalDate.now().plusWeeks(2))
+        );
 
-        int expectedArrivalDate;
+        int calculateExpectedArrivalDate = findProduct.getExpectedDeliverDay();
         if (findProduct.getExpectedDeliverDay() == 1) {
-            expectedArrivalDate = calculateExpectedArrivalDate(findProduct.getForwardingTime(), findProduct.getExpectedDeliverDay(), weeksDatesWithHoliday);
+            calculateExpectedArrivalDate = calculateExpectedArrivalDate(now, findProduct.getForwardingTime(), findProduct.getExpectedDeliverDay(), weeksDatesWithHoliday);
         }
 
-
-
-        if (expectedDeliverDay == 1) {
-            if (!isNowBeforeForwardingTime) {
-                expectedDeliverDay += 1;
-            }
-        }
-
-        if (expectedDeliverDay >= 2) {
-            if (!isNowBeforeForwardingTime) {
-                expectedDeliverDay += 1;
-            }
-        }
+        return ExpectedArrivalDateResponse.builder()
+                .productExpectedArrivalDate(findProduct.getExpectedDeliverDay())
+                .calculatedExpectedArrivalDate(calculateExpectedArrivalDate)
+                .build();
     }
 
-    private int calculateExpectedArrivalDate(int productForwardingTime, int productExpectedArrivalDate, List<WeeksDate> weeksDatesWithHoliday) {
+    public int calculateExpectedArrivalDate(LocalDateTime now, int productForwardingTime, int productExpectedArrivalDate, List<WeeksDate> weeksDatesWithHoliday) {
         LocalTime localTime = LocalTime.of(productForwardingTime, 0, 0);
-
         LocalDateTime forwardingTime = LocalDateTime.of(LocalDate.now(), localTime);
-        LocalDateTime now = LocalDateTime.of(LocalDate.now(), LocalTime.now());
 
         boolean isNowBeforeForwardingTime = now.isBefore(forwardingTime);
 
-        int expectedArrivalDate = 0;
+        int expectedArrivalDate = productExpectedArrivalDate;
+        
+        boolean isTodayHoliday = weeksDatesWithHoliday.get(0).isDeliveryCompanyHoliday();
 
-        for (WeeksDate weeksDate : weeksDatesWithHoliday) {
+        // 오늘이 휴일이 아니면
+        if (!isTodayHoliday) {
+            // 출고시간 전에 주문했고, 다음날이 휴일이 아니면 배송도착기간은 1일
+            if (isNowBeforeForwardingTime) {
+                if (!weeksDatesWithHoliday.get(1).isDeliveryCompanyHoliday()) {
+                    expectedArrivalDate = 1;
+                }
+            }
 
-            boolean isTodayHoliday = weeksDate.isDeliveryCompanyHoliday();
+            // 출고시간 이후에 주문하면 +2일 기간에 공휴일이 포함돼 있으면 넘김,
+            // 2일 동안 공휴일이 포함돼 있지 않으면 배송 출발
+            if (!isNowBeforeForwardingTime) {
+                expectedArrivalDate = getExpectedArrivalDate(weeksDatesWithHoliday);
+            }
         }
 
+        // 오늘이 휴일인 경우 출고시간에 상관 없이 배송도착기간이 계산됨
+        if (isTodayHoliday) {
+            expectedArrivalDate = getExpectedArrivalDate(weeksDatesWithHoliday);
+        }
 
+        return expectedArrivalDate;
+    }
 
-        return 0;
+    private int getExpectedArrivalDate(List<WeeksDate> weeksDatesWithHoliday) {
+        int expectedArrivalDate = 2;
+
+        int seq = 1;
+
+        boolean isTwoConsecutiveDayContainsHoliday = true;
+        while (isTwoConsecutiveDayContainsHoliday) {
+            boolean isOneDayLatterHoliday = weeksDatesWithHoliday.get(seq).isDeliveryCompanyHoliday();
+            boolean isTwoDayLatterHoliday = weeksDatesWithHoliday.get(seq + 1).isDeliveryCompanyHoliday();
+
+            if (!isOneDayLatterHoliday && !isTwoDayLatterHoliday) {
+                isTwoConsecutiveDayContainsHoliday = false;
+                break;
+            }
+            seq++;
+            expectedArrivalDate++;
+        }
+
+        if (expectedArrivalDate >= 10) {
+            return -1;
+        }
+        return expectedArrivalDate;
     }
 }

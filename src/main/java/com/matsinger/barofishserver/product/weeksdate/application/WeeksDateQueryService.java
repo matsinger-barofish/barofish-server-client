@@ -29,8 +29,6 @@ public class WeeksDateQueryService {
     
     private final WeeksDateRepository weeksDateRepository;
 
-
-
     /**
      *
      * @param year 한국의 공휴일 (추석 설날 등..)을 가져올 년도
@@ -89,21 +87,36 @@ public class WeeksDateQueryService {
         String items = (String) itemsObject.get("item").toString();
 
         JsonElement jsonElement = JsonParser.parseString(items);
-        JsonArray jsonArray = jsonElement.getAsJsonArray();
-
-        int holidayCount = (int) jsonBody.get("totalCount");
 
         ArrayList<Holiday> holidays = new ArrayList<>();
-        for (int i=0; i<holidayCount; i++) {
-            JsonObject item = jsonArray.get(i).getAsJsonObject();
-
+        // json에 오브젝트가 하나면
+        if (!jsonElement.isJsonArray()) {
+            JsonObject jsonObject = jsonElement.getAsJsonObject();
             holidays.add(
-                Holiday.builder()
-                .dateName(item.get("dateName").toString().replace("\"", ""))
-                .date(item.get("locdate").toString())
-                .isHoliday(item.get("isHoliday").toString().replace("\"", ""))
-                .build()
+                    Holiday.builder()
+                            .dateName(jsonObject.get("dateName").toString().replace("\"", ""))
+                            .date(jsonObject.get("locdate").toString())
+                            .isHoliday(jsonObject.get("isHoliday").toString().replace("\"", ""))
+                            .build()
             );
+        }
+
+        // json에 오브젝트가 여러개면
+        if (jsonElement.isJsonArray()) {
+            JsonArray jsonArray = jsonElement.getAsJsonArray();
+            int holidayCount = (int) jsonBody.get("totalCount");
+
+            for (int i=0; i<holidayCount; i++) {
+                JsonObject item = jsonArray.get(i).getAsJsonObject();
+
+                holidays.add(
+                        Holiday.builder()
+                                .dateName(item.get("dateName").toString().replace("\"", ""))
+                                .date(item.get("locdate").toString())
+                                .isHoliday(item.get("isHoliday").toString().replace("\"", ""))
+                                .build()
+                );
+            }
         }
 
         return holidays;

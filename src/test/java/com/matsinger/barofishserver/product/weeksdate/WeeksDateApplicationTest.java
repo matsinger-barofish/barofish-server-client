@@ -54,14 +54,4 @@ class WeeksDateApplicationTest {
         calendar.set(Calendar.MONTH, Integer.valueOf(dateElement[1]));
         calendar.set(Calendar.DATE, Integer.valueOf(dateElement[2]));
     }
-
-    @DisplayName("sample test")
-    @Test
-    void test() throws IOException {
-        // given
-        weeksDateCommandService.saveThisAndNextWeeksDate(LocalDate.now().minusWeeks(1));
-        // when
-
-        // then
-    }
 }
