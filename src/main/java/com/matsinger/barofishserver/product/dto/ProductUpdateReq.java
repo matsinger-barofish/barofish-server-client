@@ -24,6 +24,7 @@ public class ProductUpdateReq {
     private Integer minOrderPrice;
     private String deliveryInfo;
     private Integer expectedDeliverDay;
+    private Integer forwardingTime;
     private Integer deliverBoxPerAmount;
     private String descriptionContent;
     private Boolean needTaxation;
