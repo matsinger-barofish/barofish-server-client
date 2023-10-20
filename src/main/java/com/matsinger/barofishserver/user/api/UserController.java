@@ -78,8 +78,8 @@ public class UserController {
     public ResponseEntity<CustomResponse<Object>> joinSnsUser(@RequestPart(value = "data") SnsJoinReq request) {
 
         CustomResponse<Object> res = new CustomResponse<>();
-
         String loginId;
+        boolean isNew = false;
         try {
             if (request.getLoginType().equals(LoginType.APPLE)) {
                 boolean isExist = userAuthQueryService.checkUserExist(request);
@@ -95,6 +95,7 @@ public class UserController {
             if (loginId == null) {
                 SnsJoinLoginResponseDto responseDto = userCommandService.createSnsUserAndSave(request);
                 loginId = responseDto.getLoginId();
+                isNew = true;
 
                 String profileImage = "";
                 if (request.getProfileImage() != null) {
@@ -105,8 +106,13 @@ public class UserController {
                 userInfoCommandService.setImageUrl(responseDto.getUserId(), profileImage);
             }
             Integer userId = userCommandService.selectUserByLoginId(request.getLoginType(), loginId).getUserId();
-            CustomResponse<Object> customResponse = generateAndSetTokens(userId, res);
-            return ResponseEntity.ok(customResponse);
+            Jwt jwt = generateAndSetTokens(userId);
+            JoinResponse joinResponse = JoinResponse.builder()
+                    .jwt(jwt)
+                    .isNew(isNew)
+                    .build();
+            res.setData(Optional.of(joinResponse));
+            return ResponseEntity.ok(res);
         } catch (Exception e) {
             return res.defaultError(e);
         }
@@ -150,10 +156,10 @@ public class UserController {
 
     @PostMapping(value = "/join-apple", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
     public ResponseEntity<CustomResponse<Object>> joinAppleSns(@RequestPart(value = "data") AppleJoinReq request,
-                                                               @RequestPart(value = "profileImage", required = false) MultipartFile profileImage)
-            throws IOException {
+                                                               @RequestPart(value = "profileImage", required = false) MultipartFile profileImage) throws IOException {
         CustomResponse<Object> res = new CustomResponse<>();
         verificationService.verifyPhoneVerification(request.getVerificationId()); // 휴대폰 번호 검증
+        boolean isNew = false;
 
         if (profileImage != null && !profileImage.isEmpty()) {
             if (!s3.validateImageType(profileImage))
@@ -169,24 +175,25 @@ public class UserController {
                 userCommandService.addUserAuth(userAuth);
             } else {
                 userId = userCommandService.addAppleUser(request, phone, profileImage);
+                isNew = true;
             }
 
-            CustomResponse<Object> customResponse = generateAndSetTokens(userId, res);
-            return ResponseEntity.ok(customResponse);
+            Jwt jwt = generateAndSetTokens(userId);
+            res.setData(Optional.of(jwt));
+            return ResponseEntity.ok(res);
         } catch (Exception e) {
             return res.defaultError(e);
         }
     }
 
-    private CustomResponse<Object> generateAndSetTokens(int userId, CustomResponse<Object> res) {
+    private Jwt generateAndSetTokens(int userId) {
         String accessToken = jwtProvider.generateAccessToken(String.valueOf(userId), TokenAuthType.USER);
         String refreshToken = jwtProvider.generateRefreshToken(String.valueOf(userId), TokenAuthType.USER);
         Jwt token = new Jwt();
         token.setAccessToken(accessToken);
         token.setRefreshToken(refreshToken);
 
-        res.setData(Optional.of(token));
-        return res;
+        return token;
     }
 
     @PostMapping("/mypage/update")
