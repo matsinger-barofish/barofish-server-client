@@ -133,11 +133,26 @@ public class OrderService {
             couponName = coupon.getTitle();
         }
         UserInfoDto userInfoDto = userService.selectUserInfo(order.getUserId()).convert2Dto();
-        return OrderDto.builder().id(order.getId()).orderedAt(order.getOrderedAt()).user(userInfoDto).totalAmount(order.getTotalPrice()).deliverPlace(
-                deliverPlace.convert2Dto()).paymentWay(order.getPaymentWay()).productInfos(orderProductDtos).couponDiscount(
-                order.getCouponDiscount()).usePoint(order.getUsePoint()).ordererName(order.getOrdererName()).ordererTel(
-                order.getOrdererTel()).couponName(couponName).bankHolder(order.getBankHolder()).bankAccount(order.getBankAccount()).bankCode(
-                order.getBankCode()).bankName(order.getBankName()).originTotalPrice(order.getOriginTotalPrice()).build();
+        return OrderDto.builder()
+                .id(order.getId())
+                .state(order.getState())
+                .orderedAt(order.getOrderedAt())
+                .user(userInfoDto)
+                .totalAmount(order.getTotalPrice())
+                .deliverPlace(deliverPlace.convert2Dto())
+                .paymentWay(order.getPaymentWay())
+                .productInfos(orderProductDtos)
+                .couponDiscount(order.getCouponDiscount())
+                .usePoint(order.getUsePoint())
+                .ordererName(order.getOrdererName())
+                .ordererTel(order.getOrdererTel())
+                .couponName(couponName)
+                .bankHolder(order.getBankHolder())
+                .bankAccount(order.getBankAccount())
+                .bankCode(order.getBankCode())
+                .bankName(order.getBankName())
+                .originTotalPrice(order.getOriginTotalPrice())
+                .build();
     }
 
     public OrderDeliverPlace selectDeliverPlace(String orderId) {
