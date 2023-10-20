@@ -199,13 +199,7 @@ public class OrderController {
 //                                    Arrays.stream(state.split(",")).map(OrderProductState::valueOf).toList())
 //                    );
                     predicates.add(
-                            builder.and(
-                                    builder.or(
-                                        root.get("productInfos").get("state").in(Arrays.stream(state.split(",")).map(OrderProductState::valueOf).toList()),
-                                        builder.notEqual(t.get("state"), OrderProductState.WAIT_DEPOSIT),
-                                        builder.and(root.get("paymentWay").in(List.of(OrderPaymentWay.DEPOSIT, OrderPaymentWay.VIRTUAL_ACCOUNT)))
-                                    )
-                            )
+                        root.get("productInfos").get("state").in(Arrays.stream(state.split(",")).map(OrderProductState::valueOf).toList())
                     );
 
                     if (tokenInfo.get().getType().equals(TokenAuthType.PARTNER)) {
