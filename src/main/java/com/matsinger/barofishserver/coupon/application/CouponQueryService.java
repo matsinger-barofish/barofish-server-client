@@ -52,7 +52,9 @@ public class CouponQueryService {
         });
         Timestamp now = utils.now();
         if (coupon.getStartAt().after(now)) throw new Error("사용 기한 전의 쿠폰입니다.");
-        if (coupon.getEndAt().before(now)) throw new Error("사용 기한이 만료되었습니다.");
+        if (coupon.getEndAt() != null) {
+            if (coupon.getEndAt().before(now)) throw new Error("사용 기한이 만료되었습니다.");
+        }
     }
 
     public Boolean checkHasCoupon(Integer couponId, Integer userId) {
