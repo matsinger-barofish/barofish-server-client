@@ -59,9 +59,14 @@ public class CouponCommandService {
                 userIds == null ? userRepository.findAllByState(UserState.ACTIVE) : userRepository.findAllByIdIn(userIds);;
         for (User user : users) {
             Optional<UserInfo> userInfo = userInfoRepository.findByUserId(user.getId());
-            if (userInfo.isPresent()) notificationCommandService.sendFcmToUser(user.getId(),
+            if (userInfo.isPresent()) notificationCommandService.sendFcmToUser(
+                    user.getId(),
                     NotificationMessageType.COUPON_ARRIVED,
-                    NotificationMessage.builder().couponName(coupon.getTitle()).userName(userInfo.get().getNickname()).build());
+                    NotificationMessage.builder()
+                            .couponName(coupon.getTitle())
+                            .userName(userInfo.get().getNickname())
+                            .build()
+            );
         }
     }
 
