@@ -97,7 +97,7 @@ public class ProductControllerV2 {
     public ResponseEntity<CustomResponse<Object>> getExpectedArrivalDate(@PathVariable(value = "id") Integer productId,
                                                                          @RequestParam(value = "Authorization") Optional<String> auth) {
 
-        Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
+//        Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
         CustomResponse<Object> res = new CustomResponse<>();
 
         LocalDateTime now = LocalDateTime.now();
