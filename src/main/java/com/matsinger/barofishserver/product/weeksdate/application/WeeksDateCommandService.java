@@ -1,7 +1,7 @@
 package com.matsinger.barofishserver.product.weeksdate.application;
 
-import com.matsinger.barofishserver.product.weeksdate.dto.Holiday;
 import com.matsinger.barofishserver.product.weeksdate.domain.WeeksDate;
+import com.matsinger.barofishserver.product.weeksdate.dto.Holiday;
 import com.matsinger.barofishserver.product.weeksdate.repository.WeeksDateRepository;
 import com.matsinger.barofishserver.product.weeksdate.repository.WeeksDateRepositoryImpl;
 import lombok.RequiredArgsConstructor;
@@ -58,7 +58,7 @@ public class WeeksDateCommandService {
 
 
         List<WeeksDate> weeksDates = new ArrayList<>();
-        for (int i=0; i<14; i++) {
+        for (int i = 0; i < 14; i++) {
             WeeksDate weeksDate = createWeeksDate(calendar, koreanHolidays);
             weeksDates.add(weeksDate);
 
@@ -66,15 +66,13 @@ public class WeeksDateCommandService {
         }
 
         weeksDateRepository.saveAll(weeksDates);
+
     }
 
     private WeeksDate createWeeksDate(Calendar calendar, List<Holiday> koreanHolidays) {
         int dayOfTheWeek = calendar.get(Calendar.DAY_OF_WEEK); // 일 = 1, ... , 토 = 7
 
-        LocalDate localDate = LocalDate.of(
-                calendar.get(Calendar.YEAR),
-                calendar.get(Calendar.MONTH) + 1,
-                calendar.get(Calendar.DATE));
+        LocalDate localDate = LocalDate.of(calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH) + 1, calendar.get(Calendar.DATE));
 
         String date = localDate.toString().replace("-", "");
 
@@ -112,10 +110,6 @@ public class WeeksDateCommandService {
             }
         }
 
-        return WeeksDate.builder()
-                .date(date.toString().replace("-", ""))
-                .isDeliveryCompanyHoliday(isDeliveryCompanyHoliday)
-                .description(dateDescription)
-                .build();
+        return WeeksDate.builder().date(date.replace("-", "")).isDeliveryCompanyHoliday(isDeliveryCompanyHoliday).description(dateDescription).build();
     }
 }
