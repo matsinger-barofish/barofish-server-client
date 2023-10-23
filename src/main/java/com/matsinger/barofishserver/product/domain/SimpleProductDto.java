@@ -27,6 +27,7 @@ public class SimpleProductDto {
     CategoryDto category;
     ProductState state;
     Integer expectedDeliverDay;
+    Integer forwardingTime;
     String[] images;
     String title;
     Integer originPrice;
