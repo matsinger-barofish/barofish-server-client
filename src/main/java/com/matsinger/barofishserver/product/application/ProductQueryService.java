@@ -9,16 +9,19 @@ import com.matsinger.barofishserver.inquiry.repository.InquiryRepository;
 import com.matsinger.barofishserver.product.domain.Product;
 import com.matsinger.barofishserver.product.domain.ProductSortBy;
 import com.matsinger.barofishserver.product.domain.SimpleProductDto;
+import com.matsinger.barofishserver.product.dto.ExpectedArrivalDateResponse;
 import com.matsinger.barofishserver.product.dto.ProductListDto;
 import com.matsinger.barofishserver.product.dto.ProductListDtoV2;
 import com.matsinger.barofishserver.product.optionitem.domain.OptionItem;
 import com.matsinger.barofishserver.product.optionitem.repository.OptionItemRepository;
-import com.matsinger.barofishserver.product.productfilter.application.ProductFilterService;
 import com.matsinger.barofishserver.product.productfilter.domain.ProductFilterValue;
 import com.matsinger.barofishserver.product.productfilter.dto.ProductFilterValueDto;
 import com.matsinger.barofishserver.product.productfilter.repository.ProductFilterRepository;
 import com.matsinger.barofishserver.product.repository.ProductRepository;
 import com.matsinger.barofishserver.product.repository.ProductRepositoryImpl;
+import com.matsinger.barofishserver.product.weeksdate.application.WeeksDateQueryService;
+import com.matsinger.barofishserver.product.weeksdate.domain.WeeksDate;
+import com.matsinger.barofishserver.product.weeksdate.repository.WeeksDateRepository;
 import com.matsinger.barofishserver.review.application.ReviewQueryService;
 import com.matsinger.barofishserver.review.repository.ReviewRepository;
 import com.matsinger.barofishserver.review.dto.ReviewTotalStatistic;
@@ -36,6 +39,10 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -51,12 +58,14 @@ public class ProductQueryService {
     private final CompareFilterRepository compareFilterRepository;
     private final StoreInfoRepository storeInfoRepository;
     private final ProductSearchFilterMapRepository productSearchFilterMapRepository;
-    private final StoreService storeService;
-    private final ReviewQueryService reviewQueryService;
     private final SearchFilterFieldRepository searchFilterFieldRepository;
     private final SaveProductRepository saveProductRepository;
     private final InquiryRepository inquiryRepository;
+    private final StoreService storeService;
+    private final ReviewQueryService reviewQueryService;
     private final ProductRepositoryImpl productRepositoryImpl;
+    private final WeeksDateQueryService weekDateQueryService;
+    private final WeeksDateRepository weeksDateRepository;
 
     public ProductListDto createProductListDtos(Integer id) {
         Product findProduct = productRepository.findById(id).orElseThrow(() -> {
@@ -168,4 +177,79 @@ public class ProductQueryService {
     }
 
 
+    public ExpectedArrivalDateResponse getExpectedArrivalDate(LocalDateTime now, Integer productId) {
+        Product findProduct = findById(productId);
+        List<WeeksDate> weeksDatesWithHoliday = weeksDateRepository.findByDateBetween(
+                DateTimeFormatter.ofPattern("yyyyMMdd").format(LocalDate.now()),
+                DateTimeFormatter.ofPattern("yyyyMMdd").format(LocalDate.now().plusWeeks(2))
+        );
+
+        int calculateExpectedArrivalDate = findProduct.getExpectedDeliverDay();
+        if (findProduct.getExpectedDeliverDay() == 1) {
+            calculateExpectedArrivalDate = calculateExpectedArrivalDate(now, findProduct.getForwardingTime(), findProduct.getExpectedDeliverDay(), weeksDatesWithHoliday);
+        }
+
+        return ExpectedArrivalDateResponse.builder()
+                .productExpectedArrivalDate(findProduct.getExpectedDeliverDay())
+                .calculatedExpectedArrivalDate(calculateExpectedArrivalDate)
+                .build();
+    }
+
+    public int calculateExpectedArrivalDate(LocalDateTime now, int productForwardingTime, int productExpectedArrivalDate, List<WeeksDate> weeksDatesWithHoliday) {
+        LocalTime localTime = LocalTime.of(productForwardingTime, 0, 0);
+        LocalDateTime forwardingTime = LocalDateTime.of(LocalDate.now(), localTime);
+
+        boolean isNowBeforeForwardingTime = now.isBefore(forwardingTime);
+
+        int expectedArrivalDate = productExpectedArrivalDate;
+        
+        boolean isTodayHoliday = weeksDatesWithHoliday.get(0).isDeliveryCompanyHoliday();
+
+        // 오늘이 휴일이 아니면
+        if (!isTodayHoliday) {
+            // 출고시간 전에 주문했고, 다음날이 휴일이 아니면 배송도착기간은 1일
+            if (isNowBeforeForwardingTime) {
+                if (!weeksDatesWithHoliday.get(1).isDeliveryCompanyHoliday()) {
+                    expectedArrivalDate = 1;
+                }
+            }
+
+            // 출고시간 이후에 주문하면 +2일 기간에 공휴일이 포함돼 있으면 넘김,
+            // 2일 동안 공휴일이 포함돼 있지 않으면 배송 출발
+            if (!isNowBeforeForwardingTime) {
+                expectedArrivalDate = getExpectedArrivalDate(weeksDatesWithHoliday);
+            }
+        }
+
+        // 오늘이 휴일인 경우 출고시간에 상관 없이 배송도착기간이 계산됨
+        if (isTodayHoliday) {
+            expectedArrivalDate = getExpectedArrivalDate(weeksDatesWithHoliday);
+        }
+
+        return expectedArrivalDate;
+    }
+
+    private int getExpectedArrivalDate(List<WeeksDate> weeksDatesWithHoliday) {
+        int expectedArrivalDate = 2;
+
+        int seq = 1;
+
+        boolean isTwoConsecutiveDayContainsHoliday = true;
+        while (isTwoConsecutiveDayContainsHoliday) {
+            boolean isOneDayLatterHoliday = weeksDatesWithHoliday.get(seq).isDeliveryCompanyHoliday();
+            boolean isTwoDayLatterHoliday = weeksDatesWithHoliday.get(seq + 1).isDeliveryCompanyHoliday();
+
+            if (!isOneDayLatterHoliday && !isTwoDayLatterHoliday) {
+                isTwoConsecutiveDayContainsHoliday = false;
+                break;
+            }
+            seq++;
+            expectedArrivalDate++;
+        }
+
+        if (expectedArrivalDate >= 10) {
+            return -1;
+        }
+        return expectedArrivalDate;
+    }
 }
