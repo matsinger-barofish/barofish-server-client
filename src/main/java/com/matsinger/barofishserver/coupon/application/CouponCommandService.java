@@ -94,11 +94,17 @@ public class CouponCommandService {
         if (count == 1) couponId = 1;
         else if (count == 2) couponId = 2;
         else if (count == 3) couponId = 3;
-        if (couponId != null) {
+
+        Optional<CouponUserMap> couponUserMapOptional = couponUserMapRepository.findById(new CouponUserMapId(userId, couponId));
+
+        if (couponUserMapOptional.isEmpty()) {
             Coupon coupon = couponRepository.findById(couponId).orElseThrow(() -> new Exception("쿠폰 정보를 찾을 수 없습니다."));
             CouponUserMap
                     couponUserMap =
                     CouponUserMap.builder().couponId(couponId).userId(userId).isUsed(false).build();
+
+            couponUserMapRepository.findById(new CouponUserMapId(userId, couponId));
+
             couponUserMapRepository.save(couponUserMap);
 
             UserInfo findUserInfo = userInfoRepository.findByUserId(userId)
