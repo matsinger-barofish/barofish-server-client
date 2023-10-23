@@ -24,11 +24,21 @@ public class NotificationCommandService {
     public void sendFcmToUser(Integer userId, NotificationMessageType type, NotificationMessage message) {
         Notification
                 notification =
-                Notification.builder().userId(userId).type(message.getNotificationType(type)).title(message.getNotificationTitle(
-                        type)).content(message.getMessage(type)).build();
+                Notification.builder()
+                        .userId(userId)
+                        .type(message.combineNotificationType(type))
+                        .title(message.convertNotificationTitle(type))
+                        .content(message.convertMessage(type))
+                        .build();
         addNotification(notification);
-        fcmService.sendFcmByToken(FcmRequestDto.builder().title(notification.getTitle()).body(notification.getContent().replaceAll(
-                "<strong>",
-                "").replaceAll("</strong>", "")).targetUserId(userId).build());
+
+        fcmService.sendFcmByToken(
+                FcmRequestDto.builder()
+                        .title(notification.getTitle())
+                        .body(notification.getContent()
+                                .replaceAll("<strong>", "")
+                                .replaceAll("</strong>", ""))
+                        .targetUserId(userId)
+                        .build());
     }
 }

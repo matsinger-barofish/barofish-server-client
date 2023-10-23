@@ -11,6 +11,7 @@ import com.matsinger.barofishserver.notification.dto.NotificationMessageType;
 import com.matsinger.barofishserver.order.orderprductinfo.repository.OrderProductInfoRepository;
 import com.matsinger.barofishserver.store.repository.StoreScrapRepository;
 import com.matsinger.barofishserver.user.application.UserCommandService;
+import com.matsinger.barofishserver.user.application.UserQueryService;
 import com.matsinger.barofishserver.user.domain.User;
 import com.matsinger.barofishserver.user.domain.UserState;
 import com.matsinger.barofishserver.user.repository.UserRepository;
@@ -59,9 +60,14 @@ public class CouponCommandService {
                 userIds == null ? userRepository.findAllByState(UserState.ACTIVE) : userRepository.findAllByIdIn(userIds);;
         for (User user : users) {
             Optional<UserInfo> userInfo = userInfoRepository.findByUserId(user.getId());
-            if (userInfo.isPresent()) notificationCommandService.sendFcmToUser(user.getId(),
+            if (userInfo.isPresent()) notificationCommandService.sendFcmToUser(
+                    user.getId(),
                     NotificationMessageType.COUPON_ARRIVED,
-                    NotificationMessage.builder().couponName(coupon.getTitle()).userName(userInfo.get().getNickname()).build());
+                    NotificationMessage.builder()
+                            .couponName(coupon.getTitle())
+                            .userName(userInfo.get().getNickname())
+                            .build()
+            );
         }
     }
 
@@ -94,10 +100,21 @@ public class CouponCommandService {
                     couponUserMap =
                     CouponUserMap.builder().couponId(couponId).userId(userId).isUsed(false).build();
             couponUserMapRepository.save(couponUserMap);
+
+            UserInfo findUserInfo = userInfoRepository.findByUserId(userId)
+                    .orElseThrow(() -> new IllegalArgumentException("유저 정보를 찾을 수 없습니다."));
+
+            notificationCommandService.sendFcmToUser(
+                    findUserInfo.getUserId(),
+                    NotificationMessageType.COUPON_ARRIVED,
+                    NotificationMessage.builder()
+                            .couponName(coupon.getTitle())
+                            .userName(findUserInfo.getNickname())
+                            .build());
         }
     }
 
-    public void publishNewUserCoupon(Integer userId) {
+    public Coupon publishNewUserCoupon(Integer userId) {
         Coupon signUpCoupon = couponRepository.findById(7)
                 .orElseThrow(() -> new IllegalArgumentException("회원가입 쿠폰을 찾을 수 없습니다."));
 
@@ -112,6 +129,8 @@ public class CouponCommandService {
                 .build();
 
         couponUserMapRepository.save(userSignUpCoupon);
+
+        return signUpCoupon;
     }
 
     public void addCouponUserMapList(List<CouponUserMap> couponUserMaps) {

@@ -3,6 +3,7 @@ package com.matsinger.barofishserver.utils.fcm;
 import com.google.api.core.ApiFuture;
 import com.google.firebase.messaging.*;
 import lombok.RequiredArgsConstructor;
+import org.checkerframework.checker.units.qual.A;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -19,22 +20,38 @@ public class FcmService {
         List<FcmToken> tokens = fcmTokenRepository.findAllByUserId(requestDto.getTargetUserId());
         if (tokens != null && tokens.size() != 0) {
             for (FcmToken token : tokens) {
-                Notification notification = Notification.builder().setTitle(requestDto.getTitle())
-                        .setBody(requestDto.getBody()).build();
-                Message message = Message.builder().setToken(token.getToken()).setNotification(notification)
-                        // .putAllData(requestDto.getData())
-                        .setAndroidConfig(AndroidConfig.builder()
-                                .setNotification(AndroidNotification.builder().setTitle(
-                                        requestDto.getTitle()).setBody(requestDto.getBody()).setSound("default")
-                                        .setChannelId(
-                                                "barofish")
-                                        .build())
-                                .build())
-                        .setApnsConfig(ApnsConfig.builder().putHeader(
-                                "apns-priority",
-                                "5").setAps(Aps.builder().setSound("default").setContentAvailable(true).build())
-                                .build())
+                Notification notification = Notification.builder()
+                        .setTitle(requestDto.getTitle())
+                        .setBody(requestDto.getBody())
                         .build();
+
+                AndroidNotification androidNotification = AndroidNotification.builder()
+                        .setTitle(requestDto.getTitle())
+                        .setBody(requestDto.getBody())
+                        .setSound("default")
+                        .setChannelId("barofish")
+                        .build();
+                AndroidConfig androidConfig = AndroidConfig.builder()
+                        .setNotification(androidNotification)
+                        .build();
+
+                Aps aps = Aps.builder()
+                            .setSound("default")
+                            .setContentAvailable(true)
+                            .build();
+                ApnsConfig apnsConfig = ApnsConfig.builder()
+                            .putHeader("apns-priority", "5")
+                            .setAps(aps)
+                            .build();
+
+                Message message =
+                        Message.builder()
+                                .setToken(token.getToken())
+                                .setNotification(notification)
+                                // .putAllData(requestDto.getData())
+                                .setAndroidConfig(androidConfig)
+                                .setApnsConfig(apnsConfig)
+                                .build();
                 try {
                     // firebaseMessaging.send(message);
                     ApiFuture<String> response = fcmConfig.firebaseMessaging().sendAsync(message);
