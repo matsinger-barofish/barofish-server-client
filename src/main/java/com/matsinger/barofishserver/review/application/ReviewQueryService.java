@@ -11,7 +11,6 @@ import com.matsinger.barofishserver.review.repository.ReviewEvaluationRepository
 import com.matsinger.barofishserver.review.repository.ReviewLikeRepository;
 import com.matsinger.barofishserver.review.repository.ReviewRepository;
 import com.matsinger.barofishserver.review.repository.ReviewRepositoryImpl;
-import com.matsinger.barofishserver.store.domain.Store;
 import jakarta.persistence.Tuple;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -55,6 +54,10 @@ public class ReviewQueryService {
 
     public Page<Review> selectAllReviewList(Specification<Review> spec, PageRequest pageRequest) {
         return reviewRepository.findAll(spec, pageRequest);
+    }
+
+    public Page<Review> selectAllReviewListExceptDeleted(Specification<Review> spec, PageRequest pageRequest) {
+        return reviewRepository.findAllByIsDeletedFalse(spec, pageRequest);
     }
 
     public Page<Review> selectReviewListByStore(Integer storeId, PageRequest pageRequest) {
