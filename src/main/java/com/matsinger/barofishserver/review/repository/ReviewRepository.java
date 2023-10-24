@@ -3,7 +3,9 @@ package com.matsinger.barofishserver.review.repository;
 import com.matsinger.barofishserver.review.domain.Review;
 import jakarta.persistence.Tuple;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
@@ -75,4 +77,5 @@ public interface ReviewRepository extends JpaRepository<Review, Integer>, JpaSpe
 
     void deleteAllByUserIdIn(List<Integer> userIds);
 
+    Page<Review> findAllByIsDeletedFalse(Specification<Review> spec, PageRequest pageRequest);
 }

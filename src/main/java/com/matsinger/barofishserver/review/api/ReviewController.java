@@ -91,7 +91,7 @@ public class ReviewController {
                 return builder.and(predicates.toArray(new Predicate[0]));
             };
             PageRequest pageRequest = PageRequest.of(page, take, Sort.by(sort, orderBy.label));
-            Page<ReviewDto> reviews = reviewQueryService.selectAllReviewList(spec, pageRequest).map(review -> {
+            Page<ReviewDto> reviews = reviewQueryService.selectAllReviewListExceptDeleted(spec, pageRequest).map(review -> {
                 ReviewDto dto = reviewCommandService.convert2Dto(review);
                 dto.setSimpleProduct(productService.convert2ListDto(productService.findById(review.getProduct().getId())));
                 return dto;
