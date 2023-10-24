@@ -64,7 +64,7 @@ public class ReviewRepositoryImpl implements ReviewRepositoryCustom {
                 .leftJoin(storeInfo).on(product.storeId.eq(storeInfo.storeId))
                 .leftJoin(orderProductInfo).on(orderProductInfo.id.eq(review.orderProductInfoId))
                 .leftJoin(optionItem).on(orderProductInfo.optionItemId.eq(optionItem.id))
-                .where(review.id.eq(productId)
+                .where(review.productId.eq(productId)
                         .and(review.isDeleted.eq(false)))
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
