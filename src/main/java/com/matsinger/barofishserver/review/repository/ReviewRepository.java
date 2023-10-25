@@ -26,7 +26,7 @@ public interface ReviewRepository extends JpaRepository<Review, Integer>, JpaSpe
 
     Page<Review> findAllByStoreIdOrderByCreatedAtDesc(Integer storeId, Pageable pageable);
 
-    Page<Review> findAllByProductIdOrderByCreatedAtDesc(Integer productId, Pageable pageable);
+    Page<Review> findAllByProductIdAndIsDeletedFalseOrderByCreatedAtDesc(Integer productId, Pageable pageable);
 
     @Query(value = "SELECT r.*\n" +
             "FROM review r\n" +
