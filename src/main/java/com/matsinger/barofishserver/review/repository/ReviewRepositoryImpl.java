@@ -86,6 +86,7 @@ public class ReviewRepositoryImpl implements ReviewRepositoryCustom {
 
     public List<Integer> getReviewLikeUserIdx(Integer reviewId) {
         return queryFactory.select(reviewLike.userId)
+                .from(review)
                 .leftJoin(reviewLike).on(review.id.eq(reviewLike.reviewId))
                 .fetch();
     }
