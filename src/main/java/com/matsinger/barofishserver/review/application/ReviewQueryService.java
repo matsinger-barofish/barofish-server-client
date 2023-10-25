@@ -125,14 +125,7 @@ public class ReviewQueryService {
     public ProductReviewDto getPagedProductReviewInfo(Integer productId, ReviewOrderByType orderType, PageRequest pageRequest) {
 
         List<ReviewDtoV2> pagedProductReviews = reviewRepositoryImpl.getPagedProductReviews(productId, orderType, pageRequest);
-        for (ReviewDtoV2 reviewDtoV2 : pagedProductReviews) {
-            List<Integer> reviewLikeUserIdx = reviewRepositoryImpl.getReviewLikeUserIdx(reviewDtoV2.getReviewId());
-            if (reviewLikeUserIdx.contains(reviewDtoV2.getUserId())) {
-                reviewDtoV2.setIsLike(true);
-                break;
-            }
-            reviewDtoV2.setIsLike(false);
-        }
+        setReviewLike(pagedProductReviews);
 
         Long totalReviewCount = reviewRepositoryImpl.getProductReviewCount(productId);
 
@@ -158,6 +151,7 @@ public class ReviewQueryService {
     public StoreReviewDto getPagedProductSumStoreReviewInfo(Integer storeId, ReviewOrderByType orderType, PageRequest pageRequest) {
         Long totalReviewCount = reviewRepositoryImpl.getStoreProductReviewCount(storeId);
         List<ReviewDtoV2> pagedProductSumStoreReviews = reviewRepositoryImpl.getPagedProductSumStoreReviews(storeId, orderType, pageRequest);
+        setReviewLike(pagedProductSumStoreReviews);
 
         PageImpl<ReviewDtoV2> pagedReviews = new PageImpl<>(pagedProductSumStoreReviews, pageRequest, totalReviewCount);
 
@@ -171,6 +165,17 @@ public class ReviewQueryService {
                 .evaluationSummaryDtos(productSumStoreReviewEvaluations)
                 .pagedReviews(pagedReviews)
                 .build();
+    }
+
+    private void setReviewLike(List<ReviewDtoV2> pagedProductSumStoreReviews) {
+        for (ReviewDtoV2 reviewDtoV2 : pagedProductSumStoreReviews) {
+            List<Integer> reviewLikeUserIdx = reviewRepositoryImpl.getReviewLikeUserIdx(reviewDtoV2.getReviewId());
+            if (reviewLikeUserIdx.contains(reviewDtoV2.getUserId())) {
+                reviewDtoV2.setIsLike(true);
+                break;
+            }
+            reviewDtoV2.setIsLike(false);
+        }
     }
 
     public UserReviewDto getPagedUserReview(Integer userId, ReviewOrderByType orderType, PageRequest pageRequest) {
