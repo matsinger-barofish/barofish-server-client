@@ -6,10 +6,12 @@ import com.matsinger.barofishserver.review.domain.ReviewOrderByType;
 import com.matsinger.barofishserver.review.dto.v2.AdminReviewDto;
 import com.matsinger.barofishserver.review.dto.v2.ReviewDtoV2;
 import com.matsinger.barofishserver.review.dto.v2.ReviewEvaluationSummaryDto;
+import com.querydsl.core.types.ExpressionUtils;
 import com.querydsl.core.types.Order;
 import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.core.types.Projections;
 import com.querydsl.core.types.dsl.BooleanExpression;
+import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
 import org.aspectj.weaver.ast.Or;
@@ -261,7 +263,24 @@ public class ReviewRepositoryImpl implements ReviewRepositoryCustom {
                                                      String evaluation, Timestamp createdAtS, Timestamp createdAtE,
                                                      Integer storeId, Pageable pageable) {
 
-        queryFactory.selectFrom(review)
+        queryFactory
+                .select(Projections.fields(
+                        AdminReviewDto.class,
+                        review.id.as("reviewId"),
+                        storeInfo.name.as("storeName"),
+                        product.title.as("productTitle"),
+                        userInfo.nickname.as("userNickname"),
+                        userInfo.email.as("userEmail"),
+                        ExpressionUtils.list(
+                                JPAExpressions
+                                        .select(reviewEvaluation.evaluation)
+                                        .from(reviewEvaluation)
+                                        .where(reviewEvaluation.reviewId.eq(review.id))
+                                        .fetchAll()
+                        )
+                        review.content.as("content")
+                ))
+                .from(review)
                 .leftJoin(storeInfo).on(review.storeId.eq(storeInfo.storeId))
                 .leftJoin(product).on(review.productId.eq(product.id))
                 .leftJoin(reviewEvaluation).on(reviewEvaluation.reviewId.eq(review.id))
@@ -275,7 +294,6 @@ public class ReviewRepositoryImpl implements ReviewRepositoryCustom {
                         eqStoreId(storeId)
                 )
                 .orderBy(createReviewOrderSpecifier(orderBy, sort))
-                .groupBy()
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
                 .fetch();
