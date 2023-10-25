@@ -21,8 +21,20 @@ public class AdminReviewDto {
     private List<ReviewEvaluationType> evaluations;
     private String content;
     private String images;
-    private String imageUrls;
+    private String[] imageUrls;
     private Timestamp createdAt;
 
-    private Integer likeSum;
+    private Long likeSum;
+
+    public void setEvaluations(List<ReviewEvaluationType> evaluations) {
+        this.evaluations = evaluations;
+    }
+
+    public void setImageUrls(String[] imageUrls) {
+        this.imageUrls = imageUrls;
+    }
+
+    public void deleteImages() {
+        this.images = null;
+    }
 }

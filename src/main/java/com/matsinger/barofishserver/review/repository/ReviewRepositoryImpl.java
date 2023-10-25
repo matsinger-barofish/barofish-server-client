@@ -6,21 +6,16 @@ import com.matsinger.barofishserver.review.domain.ReviewOrderByType;
 import com.matsinger.barofishserver.review.dto.v2.AdminReviewDto;
 import com.matsinger.barofishserver.review.dto.v2.ReviewDtoV2;
 import com.matsinger.barofishserver.review.dto.v2.ReviewEvaluationSummaryDto;
-import com.querydsl.core.types.ExpressionUtils;
 import com.querydsl.core.types.Order;
 import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.core.types.Projections;
 import com.querydsl.core.types.dsl.BooleanExpression;
-import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
-import org.aspectj.weaver.ast.Or;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Repository;
-import org.springframework.util.StringUtils;
 
 import java.sql.Timestamp;
 import java.util.ArrayList;
@@ -37,6 +32,7 @@ import static com.matsinger.barofishserver.store.domain.QStoreInfo.storeInfo;
 import static com.matsinger.barofishserver.userinfo.domain.QUserInfo.userInfo;
 import static com.matsinger.barofishserver.grade.domain.QGrade.grade;
 import static com.querydsl.core.group.GroupBy.groupBy;
+import static com.querydsl.core.group.GroupBy.list;
 
 @Repository
 @RequiredArgsConstructor
@@ -258,12 +254,12 @@ public class ReviewRepositoryImpl implements ReviewRepositoryCustom {
     }
 
     @Override
-    public Page<AdminReviewDto> findAllExceptDeleted(ReviewOrderBy orderBy, Sort.Direction sort, String orderId,
+    public List<AdminReviewDto> findAllExceptDeleted(ReviewOrderBy orderBy, Sort.Direction sort, String orderId,
                                                      String productName, String partnerName, String reviewer,
                                                      String evaluation, Timestamp createdAtS, Timestamp createdAtE,
                                                      Integer storeId, Pageable pageable) {
 
-        queryFactory
+        return queryFactory
                 .select(Projections.fields(
                         AdminReviewDto.class,
                         review.id.as("reviewId"),
@@ -271,17 +267,14 @@ public class ReviewRepositoryImpl implements ReviewRepositoryCustom {
                         product.title.as("productTitle"),
                         userInfo.nickname.as("userNickname"),
                         userInfo.email.as("userEmail"),
-                        ExpressionUtils.list(
-                                JPAExpressions
-                                        .select(reviewEvaluation.evaluation)
-                                        .from(reviewEvaluation)
-                                        .where(reviewEvaluation.reviewId.eq(review.id))
-                                        .fetchAll()
-                        )
-                        review.content.as("content")
+                        review.content.as("content"),
+                        review.images.as("images"),
+                        review.createdAt.as("createdAt"),
+                        review.id.count().as("likeSum")
                 ))
                 .from(review)
                 .leftJoin(storeInfo).on(review.storeId.eq(storeInfo.storeId))
+                .leftJoin(userInfo).on(review.userId.eq(userInfo.userId))
                 .leftJoin(product).on(review.productId.eq(product.id))
                 .leftJoin(reviewEvaluation).on(reviewEvaluation.reviewId.eq(review.id))
                 .leftJoin(reviewLike).on(reviewLike.reviewId.eq(review.id))
@@ -296,32 +289,40 @@ public class ReviewRepositoryImpl implements ReviewRepositoryCustom {
                 .orderBy(createReviewOrderSpecifier(orderBy, sort))
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
+                .groupBy(review.id, reviewLike.reviewId)
                 .fetch();
     }
 
+    public Long getAllReviewCountExceptDeleted() {
+        return queryFactory.select(review.count())
+                .from(review)
+                .where(review.isDeleted.eq(false))
+                .fetchOne();
+    }
+
     private BooleanExpression eqOrderId(final String orderId) {
-        if (orderId.isEmpty()) {
+        if (orderId == null) {
             return null;
         }
         return orders.id.contains(orderId);
     }
 
     private BooleanExpression eqProductName(final String productName) {
-        if (productName.isEmpty()) {
+        if (productName == null) {
             return null;
         }
         return product.title.contains(productName);
     }
 
     private BooleanExpression eqStoreName(final String storeName) {
-        if (storeName.isEmpty()) {
+        if (storeName == null) {
             return null;
         }
         return storeInfo.name.contains(storeName);
     }
 
     private BooleanExpression eqUserName(final String userName) {
-        if (userName.isEmpty()) {
+        if (userName == null) {
             return null;
         }
         return userInfo.name.contains(userName);

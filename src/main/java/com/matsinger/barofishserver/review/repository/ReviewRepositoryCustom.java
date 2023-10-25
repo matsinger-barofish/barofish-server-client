@@ -1,16 +1,13 @@
 package com.matsinger.barofishserver.review.repository;
 
-import com.matsinger.barofishserver.review.domain.Review;
 import com.matsinger.barofishserver.review.domain.ReviewOrderBy;
 import com.matsinger.barofishserver.review.domain.ReviewOrderByType;
 import com.matsinger.barofishserver.review.dto.v2.AdminReviewDto;
 import com.matsinger.barofishserver.review.dto.v2.ReviewDtoV2;
 import com.matsinger.barofishserver.review.dto.v2.ReviewEvaluationSummaryDto;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Repository;
 
 import java.sql.Timestamp;
@@ -31,7 +28,7 @@ public interface ReviewRepositoryCustom {
 
     List<ReviewDtoV2> getPagedUserReview(Integer userId, ReviewOrderByType orderType, PageRequest pageRequest);
 
-    Page<AdminReviewDto> findAllExceptDeleted(ReviewOrderBy orderBy, Sort.Direction sort, String orderId,
+    List<AdminReviewDto> findAllExceptDeleted(ReviewOrderBy orderBy, Sort.Direction sort, String orderId,
                                               String productName, String partnerName, String reviewer,
                                               String evaluation, Timestamp createdAtS, Timestamp createdAtE,
                                               Integer storeId, Pageable pageable);

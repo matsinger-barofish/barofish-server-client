@@ -66,9 +66,10 @@ public class ReviewControllerV2 {
             storeId = tokenInfo.get().getId();
         }
 
-        reviewQueryService.findAllReviewExceptDeleted(orderBy, sort, orderId, productName, partnerName, reviewer, evaluation, createdAtS, createdAtE, storeId, pageRequest);
+        Page<AdminReviewDto> pagedReviewDtos = reviewQueryService.findAllReviewExceptDeleted(orderBy, sort, orderId, productName, partnerName, reviewer, evaluation, createdAtS, createdAtE, storeId, pageRequest);
+        res.setData(Optional.of(pagedReviewDtos));
 
-        return null;
+        return ResponseEntity.ok(res);
     }
 
     @PostMapping("/{id}")

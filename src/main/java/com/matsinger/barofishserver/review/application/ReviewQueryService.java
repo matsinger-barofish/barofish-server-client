@@ -17,6 +17,7 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.sql.Timestamp;
+import java.util.ArrayList;
 import java.util.List;
 
 @RequiredArgsConstructor
@@ -27,6 +28,7 @@ public class ReviewQueryService {
     private final ReviewEvaluationRepository evaluationRepository;
     private final ReviewLikeRepository reviewLikeRepository;
     private final ReviewRepositoryImpl reviewRepositoryImpl;
+    private final ReviewEvaluationRepository reviewEvaluationRepository;
 
     public List<ReviewEvaluationType> selectReviewEvaluations(Integer reviewId) {
         return evaluationRepository.findAllByReviewId(reviewId).stream().map(ReviewEvaluation::getEvaluation).toList();
@@ -204,11 +206,30 @@ public class ReviewQueryService {
             String evaluation, Timestamp createdAtS, Timestamp createdAtE,
             Integer storeId, Pageable pageRequest) {
 
-        reviewRepositoryImpl.findAllExceptDeleted(orderBy, sort, orderId,
-                                    productName, partnerName, reviewer,
-                                    evaluation, createdAtS, createdAtE,
-                                    storeId, pageRequest);
+        List<AdminReviewDto> reviewDtos = reviewRepositoryImpl.findAllExceptDeleted(orderBy, sort, orderId,
+                productName, partnerName, reviewer,
+                evaluation, createdAtS, createdAtE,
+                storeId, pageRequest);
 
-        return null;
+        for (AdminReviewDto reviewDto : reviewDtos) {
+
+            String imageUrls = reviewDto.getImages();
+            String processedUrls = imageUrls.substring(1, imageUrls.length() - 1);
+            String[] parsedUrls = processedUrls.split(", ");
+
+            reviewDto.setImageUrls(parsedUrls);
+            reviewDto.deleteImages();
+
+            List<ReviewEvaluationType> evaluations = new ArrayList<>();
+            List<ReviewEvaluation> findEvaluations = reviewEvaluationRepository.findAllByReviewId(reviewDto.getReviewId());
+            for (ReviewEvaluation findEvaluation : findEvaluations) {
+                evaluations.add(findEvaluation.getEvaluation());
+            }
+            reviewDto.setEvaluations(evaluations);
+        }
+
+        Long reviewCount = reviewRepositoryImpl.getAllReviewCountExceptDeleted();
+
+        return new PageImpl<>(reviewDtos, pageRequest, reviewCount);
     }
 }
