@@ -125,6 +125,15 @@ public class ReviewQueryService {
     public ProductReviewDto getPagedProductReviewInfo(Integer productId, ReviewOrderByType orderType, PageRequest pageRequest) {
 
         List<ReviewDtoV2> pagedProductReviews = reviewRepositoryImpl.getPagedProductReviews(productId, orderType, pageRequest);
+        for (ReviewDtoV2 reviewDtoV2 : pagedProductReviews) {
+            List<Integer> reviewLikeUserIdx = reviewRepositoryImpl.getReviewLikeUserIdx(reviewDtoV2.getReviewId());
+            if (reviewLikeUserIdx.contains(reviewDtoV2.getUserId())) {
+                reviewDtoV2.setIsLike(true);
+                break;
+            }
+            reviewDtoV2.setIsLike(false);
+        }
+
         Long totalReviewCount = reviewRepositoryImpl.getProductReviewCount(productId);
 
         PageImpl<ReviewDtoV2> pagedReviews = new PageImpl<>(pagedProductReviews, pageRequest, totalReviewCount);

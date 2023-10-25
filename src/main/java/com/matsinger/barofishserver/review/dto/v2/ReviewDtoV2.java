@@ -1,8 +1,10 @@
 package com.matsinger.barofishserver.review.dto.v2;
 
 import lombok.Getter;
+import org.w3c.dom.stylesheets.LinkStyle;
 
 import java.sql.Timestamp;
+import java.util.List;
 
 @Getter
 public class ReviewDtoV2 {
@@ -22,8 +24,12 @@ public class ReviewDtoV2 {
     private Timestamp createdAt;
     private String images;
     private String[] imageUrls;
+    private boolean isLike;
     private Long likeSum;
 
+    public void setIsLike(boolean isLike) {
+        this.isLike = isLike;
+    }
 
     public void setImageUrls(String[] imageUrls) {
         this.imageUrls = imageUrls;
