@@ -6,7 +6,10 @@ import com.matsinger.barofishserver.jwt.TokenInfo;
 import com.matsinger.barofishserver.review.application.ReviewCommandService;
 import com.matsinger.barofishserver.review.application.ReviewQueryService;
 import com.matsinger.barofishserver.review.domain.Review;
+import com.matsinger.barofishserver.review.domain.ReviewOrderBy;
 import com.matsinger.barofishserver.review.domain.ReviewOrderByType;
+import com.matsinger.barofishserver.review.dto.ReviewDto;
+import com.matsinger.barofishserver.review.dto.v2.AdminReviewDto;
 import com.matsinger.barofishserver.review.dto.UpdateReviewReq;
 import com.matsinger.barofishserver.review.dto.v2.ProductReviewDto;
 import com.matsinger.barofishserver.review.dto.v2.StoreReviewDto;
@@ -14,11 +17,14 @@ import com.matsinger.barofishserver.review.dto.v2.UserReviewDto;
 import com.matsinger.barofishserver.utils.CustomResponse;
 import com.matsinger.barofishserver.utils.S3.S3Uploader;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.sql.Timestamp;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -32,6 +38,38 @@ public class ReviewControllerV2 {
     private final ReviewQueryService reviewQueryService;
     private final ReviewCommandService reviewCommandService;
     private final S3Uploader s3;
+
+    @GetMapping("/management")
+    public ResponseEntity<CustomResponse<Page<AdminReviewDto>>> selectAllReviewListByAdminV2(
+            @RequestHeader(value = "Authorization") Optional<String> auth,
+            @RequestParam(value = "page", required = false, defaultValue = "0") Integer page,
+            @RequestParam(value = "take", required = false, defaultValue = "10") Integer take,
+            @RequestParam(value = "orderby", defaultValue = "createdAt") ReviewOrderBy orderBy,
+            @RequestParam(value = "orderType", defaultValue = "DESC") Sort.Direction sort,
+            @RequestParam(value = "orderNo", required = false) String orderId,
+            @RequestParam(value = "productName", required = false) String productName,
+            @RequestParam(value = "partnerName", required = false) String partnerName,
+            @RequestParam(value = "reviewer", required = false) String reviewer,
+            @RequestParam(value = "evaluation", required = false) String evaluation,
+            @RequestParam(value = "createdAtS", required = false) Timestamp createdAtS,
+            @RequestParam(value = "createdAtE", required = false) Timestamp createdAtE
+    ) {
+        CustomResponse<Page<AdminReviewDto>> res = new CustomResponse<>();
+        Optional<TokenInfo>
+                tokenInfo =
+                jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN, TokenAuthType.PARTNER), auth);
+        if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
+
+        PageRequest pageRequest = PageRequest.of(page, take);
+        Integer storeId = null;
+        if (tokenInfo.get().getType().equals(TokenAuthType.PARTNER)) {
+            storeId = tokenInfo.get().getId();
+        }
+
+        reviewQueryService.findAllReviewExceptDeleted(orderBy, sort, orderId, productName, partnerName, reviewer, evaluation, createdAtS, createdAtE, storeId, pageRequest);
+
+        return null;
+    }
 
     @PostMapping("/{id}")
     public ResponseEntity<CustomResponse<Boolean>> deleteReview(@RequestHeader(value = "Authorization") Optional<String> auth, @PathVariable("id") Integer reviewId) {

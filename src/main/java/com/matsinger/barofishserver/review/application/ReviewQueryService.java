@@ -1,9 +1,7 @@
 package com.matsinger.barofishserver.review.application;
 
-import com.matsinger.barofishserver.review.domain.Review;
-import com.matsinger.barofishserver.review.domain.ReviewEvaluation;
-import com.matsinger.barofishserver.review.domain.ReviewEvaluationType;
-import com.matsinger.barofishserver.review.domain.ReviewOrderByType;
+import com.matsinger.barofishserver.review.domain.*;
+import com.matsinger.barofishserver.review.dto.ReviewDto;
 import com.matsinger.barofishserver.review.dto.ReviewStatistic;
 import com.matsinger.barofishserver.review.dto.ReviewTotalStatistic;
 import com.matsinger.barofishserver.review.dto.v2.*;
@@ -14,13 +12,11 @@ import com.matsinger.barofishserver.review.repository.ReviewRepositoryImpl;
 import jakarta.persistence.Tuple;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.*;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
+import java.sql.Timestamp;
 import java.util.List;
 
 @RequiredArgsConstructor
@@ -57,7 +53,7 @@ public class ReviewQueryService {
     }
 
     public Page<Review> selectAllReviewListExceptDeleted(Specification<Review> spec, PageRequest pageRequest) {
-        return reviewRepository.findAllByIsDeletedFalse(spec, pageRequest);
+        return reviewRepository.findAll(spec, pageRequest);
     }
 
     public Page<Review> selectReviewListByStore(Integer storeId, PageRequest pageRequest) {
@@ -200,5 +196,19 @@ public class ReviewQueryService {
                 pagedReview.setProductImage(null);
             }
         }
+    }
+
+    public Page<AdminReviewDto> findAllReviewExceptDeleted(
+            ReviewOrderBy orderBy, Sort.Direction sort, String orderId,
+            String productName, String partnerName, String reviewer,
+            String evaluation, Timestamp createdAtS, Timestamp createdAtE,
+            Integer storeId, Pageable pageRequest) {
+
+        reviewRepositoryImpl.findAllExceptDeleted(orderBy, sort, orderId,
+                                    productName, partnerName, reviewer,
+                                    evaluation, createdAtS, createdAtE,
+                                    storeId, pageRequest);
+
+        return null;
     }
 }
