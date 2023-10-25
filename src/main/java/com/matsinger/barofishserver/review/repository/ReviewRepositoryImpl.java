@@ -88,6 +88,7 @@ public class ReviewRepositoryImpl implements ReviewRepositoryCustom {
         return queryFactory.select(reviewLike.userId)
                 .from(review)
                 .leftJoin(reviewLike).on(review.id.eq(reviewLike.reviewId))
+                .where(review.id.eq(reviewId))
                 .fetch();
     }
 
