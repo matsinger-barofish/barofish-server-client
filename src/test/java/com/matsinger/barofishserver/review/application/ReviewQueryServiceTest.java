@@ -197,7 +197,7 @@ class ReviewQueryServiceTest {
     @Test
     void test() {
         // given
-        reviewRepository.findAllByProductIdAndIsDeletedFalseOrderByCreatedAtDesc(10000, PageRequest.of(1, 10));
+        reviewLikeRepository.findByReviewIdAndUserId(10000, 10000);
         // when
 
         // then

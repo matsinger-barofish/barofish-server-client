@@ -29,7 +29,9 @@ import com.matsinger.barofishserver.product.repository.ProductRepository;
 import com.matsinger.barofishserver.product.productfilter.application.ProductFilterService;
 import com.matsinger.barofishserver.review.application.ReviewQueryService;
 import com.matsinger.barofishserver.review.domain.Review;
+import com.matsinger.barofishserver.review.dto.ReviewDto;
 import com.matsinger.barofishserver.review.dto.ReviewTotalStatistic;
+import com.matsinger.barofishserver.review.repository.ReviewLikeRepository;
 import com.matsinger.barofishserver.review.repository.ReviewRepository;
 import com.matsinger.barofishserver.searchFilter.application.SearchFilterQueryService;
 import com.matsinger.barofishserver.searchFilter.domain.ProductSearchFilterMap;
@@ -55,6 +57,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.LongStream;
 
 @RequiredArgsConstructor
 @Slf4j
@@ -80,6 +83,7 @@ public class ProductService {
     private final DifficultDeliverAddressQueryService difficultDeliverAddressQueryService;
     private final AddressQueryService addressQueryService;
     private final Common utils;
+    private final ReviewLikeRepository reviewLikeRepository;
 
     public List<Product> selectProductListWithIds(List<Integer> ids) {
         return productRepository.findAllByIdIn(ids);
@@ -369,6 +373,7 @@ public class ProductService {
         List<Review>
                 reviews =
                 reviewQueryService.selectReviewListByProduct(product.getId(), PageRequest.of(0, 50)).getContent();
+
         StoreInfo store = storeService.selectStoreInfo(product.getStoreId());
         List<Product> comparedProducts = selectComparedProductList(product.getId());
         ReviewTotalStatistic
@@ -387,6 +392,19 @@ public class ProductService {
                             return addressQueryService.selectAddressWithBcode(v.getBcode());
                         }).toList();
         OptionItem optionItem = selectOptionItem(product.getRepresentOptionItemId());
+
+        List<ReviewDto> reviewDtos = new ArrayList<>();
+        for (Review review : reviews) {
+            ReviewDto reviewDto = review.convert2Dto();
+            if (reviewLikeRepository.findByReviewIdAndUserId(reviewDto.getId(), userId).isEmpty()) {
+                reviewDto.setIsLike(false);
+                reviewDtos.add(reviewDto);
+                break;
+            }
+            reviewDto.setIsLike(true);
+            reviewDtos.add(reviewDto);
+        }
+
         productDto.setIsLike(userId != null &&
                 saveProductRepository.existsById(new SaveProductId(userId, product.getId())));
         productDto.setDeliverFeeType(product.getDeliverFeeType());
@@ -400,7 +418,7 @@ public class ProductService {
         productDto.setComparedProduct(comparedProducts.stream().map(this::convert2ListDto).toList());
         productDto.setStore(storeService.convert2SimpleDto(store, userId));
         productDto.setInquiries(inquiries.stream().map(Inquiry::convert2Dto).toList());
-        productDto.setReviews(reviews.stream().map(Review::convert2Dto).toList());
+        productDto.setReviews(reviewDtos);
         productDto.setFilterValues(productFilterService.selectProductFilterValueListWithProductId(product.getId()));
         productDto.setReviewCount(reviews.size());
         productDto.setNeedTaxation(product.getNeedTaxation());
