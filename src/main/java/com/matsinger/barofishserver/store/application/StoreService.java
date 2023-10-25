@@ -65,7 +65,7 @@ public class StoreService {
                 reviewDtos =
                 reviewRepository.findAllByStoreId(storeInfo.getStoreId(),
                         PageRequest.of(0, 20)).getContent().stream().map(Review::convert2Dto).toList();
-        Integer reviewCount = reviewRepository.countAllByStoreId(storeInfo.getStoreId());
+        Integer reviewCount = reviewRepository.countByIsDeletedFalseAndStoreId(storeInfo.getStoreId());
         Integer productCount = productRepository.countAllByStoreId(storeInfo.getStoreId());
         Store store = selectStore(storeInfo.getStoreId());
         SimpleStore
