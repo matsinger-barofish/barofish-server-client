@@ -278,13 +278,12 @@ public class ReviewRepositoryImpl implements ReviewRepositoryCustom {
                         review.content.as("content"),
                         review.images.as("images"),
                         review.createdAt.as("createdAt"),
-                        review.id.count().as("likeSum")
+                        reviewLike.reviewId.count().as("likeSum")
                 ))
                 .from(review)
                 .leftJoin(storeInfo).on(review.storeId.eq(storeInfo.storeId))
                 .leftJoin(userInfo).on(review.userId.eq(userInfo.userId))
                 .leftJoin(product).on(review.productId.eq(product.id))
-                .leftJoin(reviewEvaluation).on(reviewEvaluation.reviewId.eq(review.id))
                 .leftJoin(reviewLike).on(reviewLike.reviewId.eq(review.id))
                 .where(
                         eqOrderId(orderId),
@@ -297,7 +296,7 @@ public class ReviewRepositoryImpl implements ReviewRepositoryCustom {
                 .orderBy(createReviewOrderSpecifier(orderBy, sort))
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
-                .groupBy(review.id, reviewLike.reviewId)
+                .groupBy(review.id, reviewLike.userId)
                 .fetch();
     }
 
