@@ -1,7 +1,6 @@
 package com.matsinger.barofishserver.review.application;
 
 import com.matsinger.barofishserver.review.domain.*;
-import com.matsinger.barofishserver.review.dto.ReviewDto;
 import com.matsinger.barofishserver.review.dto.ReviewStatistic;
 import com.matsinger.barofishserver.review.dto.ReviewTotalStatistic;
 import com.matsinger.barofishserver.review.dto.v2.*;
@@ -122,10 +121,10 @@ public class ReviewQueryService {
         return reviewRepository.existsByUserIdAndProductIdAndOrderProductInfoId(userId, productId, orderProductInfoId);
     }
 
-    public ProductReviewDto getPagedProductReviewInfo(Integer productId, ReviewOrderByType orderType, PageRequest pageRequest) {
+    public ProductReviewDto getPagedProductReviewInfo(Integer productId, Integer userId, ReviewOrderByType orderType, PageRequest pageRequest) {
 
         List<ReviewDtoV2> pagedProductReviews = reviewRepositoryImpl.getPagedProductReviews(productId, orderType, pageRequest);
-        setReviewLike(pagedProductReviews);
+        setReviewLike(pagedProductReviews, userId);
 
         Long totalReviewCount = reviewRepositoryImpl.getProductReviewCount(productId);
 
@@ -148,10 +147,10 @@ public class ReviewQueryService {
                 .orElseThrow(() -> new IllegalArgumentException("후기를 찾을 수 없습니다."));
     }
 
-    public StoreReviewDto getPagedProductSumStoreReviewInfo(Integer storeId, ReviewOrderByType orderType, PageRequest pageRequest) {
+    public StoreReviewDto getPagedProductSumStoreReviewInfo(Integer storeId, Integer userId, ReviewOrderByType orderType, PageRequest pageRequest) {
         Long totalReviewCount = reviewRepositoryImpl.getStoreProductReviewCount(storeId);
         List<ReviewDtoV2> pagedProductSumStoreReviews = reviewRepositoryImpl.getPagedProductSumStoreReviews(storeId, orderType, pageRequest);
-        setReviewLike(pagedProductSumStoreReviews);
+        setReviewLike(pagedProductSumStoreReviews, userId);
 
         PageImpl<ReviewDtoV2> pagedReviews = new PageImpl<>(pagedProductSumStoreReviews, pageRequest, totalReviewCount);
 
@@ -167,17 +166,6 @@ public class ReviewQueryService {
                 .build();
     }
 
-    private void setReviewLike(List<ReviewDtoV2> pagedProductSumStoreReviews) {
-        for (ReviewDtoV2 reviewDtoV2 : pagedProductSumStoreReviews) {
-            List<Integer> reviewLikeUserIdx = reviewRepositoryImpl.getReviewLikeUserIdx(reviewDtoV2.getReviewId());
-            if (reviewLikeUserIdx.contains(reviewDtoV2.getUserId())) {
-                reviewDtoV2.setIsLike(true);
-                break;
-            }
-            reviewDtoV2.setIsLike(false);
-        }
-    }
-
     public UserReviewDto getPagedUserReview(Integer userId, ReviewOrderByType orderType, PageRequest pageRequest) {
 
         Long totalReviewCount = reviewRepositoryImpl.getUserReviewCount(userId);
@@ -191,6 +179,17 @@ public class ReviewQueryService {
                 .reviewCount(totalReviewCount)
                 .pagedReviews(pagedReviews)
                 .build();
+    }
+
+    private void setReviewLike(List<ReviewDtoV2> pagedReviewDto, Integer userId) {
+        for (ReviewDtoV2 reviewDtoV2 : pagedReviewDto) {
+            List<Integer> reviewLikeUserIdx = reviewRepositoryImpl.getReviewLikeUserIdx(reviewDtoV2.getReviewId());
+            if (reviewLikeUserIdx.contains(userId)) {
+                reviewDtoV2.setIsLike(true);
+                break;
+            }
+            reviewDtoV2.setIsLike(false);
+        }
     }
 
     private void convertStringImageUrlsToArray(PageImpl<ReviewDtoV2> pagedReviews) {
