@@ -100,7 +100,7 @@ public class ReviewControllerV2 {
         CustomResponse<ProductReviewDto> res = new CustomResponse<>();
         try {
             if (tokenInfo.get().getType().equals(TokenAuthType.USER)) {
-                ProductReviewDto pagedProductReviewInfo = reviewQueryService.getPagedProductReviewInfo(productId, orderType, pageRequest);
+                ProductReviewDto pagedProductReviewInfo = reviewQueryService.getPagedProductReviewInfo(productId, tokenInfo.get().getId(), orderType, pageRequest);
 
                 res.setData(Optional.of(pagedProductReviewInfo));
                 return ResponseEntity.ok(res);
@@ -129,7 +129,7 @@ public class ReviewControllerV2 {
         PageRequest pageRequest = PageRequest.of(page-1, take);
 
         try {
-            StoreReviewDto pagedStoreReviewDto = reviewQueryService.getPagedProductSumStoreReviewInfo(storeId, orderType, pageRequest);
+            StoreReviewDto pagedStoreReviewDto = reviewQueryService.getPagedProductSumStoreReviewInfo(storeId, userId, orderType, pageRequest);
             res.setData(Optional.of(pagedStoreReviewDto));
             return ResponseEntity.ok(res);
 
