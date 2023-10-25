@@ -20,8 +20,7 @@ public interface ReviewRepository extends JpaRepository<Review, Integer>, JpaSpe
     Integer countAllByUserId(Integer userId);
 
     Integer countAllByProductId(Integer productId);
-
-    Integer countAllByStoreId(Integer storeId);
+    Integer countByIsDeletedFalseAndStoreId(Integer storeId);
 
     Page<Review> findAllByStoreId(Integer storeId, Pageable pageable);
 
