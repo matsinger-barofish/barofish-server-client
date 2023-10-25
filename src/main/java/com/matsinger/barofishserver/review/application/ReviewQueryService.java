@@ -75,7 +75,7 @@ public class ReviewQueryService {
     }
 
     public Page<Review> selectReviewListByProduct(Integer productId, PageRequest pageRequest) {
-        return reviewRepository.findAllByProductIdOrderByCreatedAtDesc(productId, pageRequest);
+        return reviewRepository.findAllByProductIdAndIsDeletedFalseOrderByCreatedAtDesc(productId, pageRequest);
     }
 
     public Review selectReview(Integer reviewId) {
