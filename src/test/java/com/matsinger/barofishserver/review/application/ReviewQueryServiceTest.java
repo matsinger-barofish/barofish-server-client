@@ -192,4 +192,14 @@ class ReviewQueryServiceTest {
 
         // then
     }
+
+    @DisplayName("sample test")
+    @Test
+    void test() {
+        // given
+        reviewRepository.findAllByProductIdAndIsDeletedFalseOrderByCreatedAtDesc(10000, PageRequest.of(1, 10));
+        // when
+
+        // then
+    }
 }
