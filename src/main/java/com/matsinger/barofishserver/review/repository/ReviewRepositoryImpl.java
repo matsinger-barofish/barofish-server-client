@@ -68,7 +68,7 @@ public class ReviewRepositoryImpl implements ReviewRepositoryCustom {
                         .and(review.isDeleted.eq(false)))
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
-                .groupBy(review.id, reviewLike.reviewId)
+                .groupBy(review.id)
                 .orderBy(orderSpecifiers)
                 .fetch();
     }
@@ -82,6 +82,12 @@ public class ReviewRepositoryImpl implements ReviewRepositoryCustom {
                 .fetchOne();
 
         return reviewCount;
+    }
+
+    public List<Integer> getReviewLikeUserIdx(Integer reviewId) {
+        return queryFactory.select(reviewLike.userId)
+                .leftJoin(reviewLike).on(review.id.eq(reviewLike.reviewId))
+                .fetch();
     }
 
     @Override
