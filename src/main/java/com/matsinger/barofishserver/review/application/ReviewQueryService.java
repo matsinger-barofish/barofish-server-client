@@ -185,10 +185,10 @@ public class ReviewQueryService {
         for (ReviewDtoV2 reviewDtoV2 : pagedReviewDto) {
             List<Integer> reviewLikeUserIdx = reviewRepositoryImpl.getReviewLikeUserIdx(reviewDtoV2.getReviewId());
             if (reviewLikeUserIdx.contains(userId)) {
-                reviewDtoV2.setIsSameUserLike(true);
+                reviewDtoV2.setSameUserLike(true);
                 break;
             }
-            reviewDtoV2.setIsSameUserLike(false);
+            reviewDtoV2.setSameUserLike(false);
         }
     }
 
