@@ -291,7 +291,8 @@ public class ReviewRepositoryImpl implements ReviewRepositoryCustom {
                         eqStoreName(partnerName),
                         eqUserName(reviewer),
                         betweenDate(createdAtS, createdAtE),
-                        eqStoreId(storeId)
+                        eqStoreId(storeId),
+                        review.isDeleted.eq(false)
                 )
                 .orderBy(createReviewOrderSpecifier(orderBy, sort))
                 .offset(pageable.getOffset())
