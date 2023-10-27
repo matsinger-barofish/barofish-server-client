@@ -99,16 +99,10 @@ public class ReviewControllerV2 {
         PageRequest pageRequest = PageRequest.of(page-1, take);
         CustomResponse<ProductReviewDto> res = new CustomResponse<>();
         try {
-            if (tokenInfo.get().getType().equals(TokenAuthType.USER)) {
-                ProductReviewDto pagedProductReviewInfo = reviewQueryService.getPagedProductReviewInfo(productId, tokenInfo.get().getId(), orderType, pageRequest);
+            ProductReviewDto pagedProductReviewInfo = reviewQueryService.getPagedProductReviewInfo(productId, tokenInfo.get().getId(), orderType, pageRequest);
 
-                res.setData(Optional.of(pagedProductReviewInfo));
-                return ResponseEntity.ok(res);
-            }
-
-            res.throwError("토큰 정보가 유효하지 않습니다.", "01");
+            res.setData(Optional.of(pagedProductReviewInfo));
             return ResponseEntity.ok(res);
-
         } catch (Exception e) {
             return res.defaultError(e);
         }
