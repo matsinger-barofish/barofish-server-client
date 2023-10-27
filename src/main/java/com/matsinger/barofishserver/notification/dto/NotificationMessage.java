@@ -24,7 +24,7 @@ public class NotificationMessage {
         return "";
     }
 
-    public String getMessage(NotificationMessageType type) {
+    public String convertMessage(NotificationMessageType type) {
         return switch (type) {
             case PAYMENT_DONE -> String.format("<strong>%s</strong> 상품의 결제가 완료되었습니다.", this.productName);
             case DELIVER_READY -> String.format("주문하신 <strong>%s</strong> 상품의 배송 준비가 완료되었습니다.", this.productName);
@@ -54,7 +54,7 @@ public class NotificationMessage {
         };
     }
 
-    public NotificationType getNotificationType(NotificationMessageType type) {
+    public NotificationType combineNotificationType(NotificationMessageType type) {
         switch (type) {
             case DELIVER_START:
             case DELIVER_DONE:
@@ -81,7 +81,7 @@ public class NotificationMessage {
         }
     }
 
-    public String getNotificationTitle(NotificationMessageType type) {
+    public String convertNotificationTitle(NotificationMessageType type) {
         switch (type) {
             case PAYMENT_DONE:
                 return "결제 완료";

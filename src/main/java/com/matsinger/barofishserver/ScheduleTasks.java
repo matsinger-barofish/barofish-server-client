@@ -3,11 +3,17 @@ package com.matsinger.barofishserver;
 import com.matsinger.barofishserver.deliver.application.DeliverService;
 import com.matsinger.barofishserver.order.application.OrderService;
 import com.matsinger.barofishserver.product.application.ProductService;
+import com.matsinger.barofishserver.product.weeksdate.application.WeeksDateCommandService;
+import com.matsinger.barofishserver.product.weeksdate.application.WeeksDateQueryService;
 import com.matsinger.barofishserver.search.application.SearchKeywordCommandService;
 import com.matsinger.barofishserver.user.application.UserCommandService;
 import lombok.AllArgsConstructor;
+import org.springframework.context.annotation.Conditional;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
+
+import java.io.IOException;
+import java.time.LocalDate;
 
 @Component
 @AllArgsConstructor
@@ -18,6 +24,7 @@ public class ScheduleTasks {
     private final OrderService orderService;
     private final UserCommandService userCommandService;
     private final ProductService productService;
+    private final WeeksDateCommandService weeksDateCommandService;
 
     @Scheduled(cron = "0 0 0 * * 1")
     public void SearchKeywordSchedule() {
@@ -47,5 +54,11 @@ public class ScheduleTasks {
     @Scheduled(cron = "0 0 */1 * * *")
     public void updateProductStateActiveSupposedToStartPromotion() {
         productService.updateProductStateActiveSupposedToStartPromotion();
+    }
+
+    @Scheduled(cron = "0 0 * * * 1") // 매주 일요일 정각에 실행
+    @Conditional(ProfilesCheck.class)
+    public void addDateInfoInTheNextTwoWeeks() throws IOException {
+        weeksDateCommandService.saveThisAndNextWeeksDate(LocalDate.now());
     }
 }

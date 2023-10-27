@@ -1,14 +1,18 @@
 package com.matsinger.barofishserver.review.repository;
 
 import com.matsinger.barofishserver.review.domain.Review;
+import com.matsinger.barofishserver.review.dto.v2.AdminReviewDto;
 import jakarta.persistence.Tuple;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.lang.reflect.Member;
 import java.util.List;
 
 public interface ReviewRepository extends JpaRepository<Review, Integer>, JpaSpecificationExecutor<Review> {
@@ -18,14 +22,13 @@ public interface ReviewRepository extends JpaRepository<Review, Integer>, JpaSpe
     Integer countAllByUserId(Integer userId);
 
     Integer countAllByProductId(Integer productId);
-
-    Integer countAllByStoreId(Integer storeId);
+    Integer countByIsDeletedFalseAndStoreId(Integer storeId);
 
     Page<Review> findAllByStoreId(Integer storeId, Pageable pageable);
 
     Page<Review> findAllByStoreIdOrderByCreatedAtDesc(Integer storeId, Pageable pageable);
 
-    Page<Review> findAllByProductIdOrderByCreatedAtDesc(Integer productId, Pageable pageable);
+    Page<Review> findAllByProductIdAndIsDeletedFalseOrderByCreatedAtDesc(Integer productId, Pageable pageable);
 
     @Query(value = "SELECT r.*\n" +
             "FROM review r\n" +
@@ -74,5 +77,4 @@ public interface ReviewRepository extends JpaRepository<Review, Integer>, JpaSpe
                                                             Integer orderProductInfoId);
 
     void deleteAllByUserIdIn(List<Integer> userIds);
-
 }

@@ -22,8 +22,12 @@ public class ReviewDtoV2 {
     private Timestamp createdAt;
     private String images;
     private String[] imageUrls;
+    private boolean sameUserLike;
     private Long likeSum;
 
+    public void setSameUserLike(boolean isLike) {
+        this.sameUserLike = isLike;
+    }
 
     public void setImageUrls(String[] imageUrls) {
         this.imageUrls = imageUrls;
