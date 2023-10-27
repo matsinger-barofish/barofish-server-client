@@ -14,7 +14,7 @@ import com.matsinger.barofishserver.product.application.ProductQueryService;
 import com.matsinger.barofishserver.product.application.ProductService;
 import com.matsinger.barofishserver.product.difficultDeliverAddress.application.DifficultDeliverAddressCommandService;
 import com.matsinger.barofishserver.product.domain.ProductSortBy;
-import com.matsinger.barofishserver.product.dto.ProductListDto;
+import com.matsinger.barofishserver.product.dto.ExpectedArrivalDateResponse;
 import com.matsinger.barofishserver.product.dto.ProductListDtoV2;
 import com.matsinger.barofishserver.product.productfilter.application.ProductFilterService;
 import com.matsinger.barofishserver.search.application.SearchKeywordQueryService;
@@ -29,6 +29,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.Set;
 
@@ -90,5 +91,20 @@ public class ProductControllerV2 {
         } catch (Exception e) {
             return res.defaultError(e);
         }
+    }
+
+    @GetMapping("/arrival-date/{id}")
+    public ResponseEntity<CustomResponse<Object>> getExpectedArrivalDate(@PathVariable(value = "id") Integer productId,
+                                                                         @RequestParam(value = "Authorization") Optional<String> auth) {
+
+//        Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
+        CustomResponse<Object> res = new CustomResponse<>();
+
+        LocalDateTime now = LocalDateTime.now();
+
+        ExpectedArrivalDateResponse expectedArrivalDate = productQueryService.getExpectedArrivalDate(now, productId);
+
+        res.setData(Optional.of(expectedArrivalDate));
+        return ResponseEntity.ok(res);
     }
 }

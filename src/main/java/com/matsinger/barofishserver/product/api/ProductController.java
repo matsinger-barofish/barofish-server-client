@@ -405,6 +405,7 @@ public class ProductController {
             product.setDeliverFee(data.getDeliveryFee());
             product.setDeliverFeeType(data.getDeliverFeeType());
             product.setMinOrderPrice(data.getMinOrderPrice());
+            product.setForwardingTime(data.getForwardingTime());
             product.setCreatedAt(new Timestamp(System.currentTimeMillis()));
             Product result = productService.addProduct(product);
             OptionItem representOptionItem = null;
@@ -546,6 +547,7 @@ public class ProductController {
                 if (data.getExpectedDeliverDay() < 0) return res.throwError("예상 도착일을 입력해주세요.", "INPUT_CHECK_REQUIRED");
                 product.setExpectedDeliverDay(data.getExpectedDeliverDay());
             }
+            product.setForwardingTime(data.getForwardingTime());
             if (data.getPromotionStartAt() != null) {
                 product.setPromotionStartAt(data.getPromotionStartAt());
             }

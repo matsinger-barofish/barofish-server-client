@@ -11,6 +11,7 @@ import com.matsinger.barofishserver.compare.repository.CompareItemRepository;
 import com.matsinger.barofishserver.compare.repository.CompareSetRepository;
 import com.matsinger.barofishserver.compare.repository.SaveProductRepository;
 import com.matsinger.barofishserver.coupon.application.CouponCommandService;
+import com.matsinger.barofishserver.coupon.domain.Coupon;
 import com.matsinger.barofishserver.coupon.domain.CouponUserMap;
 import com.matsinger.barofishserver.coupon.repository.CouponUserMapRepository;
 import com.matsinger.barofishserver.grade.application.GradeQueryService;
@@ -18,6 +19,9 @@ import com.matsinger.barofishserver.grade.domain.Grade;
 import com.matsinger.barofishserver.grade.repository.GradeRepository;
 import com.matsinger.barofishserver.inquiry.application.InquiryCommandService;
 import com.matsinger.barofishserver.inquiry.repository.InquiryRepository;
+import com.matsinger.barofishserver.notification.application.NotificationCommandService;
+import com.matsinger.barofishserver.notification.dto.NotificationMessage;
+import com.matsinger.barofishserver.notification.dto.NotificationMessageType;
 import com.matsinger.barofishserver.notification.repository.NotificationRepository;
 import com.matsinger.barofishserver.order.domain.Orders;
 import com.matsinger.barofishserver.order.orderprductinfo.repository.OrderProductInfoRepository;
@@ -105,6 +109,7 @@ public class UserCommandService {
     private final S3Uploader s3;
     private final Common utils;
     private final CouponCommandService couponCommandService;
+    private final NotificationCommandService notificationCommandService;
 
     @Transactional
     public SnsJoinLoginResponseDto createSnsUserAndSave(SnsJoinReq request) throws MalformedURLException {
@@ -117,9 +122,17 @@ public class UserCommandService {
 
         UserAuth createdUserAuth = userAuthCommandService.createUserAuth(request, user);
         Grade grade = gradeRepository.findById(1).orElseThrow(() -> new IllegalStateException("등급 정보를 찾을 수 없습니다."));
-        userInfoCommandService.createAndSaveUserInfo(user, request, "", grade);
-        
-        couponCommandService.publishNewUserCoupon(user.getId());
+        UserInfo createdUserInfo = userInfoCommandService.createAndSaveUserInfo(user, request, "", grade);
+
+        Coupon publishedCoupon = couponCommandService.publishNewUserCoupon(user.getId());
+
+        notificationCommandService.sendFcmToUser(
+                user.getId(),
+                NotificationMessageType.COUPON_ARRIVED,
+                NotificationMessage.builder()
+                        .couponName(publishedCoupon.getTitle())
+                        .userName(createdUserInfo.getNickname())
+                        .build());
 
         return SnsJoinLoginResponseDto.builder().userId(user.getId()).loginId(createdUserAuth.getLoginId()).build();
     }
@@ -139,7 +152,16 @@ public class UserCommandService {
 
         setAndSaveDeliverPlace(createdUser, createdUserInfo, request);
 
-        couponCommandService.publishNewUserCoupon(createdUser.getId());
+        Coupon publishedCoupon = couponCommandService.publishNewUserCoupon(createdUser.getId());
+
+        notificationCommandService.sendFcmToUser(
+                createdUserInfo.getUserId(),
+                NotificationMessageType.COUPON_ARRIVED,
+                NotificationMessage.builder()
+                        .couponName(publishedCoupon.getTitle())
+                        .userName(createdUserInfo.getNickname())
+                        .build());
+
         return createdUser.getId();
     }
 
@@ -157,7 +179,7 @@ public class UserCommandService {
         SiteInformation siteInformation = siteInfoQueryService.selectSiteInfo("INT_JOIN_POINT");
         int point = Integer.parseInt(siteInformation.getContent());
         Grade grade = gradeQueryService.selectGrade(1);
-        userInfoRepository.save(request.toUserInfoEntity(savedUser, "", phoneNumber, point, grade));
+        UserInfo createdUserInfo = userInfoRepository.save(request.toUserInfoEntity(savedUser, "", phoneNumber, point, grade));
 
         deliverPlaceRepository.save(request.toDeliveryPlaceEntity(savedUser, phoneNumber));
 
@@ -171,7 +193,15 @@ public class UserCommandService {
 
         userInfoCommandService.setImageUrl(savedUser.getId(), profileImageUrl);
 
-        couponCommandService.publishNewUserCoupon(savedUser.getId());
+        Coupon publishedCoupon = couponCommandService.publishNewUserCoupon(savedUser.getId());
+
+        notificationCommandService.sendFcmToUser(
+                createdUserInfo.getUserId(),
+                NotificationMessageType.COUPON_ARRIVED,
+                NotificationMessage.builder()
+                        .couponName(publishedCoupon.getTitle())
+                        .userName(createdUserInfo.getNickname())
+                        .build());
 
         return savedUser.getId();
     }

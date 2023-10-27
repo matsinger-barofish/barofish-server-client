@@ -193,4 +193,14 @@ class ReviewQueryServiceTest {
 
         // then
     }
+
+    @DisplayName("sample test")
+    @Test
+    void test() {
+        // given
+        reviewLikeRepository.findByReviewIdAndUserId(10000, 10000);
+        // when
+
+        // then
+    }
 }

@@ -1,21 +1,27 @@
 package com.matsinger.barofishserver.review.repository;
 
 import com.matsinger.barofishserver.product.domain.ProductState;
+import com.matsinger.barofishserver.review.domain.ReviewOrderBy;
 import com.matsinger.barofishserver.review.domain.ReviewOrderByType;
+import com.matsinger.barofishserver.review.dto.v2.AdminReviewDto;
 import com.matsinger.barofishserver.review.dto.v2.ReviewDtoV2;
 import com.matsinger.barofishserver.review.dto.v2.ReviewEvaluationSummaryDto;
 import com.querydsl.core.types.Order;
 import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.core.types.Projections;
+import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Repository;
 
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.matsinger.barofishserver.order.domain.QOrders.orders;
 import static com.matsinger.barofishserver.order.orderprductinfo.domain.QOrderProductInfo.orderProductInfo;
 import static com.matsinger.barofishserver.product.domain.QProduct.product;
 import static com.matsinger.barofishserver.product.optionitem.domain.QOptionItem.optionItem;
@@ -26,6 +32,7 @@ import static com.matsinger.barofishserver.store.domain.QStoreInfo.storeInfo;
 import static com.matsinger.barofishserver.userinfo.domain.QUserInfo.userInfo;
 import static com.matsinger.barofishserver.grade.domain.QGrade.grade;
 import static com.querydsl.core.group.GroupBy.groupBy;
+import static com.querydsl.core.group.GroupBy.list;
 
 @Repository
 @RequiredArgsConstructor
@@ -64,11 +71,11 @@ public class ReviewRepositoryImpl implements ReviewRepositoryCustom {
                 .leftJoin(storeInfo).on(product.storeId.eq(storeInfo.storeId))
                 .leftJoin(orderProductInfo).on(orderProductInfo.id.eq(review.orderProductInfoId))
                 .leftJoin(optionItem).on(orderProductInfo.optionItemId.eq(optionItem.id))
-                .where(review.id.eq(productId)
+                .where(review.productId.eq(productId)
                         .and(review.isDeleted.eq(false)))
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
-                .groupBy(review.id, reviewLike.reviewId)
+                .groupBy(review.id)
                 .orderBy(orderSpecifiers)
                 .fetch();
     }
@@ -82,6 +89,14 @@ public class ReviewRepositoryImpl implements ReviewRepositoryCustom {
                 .fetchOne();
 
         return reviewCount;
+    }
+
+    public List<Integer> getReviewLikeUserIdx(Integer reviewId) {
+        return queryFactory.select(reviewLike.userId)
+                .from(review)
+                .leftJoin(reviewLike).on(review.id.eq(reviewLike.reviewId))
+                .where(review.id.eq(reviewId))
+                .fetch();
     }
 
     @Override
@@ -242,6 +257,127 @@ public class ReviewRepositoryImpl implements ReviewRepositoryCustom {
 
         if (orderType.equals(ReviewOrderByType.BEST)) {
             orderSpecifiers.add(new OrderSpecifier(Order.DESC, reviewLike.reviewId.count()));
+        }
+        return orderSpecifiers.toArray(new OrderSpecifier[orderSpecifiers.size()]);
+    }
+
+    @Override
+    public List<AdminReviewDto> findAllExceptDeleted(ReviewOrderBy orderBy, Sort.Direction sort, String orderId,
+                                                     String productName, String partnerName, String reviewer,
+                                                     String evaluation, Timestamp createdAtS, Timestamp createdAtE,
+                                                     Integer storeId, Pageable pageable) {
+
+        return queryFactory
+                .select(Projections.fields(
+                        AdminReviewDto.class,
+                        review.id.as("reviewId"),
+                        storeInfo.name.as("storeName"),
+                        product.title.as("productTitle"),
+                        userInfo.nickname.as("userNickname"),
+                        userInfo.email.as("userEmail"),
+                        review.content.as("content"),
+                        review.images.as("images"),
+                        review.createdAt.as("createdAt"),
+                        reviewLike.reviewId.count().as("likeSum")
+                ))
+                .from(review)
+                .leftJoin(storeInfo).on(review.storeId.eq(storeInfo.storeId))
+                .leftJoin(userInfo).on(review.userId.eq(userInfo.userId))
+                .leftJoin(product).on(review.productId.eq(product.id))
+                .leftJoin(reviewLike).on(reviewLike.reviewId.eq(review.id))
+                .where(
+                        eqOrderId(orderId),
+                        eqProductName(productName),
+                        eqStoreName(partnerName),
+                        eqUserName(reviewer),
+                        betweenDate(createdAtS, createdAtE),
+                        eqStoreId(storeId),
+                        review.isDeleted.eq(false)
+                )
+                .orderBy(createReviewOrderSpecifier(orderBy, sort))
+                .offset(pageable.getOffset())
+                .limit(pageable.getPageSize())
+                .groupBy(review.id, reviewLike.userId)
+                .fetch();
+    }
+
+    public Long getAllReviewCountExceptDeleted() {
+        return queryFactory.select(review.count())
+                .from(review)
+                .where(review.isDeleted.eq(false))
+                .fetchOne();
+    }
+
+    private BooleanExpression eqOrderId(final String orderId) {
+        if (orderId == null) {
+            return null;
+        }
+        return orders.id.contains(orderId);
+    }
+
+    private BooleanExpression eqProductName(final String productName) {
+        if (productName == null) {
+            return null;
+        }
+        return product.title.contains(productName);
+    }
+
+    private BooleanExpression eqStoreName(final String storeName) {
+        if (storeName == null) {
+            return null;
+        }
+        return storeInfo.name.contains(storeName);
+    }
+
+    private BooleanExpression eqUserName(final String userName) {
+        if (userName == null) {
+            return null;
+        }
+        return userInfo.name.contains(userName);
+    }
+
+    private BooleanExpression betweenDate(Timestamp createdAtS, Timestamp createdAtE) {
+        if (createdAtS != null && createdAtE != null) {
+            review.createdAt.goe(createdAtS).and(review.createdAt.loe(createdAtE));
+        }
+        if (createdAtS != null && createdAtE == null) {
+            review.createdAt.goe(createdAtS);
+        }
+        if (createdAtS == null && createdAtE != null) {
+            review.createdAt.loe(createdAtE);
+        }
+        return null;
+    }
+
+    private BooleanExpression eqStoreId(Integer storeId) {
+        if (storeId == null) {
+            return null;
+        }
+        return storeInfo.storeId.eq(storeId);
+    }
+
+    private OrderSpecifier[] createReviewOrderSpecifier(ReviewOrderBy orderBy, Sort.Direction sort) {
+        List<OrderSpecifier> orderSpecifiers = new ArrayList<>();
+        Order direction = sort.isAscending() ? Order.ASC : Order.DESC;
+
+        String orderCondition = orderBy.label;
+        if (orderCondition.equals("orderId")) {
+            orderSpecifiers.add(new OrderSpecifier(direction, orders.id));
+        }
+        if (orderCondition.equals("productName")) {
+            orderSpecifiers.add(new OrderSpecifier(direction, product.title));
+        }
+        if (orderCondition.equals("storeName")) {
+            orderSpecifiers.add(new OrderSpecifier(direction, storeInfo.name));
+        }
+        if (orderCondition.equals("reviewerName")) {
+            orderSpecifiers.add(new OrderSpecifier(direction, userInfo.name));
+        }
+        if (orderCondition.equals("reviewerEmail")) {
+            orderSpecifiers.add(new OrderSpecifier(direction, userInfo.email));
+        }
+        if (orderCondition.equals("createdAt")) {
+            orderSpecifiers.add(new OrderSpecifier(direction, review.createdAt));
         }
         return orderSpecifiers.toArray(new OrderSpecifier[orderSpecifiers.size()]);
     }

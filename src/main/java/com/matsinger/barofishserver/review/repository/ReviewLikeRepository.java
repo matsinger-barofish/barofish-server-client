@@ -5,6 +5,7 @@ import com.matsinger.barofishserver.review.domain.ReviewLikeId;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface ReviewLikeRepository extends JpaRepository<ReviewLike, ReviewLikeId> {
     Boolean existsByUserIdAndReviewId(Integer userId, Integer reviewId);
@@ -14,4 +15,6 @@ public interface ReviewLikeRepository extends JpaRepository<ReviewLike, ReviewLi
     void deleteAllByReviewId(Integer reviewId);
 
     void deleteAllByUserIdIn(List<Integer> userIds);
+
+    Optional<ReviewLike> findByReviewIdAndUserId(Integer id, Integer userId);
 }

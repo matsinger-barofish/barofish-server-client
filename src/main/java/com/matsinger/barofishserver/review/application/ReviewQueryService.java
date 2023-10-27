@@ -1,9 +1,6 @@
 package com.matsinger.barofishserver.review.application;
 
-import com.matsinger.barofishserver.review.domain.Review;
-import com.matsinger.barofishserver.review.domain.ReviewEvaluation;
-import com.matsinger.barofishserver.review.domain.ReviewEvaluationType;
-import com.matsinger.barofishserver.review.domain.ReviewOrderByType;
+import com.matsinger.barofishserver.review.domain.*;
 import com.matsinger.barofishserver.review.dto.ReviewStatistic;
 import com.matsinger.barofishserver.review.dto.ReviewTotalStatistic;
 import com.matsinger.barofishserver.review.dto.v2.*;
@@ -11,17 +8,15 @@ import com.matsinger.barofishserver.review.repository.ReviewEvaluationRepository
 import com.matsinger.barofishserver.review.repository.ReviewLikeRepository;
 import com.matsinger.barofishserver.review.repository.ReviewRepository;
 import com.matsinger.barofishserver.review.repository.ReviewRepositoryImpl;
-import com.matsinger.barofishserver.store.domain.Store;
 import jakarta.persistence.Tuple;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.*;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
+import java.sql.Timestamp;
+import java.util.ArrayList;
 import java.util.List;
 
 @RequiredArgsConstructor
@@ -32,6 +27,7 @@ public class ReviewQueryService {
     private final ReviewEvaluationRepository evaluationRepository;
     private final ReviewLikeRepository reviewLikeRepository;
     private final ReviewRepositoryImpl reviewRepositoryImpl;
+    private final ReviewEvaluationRepository reviewEvaluationRepository;
 
     public List<ReviewEvaluationType> selectReviewEvaluations(Integer reviewId) {
         return evaluationRepository.findAllByReviewId(reviewId).stream().map(ReviewEvaluation::getEvaluation).toList();
@@ -57,6 +53,10 @@ public class ReviewQueryService {
         return reviewRepository.findAll(spec, pageRequest);
     }
 
+    public Page<Review> selectAllReviewListExceptDeleted(Specification<Review> spec, PageRequest pageRequest) {
+        return reviewRepository.findAll(spec, pageRequest);
+    }
+
     public Page<Review> selectReviewListByStore(Integer storeId, PageRequest pageRequest) {
         return reviewRepository.findAllByStoreId(storeId, pageRequest);
     }
@@ -74,7 +74,7 @@ public class ReviewQueryService {
     }
 
     public Page<Review> selectReviewListByProduct(Integer productId, PageRequest pageRequest) {
-        return reviewRepository.findAllByProductIdOrderByCreatedAtDesc(productId, pageRequest);
+        return reviewRepository.findAllByProductIdAndIsDeletedFalseOrderByCreatedAtDesc(productId, pageRequest);
     }
 
     public Review selectReview(Integer reviewId) {
@@ -121,9 +121,11 @@ public class ReviewQueryService {
         return reviewRepository.existsByUserIdAndProductIdAndOrderProductInfoId(userId, productId, orderProductInfoId);
     }
 
-    public ProductReviewDto getPagedProductReviewInfo(Integer productId, ReviewOrderByType orderType, PageRequest pageRequest) {
+    public ProductReviewDto getPagedProductReviewInfo(Integer productId, Integer userId, ReviewOrderByType orderType, PageRequest pageRequest) {
 
         List<ReviewDtoV2> pagedProductReviews = reviewRepositoryImpl.getPagedProductReviews(productId, orderType, pageRequest);
+        setReviewLike(pagedProductReviews, userId);
+
         Long totalReviewCount = reviewRepositoryImpl.getProductReviewCount(productId);
 
         PageImpl<ReviewDtoV2> pagedReviews = new PageImpl<>(pagedProductReviews, pageRequest, totalReviewCount);
@@ -145,9 +147,10 @@ public class ReviewQueryService {
                 .orElseThrow(() -> new IllegalArgumentException("후기를 찾을 수 없습니다."));
     }
 
-    public StoreReviewDto getPagedProductSumStoreReviewInfo(Integer storeId, ReviewOrderByType orderType, PageRequest pageRequest) {
+    public StoreReviewDto getPagedProductSumStoreReviewInfo(Integer storeId, Integer userId, ReviewOrderByType orderType, PageRequest pageRequest) {
         Long totalReviewCount = reviewRepositoryImpl.getStoreProductReviewCount(storeId);
         List<ReviewDtoV2> pagedProductSumStoreReviews = reviewRepositoryImpl.getPagedProductSumStoreReviews(storeId, orderType, pageRequest);
+        setReviewLike(pagedProductSumStoreReviews, userId);
 
         PageImpl<ReviewDtoV2> pagedReviews = new PageImpl<>(pagedProductSumStoreReviews, pageRequest, totalReviewCount);
 
@@ -178,6 +181,17 @@ public class ReviewQueryService {
                 .build();
     }
 
+    private void setReviewLike(List<ReviewDtoV2> pagedReviewDto, Integer userId) {
+        for (ReviewDtoV2 reviewDtoV2 : pagedReviewDto) {
+            List<Integer> reviewLikeUserIdx = reviewRepositoryImpl.getReviewLikeUserIdx(reviewDtoV2.getReviewId());
+            if (reviewLikeUserIdx.contains(userId)) {
+                reviewDtoV2.setSameUserLike(true);
+                break;
+            }
+            reviewDtoV2.setSameUserLike(false);
+        }
+    }
+
     private void convertStringImageUrlsToArray(PageImpl<ReviewDtoV2> pagedReviews) {
         for (ReviewDtoV2 pagedReview : pagedReviews) {
             String imageUrls = pagedReview.getImages();
@@ -197,5 +211,38 @@ public class ReviewQueryService {
                 pagedReview.setProductImage(null);
             }
         }
+    }
+
+    public Page<AdminReviewDto> findAllReviewExceptDeleted(
+            ReviewOrderBy orderBy, Sort.Direction sort, String orderId,
+            String productName, String partnerName, String reviewer,
+            String evaluation, Timestamp createdAtS, Timestamp createdAtE,
+            Integer storeId, Pageable pageRequest) {
+
+        List<AdminReviewDto> reviewDtos = reviewRepositoryImpl.findAllExceptDeleted(orderBy, sort, orderId,
+                productName, partnerName, reviewer,
+                evaluation, createdAtS, createdAtE,
+                storeId, pageRequest);
+
+        for (AdminReviewDto reviewDto : reviewDtos) {
+
+            String imageUrls = reviewDto.getImages();
+            String processedUrls = imageUrls.substring(1, imageUrls.length() - 1);
+            String[] parsedUrls = processedUrls.split(", ");
+
+            reviewDto.setImageUrls(parsedUrls);
+            reviewDto.deleteImages();
+
+            List<ReviewEvaluationType> evaluations = new ArrayList<>();
+            List<ReviewEvaluation> findEvaluations = reviewEvaluationRepository.findAllByReviewId(reviewDto.getReviewId());
+            for (ReviewEvaluation findEvaluation : findEvaluations) {
+                evaluations.add(findEvaluation.getEvaluation());
+            }
+            reviewDto.setEvaluations(evaluations);
+        }
+
+        Long reviewCount = reviewRepositoryImpl.getAllReviewCountExceptDeleted();
+
+        return new PageImpl<>(reviewDtos, pageRequest, reviewCount);
     }
 }
