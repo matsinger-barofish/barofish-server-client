@@ -111,7 +111,7 @@ public class UserController {
                     .jwt(jwt)
                     .isNew(isNew)
                     .build();
-            res.setData(Optional.of(joinResponse));
+            res.setData(Optional.of(jwt));
             return ResponseEntity.ok(res);
         } catch (Exception e) {
             return res.defaultError(e);
@@ -159,7 +159,6 @@ public class UserController {
                                                                @RequestPart(value = "profileImage", required = false) MultipartFile profileImage) throws IOException {
         CustomResponse<Object> res = new CustomResponse<>();
         verificationService.verifyPhoneVerification(request.getVerificationId()); // 휴대폰 번호 검증
-        boolean isNew = false;
 
         if (profileImage != null && !profileImage.isEmpty()) {
             if (!s3.validateImageType(profileImage))
@@ -175,7 +174,6 @@ public class UserController {
                 userCommandService.addUserAuth(userAuth);
             } else {
                 userId = userCommandService.addAppleUser(request, phone, profileImage);
-                isNew = true;
             }
 
             Jwt jwt = generateAndSetTokens(userId);
