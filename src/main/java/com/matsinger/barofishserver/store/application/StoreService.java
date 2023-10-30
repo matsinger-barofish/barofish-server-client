@@ -57,25 +57,39 @@ public class StoreService {
 
     public SimpleStore convert2SimpleDto(StoreInfo storeInfo, Integer userId) {
         Boolean isLike = userId != null ? checkLikeStore(storeInfo.getStoreId(), userId) : false;
-        List<ReviewStatistic>
-                reviewStatistics =
+
+        List<ReviewStatistic> reviewStatistics =
                 reviewRepository.selectReviewStatisticsWithStoreId(storeInfo.getStoreId()).stream().map(tuple -> ReviewStatistic.builder().key(
                         tuple.get("evaluation").toString()).count(Integer.valueOf(tuple.get("count").toString())).build()).toList();
+
         List<ReviewDto>
                 reviewDtos =
                 reviewRepository.findAllByStoreId(storeInfo.getStoreId(),
                         PageRequest.of(0, 20)).getContent().stream().map(Review::convert2Dto).toList();
+
         Integer reviewCount = reviewRepository.countByIsDeletedFalseAndStoreId(storeInfo.getStoreId());
         Integer productCount = productRepository.countAllByStoreId(storeInfo.getStoreId());
         Store store = selectStore(storeInfo.getStoreId());
-        SimpleStore
-                simpleStore =
-                SimpleStore.builder().loginId(store.getLoginId()).storeId(storeInfo.getStoreId()).backgroundImage(
-                        storeInfo.getBackgroudImage()).profileImage(storeInfo.getProfileImage()).name(storeInfo.getName()).location(
-                        storeInfo.getLocation()).isReliable(storeInfo.getIsReliable()).keyword(storeInfo.getKeyword().split(
-                        ",")).visitNote(storeInfo.getVisitNote()).refundDeliverFee(storeInfo.getRefundDeliverFee()).oneLineDescription(
-                        storeInfo.getOneLineDescription()).isLike(isLike).reviewStatistic(reviewStatistics).reviews(
-                        reviewDtos).reviewCount(reviewCount).productCount(productCount).deliverCompany(storeInfo.getDeliverCompany()).build();
+
+        SimpleStore simpleStore = SimpleStore.builder()
+                        .loginId(store.getLoginId())
+                        .storeId(storeInfo.getStoreId())
+                        .backgroundImage(storeInfo.getBackgroudImage())
+                        .profileImage(storeInfo.getProfileImage())
+                        .name(storeInfo.getName())
+                        .location(storeInfo.getLocation())
+                        .isReliable(storeInfo.getIsReliable())
+                        .keyword(storeInfo.getKeyword().split(","))
+                        .visitNote(storeInfo.getVisitNote())
+                        .refundDeliverFee(storeInfo.getRefundDeliverFee())
+                        .oneLineDescription(storeInfo.getOneLineDescription())
+                        .isLike(isLike)
+                        .reviewStatistic(reviewStatistics)
+                        .reviews(reviewDtos)
+                        .reviewCount(reviewCount)
+                        .productCount(productCount)
+                        .deliverCompany(storeInfo.getDeliverCompany())
+                        .build();
         return simpleStore;
     }
 

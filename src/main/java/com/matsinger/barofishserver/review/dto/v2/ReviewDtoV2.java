@@ -1,5 +1,6 @@
 package com.matsinger.barofishserver.review.dto.v2;
 
+import com.matsinger.barofishserver.product.domain.ProductState;
 import lombok.Getter;
 
 import java.sql.Timestamp;
@@ -13,6 +14,7 @@ public class ReviewDtoV2 {
     private String userGrade;
     private String storeName;
     private Integer productId;
+    private ProductState productState;
     private String productName;
     private int originPrice;
     private int discountPrice;
