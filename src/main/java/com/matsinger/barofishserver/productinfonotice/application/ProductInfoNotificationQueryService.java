@@ -11,6 +11,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Optional;
+
 import static com.matsinger.barofishserver.productinfonotice.domain.ProductInfoNoticeForm.*;
 
 @Service
@@ -38,16 +40,16 @@ public class ProductInfoNotificationQueryService {
             return findInfo.toDto();
         }
 
-        throw new IllegalArgumentException("상품 고시 정보를 찾을 수 없습니다.");
+        return null;
     }
 
     public ProcessedFoodInfo findProcessedFoodInfoByProductId(int productId) {
-        return processedFoodInfoRepository.findByProductId(productId)
-                .orElseThrow(() -> new IllegalArgumentException("상품 고시 정보를 찾을 수 없습니다."));
+        Optional<ProcessedFoodInfo> optionalProcessedFoodInfo = processedFoodInfoRepository.findByProductId(productId);
+        return optionalProcessedFoodInfo.orElse(null);
     }
 
     public AgriculturalAndLivestockProductsInfo findLivestockProductsInfoByProductId(int productId) {
-        return agriculturalAndLivestockProductsInfoRepository.findByProductId(productId)
-                .orElseThrow(() -> new IllegalArgumentException("상품 고시 정보를 찾을 수 없습니다."));
+        Optional<AgriculturalAndLivestockProductsInfo> optionalAgriculturalAndLivestockProductsInfo = agriculturalAndLivestockProductsInfoRepository.findByProductId(productId);
+        return optionalAgriculturalAndLivestockProductsInfo.orElse(null);
     }
 }
