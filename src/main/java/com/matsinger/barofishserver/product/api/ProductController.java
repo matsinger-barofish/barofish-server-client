@@ -386,6 +386,7 @@ public class ProductController {
             }
             // Setter
             Product product = new Product();
+            product.setItemCode("19");
             product.setDiscountRate(0);
             product.setTitle(title);
             product.setOriginPrice(0);
