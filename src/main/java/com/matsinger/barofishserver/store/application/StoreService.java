@@ -67,13 +67,16 @@ public class StoreService {
 //                        tuple.get("evaluation").toString()).count(Integer.valueOf(tuple.get("count").toString())).build()).toList();
 
         List<ReviewEvaluationSummaryDto> productReviewEvaluations = reviewRepositoryImpl.getProductReviewEvaluations(storeInfo.getStoreId());
-        List<ReviewStatistic> reviewStatistics = productReviewEvaluations.stream().map(evaluation ->
-                ReviewStatistic.builder()
+
+        List<ReviewStatistic> reviewStatistics = new ArrayList<>();
+        for (ReviewEvaluationSummaryDto evaluation : productReviewEvaluations) {
+            if (evaluation.getEvaluationType() != null && evaluation.getEvaluationSum() != null) {
+                reviewStatistics.add(ReviewStatistic.builder()
                         .key(evaluation.getEvaluationType().toString())
                         .count(evaluation.getEvaluationSum().intValue())
-                        .build()
-        ).toList();
-
+                        .build());
+            }
+        }
 
         List<ReviewDto>
                 reviewDtos =
