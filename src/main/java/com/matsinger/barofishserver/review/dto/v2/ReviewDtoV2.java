@@ -13,6 +13,7 @@ public class ReviewDtoV2 {
     private String userGrade;
     private String storeName;
     private Integer productId;
+    private boolean productState;
     private String productName;
     private int originPrice;
     private int discountPrice;

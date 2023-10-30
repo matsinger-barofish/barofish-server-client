@@ -133,6 +133,7 @@ public class ReviewRepositoryImpl implements ReviewRepositoryCustom {
                         grade.name.as("userGrade"),
                         storeInfo.name.as("storeName"),
                         product.id.as("productId"),
+                        product.state.as("productState"),
                         product.title.as("productName"),
                         product.images.as("productImage"),
                         optionItem.originPrice.as("originPrice"),
@@ -151,7 +152,6 @@ public class ReviewRepositoryImpl implements ReviewRepositoryCustom {
                 .leftJoin(orderProductInfo).on(orderProductInfo.id.eq(review.orderProductInfoId))
                 .leftJoin(optionItem).on(orderProductInfo.optionItemId.eq(optionItem.id))
                 .where(review.storeId.eq(storeId)
-                        .and(product.state.eq(ProductState.ACTIVE))
                         .and(review.isDeleted.eq(false)))
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
@@ -167,7 +167,7 @@ public class ReviewRepositoryImpl implements ReviewRepositoryCustom {
                 .leftJoin(product).on(review.productId.eq(product.id))
                 .where(review.storeId.eq(storeId)
                         .and(review.isDeleted.eq(false))
-                        .and(product.state.eq(ProductState.ACTIVE)))
+                )
                 .fetchOne();
 
         return reviewCount;
@@ -187,7 +187,6 @@ public class ReviewRepositoryImpl implements ReviewRepositoryCustom {
                 .leftJoin(review).on(review.productId.eq(product.id))
                 .leftJoin(reviewEvaluation).on(review.id.eq(reviewEvaluation.reviewId))
                 .where(storeInfo.storeId.eq(storeId)
-                        .and(product.state.eq(ProductState.ACTIVE))
                         .and(review.isDeleted.eq(false)))
                 .groupBy(reviewEvaluation.evaluation)
                 .fetch();
