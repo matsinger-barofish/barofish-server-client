@@ -66,7 +66,7 @@ public class StoreService {
 //                reviewRepository.selectReviewStatisticsWithStoreId(storeInfo.getStoreId()).stream().map(tuple -> ReviewStatistic.builder().key(
 //                        tuple.get("evaluation").toString()).count(Integer.valueOf(tuple.get("count").toString())).build()).toList();
 
-        List<ReviewEvaluationSummaryDto> productReviewEvaluations = reviewRepositoryImpl.getProductReviewEvaluations(storeInfo.getStoreId());
+        List<ReviewEvaluationSummaryDto> productReviewEvaluations = reviewRepositoryImpl.getProductSumStoreReviewEvaluations(storeInfo.getStoreId());
 
         List<ReviewStatistic> reviewStatistics = new ArrayList<>();
         for (ReviewEvaluationSummaryDto evaluation : productReviewEvaluations) {
