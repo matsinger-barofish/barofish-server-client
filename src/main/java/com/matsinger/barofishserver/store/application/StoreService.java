@@ -2,10 +2,12 @@ package com.matsinger.barofishserver.store.application;
 
 
 import com.matsinger.barofishserver.product.repository.ProductRepository;
+import com.matsinger.barofishserver.review.dto.v2.ReviewEvaluationSummaryDto;
 import com.matsinger.barofishserver.review.repository.ReviewRepository;
 import com.matsinger.barofishserver.review.domain.Review;
 import com.matsinger.barofishserver.review.dto.ReviewDto;
 import com.matsinger.barofishserver.review.dto.ReviewStatistic;
+import com.matsinger.barofishserver.review.repository.ReviewRepositoryImpl;
 import com.matsinger.barofishserver.store.domain.*;
 import com.matsinger.barofishserver.store.repository.StoreInfoRepository;
 import com.matsinger.barofishserver.store.repository.StoreRepository;
@@ -24,6 +26,7 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 @RequiredArgsConstructor
 @Slf4j
@@ -35,6 +38,7 @@ public class StoreService {
     private final StoreInfoRepository storeInfoRepository;
     private final ProductRepository productRepository;
     private final StoreScrapRepository storeScrapRepository;
+    private final ReviewRepositoryImpl reviewRepositoryImpl;
 
     public StoreDto convert2Dto(Store store, Boolean isUser) {
         StoreInfo storeInfo = selectStoreInfo(store.getId());
@@ -58,9 +62,18 @@ public class StoreService {
     public SimpleStore convert2SimpleDto(StoreInfo storeInfo, Integer userId) {
         Boolean isLike = userId != null ? checkLikeStore(storeInfo.getStoreId(), userId) : false;
 
-        List<ReviewStatistic> reviewStatistics =
-                reviewRepository.selectReviewStatisticsWithStoreId(storeInfo.getStoreId()).stream().map(tuple -> ReviewStatistic.builder().key(
-                        tuple.get("evaluation").toString()).count(Integer.valueOf(tuple.get("count").toString())).build()).toList();
+//        List<ReviewStatistic> reviewStatistics =
+//                reviewRepository.selectReviewStatisticsWithStoreId(storeInfo.getStoreId()).stream().map(tuple -> ReviewStatistic.builder().key(
+//                        tuple.get("evaluation").toString()).count(Integer.valueOf(tuple.get("count").toString())).build()).toList();
+
+        List<ReviewEvaluationSummaryDto> productReviewEvaluations = reviewRepositoryImpl.getProductReviewEvaluations(storeInfo.getStoreId());
+        List<ReviewStatistic> reviewStatistics = productReviewEvaluations.stream().map(evaluation ->
+                ReviewStatistic.builder()
+                        .key(evaluation.getEvaluationType().toString())
+                        .count(evaluation.getEvaluationSum().intValue())
+                        .build()
+        ).toList();
+
 
         List<ReviewDto>
                 reviewDtos =
