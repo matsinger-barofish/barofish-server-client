@@ -1,11 +1,10 @@
 package com.matsinger.barofishserver.data.curation.application;
 
-import com.matsinger.barofishserver.data.curation.domain.Curation;
-import com.matsinger.barofishserver.data.curation.domain.CurationState;
-import com.matsinger.barofishserver.data.curation.domain.CurationType;
-import com.matsinger.barofishserver.data.curation.repository.CurationRepository;
-import com.matsinger.barofishserver.search.repository.SearchKeywordRepository;
-import org.assertj.core.api.Assertions;
+import com.matsinger.barofishserver.domain.data.curation.application.CurationQueryService;
+import com.matsinger.barofishserver.domain.data.curation.domain.Curation;
+import com.matsinger.barofishserver.domain.data.curation.domain.CurationState;
+import com.matsinger.barofishserver.domain.data.curation.domain.CurationType;
+import com.matsinger.barofishserver.domain.data.curation.repository.CurationRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -18,7 +17,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.*;
-import static org.junit.jupiter.api.Assertions.*;
 
 @ActiveProfiles("local")
 @SpringBootTest

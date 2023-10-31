@@ -1,14 +1,14 @@
 package com.matsinger.barofishserver.jwt;
 
-import com.matsinger.barofishserver.admin.application.AdminQueryService;
-import com.matsinger.barofishserver.admin.domain.Admin;
-import com.matsinger.barofishserver.admin.domain.AdminState;
-import com.matsinger.barofishserver.store.domain.Store;
-import com.matsinger.barofishserver.store.application.StoreService;
-import com.matsinger.barofishserver.store.domain.StoreState;
-import com.matsinger.barofishserver.user.domain.User;
-import com.matsinger.barofishserver.user.application.UserCommandService;
-import com.matsinger.barofishserver.user.domain.UserState;
+import com.matsinger.barofishserver.domain.admin.application.AdminQueryService;
+import com.matsinger.barofishserver.domain.admin.domain.Admin;
+import com.matsinger.barofishserver.domain.admin.domain.AdminState;
+import com.matsinger.barofishserver.domain.store.domain.Store;
+import com.matsinger.barofishserver.domain.store.application.StoreService;
+import com.matsinger.barofishserver.domain.store.domain.StoreState;
+import com.matsinger.barofishserver.domain.user.domain.User;
+import com.matsinger.barofishserver.domain.user.application.UserCommandService;
+import com.matsinger.barofishserver.domain.user.domain.UserState;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 

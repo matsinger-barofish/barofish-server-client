@@ -1,8 +1,8 @@
 package com.matsinger.barofishserver.product.weeksdate;
 
-import com.matsinger.barofishserver.product.weeksdate.application.WeeksDateCommandService;
-import com.matsinger.barofishserver.product.weeksdate.application.WeeksDateQueryService;
-import com.matsinger.barofishserver.product.weeksdate.dto.Holiday;
+import com.matsinger.barofishserver.domain.product.weeksdate.application.WeeksDateCommandService;
+import com.matsinger.barofishserver.domain.product.weeksdate.application.WeeksDateQueryService;
+import com.matsinger.barofishserver.domain.product.weeksdate.dto.Holiday;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
