@@ -1,13 +1,13 @@
 package com.matsinger.barofishserver.user;
 
-import com.matsinger.barofishserver.user.application.UserCommandService;
-import com.matsinger.barofishserver.user.domain.UserState;
-import com.matsinger.barofishserver.user.dto.SnsJoinReq;
-import com.matsinger.barofishserver.user.domain.User;
-import com.matsinger.barofishserver.user.repository.UserRepository;
-import com.matsinger.barofishserver.userauth.domain.UserAuth;
-import com.matsinger.barofishserver.userauth.repository.UserAuthRepository;
-import com.matsinger.barofishserver.userauth.application.UserAuthCommandService;
+import com.matsinger.barofishserver.domain.user.application.UserCommandService;
+import com.matsinger.barofishserver.domain.user.domain.UserState;
+import com.matsinger.barofishserver.domain.user.dto.SnsJoinReq;
+import com.matsinger.barofishserver.domain.user.domain.User;
+import com.matsinger.barofishserver.domain.user.repository.UserRepository;
+import com.matsinger.barofishserver.domain.userauth.domain.UserAuth;
+import com.matsinger.barofishserver.domain.userauth.repository.UserAuthRepository;
+import com.matsinger.barofishserver.domain.userauth.application.UserAuthCommandService;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -17,7 +17,7 @@ import org.springframework.test.context.ActiveProfiles;
 
 import java.sql.Timestamp;
 
-import static com.matsinger.barofishserver.userauth.domain.LoginType.*;
+import static com.matsinger.barofishserver.domain.userauth.domain.LoginType.*;
 import static org.assertj.core.api.Assertions.*;
 
 @ActiveProfiles("local")
