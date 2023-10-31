@@ -52,6 +52,9 @@ dependencies {
     implementation 'org.apache.poi:poi:5.2.2'
     implementation 'org.apache.poi:poi-ooxml:5.2.2'
 
+    runtimeOnly 'io.micrometer:micrometer-registry-prometheus' // 마이크로미터 프로메테우스 구현체
+    implementation 'org.springframework.boot:spring-boot-starter-actuator' // 엑츄에이터
+
     // ⭐ Spring boot 3.x이상에서 QueryDsl 패키지를 정의하는 방법
     // 참고: https://velog.io/@juhyeon1114/Spring-QueryDsl-gradle-%EC%84%A4%EC%A0%95-Spring-boot-3.0-%EC%9D%B4%EC%83%81
     implementation 'com.querydsl:querydsl-jpa:5.0.0:jakarta'
