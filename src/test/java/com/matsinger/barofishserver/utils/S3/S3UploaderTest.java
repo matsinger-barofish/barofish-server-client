@@ -1,16 +1,14 @@
 package com.matsinger.barofishserver.utils.S3;
 
-import com.matsinger.barofishserver.category.application.CategoryQueryService;
-import com.matsinger.barofishserver.product.application.ProductQueryService;
-import com.matsinger.barofishserver.product.domain.Product;
-import com.matsinger.barofishserver.review.application.ReviewQueryService;
-import com.matsinger.barofishserver.review.domain.Review;
-import com.matsinger.barofishserver.review.repository.ReviewRepository;
-import com.matsinger.barofishserver.store.application.StoreQueryService;
-import com.matsinger.barofishserver.store.domain.Store;
-import com.matsinger.barofishserver.user.application.UserQueryService;
-import com.matsinger.barofishserver.user.domain.User;
-import org.assertj.core.api.Assertions;
+import com.matsinger.barofishserver.domain.product.application.ProductQueryService;
+import com.matsinger.barofishserver.domain.product.domain.Product;
+import com.matsinger.barofishserver.domain.review.application.ReviewQueryService;
+import com.matsinger.barofishserver.domain.review.domain.Review;
+import com.matsinger.barofishserver.domain.review.repository.ReviewRepository;
+import com.matsinger.barofishserver.domain.store.application.StoreQueryService;
+import com.matsinger.barofishserver.domain.store.domain.Store;
+import com.matsinger.barofishserver.domain.user.application.UserQueryService;
+import com.matsinger.barofishserver.domain.user.domain.User;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

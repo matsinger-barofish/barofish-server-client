@@ -1,11 +1,12 @@
 package com.matsinger.barofishserver.user.paymentMethod.application;
 
-import com.matsinger.barofishserver.user.paymentMethod.repository.PaymentMethodRepository;
-import com.matsinger.barofishserver.user.paymentMethod.domain.PaymentMethod;
-import com.matsinger.barofishserver.user.paymentMethod.dto.PaymentMethodDto;
-import com.matsinger.barofishserver.user.domain.User;
-import com.matsinger.barofishserver.user.domain.UserState;
-import com.matsinger.barofishserver.user.repository.UserRepository;
+import com.matsinger.barofishserver.domain.user.paymentMethod.application.PaymentMethodQueryService;
+import com.matsinger.barofishserver.domain.user.paymentMethod.repository.PaymentMethodRepository;
+import com.matsinger.barofishserver.domain.user.paymentMethod.domain.PaymentMethod;
+import com.matsinger.barofishserver.domain.user.paymentMethod.dto.PaymentMethodDto;
+import com.matsinger.barofishserver.domain.user.domain.User;
+import com.matsinger.barofishserver.domain.user.domain.UserState;
+import com.matsinger.barofishserver.domain.user.repository.UserRepository;
 import com.matsinger.barofishserver.utils.AES256;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;

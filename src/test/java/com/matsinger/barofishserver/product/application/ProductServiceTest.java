@@ -1,22 +1,17 @@
 package com.matsinger.barofishserver.product.application;
 
-import com.matsinger.barofishserver.category.domain.Category;
-import com.matsinger.barofishserver.category.repository.CategoryRepository;
-import com.matsinger.barofishserver.product.domain.Product;
-import com.matsinger.barofishserver.product.domain.ProductDeliverFeeType;
-import com.matsinger.barofishserver.product.domain.ProductState;
-import com.matsinger.barofishserver.product.repository.ProductRepository;
+import com.matsinger.barofishserver.domain.category.repository.CategoryRepository;
+import com.matsinger.barofishserver.domain.product.application.ProductService;
+import com.matsinger.barofishserver.domain.product.domain.Product;
+import com.matsinger.barofishserver.domain.product.repository.ProductRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.cglib.core.Local;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.sql.Timestamp;
-import java.text.SimpleDateFormat;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Calendar;
 import java.util.List;

@@ -5,7 +5,7 @@ import com.matsinger.barofishserver.excel.application.ProductExcelService;
 import com.matsinger.barofishserver.jwt.JwtService;
 import com.matsinger.barofishserver.jwt.TokenAuthType;
 import com.matsinger.barofishserver.jwt.TokenInfo;
-import com.matsinger.barofishserver.product.application.ProductService;
+import com.matsinger.barofishserver.domain.product.application.ProductService;
 import com.matsinger.barofishserver.utils.CustomResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
