@@ -1,18 +1,20 @@
 package com.matsinger.barofishserver.review.application;
 
-import com.matsinger.barofishserver.order.orderprductinfo.application.OrderProductInfoQueryService;
-import com.matsinger.barofishserver.product.application.ProductQueryService;
-import com.matsinger.barofishserver.review.domain.Review;
-import com.matsinger.barofishserver.review.domain.ReviewEvaluation;
-import com.matsinger.barofishserver.review.domain.ReviewEvaluationType;
-import com.matsinger.barofishserver.review.repository.ReviewEvaluationRepository;
-import com.matsinger.barofishserver.review.repository.ReviewRepository;
-import com.matsinger.barofishserver.store.application.StoreQueryService;
-import com.matsinger.barofishserver.user.application.UserQueryService;
+import com.matsinger.barofishserver.domain.order.orderprductinfo.application.OrderProductInfoQueryService;
+import com.matsinger.barofishserver.domain.product.application.ProductQueryService;
+import com.matsinger.barofishserver.domain.review.application.ReviewCommandService;
+import com.matsinger.barofishserver.domain.review.domain.Review;
+import com.matsinger.barofishserver.domain.review.domain.ReviewEvaluation;
+import com.matsinger.barofishserver.domain.review.domain.ReviewEvaluationType;
+import com.matsinger.barofishserver.domain.review.repository.ReviewEvaluationRepository;
+import com.matsinger.barofishserver.domain.review.repository.ReviewRepository;
+import com.matsinger.barofishserver.domain.store.application.StoreQueryService;
+import com.matsinger.barofishserver.domain.user.application.UserQueryService;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
@@ -20,6 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
+
 
 @SpringBootTest
 @ActiveProfiles("local")
@@ -43,8 +46,10 @@ class ReviewCommandServiceTest {
     private Review review1;
     private Review review2;
 
+
     @BeforeEach
     public void ReviewCommandServiceTest() {
+
         Review createdReview = reviewRepository.save(Review.builder()
                 .productId(10000)
                 .storeId(10000)

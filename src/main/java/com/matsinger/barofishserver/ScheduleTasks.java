@@ -1,12 +1,11 @@
 package com.matsinger.barofishserver;
 
-import com.matsinger.barofishserver.deliver.application.DeliverService;
-import com.matsinger.barofishserver.order.application.OrderService;
-import com.matsinger.barofishserver.product.application.ProductService;
-import com.matsinger.barofishserver.product.weeksdate.application.WeeksDateCommandService;
-import com.matsinger.barofishserver.product.weeksdate.application.WeeksDateQueryService;
-import com.matsinger.barofishserver.search.application.SearchKeywordCommandService;
-import com.matsinger.barofishserver.user.application.UserCommandService;
+import com.matsinger.barofishserver.domain.deliver.application.DeliverService;
+import com.matsinger.barofishserver.domain.order.application.OrderService;
+import com.matsinger.barofishserver.domain.product.application.ProductService;
+import com.matsinger.barofishserver.domain.product.weeksdate.application.WeeksDateCommandService;
+import com.matsinger.barofishserver.domain.search.application.SearchKeywordCommandService;
+import com.matsinger.barofishserver.domain.user.application.UserCommandService;
 import lombok.AllArgsConstructor;
 import org.springframework.context.annotation.Conditional;
 import org.springframework.scheduling.annotation.Scheduled;

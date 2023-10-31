@@ -1,8 +1,10 @@
 package com.matsinger.barofishserver.order.orderprductinfo.repository;
 
-import com.matsinger.barofishserver.settlement.application.SettlementQueryService;
-import com.matsinger.barofishserver.settlement.dto.SettlementOrderDto;
-import com.matsinger.barofishserver.settlement.dto.TempDto;
+import com.matsinger.barofishserver.domain.order.orderprductinfo.repository.OrderProductInfoRepository;
+import com.matsinger.barofishserver.domain.order.orderprductinfo.repository.OrderProductInfoRepositoryImpl;
+import com.matsinger.barofishserver.domain.settlement.application.SettlementQueryService;
+import com.matsinger.barofishserver.domain.settlement.dto.SettlementOrderDto;
+import com.matsinger.barofishserver.domain.settlement.dto.TempDto;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
