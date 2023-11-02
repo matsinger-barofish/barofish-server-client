@@ -25,7 +25,7 @@ import java.util.Enumeration;
 import java.util.Iterator;
 
 @Slf4j
-@RestControllerAdvice(basePackages = {"com.matsinger.barofishserver.global.exception"})
+@RestControllerAdvice(basePackages = {"com.matsinger.barofishserver"})
 @RequiredArgsConstructor
 public class GlobalControllerAdvice implements RequestBodyAdvice {
 
