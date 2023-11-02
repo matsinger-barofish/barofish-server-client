@@ -129,43 +129,40 @@ public class ProductController {
                 tokenInfo =
                 jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN, TokenAuthType.PARTNER), auth);
         if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
-        try {
-            Specification<Product> spec = (root, query, builder) -> {
-                List<Predicate> predicates = new ArrayList<>();
-                if (partnerName != null) predicates.add(builder.like(root.get("store").get("storeInfo").get("name"),
-                        "%" + partnerName + "%"));
-                if (title != null) predicates.add(builder.like(root.get("title"), "%" + title + "%"));
-                if (category != null)
-                    predicates.add(builder.like(root.get("category").get("name"), "%" + category + "%"));
-                if (partnerId != null)
-                    predicates.add(builder.and(root.get("store").get("id").in(Arrays.stream(partnerId.split(",")).map(
-                            Integer::valueOf).toList())));
-                if (state != null)
-                    predicates.add(builder.and(root.get("state").in(Arrays.stream(state.split(",")).map(ProductState::valueOf).toList())));
-                if (categoryId != null)
-                    predicates.add(builder.and(root.get("category").get("id").in(Arrays.stream(categoryId.split(",")).map(
-                            Integer::valueOf).toList())));
-                if (createdAtS != null) predicates.add(builder.greaterThan(root.get("createdAt"), createdAtS));
-                if (createdAtE != null) predicates.add(builder.lessThan(root.get("createdAt"), createdAtE));
-                if (tokenInfo.get().getType().equals(TokenAuthType.PARTNER))
-                    predicates.add(builder.equal(root.get("storeId"), tokenInfo.get().getId()));
-                predicates.add(builder.notEqual(root.get("state"), ProductState.DELETED));
-                return builder.and(predicates.toArray(new Predicate[0]));
-            };
-            Pageable pageRequest = PageRequest.of(page, take, Sort.by(sort, orderBy.label));
-            Page<Product> products;
-            products = productService.selectProductByAdmin(pageRequest, spec);
+        Specification<Product> spec = (root, query, builder) -> {
+            List<Predicate> predicates = new ArrayList<>();
+            if (partnerName != null) predicates.add(builder.like(root.get("store").get("storeInfo").get("name"),
+                    "%" + partnerName + "%"));
+            if (title != null) predicates.add(builder.like(root.get("title"), "%" + title + "%"));
+            if (category != null)
+                predicates.add(builder.like(root.get("category").get("name"), "%" + category + "%"));
+            if (partnerId != null)
+                predicates.add(builder.and(root.get("store").get("id").in(Arrays.stream(partnerId.split(",")).map(
+                        Integer::valueOf).toList())));
+            if (state != null)
+                predicates.add(builder.and(root.get("state").in(Arrays.stream(state.split(",")).map(ProductState::valueOf).toList())));
+            if (categoryId != null)
+                predicates.add(builder.and(root.get("category").get("id").in(Arrays.stream(categoryId.split(",")).map(
+                        Integer::valueOf).toList())));
+            if (createdAtS != null) predicates.add(builder.greaterThan(root.get("createdAt"), createdAtS));
+            if (createdAtE != null) predicates.add(builder.lessThan(root.get("createdAt"), createdAtE));
+            if (tokenInfo.get().getType().equals(TokenAuthType.PARTNER))
+                predicates.add(builder.equal(root.get("storeId"), tokenInfo.get().getId()));
+            predicates.add(builder.notEqual(root.get("state"), ProductState.DELETED));
+            return builder.and(predicates.toArray(new Predicate[0]));
+        };
+        Pageable pageRequest = PageRequest.of(page, take, Sort.by(sort, orderBy.label));
+        Page<Product> products;
+        products = productService.selectProductByAdmin(pageRequest, spec);
 
-            Page<SimpleProductDto>
-                    productDtos =
-                    products.map(product -> productService.convert2SimpleDto(product, null));
+        Page<SimpleProductDto>
+                productDtos =
+                products.map(product -> productService.convert2SimpleDto(product, null));
 
-            res.setData(Optional.of(productDtos));
-            return ResponseEntity.ok(res);
-        } catch (Exception e) {
-            return res.defaultError(e);
-        }
+        res.setData(Optional.of(productDtos));
+        return ResponseEntity.ok(res);
     }
+
 
     @GetMapping("/list/count")
     public ResponseEntity<CustomResponse<Long>> selectProductCountByUser(@RequestParam(value = "page", defaultValue = "1") Integer page,
@@ -273,19 +270,15 @@ public class ProductController {
                         TokenAuthType.PARTNER,
                         TokenAuthType.ADMIN), auth) : Optional.empty();
         CustomResponse<SimpleProductDto> res = new CustomResponse<>();
-        try {
-            Product product = productService.findById(id);
-            SimpleProductDto
-                    productDto =
-                    productService.convert2SimpleDto(product,
-                            tokenInfo != null &&
-                                    tokenInfo.isPresent() &&
-                                    tokenInfo.get().getType().equals(TokenAuthType.USER) ? tokenInfo.get().getId() : null);
-            res.setData(Optional.ofNullable(productDto));
-            return ResponseEntity.ok(res);
-        } catch (Exception e) {
-            return res.defaultError(e);
-        }
+        Product product = productService.findById(id);
+        SimpleProductDto
+                productDto =
+                productService.convert2SimpleDto(product,
+                        tokenInfo != null &&
+                                tokenInfo.isPresent() &&
+                                tokenInfo.get().getType().equals(TokenAuthType.USER) ? tokenInfo.get().getId() : null);
+        res.setData(Optional.ofNullable(productDto));
+        return ResponseEntity.ok(res);
     }
 
     @GetMapping("/{id}/option")
