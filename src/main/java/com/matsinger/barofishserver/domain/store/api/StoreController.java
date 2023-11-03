@@ -65,20 +65,17 @@ public class StoreController {
         Boolean
                 isAdmin =
                 tokenInfo != null && tokenInfo.isPresent() && tokenInfo.get().getType().equals(TokenAuthType.ADMIN);
-        try {
-            PageRequest pageRequest = PageRequest.of(page, take, Sort.by(sort, orderBy.label));
-            List<StoreDto>
-                    stores =
-                    storeService.selectStoreList(true,
-                            pageRequest,
-                            null).stream().map(store -> storeService.convert2Dto(store, false)).toList();
 
-            res.setData(Optional.ofNullable(stores));
+        PageRequest pageRequest = PageRequest.of(page, take, Sort.by(sort, orderBy.label));
+        List<StoreDto>
+                stores =
+                storeService.selectStoreList(true,
+                        pageRequest,
+                        null).stream().map(store -> storeService.convert2Dto(store, false)).toList();
 
-            return ResponseEntity.ok(res);
-        } catch (Exception e) {
-            return res.defaultError(e);
-        }
+        res.setData(Optional.ofNullable(stores));
+
+        return ResponseEntity.ok(res);
     }
 
     @GetMapping("/management/list")
@@ -103,37 +100,34 @@ public class StoreController {
         Boolean
                 isAdmin =
                 tokenInfo != null && tokenInfo.isPresent() && tokenInfo.get().getType().equals(TokenAuthType.ADMIN);
-        try {
-            Specification<Store> spec = (root, query, builder) -> {
-                List<Predicate> predicates = new ArrayList<>();
-                if (name != null) predicates.add(builder.like(root.get("storeInfo").get("name"), "%" + name + "%"));
-                if (loginId != null) predicates.add(builder.like(root.get("loginId"), "%" + loginId + "%"));
-                if (location != null)
-                    predicates.add(builder.like(root.get("storeInfo").get("location"), "%" + location + "%"));
-                if (ids != null) predicates.add(builder.and(root.get("id").in(utils.str2IntList(ids))));
-                if (state != null)
-                    predicates.add(builder.and(root.get("state").in(Arrays.stream(state.split(",")).map(StoreState::valueOf).toList())));
-                if (joinAtS != null) predicates.add(builder.greaterThan(root.get("joinAt"), joinAtS));
-                if (joinAtE != null) predicates.add(builder.lessThan(root.get("joinAt"), joinAtE));
-                return builder.and(predicates.toArray(new Predicate[0]));
-            };
-            PageRequest pageRequest = PageRequest.of(page, take, Sort.by(sort, orderBy.label));
 
-            if (orderBy.label.equals("state")) {
+        Specification<Store> spec = (root, query, builder) -> {
+            List<Predicate> predicates = new ArrayList<>();
+            if (name != null) predicates.add(builder.like(root.get("storeInfo").get("name"), "%" + name + "%"));
+            if (loginId != null) predicates.add(builder.like(root.get("loginId"), "%" + loginId + "%"));
+            if (location != null)
+                predicates.add(builder.like(root.get("storeInfo").get("location"), "%" + location + "%"));
+            if (ids != null) predicates.add(builder.and(root.get("id").in(utils.str2IntList(ids))));
+            if (state != null)
+                predicates.add(builder.and(root.get("state").in(Arrays.stream(state.split(",")).map(StoreState::valueOf).toList())));
+            if (joinAtS != null) predicates.add(builder.greaterThan(root.get("joinAt"), joinAtS));
+            if (joinAtE != null) predicates.add(builder.lessThan(root.get("joinAt"), joinAtE));
+            return builder.and(predicates.toArray(new Predicate[0]));
+        };
+        PageRequest pageRequest = PageRequest.of(page, take, Sort.by(sort, orderBy.label));
+
+        if (orderBy.label.equals("state")) {
 //                pageRequest = PageRequest.of(page, take, Sort.by(sort, "joinAt").and(Sort.by(sort, orderBy.label)));
-                pageRequest = PageRequest.of(page, take, Sort.by(sort, orderBy.label).and(Sort.by(sort, "joinAt")));
-            }
-            Page<StoreDto>
-                    stores =
-                    storeService.selectStoreList(true, pageRequest, spec).map(store -> storeService.convert2Dto(store,
-                            false));
-
-            res.setData(Optional.ofNullable(stores));
-
-            return ResponseEntity.ok(res);
-        } catch (Exception e) {
-            return res.defaultError(e);
+            pageRequest = PageRequest.of(page, take, Sort.by(sort, orderBy.label).and(Sort.by(sort, "joinAt")));
         }
+        Page<StoreDto>
+                stores =
+                storeService.selectStoreList(true, pageRequest, spec).map(store -> storeService.convert2Dto(store,
+                        false));
+
+        res.setData(Optional.ofNullable(stores));
+
+        return ResponseEntity.ok(res);
     }
 
     @GetMapping("/recommend")
@@ -144,56 +138,50 @@ public class StoreController {
                                                                                       @RequestParam(value = "keyword", required = false, defaultValue = "") String keyword) {
         CustomResponse<List<SimpleStore>> res = new CustomResponse<>();
         Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ALLOW), auth);
-        try {
-            List<StoreInfo> storeInfos = storeService.selectRecommendStore(type, page - 1, take, keyword);
-            List<SimpleStore> stores = storeInfos.stream().map(v -> {
-                Integer
-                        userId =
-                        tokenInfo != null &&
-                                tokenInfo.isPresent() &&
-                                tokenInfo.get().getType().equals(TokenAuthType.USER) ? tokenInfo.get().getId() : null;
-                SimpleStore simpleStore = storeService.convert2SimpleDto(v, userId);
-                simpleStore.setProducts(productService.selectProductListWithStoreIdAndStateActive(v.getStoreId()).stream().map(
-                        productService::convert2ListDto).toList());
-                return simpleStore;
-            }).toList();
 
-            res.setData(Optional.ofNullable(stores));
-            return ResponseEntity.ok(res);
-        } catch (Exception e) {
-            return res.defaultError(e);
-        }
+        List<StoreInfo> storeInfos = storeService.selectRecommendStore(type, page - 1, take, keyword);
+        List<SimpleStore> stores = storeInfos.stream().map(v -> {
+            Integer
+                    userId =
+                    tokenInfo != null &&
+                            tokenInfo.isPresent() &&
+                            tokenInfo.get().getType().equals(TokenAuthType.USER) ? tokenInfo.get().getId() : null;
+            SimpleStore simpleStore = storeService.convert2SimpleDto(v, userId);
+            simpleStore.setProducts(productService.selectProductListWithStoreIdAndStateActive(v.getStoreId()).stream().map(
+                    productService::convert2ListDto).toList());
+            return simpleStore;
+        }).toList();
+
+        res.setData(Optional.ofNullable(stores));
+        return ResponseEntity.ok(res);
     }
 
     @PostMapping("/login")
     public ResponseEntity<CustomResponse<Jwt>> loginStore(@RequestPart(value = "loginId") String loginId,
                                                           @RequestPart(value = "password") String password) {
         CustomResponse<Jwt> res = new CustomResponse<>();
-        try {
-            Optional<Store> store = storeService.selectOptionalStoreByLoginId(loginId);
-            if (store == null || store.isEmpty()) return res.throwError("아이디 및 비밀번호를 확인해주세요.", "INPUT_CHECK_REQUIRED");
-            if (!BCrypt.checkpw(password, store.get().getPassword()))
-                return res.throwError("아이디 및 비밀번호를 확인해주세요.", "INPUT_CHECK_REQUIRED");
-            if (!store.get().getState().equals(StoreState.ACTIVE)) {
-                if (store.get().getState().equals(StoreState.BANNED))
-                    return res.throwError("정지된 계정입니다.", "NOT_ALLOWED");
-                if (store.get().getState().equals(StoreState.DELETED))
-                    return res.throwError("삭제된 계정입니다.", "NOT_ALLOWED");
-            }
-            String
-                    accessToken =
-                    jwtProvider.generateAccessToken(String.valueOf(store.get().getId()), TokenAuthType.PARTNER);
-            String
-                    refreshToken =
-                    jwtProvider.generateRefreshToken(String.valueOf(store.get().getId()), TokenAuthType.PARTNER);
-            Jwt token = new Jwt();
-            token.setAccessToken(accessToken);
-            token.setRefreshToken(refreshToken);
-            res.setData(Optional.of(token));
-            return ResponseEntity.ok(res);
-        } catch (Exception e) {
-            return res.defaultError(e);
+
+        Optional<Store> store = storeService.selectOptionalStoreByLoginId(loginId);
+        if (store == null || store.isEmpty()) return res.throwError("아이디 및 비밀번호를 확인해주세요.", "INPUT_CHECK_REQUIRED");
+        if (!BCrypt.checkpw(password, store.get().getPassword()))
+            return res.throwError("아이디 및 비밀번호를 확인해주세요.", "INPUT_CHECK_REQUIRED");
+        if (!store.get().getState().equals(StoreState.ACTIVE)) {
+            if (store.get().getState().equals(StoreState.BANNED))
+                return res.throwError("정지된 계정입니다.", "NOT_ALLOWED");
+            if (store.get().getState().equals(StoreState.DELETED))
+                return res.throwError("삭제된 계정입니다.", "NOT_ALLOWED");
         }
+        String
+                accessToken =
+                jwtProvider.generateAccessToken(String.valueOf(store.get().getId()), TokenAuthType.PARTNER);
+        String
+                refreshToken =
+                jwtProvider.generateRefreshToken(String.valueOf(store.get().getId()), TokenAuthType.PARTNER);
+        Jwt token = new Jwt();
+        token.setAccessToken(accessToken);
+        token.setRefreshToken(refreshToken);
+        res.setData(Optional.of(token));
+        return ResponseEntity.ok(res);
     }
 
     @GetMapping(value = {"/management/{id}", "management"})

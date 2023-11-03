@@ -26,46 +26,33 @@ public class DeliverController {
     @GetMapping("/company/list")
     public ResponseEntity<CustomResponse<List<Deliver.Company>>> selectDeliverCompanyList() {
         CustomResponse<List<Deliver.Company>> res = new CustomResponse<>();
-        try {
 
-            res.setData(Optional.ofNullable(deliverService.selectDeliverCompanyList()));
-            return ResponseEntity.ok(res);
-        } catch (Exception e) {
-            return res.defaultError(e);
-        }
+        res.setData(Optional.ofNullable(deliverService.selectDeliverCompanyList()));
+        return ResponseEntity.ok(res);
     }
 
     @GetMapping("/company/recommend")
     public ResponseEntity<CustomResponse<List<Deliver.Company>>> selectRecommendDeliverCompanyList(@RequestParam("invoice") String invoice) {
         CustomResponse<List<Deliver.Company>> res = new CustomResponse<>();
-        try {
-            res.setData(Optional.ofNullable(deliverService.selectRecommendDeliverCompanyList(invoice)));
-            return ResponseEntity.ok(res);
-        } catch (Exception e) {
-            return res.defaultError(e);
-        }
+
+        res.setData(Optional.ofNullable(deliverService.selectRecommendDeliverCompanyList(invoice)));
+        return ResponseEntity.ok(res);
     }
 
     @GetMapping("/tracking")
     public ResponseEntity<CustomResponse<Deliver.TrackingInfo>> selectTrackingInfo(@RequestParam("invoice") String invoice,
                                                                                    @RequestParam("code") String code) {
         CustomResponse<Deliver.TrackingInfo> res = new CustomResponse<>();
-        try {
-            res.setData(Optional.ofNullable(deliverService.selectTrackingInfo(code, invoice)));
-            return ResponseEntity.ok(res);
-        } catch (Exception e) {
-            return res.defaultError(e);
-        }
+
+        res.setData(Optional.ofNullable(deliverService.selectTrackingInfo(code, invoice)));
+        return ResponseEntity.ok(res);
     }
 
     @GetMapping("/api-key")
     public ResponseEntity<CustomResponse<String>> selectSmartDeliverApiKey() {
         CustomResponse<String> res = new CustomResponse<>();
-        try {
-            res.setData(Optional.ofNullable(apiKey));
-            return ResponseEntity.ok(res);
-        } catch (Exception e) {
-            return res.defaultError(e);
-        }
+
+        res.setData(Optional.ofNullable(apiKey));
+        return ResponseEntity.ok(res);
     }
 }

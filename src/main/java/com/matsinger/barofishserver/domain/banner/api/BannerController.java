@@ -49,13 +49,10 @@ public class BannerController {
     @GetMapping("/")
     public ResponseEntity<CustomResponse<List<BannerDto>>> selectBannerList() {
         CustomResponse<List<BannerDto>> res = new CustomResponse<>();
-        try {
-            List<BannerDto> banners = bannerQueryService.selectBannerList().stream().map(Banner::convert2Dto).toList();
-            res.setData(Optional.of(banners));
-            return ResponseEntity.ok(res);
-        } catch (Exception e) {
-            return res.defaultError(e);
-        }
+
+        List<BannerDto> banners = bannerQueryService.selectBannerList().stream().map(Banner::convert2Dto).toList();
+        res.setData(Optional.of(banners));
+        return ResponseEntity.ok(res);
     }
 
 
@@ -66,21 +63,18 @@ public class BannerController {
         CustomResponse<List<BannerDto>> res = new CustomResponse<>();
         Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
         if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
-        try {
-            List<BannerDto> bannerDtos = new ArrayList<>();
-            List<Banner> banners = new ArrayList<>();
-            for (int i = 0; i < data.getBannerIds().size(); i++) {
-                Banner banner = bannerQueryService.selectBanner(data.getBannerIds().get(i));
-                banner.setSortNo(i + 1);
-                banners.add(banner);
-                bannerDtos.add(banner.convert2Dto());
-            }
-            bannerCommandService.updateAllBanners(banners);
-            res.setData(Optional.of(bannerDtos));
-            return ResponseEntity.ok(res);
-        } catch (Exception e) {
-            return res.defaultError(e);
+
+        List<BannerDto> bannerDtos = new ArrayList<>();
+        List<Banner> banners = new ArrayList<>();
+        for (int i = 0; i < data.getBannerIds().size(); i++) {
+            Banner banner = bannerQueryService.selectBanner(data.getBannerIds().get(i));
+            banner.setSortNo(i + 1);
+            banners.add(banner);
+            bannerDtos.add(banner.convert2Dto());
         }
+        bannerCommandService.updateAllBanners(banners);
+        res.setData(Optional.of(bannerDtos));
+        return ResponseEntity.ok(res);
     }
 
     @GetMapping("/management")
@@ -94,56 +88,44 @@ public class BannerController {
         CustomResponse<List<BannerDto>> res = new CustomResponse<>();
         Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
         if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
-        try {
-            Specification<Banner> spec = (root, query, builder) -> {
-                List<Predicate> predicates = new ArrayList<>();
-                if (types != null)
-                    predicates.add(builder.and(root.get("type").in(Arrays.stream(types.split(",")).map(BannerType::valueOf).toList())));
-                return builder.and(predicates.toArray(new Predicate[0]));
-            };
-            List<BannerDto> banners =
-                    bannerQueryService.selectBannerListByAdmin(spec).stream().map(Banner::convert2Dto).toList();
-            res.setData(Optional.of(banners));
-            return ResponseEntity.ok(res);
-        } catch (Exception e) {
-            return res.defaultError(e);
-        }
+
+        Specification<Banner> spec = (root, query, builder) -> {
+            List<Predicate> predicates = new ArrayList<>();
+            if (types != null)
+                predicates.add(builder.and(root.get("type").in(Arrays.stream(types.split(",")).map(BannerType::valueOf).toList())));
+            return builder.and(predicates.toArray(new Predicate[0]));
+        };
+        List<BannerDto> banners =
+                bannerQueryService.selectBannerListByAdmin(spec).stream().map(Banner::convert2Dto).toList();
+        res.setData(Optional.of(banners));
+        return ResponseEntity.ok(res);
     }
 
     @GetMapping("/pcweb")
     public ResponseEntity<CustomResponse<BannerDto>> selectPcWebBanner() {
         CustomResponse<BannerDto> res = new CustomResponse<>();
-        try {
-            Banner banner = bannerQueryService.selectPcWebBanner();
-            res.setData(Optional.ofNullable(banner == null ? null : banner.convert2Dto()));
-            return ResponseEntity.ok(res);
-        } catch (Exception e) {
-            return res.defaultError(e);
-        }
+
+        Banner banner = bannerQueryService.selectPcWebBanner();
+        res.setData(Optional.ofNullable(banner == null ? null : banner.convert2Dto()));
+        return ResponseEntity.ok(res);
     }
 
     @GetMapping("/my-page")
     public ResponseEntity<CustomResponse<List<BannerDto>>> selectMyPageBanner() {
         CustomResponse<List<BannerDto>> res = new CustomResponse<>();
-        try {
-            List<Banner> banner = bannerQueryService.selectMyPageBanner();
-            res.setData(Optional.of(banner.stream().map(Banner::convert2Dto).toList()));
-            return ResponseEntity.ok(res);
-        } catch (Exception e) {
-            return res.defaultError(e);
-        }
+
+        List<Banner> banner = bannerQueryService.selectMyPageBanner();
+        res.setData(Optional.of(banner.stream().map(Banner::convert2Dto).toList()));
+        return ResponseEntity.ok(res);
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<CustomResponse<BannerDto>> selectBanner(@PathVariable("id") Integer id) {
         CustomResponse<BannerDto> res = new CustomResponse<>();
-        try {
-            BannerDto banner = bannerQueryService.selectBanner(id).convert2Dto();
-            res.setData(Optional.ofNullable(banner));
-            return ResponseEntity.ok(res);
-        } catch (Exception e) {
-            return res.defaultError(e);
-        }
+
+        BannerDto banner = bannerQueryService.selectBanner(id).convert2Dto();
+        res.setData(Optional.ofNullable(banner));
+        return ResponseEntity.ok(res);
     }
 
     @PostMapping("/add")

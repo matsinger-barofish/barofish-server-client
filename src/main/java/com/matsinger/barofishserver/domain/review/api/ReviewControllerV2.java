@@ -77,19 +77,15 @@ public class ReviewControllerV2 {
         Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER, TokenAuthType.PARTNER, TokenAuthType.ADMIN), auth);
         if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
 
-        try {
-            Review review = reviewQueryService.selectReview(reviewId);
-            if (tokenInfo.isPresent() && tokenInfo.get().getType().equals(TokenAuthType.USER) && review.getUserId() != tokenInfo.get().getId())
-                return res.throwError("타인의 리뷰는 삭제할 수 없습니다.", "NOT_ALLOWED");
-            else if (tokenInfo.isPresent() && tokenInfo.get().getType().equals(TokenAuthType.PARTNER) && review.getStore().getId() != tokenInfo.get().getId())
-                return res.throwError("타 상점의 리뷰입니다.", "NOT_ALLOWED");
+        Review review = reviewQueryService.selectReview(reviewId);
+        if (tokenInfo.isPresent() && tokenInfo.get().getType().equals(TokenAuthType.USER) && review.getUserId() != tokenInfo.get().getId())
+            return res.throwError("타인의 리뷰는 삭제할 수 없습니다.", "NOT_ALLOWED");
+        else if (tokenInfo.isPresent() && tokenInfo.get().getType().equals(TokenAuthType.PARTNER) && review.getStore().getId() != tokenInfo.get().getId())
+            return res.throwError("타 상점의 리뷰입니다.", "NOT_ALLOWED");
 
-            review.setIsDeleted(true);
-            res.setData(Optional.ofNullable(true));
-            return ResponseEntity.ok(res);
-        } catch (Exception e) {
-            return res.defaultError(e);
-        }
+        review.setIsDeleted(true);
+        res.setData(Optional.ofNullable(true));
+        return ResponseEntity.ok(res);
     }
 
     @GetMapping("/product/{id}")
@@ -97,14 +93,11 @@ public class ReviewControllerV2 {
         Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ALLOW), auth);
         PageRequest pageRequest = PageRequest.of(page-1, take);
         CustomResponse<ProductReviewDto> res = new CustomResponse<>();
-        try {
-            ProductReviewDto pagedProductReviewInfo = reviewQueryService.getPagedProductReviewInfo(productId, tokenInfo.get().getId(), orderType, pageRequest);
 
-            res.setData(Optional.of(pagedProductReviewInfo));
-            return ResponseEntity.ok(res);
-        } catch (Exception e) {
-            return res.defaultError(e);
-        }
+        ProductReviewDto pagedProductReviewInfo = reviewQueryService.getPagedProductReviewInfo(productId, tokenInfo.get().getId(), orderType, pageRequest);
+
+        res.setData(Optional.of(pagedProductReviewInfo));
+        return ResponseEntity.ok(res);
     }
 
     @GetMapping(value = {"/store/{id}", "/store"})
@@ -121,14 +114,9 @@ public class ReviewControllerV2 {
 
         PageRequest pageRequest = PageRequest.of(page-1, take);
 
-        try {
-            StoreReviewDto pagedStoreReviewDto = reviewQueryService.getPagedProductSumStoreReviewInfo(storeId, userId, orderType, pageRequest);
-            res.setData(Optional.of(pagedStoreReviewDto));
-            return ResponseEntity.ok(res);
-
-        } catch (Exception e) {
-            return res.defaultError(e);
-        }
+        StoreReviewDto pagedStoreReviewDto = reviewQueryService.getPagedProductSumStoreReviewInfo(storeId, userId, orderType, pageRequest);
+        res.setData(Optional.of(pagedStoreReviewDto));
+        return ResponseEntity.ok(res);
     }
 
     @GetMapping("/my")
@@ -139,30 +127,22 @@ public class ReviewControllerV2 {
         Integer userId = tokenInfo.get().getId();
 
         PageRequest pageRequest = PageRequest.of(page-1, take);
-        try {
-            UserReviewDto pagedUserReview = reviewQueryService.getPagedUserReview(userId, orderType, pageRequest);
-            res.setData(Optional.of(pagedUserReview));
-            return ResponseEntity.ok(res);
 
-        } catch (Exception e) {
-            return res.defaultError(e);
-        }
+        UserReviewDto pagedUserReview = reviewQueryService.getPagedUserReview(userId, orderType, pageRequest);
+        res.setData(Optional.of(pagedUserReview));
+        return ResponseEntity.ok(res);
     }
 
     @PostMapping("/update/{id}")
-    public ResponseEntity<CustomResponse<Object>> updateReviewV2(@RequestHeader(value = "Authorization") Optional<String> auth, @PathVariable("id") Integer id, @RequestPart(value = "data") UpdateReviewReq data, @RequestPart(value = "images", required = false) List<MultipartFile> images) {
+    public ResponseEntity<CustomResponse<Object>> updateReviewV2(@RequestHeader(value = "Authorization") Optional<String> auth, @PathVariable("id") Integer id, @RequestPart(value = "data") UpdateReviewReq data, @RequestPart(value = "images", required = false) List<MultipartFile> images) throws Exception {
         CustomResponse<Object> res = new CustomResponse<>();
         Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth);
         if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
-        try {
-            Integer userId = tokenInfo.get().getId();
+        Integer userId = tokenInfo.get().getId();
 
-            Integer updatedReviewId = reviewCommandService.update(userId, id, data, images);
+        Integer updatedReviewId = reviewCommandService.update(userId, id, data, images);
 
-            res.setData(Optional.ofNullable(updatedReviewId));
-            return ResponseEntity.ok(res);
-        } catch (Exception e) {
-            return res.defaultError(e);
-        }
+        res.setData(Optional.ofNullable(updatedReviewId));
+        return ResponseEntity.ok(res);
     }
 }
