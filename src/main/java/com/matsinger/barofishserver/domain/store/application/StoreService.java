@@ -151,13 +151,13 @@ public class StoreService {
 
     public Store selectStore(Integer id) {
         return storeRepository.findById(id).orElseThrow(() -> {
-            throw new Error("상점 정보를 찾을 수 없습니다.");
+            throw new IllegalArgumentException("상점 정보를 찾을 수 없습니다.");
         });
     }
 
     public StoreInfo selectStoreInfo(Integer id) {
         return storeInfoRepository.findById(id).orElseThrow(() -> {
-            throw new Error("상점 정보를 찾을 수 없습니다.");
+            throw new IllegalArgumentException("상점 정보를 찾을 수 없습니다.");
         });
     }
 
@@ -171,7 +171,7 @@ public class StoreService {
 
     public Store selectStoreByLoginId(String loginId) {
         Store store = storeRepository.findByLoginId(loginId).orElseThrow(() -> {
-            throw new Error("스토어 정보를 찾을 수 없습니다.");
+            throw new IllegalArgumentException("스토어 정보를 찾을 수 없습니다.");
         });
         return store;
     }

@@ -60,39 +60,36 @@ public class AdminController {
         CustomResponse<Page<Admin>> res = new CustomResponse<>();
         Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
         if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
-        try {
-            PageRequest pageRequest = PageRequest.of(page, take, Sort.by(orderType, orderBy.label));
-            Specification<Admin> spec = (root, query, builder) -> {
-                List<Predicate> predicates = new ArrayList<>();
-                if (name != null) predicates.add(builder.like(root.get("name"), "%" + name + "%"));
-                if (tel != null) predicates.add(builder.like(root.get("tel"), "%" + tel + "%"));
-                if (state != null)
-                    predicates.add(builder.and(root.get("state").in(Arrays.stream(state.split(",")).map(AdminState::valueOf).toList())));
-                if (createdAtS != null) predicates.add(builder.greaterThan(root.get("createdAt"), createdAtS));
-                if (createdAtE != null) predicates.add(builder.lessThan(root.get("createdAt"), createdAtE));
-                if (accessUser != null)
-                    predicates.add(builder.equal(root.get("adminAuth").get("accessUser"), accessUser));
-                if (accessProduct != null)
-                    predicates.add(builder.equal(root.get("adminAuth").get("accessProduct"), accessProduct));
-                if (accessOrder != null)
-                    predicates.add(builder.equal(root.get("adminAuth").get("accessOrder"), accessOrder));
-                if (accessSettlement != null)
-                    predicates.add(builder.equal(root.get("adminAuth").get("accessSettlement"), accessSettlement));
-                if (accessBoard != null)
-                    predicates.add(builder.equal(root.get("adminAuth").get("accessBoard"), accessBoard));
-                if (accessPromotion != null)
-                    predicates.add(builder.equal(root.get("adminAuth").get("accessPromotion"), accessPromotion));
-                if (accessSetting != null)
-                    predicates.add(builder.equal(root.get("adminAuth").get("accessSetting"), accessSetting));
-                return builder.and(predicates.toArray(new Predicate[0]));
-            };
-            Page<Admin> admins = adminQueryService.selectAdminList(pageRequest, spec);
-            admins.forEach(v -> v.setPassword(null));
-            res.setData(Optional.ofNullable(admins));
-            return ResponseEntity.ok(res);
-        } catch (Exception e) {
-            return res.defaultError(e);
-        }
+
+        PageRequest pageRequest = PageRequest.of(page, take, Sort.by(orderType, orderBy.label));
+        Specification<Admin> spec = (root, query, builder) -> {
+            List<Predicate> predicates = new ArrayList<>();
+            if (name != null) predicates.add(builder.like(root.get("name"), "%" + name + "%"));
+            if (tel != null) predicates.add(builder.like(root.get("tel"), "%" + tel + "%"));
+            if (state != null)
+                predicates.add(builder.and(root.get("state").in(Arrays.stream(state.split(",")).map(AdminState::valueOf).toList())));
+            if (createdAtS != null) predicates.add(builder.greaterThan(root.get("createdAt"), createdAtS));
+            if (createdAtE != null) predicates.add(builder.lessThan(root.get("createdAt"), createdAtE));
+            if (accessUser != null)
+                predicates.add(builder.equal(root.get("adminAuth").get("accessUser"), accessUser));
+            if (accessProduct != null)
+                predicates.add(builder.equal(root.get("adminAuth").get("accessProduct"), accessProduct));
+            if (accessOrder != null)
+                predicates.add(builder.equal(root.get("adminAuth").get("accessOrder"), accessOrder));
+            if (accessSettlement != null)
+                predicates.add(builder.equal(root.get("adminAuth").get("accessSettlement"), accessSettlement));
+            if (accessBoard != null)
+                predicates.add(builder.equal(root.get("adminAuth").get("accessBoard"), accessBoard));
+            if (accessPromotion != null)
+                predicates.add(builder.equal(root.get("adminAuth").get("accessPromotion"), accessPromotion));
+            if (accessSetting != null)
+                predicates.add(builder.equal(root.get("adminAuth").get("accessSetting"), accessSetting));
+            return builder.and(predicates.toArray(new Predicate[0]));
+        };
+        Page<Admin> admins = adminQueryService.selectAdminList(pageRequest, spec);
+        admins.forEach(v -> v.setPassword(null));
+        res.setData(Optional.ofNullable(admins));
+        return ResponseEntity.ok(res);
     }
 
     @GetMapping("/{id}")
