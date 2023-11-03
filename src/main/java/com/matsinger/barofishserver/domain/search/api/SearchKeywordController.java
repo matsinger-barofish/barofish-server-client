@@ -24,13 +24,10 @@ public class SearchKeywordController {
     @GetMapping("/rank")
     public ResponseEntity<CustomResponse<List<SearchKeyword>>> selectTopSearchKeywords() {
         CustomResponse<List<SearchKeyword>> res = new CustomResponse<>();
-        try {
-            List<SearchKeyword> keywords = searchKeywordQueryService.selectTopSearchKeywords();
-            res.setData(Optional.ofNullable(keywords));
-            return ResponseEntity.ok(res);
-        } catch (Exception e) {
-            return res.defaultError(e);
-        }
+
+        List<SearchKeyword> keywords = searchKeywordQueryService.selectTopSearchKeywords();
+        res.setData(Optional.ofNullable(keywords));
+        return ResponseEntity.ok(res);
     }
 
     @GetMapping("")
@@ -38,31 +35,25 @@ public class SearchKeywordController {
                                                                               @RequestParam(value = "page", defaultValue = "1", required = false) Integer page,
                                                                               @RequestParam(value = "take", defaultValue = "10", required = false) Integer take) {
         CustomResponse<List<ProductListDto>> res = new CustomResponse<>();
-        try {
-            searchKeywordQueryService.searchKeyword(keyword);
-            List<ProductListDto> products = searchKeywordQueryService.searchKeyword(keyword, page - 1, take);
-            res.setData(Optional.ofNullable(products));
-            return ResponseEntity.ok(res);
-        } catch (Exception e) {
-            return res.defaultError(e);
-        }
+
+        searchKeywordQueryService.searchKeyword(keyword);
+        List<ProductListDto> products = searchKeywordQueryService.searchKeyword(keyword, page - 1, take);
+        res.setData(Optional.ofNullable(products));
+        return ResponseEntity.ok(res);
     }
 
     @GetMapping("/direct")
     public ResponseEntity<CustomResponse<List<SearchProductDto>>> searchingProductDirect(@RequestParam("keyword") String keyword) {
         CustomResponse<List<SearchProductDto>> res = new CustomResponse<>();
-        try {
-            List<SearchKeywordRepository.SearchProduct>
-                    result =
-                    searchKeywordQueryService.selectSearchProductTitle(keyword);
-            List<SearchProductDto> dtos = new ArrayList<>();
-            for (SearchKeywordRepository.SearchProduct data : result) {
-                dtos.add(SearchProductDto.builder().id(data.getId()).title(data.getTitle()).build());
-            }
-            res.setData(Optional.of(dtos));
-            return ResponseEntity.ok(res);
-        } catch (Exception e) {
-            return res.defaultError(e);
+
+        List<SearchKeywordRepository.SearchProduct>
+                result =
+                searchKeywordQueryService.selectSearchProductTitle(keyword);
+        List<SearchProductDto> dtos = new ArrayList<>();
+        for (SearchKeywordRepository.SearchProduct data : result) {
+            dtos.add(SearchProductDto.builder().id(data.getId()).title(data.getTitle()).build());
         }
+        res.setData(Optional.of(dtos));
+        return ResponseEntity.ok(res);
     }
 }

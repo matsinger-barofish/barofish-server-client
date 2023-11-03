@@ -37,39 +37,36 @@ public class DashBoardController {
                 tokenInfo =
                 jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN, TokenAuthType.PARTNER), auth);
         if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
-        try {
-            Integer storeId = null;
-            if (tokenInfo.get().getType().equals(TokenAuthType.PARTNER)) storeId = tokenInfo.get().getId();
-            Integer dailyJoinCount = storeId == null ? dashBoardService.selectJoinCount(DashBoardType.DAILY) : null;
-            List<InquiryDto> inquiries = new ArrayList<>();
-            if (storeId == null) inquiries = dashBoardService.selectInquiryList(null);
-            else inquiries = dashBoardService.selectInquiryList(storeId);
-            DashBoardService.DashBoardOrderAggregation
-                    dailyOrderAggregation =
-                    dashBoardService.getOrderCount(DashBoardType.DAILY, storeId);
-            Integer dailyOrderCount = dailyOrderAggregation.getCount();
-            Integer dailyOrderAmount = dailyOrderAggregation.getAmount();
-            List<OrderProductInfo> orderSituation = null;
-            Integer monthlyJoinCount = null;
-            if (storeId == null) monthlyJoinCount = dashBoardService.selectJoinCount(DashBoardType.MONTHLY);
-            DashBoardService.DashBoardOrderAggregation
-                    monthlyOrderAggregation =
-                    dashBoardService.getOrderCount(DashBoardType.MONTHLY, storeId);
-            Integer monthlyOrderCount = monthlyOrderAggregation.getCount();
-            Integer monthlyOrderAmount = monthlyOrderAggregation.getAmount();
-            List<ProductRankDto>
-                    dailyMostSoldProduct =
-                    dashBoardService.getProductRankList(DashBoardType.DAILY, storeId);
-            List<ProductRankDto>
-                    monthlyMostSoldProduct =
-                    dashBoardService.getProductRankList(DashBoardType.MONTHLY, storeId);
-            res.setData(Optional.ofNullable(DashBoard.builder().dailyJoinCount(dailyJoinCount).inquiries(inquiries).dailyOrderCount(
-                    dailyOrderCount).dailyOrderAmount(dailyOrderAmount).monthlyOrderCount(monthlyOrderCount).monthlyJoinCount(
-                    monthlyJoinCount).monthlyOrderAmount(monthlyOrderAmount).dailyMostSoldProduct(dailyMostSoldProduct).monthlyMostSoldProduct(
-                    monthlyMostSoldProduct).build()));
-            return ResponseEntity.ok(res);
-        } catch (Exception e) {
-            return res.defaultError(e);
-        }
+
+        Integer storeId = null;
+        if (tokenInfo.get().getType().equals(TokenAuthType.PARTNER)) storeId = tokenInfo.get().getId();
+        Integer dailyJoinCount = storeId == null ? dashBoardService.selectJoinCount(DashBoardType.DAILY) : null;
+        List<InquiryDto> inquiries = new ArrayList<>();
+        if (storeId == null) inquiries = dashBoardService.selectInquiryList(null);
+        else inquiries = dashBoardService.selectInquiryList(storeId);
+        DashBoardService.DashBoardOrderAggregation
+                dailyOrderAggregation =
+                dashBoardService.getOrderCount(DashBoardType.DAILY, storeId);
+        Integer dailyOrderCount = dailyOrderAggregation.getCount();
+        Integer dailyOrderAmount = dailyOrderAggregation.getAmount();
+        List<OrderProductInfo> orderSituation = null;
+        Integer monthlyJoinCount = null;
+        if (storeId == null) monthlyJoinCount = dashBoardService.selectJoinCount(DashBoardType.MONTHLY);
+        DashBoardService.DashBoardOrderAggregation
+                monthlyOrderAggregation =
+                dashBoardService.getOrderCount(DashBoardType.MONTHLY, storeId);
+        Integer monthlyOrderCount = monthlyOrderAggregation.getCount();
+        Integer monthlyOrderAmount = monthlyOrderAggregation.getAmount();
+        List<ProductRankDto>
+                dailyMostSoldProduct =
+                dashBoardService.getProductRankList(DashBoardType.DAILY, storeId);
+        List<ProductRankDto>
+                monthlyMostSoldProduct =
+                dashBoardService.getProductRankList(DashBoardType.MONTHLY, storeId);
+        res.setData(Optional.ofNullable(DashBoard.builder().dailyJoinCount(dailyJoinCount).inquiries(inquiries).dailyOrderCount(
+                dailyOrderCount).dailyOrderAmount(dailyOrderAmount).monthlyOrderCount(monthlyOrderCount).monthlyJoinCount(
+                monthlyJoinCount).monthlyOrderAmount(monthlyOrderAmount).dailyMostSoldProduct(dailyMostSoldProduct).monthlyMostSoldProduct(
+                monthlyMostSoldProduct).build()));
+        return ResponseEntity.ok(res);
     }
 }

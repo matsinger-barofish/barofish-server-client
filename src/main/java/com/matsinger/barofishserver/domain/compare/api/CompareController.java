@@ -179,13 +179,10 @@ public class CompareController {
         Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth);
         if (tokenInfo == null)
             return res.throwError("인증이 필요합니다.", "FORBIDDEN");
-        try {
-            Boolean result = compareItemCommandService.addSaveProduct(tokenInfo.get().getId(), data.getProductId());
-            res.setData(Optional.ofNullable(result));
-            return ResponseEntity.ok(res);
-        } catch (Exception e) {
-            return res.defaultError(e);
-        }
+
+        Boolean result = compareItemCommandService.addSaveProduct(tokenInfo.get().getId(), data.getProductId());
+        res.setData(Optional.ofNullable(result));
+        return ResponseEntity.ok(res);
     }
 
     @DeleteMapping("/set")
@@ -196,20 +193,17 @@ public class CompareController {
         Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth);
         if (tokenInfo == null)
             return res.throwError("인증이 필요합니다.", "FORBIDDEN");
-        try {
-            for (Integer setId : data.getCompareSetIds()) {
-                CompareSet compareSet = compareItemQueryService.selectCompareSet(setId);
-                if (tokenInfo.get().getId() != compareSet.getUserId())
-                    return res.throwError("삭제 권한이 없습니다.", "NOT_ALLOWED");
-            }
-            for (Integer setId : data.getCompareSetIds()) {
-                compareItemCommandService.deleteCompareSet(setId);
-            }
-            res.setData(Optional.of(true));
-            return ResponseEntity.ok(res);
-        } catch (Exception e) {
-            return res.defaultError(e);
+
+        for (Integer setId : data.getCompareSetIds()) {
+            CompareSet compareSet = compareItemQueryService.selectCompareSet(setId);
+            if (tokenInfo.get().getId() != compareSet.getUserId())
+                return res.throwError("삭제 권한이 없습니다.", "NOT_ALLOWED");
         }
+        for (Integer setId : data.getCompareSetIds()) {
+            compareItemCommandService.deleteCompareSet(setId);
+        }
+        res.setData(Optional.of(true));
+        return ResponseEntity.ok(res);
     }
 
     @DeleteMapping("/save")
@@ -220,17 +214,14 @@ public class CompareController {
         Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth);
         if (tokenInfo == null)
             return res.throwError("인증이 필요합니다.", "FORBIDDEN");
-        try {
-            List<SaveProduct> saveProducts = new ArrayList<>();
-            for (Integer productId : data.getProductIds()) {
-                saveProducts.add(compareItemQueryService.selectSaveProduct(tokenInfo.get().getId(), productId));
-            }
-            compareItemCommandService.deleteSaveProduct(saveProducts);
-            res.setData(Optional.of(true));
-            return ResponseEntity.ok(res);
-        } catch (Exception e) {
-            return res.defaultError(e);
+
+        List<SaveProduct> saveProducts = new ArrayList<>();
+        for (Integer productId : data.getProductIds()) {
+            saveProducts.add(compareItemQueryService.selectSaveProduct(tokenInfo.get().getId(), productId));
         }
+        compareItemCommandService.deleteSaveProduct(saveProducts);
+        res.setData(Optional.of(true));
+        return ResponseEntity.ok(res);
     }
 
     // ------추천 비교하기 세트-------------------------------
@@ -242,32 +233,25 @@ public class CompareController {
         Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
         if (tokenInfo == null)
             return res.throwError("인증이 필요합니다.", "FORBIDDEN");
-        try {
-            List<RecommendCompareSetDto> recommendCompareSetDtos = recommendCompareSetService
-                    .selectRecommendCompareSetList(type).stream().map(v -> recommendCompareSetService.convert2Dto(
-                            v,
-                            null))
-                    .toList();
-            res.setData(Optional.of(recommendCompareSetDtos));
-            return ResponseEntity.ok(res);
-        } catch (Exception e) {
-            return res.defaultError(e);
-        }
+        List<RecommendCompareSetDto> recommendCompareSetDtos = recommendCompareSetService
+                .selectRecommendCompareSetList(type).stream().map(v -> recommendCompareSetService.convert2Dto(
+                        v,
+                        null))
+                .toList();
+        res.setData(Optional.of(recommendCompareSetDtos));
+        return ResponseEntity.ok(res);
     }
 
     @GetMapping("/recommend/{id}")
     public ResponseEntity<CustomResponse<RecommendCompareSetDto>> selectRecommendCompareSet(
             @PathVariable("id") Integer id) {
         CustomResponse<RecommendCompareSetDto> res = new CustomResponse<>();
-        try {
-            RecommendCompareSetDto recommendCompareSetDto = recommendCompareSetService.convert2Dto(
-                    recommendCompareSetService.selectRecommendCompareSet(id),
-                    null);
-            res.setData(Optional.ofNullable(recommendCompareSetDto));
-            return ResponseEntity.ok(res);
-        } catch (Exception e) {
-            return res.defaultError(e);
-        }
+
+        RecommendCompareSetDto recommendCompareSetDto = recommendCompareSetService.convert2Dto(
+                recommendCompareSetService.selectRecommendCompareSet(id),
+                null);
+        res.setData(Optional.ofNullable(recommendCompareSetDto));
+        return ResponseEntity.ok(res);
     }
 
     @PostMapping("/recommend/add")
@@ -278,30 +262,26 @@ public class CompareController {
         Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
         if (tokenInfo == null)
             return res.throwError("인증이 필요합니다.", "FORBIDDEN");
-        try {
-            if (data.getType() == null)
-                return res.throwError("타입을 입력해주세요.", "INPUT_CHECK_REQUIRED");
-            if (data.getProductIds() == null)
-                return res.throwError("상품 아이디를 입력해주세요.", "INPUT_CHECK_REQUIRED");
-            if (new HashSet<>(data.getProductIds()).size() != 3)
-                return res.throwError("3개의 상품을 입력해주세요.", "INPUT_CHECK_REQUIRED");
-            List<Product> products = data.getProductIds().stream().map(productService::selectProduct).toList();
+        if (data.getType() == null)
+            return res.throwError("타입을 입력해주세요.", "INPUT_CHECK_REQUIRED");
+        if (data.getProductIds() == null)
+            return res.throwError("상품 아이디를 입력해주세요.", "INPUT_CHECK_REQUIRED");
+        if (new HashSet<>(data.getProductIds()).size() != 3)
+            return res.throwError("3개의 상품을 입력해주세요.", "INPUT_CHECK_REQUIRED");
+        List<Product> products = data.getProductIds().stream().map(productService::selectProduct).toList();
 
-            if (products.stream().map(v -> v.getCategory() != null ? v.getCategory().getCategoryId() : null)
-                    .collect(Collectors.toSet()).size() != 1)
-                return res.throwError("같은 카테고리 내에서 선정 가능합니다.", "INPUT_CHECK_REQUIRED");
+        if (products.stream().map(v -> v.getCategory() != null ? v.getCategory().getCategoryId() : null)
+                .collect(Collectors.toSet()).size() != 1)
+            return res.throwError("같은 카테고리 내에서 선정 가능합니다.", "INPUT_CHECK_REQUIRED");
 
-            RecommendCompareSet recommendCompareSet = recommendCompareSetService
-                    .addRecommendCompareSet(RecommendCompareSet.builder().type(data.getType()).product1Id(
-                            data.getProductIds().get(0)).product2Id(data.getProductIds().get(1))
-                            .product3Id(data.getProductIds().get(
-                                    2))
-                            .build());
-            res.setData(Optional.ofNullable(recommendCompareSetService.convert2Dto(recommendCompareSet, null)));
-            return ResponseEntity.ok(res);
-        } catch (Exception e) {
-            return res.defaultError(e);
-        }
+        RecommendCompareSet recommendCompareSet = recommendCompareSetService
+                .addRecommendCompareSet(RecommendCompareSet.builder().type(data.getType()).product1Id(
+                        data.getProductIds().get(0)).product2Id(data.getProductIds().get(1))
+                        .product3Id(data.getProductIds().get(
+                                2))
+                        .build());
+        res.setData(Optional.ofNullable(recommendCompareSetService.convert2Dto(recommendCompareSet, null)));
+        return ResponseEntity.ok(res);
     }
 
     @PostMapping("/recommend/update/{id}")
@@ -313,31 +293,28 @@ public class CompareController {
         Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
         if (tokenInfo == null)
             return res.throwError("인증이 필요합니다.", "FORBIDDEN");
-        try {
-            RecommendCompareSet set = recommendCompareSetService.selectRecommendCompareSet(id);
-            if (data.getProductIds() == null)
-                return res.throwError("상품 아이디를 입력해주세요.", "INPUT_CHECK_REQUIRED");
-            if (data.getType() != null) {
-                set.setType(data.getType());
-            }
-            if (new HashSet<>(data.getProductIds()).size() != 3)
-                return res.throwError("3개의 상품을 입력해주세요.", "INPUT_CHECK_REQUIRED");
 
-            List<Product> products = data.getProductIds().stream().map(productService::selectProduct).toList();
-
-            if (products.stream().map(v -> v.getCategory() != null ? v.getCategory().getCategoryId() : null)
-                    .collect(Collectors.toSet()).size() != 1)
-                return res.throwError("같은 카테고리 내에서 선정 가능합니다.", "INPUT_CHECK_REQUIRED");
-            set.setProduct1Id(data.getProductIds().get(0));
-            set.setProduct2Id(data.getProductIds().get(1));
-            set.setProduct3Id(data.getProductIds().get(2));
-            set = recommendCompareSetService.updateRecommendCompareSet(set);
-            RecommendCompareSet recommendCompareSet = recommendCompareSetService.addRecommendCompareSet(set);
-            res.setData(Optional.ofNullable(recommendCompareSetService.convert2Dto(recommendCompareSet, null)));
-            return ResponseEntity.ok(res);
-        } catch (Exception e) {
-            return res.defaultError(e);
+        RecommendCompareSet set = recommendCompareSetService.selectRecommendCompareSet(id);
+        if (data.getProductIds() == null)
+            return res.throwError("상품 아이디를 입력해주세요.", "INPUT_CHECK_REQUIRED");
+        if (data.getType() != null) {
+            set.setType(data.getType());
         }
+        if (new HashSet<>(data.getProductIds()).size() != 3)
+            return res.throwError("3개의 상품을 입력해주세요.", "INPUT_CHECK_REQUIRED");
+
+        List<Product> products = data.getProductIds().stream().map(productService::selectProduct).toList();
+
+        if (products.stream().map(v -> v.getCategory() != null ? v.getCategory().getCategoryId() : null)
+                .collect(Collectors.toSet()).size() != 1)
+            return res.throwError("같은 카테고리 내에서 선정 가능합니다.", "INPUT_CHECK_REQUIRED");
+        set.setProduct1Id(data.getProductIds().get(0));
+        set.setProduct2Id(data.getProductIds().get(1));
+        set.setProduct3Id(data.getProductIds().get(2));
+        set = recommendCompareSetService.updateRecommendCompareSet(set);
+        RecommendCompareSet recommendCompareSet = recommendCompareSetService.addRecommendCompareSet(set);
+        res.setData(Optional.ofNullable(recommendCompareSetService.convert2Dto(recommendCompareSet, null)));
+        return ResponseEntity.ok(res);
     }
 
     @DeleteMapping("/recommend/{id}")
@@ -348,13 +325,10 @@ public class CompareController {
         Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
         if (tokenInfo == null)
             return res.throwError("인증이 필요합니다.", "FORBIDDEN");
-        try {
-            RecommendCompareSet set = recommendCompareSetService.selectRecommendCompareSet(id);
-            recommendCompareSetService.deleteRecommendCompareSet(id);
-            res.setData(Optional.of(true));
-            return ResponseEntity.ok(res);
-        } catch (Exception e) {
-            return res.defaultError(e);
-        }
+
+        RecommendCompareSet set = recommendCompareSetService.selectRecommendCompareSet(id);
+        recommendCompareSetService.deleteRecommendCompareSet(id);
+        res.setData(Optional.of(true));
+        return ResponseEntity.ok(res);
     }
 }

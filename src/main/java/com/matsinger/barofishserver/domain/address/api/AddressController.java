@@ -25,19 +25,16 @@ public class AddressController {
     @GetMapping("/list")
     public ResponseEntity<CustomResponse<List<Address>>> selectAddressList(@RequestParam(value = "keyword", required = false) String keyword) {
         CustomResponse<List<Address>> res = new CustomResponse<>();
-        try {
-            Specification<Address> spec = null;
-            if (keyword != null) spec = (root, query, builder) -> {
-                List<Predicate> predicates = new ArrayList<>();
-                if (keyword != null) predicates.add(builder.like(root.get("sido"), "%" + keyword + "%"));
-                if (keyword != null) predicates.add(builder.like(root.get("sigungu"), "%" + keyword + "%"));
-                return builder.or(predicates.toArray(new Predicate[0]));
-            };
-            List<Address> addresses = addressQueryService.selectAddressList(spec);
-            res.setData(Optional.ofNullable(addresses));
-            return ResponseEntity.ok(res);
-        } catch (Exception e) {
-            return res.defaultError(e);
-        }
+
+        Specification<Address> spec = null;
+        if (keyword != null) spec = (root, query, builder) -> {
+            List<Predicate> predicates = new ArrayList<>();
+            if (keyword != null) predicates.add(builder.like(root.get("sido"), "%" + keyword + "%"));
+            if (keyword != null) predicates.add(builder.like(root.get("sigungu"), "%" + keyword + "%"));
+            return builder.or(predicates.toArray(new Predicate[0]));
+        };
+        List<Address> addresses = addressQueryService.selectAddressList(spec);
+        res.setData(Optional.ofNullable(addresses));
+        return ResponseEntity.ok(res);
     }
 }

@@ -31,13 +31,10 @@ public class GradeController {
     @GetMapping("/list")
     public ResponseEntity<CustomResponse<List<Grade>>> selectGrade() {
         CustomResponse<List<Grade>> res = new CustomResponse<>();
-        try {
-            List<Grade> grades = gradeQueryService.selectGradeList();
-            res.setData(Optional.ofNullable(grades));
-            return ResponseEntity.ok(res);
-        } catch (Exception e) {
-            return res.defaultError(e);
-        }
+
+        List<Grade> grades = gradeQueryService.selectGradeList();
+        res.setData(Optional.ofNullable(grades));
+        return ResponseEntity.ok(res);
     }
 
     @GetMapping("/{id}")
