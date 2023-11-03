@@ -136,14 +136,17 @@ public class JwtProvider {
             Jwts.parser().setSigningKey(secret).parseClaimsJws(token);
             return true;
         } catch (MalformedJwtException e) {
-            log.error("Invalid JWT token: {}", e.getMessage());
+            log.warn("Invalid JWT token: {}", e.getMessage());
+            throw new JwtException("토큰 정보가 유효하지 않습니다.");
         } catch (ExpiredJwtException e) {
-            log.error("JWT token is expired: {}", e.getMessage());
+            log.warn("JWT token is expired: {}", e.getMessage());
+            throw new JwtException("토큰 정보가 만료되었습니다. 다시 로그인해 주세요.");
         } catch (UnsupportedJwtException e) {
-            log.error("JWT token is unsupported: {}", e.getMessage());
+            log.warn("JWT token is unsupported: {}", e.getMessage());
+            throw new JwtException("지원하지 않는 토큰 정보입니다.");
         } catch (IllegalArgumentException e) {
-            log.error("JWT claims string is empty: {}", e.getMessage());
+            log.warn("JWT claims string is empty: {}", e.getMessage());
+            throw new JwtException("토큰 정보가 없습니다. 다시 로그인해 주세요.");
         }
-        return false;
     }
 }
