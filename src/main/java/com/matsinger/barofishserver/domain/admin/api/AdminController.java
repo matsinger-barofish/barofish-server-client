@@ -164,7 +164,7 @@ public class AdminController {
     @PostMapping("/update/{id}")
     public ResponseEntity<CustomResponse<Admin>> updateAdminByMaster(@RequestHeader(value = "Authorization") Optional<String> auth,
                                                                      @PathVariable("id") Integer id,
-                                                                     @RequestPart(value = "data") UpdateAdminReq data) {
+                                                                     @RequestPart(value = "data") UpdateAdminReq data) throws Exception {
         CustomResponse<Admin> res = new CustomResponse<>();
         Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
         if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
