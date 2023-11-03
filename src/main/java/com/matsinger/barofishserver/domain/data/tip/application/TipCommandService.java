@@ -29,14 +29,11 @@ public class TipCommandService {
     }
 
     public void delete(Integer id) {
-        try {
-            Tip tip = tipRepository.findById(id).orElseThrow(() -> {
-                throw new Error("팁 정보를 찾을 수 없습니다.");
-            });
-            tipRepository.deleteById(id);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+
+        Tip tip = tipRepository.findById(id).orElseThrow(() -> {
+            throw new Error("팁 정보를 찾을 수 없습니다.");
+        });
+        tipRepository.deleteById(id);
     }
 
     public void updateTipList(List<Tip> tips) {

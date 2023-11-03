@@ -7,6 +7,8 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.core.MethodParameter;
 import org.springframework.http.HttpInputMessage;
 import org.springframework.http.ResponseEntity;
@@ -29,11 +31,14 @@ import java.util.Iterator;
 @RequiredArgsConstructor
 public class GlobalControllerAdvice implements RequestBodyAdvice {
 
-    private final ObjectMapper objectMapper;
+    private final Logger logger = LoggerFactory.getLogger(this.getClass().getSimpleName());
+
     private ThreadLocal<Boolean> afterBodyReadExecuted = ThreadLocal.withInitial(() -> false);
 
     @ExceptionHandler(value = {RuntimeException.class})
-    public ResponseEntity<CustomResponse<Object>> test(HttpServletRequest request, Exception e) throws IOException {
+    public ResponseEntity<CustomResponse<Object>> test(
+            HttpServletRequest request,
+            Exception e) throws IOException {
 
         printExceptionInfo(request, e);
 
@@ -45,22 +50,22 @@ public class GlobalControllerAdvice implements RequestBodyAdvice {
 
     private void printExceptionInfo(HttpServletRequest request, Exception e) {
         if (!afterBodyReadExecuted.get()) {
-            log.error("### Exception Start ###");
-            log.error(DateTimeFormatter.ofPattern("yyyy-MM-dd hh:mm:ss").format(LocalDateTime.now()));
+            logger.warn("### Exception Start ###");
+            logger.warn(DateTimeFormatter.ofPattern("yyyy-MM-dd hh:mm:ss").format(LocalDateTime.now()));
         }
 
-        log.error("url = {}", request.getRequestURI());
-        log.error("method = {}", request.getMethod());
-        log.error("queryString = {}", request.getQueryString());
+        logger.warn("url = {}", request.getRequestURI());
+        logger.warn("method = {}", request.getMethod());
+        logger.warn("queryString = {}", request.getQueryString());
         request.getHeaderNames().asIterator().forEachRemaining(
-                header -> log.error("header = {}", request.getHeader(header))
+                header -> logger.warn("header = {}", request.getHeader(header))
         );
         request.getParameterNames().asIterator().forEachRemaining(
-                parameter -> log.error("parameter = {}", request.getParameter(parameter))
+                parameter -> logger.warn("parameter = {}", request.getParameter(parameter))
         );
         e.printStackTrace();
 
-        log.error("### Exception End ###");
+        logger.warn("### Exception End ###");
     }
 
     @Override
@@ -90,11 +95,11 @@ public class GlobalControllerAdvice implements RequestBodyAdvice {
 
         afterBodyReadExecuted.set(true);
 
-        log.error("### Exception Start ###");
-        log.error("Exception Date = {}", DateTimeFormatter.ofPattern("yyyy-MM-dd hh:mm:ss").format(LocalDateTime.now()));
+        logger.warn("### Exception Start ###");
+        logger.warn("Exception Date = {}", DateTimeFormatter.ofPattern("yyyy-MM-dd hh:mm:ss").format(LocalDateTime.now()));
 
         // @RequestBody 필드 정보 출력
-        log.error("RequestBody = {}", body.toString());
+        logger.warn("RequestBody = {}", body.toString());
 
         return body;
     }

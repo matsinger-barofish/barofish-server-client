@@ -34,16 +34,12 @@ public class NotificationController {
         CustomResponse<Page<Notification>> res = new CustomResponse<>();
         Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth);
         if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
-        try {
-            PageRequest pageRequest = PageRequest.of(page, take, Sort.by(Sort.Direction.DESC, "createdAt"));
-            Page<Notification>
-                    notifications =
-                    notificationQueryService.selectNotificationListWithUserId(tokenInfo.get().getId(), pageRequest);
-            res.setData(Optional.ofNullable(notifications));
-            return ResponseEntity.ok(res);
-        } catch (Exception e) {
-            return res.defaultError(e);
-        }
-    }
 
+        PageRequest pageRequest = PageRequest.of(page, take, Sort.by(Sort.Direction.DESC, "createdAt"));
+        Page<Notification>
+                notifications =
+                notificationQueryService.selectNotificationListWithUserId(tokenInfo.get().getId(), pageRequest);
+        res.setData(Optional.ofNullable(notifications));
+        return ResponseEntity.ok(res);
+    }
 }

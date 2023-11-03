@@ -58,53 +58,47 @@ public class CouponController {
         CustomResponse<Page<CouponDto>> res = new CustomResponse<>();
         Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
         if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
-        try {
-            Specification<Coupon> spec = (root, query, builder) -> {
-                List<Predicate> predicates = new ArrayList<>();
-                if (title != null) predicates.add(builder.like(root.get("title"), "%" + title + "%"));
-                if (type != null)
-                    predicates.add(builder.and(root.get("type").in(Arrays.stream(type.split(",")).map(CouponType::valueOf).toList())));
-                if (startAtS != null) predicates.add(builder.greaterThan(root.get("startAt"), startAtS));
-                if (startAtE != null) predicates.add(builder.lessThan(root.get("startAt"), startAtE));
-                if (endAtS != null) predicates.add(builder.greaterThan(root.get("endAt"), endAtS));
-                if (endAtE != null) predicates.add(builder.lessThan(root.get("endAt"), endAtE));
-                predicates.add(builder.equal(root.get("state"), CouponState.ACTIVE));
+
+        Specification<Coupon> spec = (root, query, builder) -> {
+            List<Predicate> predicates = new ArrayList<>();
+            if (title != null) predicates.add(builder.like(root.get("title"), "%" + title + "%"));
+            if (type != null)
+                predicates.add(builder.and(root.get("type").in(Arrays.stream(type.split(",")).map(CouponType::valueOf).toList())));
+            if (startAtS != null) predicates.add(builder.greaterThan(root.get("startAt"), startAtS));
+            if (startAtE != null) predicates.add(builder.lessThan(root.get("startAt"), startAtE));
+            if (endAtS != null) predicates.add(builder.greaterThan(root.get("endAt"), endAtS));
+            if (endAtE != null) predicates.add(builder.lessThan(root.get("endAt"), endAtE));
+            predicates.add(builder.equal(root.get("state"), CouponState.ACTIVE));
 //                predicates.add(builder.notEqual(root.get("publicType"), CouponPublicType.PRIVATE));
-                return builder.and(predicates.toArray(new Predicate[0]));
-            };
-            PageRequest pageRequest = PageRequest.of(page, take, Sort.by(sort, orderBy.label));
-            Page<CouponDto> coupons = couponQueryService.selectCouponListByAdmin(pageRequest, spec).map(v -> {
-                List<UserInfoDto> users = null;
-                if (v.getPublicType().equals(CouponPublicType.PRIVATE)) {
-                    List<Integer> userIds = couponQueryService.selectPublishedCouponUserIds(v.getId());
-                    users =
-                            userCommandService.selectUserInfoListWithIds(userIds).stream().map(UserInfo::convert2Dto).toList();
-                }
-                return v.convert2Dto(users);
-            });
-            res.setData(Optional.ofNullable(coupons));
-            return ResponseEntity.ok(res);
-        } catch (Exception e) {
-            return res.defaultError(e);
-        }
+            return builder.and(predicates.toArray(new Predicate[0]));
+        };
+        PageRequest pageRequest = PageRequest.of(page, take, Sort.by(sort, orderBy.label));
+        Page<CouponDto> coupons = couponQueryService.selectCouponListByAdmin(pageRequest, spec).map(v -> {
+            List<UserInfoDto> users = null;
+            if (v.getPublicType().equals(CouponPublicType.PRIVATE)) {
+                List<Integer> userIds = couponQueryService.selectPublishedCouponUserIds(v.getId());
+                users =
+                        userCommandService.selectUserInfoListWithIds(userIds).stream().map(UserInfo::convert2Dto).toList();
+            }
+            return v.convert2Dto(users);
+        });
+        res.setData(Optional.ofNullable(coupons));
+        return ResponseEntity.ok(res);
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<CustomResponse<CouponDto>> selectCoupon(@PathVariable("id") Integer id) {
         CustomResponse<CouponDto> res = new CustomResponse<>();
-        try {
-            Coupon coupon = couponQueryService.selectCoupon(id);
-            List<UserInfoDto> users = null;
-            if (coupon.getPublicType().equals(CouponPublicType.PRIVATE)) {
-                List<Integer> userIds = couponQueryService.selectPublishedCouponUserIds(coupon.getId());
-                users =
-                        userCommandService.selectUserInfoListWithIds(userIds).stream().map(UserInfo::convert2Dto).toList();
-            }
-            res.setData(Optional.ofNullable(coupon.convert2Dto(users)));
-            return ResponseEntity.ok(res);
-        } catch (Exception e) {
-            return res.defaultError(e);
+
+        Coupon coupon = couponQueryService.selectCoupon(id);
+        List<UserInfoDto> users = null;
+        if (coupon.getPublicType().equals(CouponPublicType.PRIVATE)) {
+            List<Integer> userIds = couponQueryService.selectPublishedCouponUserIds(coupon.getId());
+            users =
+                    userCommandService.selectUserInfoListWithIds(userIds).stream().map(UserInfo::convert2Dto).toList();
         }
+        res.setData(Optional.ofNullable(coupon.convert2Dto(users)));
+        return ResponseEntity.ok(res);
     }
 
     @GetMapping("/can-use")
@@ -112,13 +106,10 @@ public class CouponController {
         CustomResponse<List<Coupon>> res = new CustomResponse<>();
         Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth);
         if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
-        try {
-            List<Coupon> coupons = couponQueryService.selectCanUseCoupon(tokenInfo.get().getId());
-            res.setData(Optional.ofNullable(coupons));
-            return ResponseEntity.ok(res);
-        } catch (Exception e) {
-            return res.defaultError(e);
-        }
+
+        List<Coupon> coupons = couponQueryService.selectCanUseCoupon(tokenInfo.get().getId());
+        res.setData(Optional.ofNullable(coupons));
+        return ResponseEntity.ok(res);
     }
 
     @GetMapping("/can-download")
@@ -126,13 +117,10 @@ public class CouponController {
         CustomResponse<List<Coupon>> res = new CustomResponse<>();
         Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth);
         if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
-        try {
-            List<Coupon> coupons = couponQueryService.selectNotDownloadCoupon(tokenInfo.get().getId());
-            res.setData(Optional.ofNullable(coupons));
-            return ResponseEntity.ok(res);
-        } catch (Exception e) {
-            return res.defaultError(e);
-        }
+
+        List<Coupon> coupons = couponQueryService.selectNotDownloadCoupon(tokenInfo.get().getId());
+        res.setData(Optional.ofNullable(coupons));
+        return ResponseEntity.ok(res);
     }
 
     @GetMapping("/downloaded")
@@ -140,13 +128,10 @@ public class CouponController {
         CustomResponse<List<Coupon>> res = new CustomResponse<>();
         Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth);
         if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
-        try {
-            List<Coupon> coupons = couponQueryService.selectDownloadedCoupon(tokenInfo.get().getId());
-            res.setData(Optional.ofNullable(coupons));
-            return ResponseEntity.ok(res);
-        } catch (Exception e) {
-            return res.defaultError(e);
-        }
+
+        List<Coupon> coupons = couponQueryService.selectDownloadedCoupon(tokenInfo.get().getId());
+        res.setData(Optional.ofNullable(coupons));
+        return ResponseEntity.ok(res);
     }
 
     @PostMapping("/download/{id}")
@@ -155,15 +140,12 @@ public class CouponController {
         CustomResponse<Boolean> res = new CustomResponse<>();
         Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth);
         if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
-        try {
-            Boolean checkDownloaded = couponQueryService.checkHasCoupon(id, tokenInfo.get().getId());
-            if (checkDownloaded) return res.throwError("이미 다운로드 받은 쿠폰입니다.", "INPUT_CHECK_REQUIRED");
-            couponCommandService.downloadCoupon(tokenInfo.get().getId(), id);
-            res.setData(Optional.of(true));
-            return ResponseEntity.ok(res);
-        } catch (Exception e) {
-            return res.defaultError(e);
-        }
+
+        Boolean checkDownloaded = couponQueryService.checkHasCoupon(id, tokenInfo.get().getId());
+        if (checkDownloaded) return res.throwError("이미 다운로드 받은 쿠폰입니다.", "INPUT_CHECK_REQUIRED");
+        couponCommandService.downloadCoupon(tokenInfo.get().getId(), id);
+        res.setData(Optional.of(true));
+        return ResponseEntity.ok(res);
     }
 
 
