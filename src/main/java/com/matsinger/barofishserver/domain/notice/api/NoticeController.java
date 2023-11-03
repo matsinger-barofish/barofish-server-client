@@ -37,13 +37,10 @@ public class NoticeController {
     @GetMapping("/")
     public ResponseEntity<CustomResponse<List<Notice>>> selectNoticeList(@RequestParam(value = "type") NoticeType type) {
         CustomResponse<List<Notice>> res = new CustomResponse<>();
-        try {
-            List<Notice> notices = noticeQueryService.selectNoticeList(type);
-            res.setData(Optional.ofNullable(notices));
-            return ResponseEntity.ok(res);
-        } catch (Exception e) {
-            return res.defaultError(e);
-        }
+
+        List<Notice> notices = noticeQueryService.selectNoticeList(type);
+        res.setData(Optional.ofNullable(notices));
+        return ResponseEntity.ok(res);
     }
 
     @GetMapping("/management")
@@ -59,91 +56,79 @@ public class NoticeController {
         CustomResponse<Page<Notice>> res = new CustomResponse<>();
         Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
         if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
-        try {
-            Specification<Notice> spec = (root, query, builder) -> {
-                List<Predicate> predicates = new ArrayList<>();
-                if (title != null) predicates.add(builder.like(root.get("title"), "%" + title + "%"));
-                if (createdAtS != null) predicates.add(builder.greaterThan(root.get("createdAt"), createdAtS));
-                if (createdAtE != null) predicates.add(builder.lessThan(root.get("createdAt"), createdAtE));
-                if (tokenInfo.get().getType().equals(TokenAuthType.PARTNER))
-                    predicates.add(builder.equal(root.get("product").get("storeId"), tokenInfo.get().getId()));
-                predicates.add(builder.equal(root.get("type"), type));
-                return builder.and(predicates.toArray(new Predicate[0]));
-            };
-            PageRequest pageRequest = PageRequest.of(page, take, Sort.by(sort, orderBy.label));
-            Page<Notice> notices = noticeQueryService.selectNoticeList(spec, pageRequest);
-            res.setData(Optional.ofNullable(notices));
-            return ResponseEntity.ok(res);
-        } catch (Exception e) {
-            return res.defaultError(e);
-        }
+
+        Specification<Notice> spec = (root, query, builder) -> {
+            List<Predicate> predicates = new ArrayList<>();
+            if (title != null) predicates.add(builder.like(root.get("title"), "%" + title + "%"));
+            if (createdAtS != null) predicates.add(builder.greaterThan(root.get("createdAt"), createdAtS));
+            if (createdAtE != null) predicates.add(builder.lessThan(root.get("createdAt"), createdAtE));
+            if (tokenInfo.get().getType().equals(TokenAuthType.PARTNER))
+                predicates.add(builder.equal(root.get("product").get("storeId"), tokenInfo.get().getId()));
+            predicates.add(builder.equal(root.get("type"), type));
+            return builder.and(predicates.toArray(new Predicate[0]));
+        };
+        PageRequest pageRequest = PageRequest.of(page, take, Sort.by(sort, orderBy.label));
+        Page<Notice> notices = noticeQueryService.selectNoticeList(spec, pageRequest);
+        res.setData(Optional.ofNullable(notices));
+        return ResponseEntity.ok(res);
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<CustomResponse<Notice>> selectNotice(@PathVariable("id") Integer noticeId) {
         CustomResponse<Notice> res = new CustomResponse<>();
-        try {
-            Notice notice = noticeQueryService.selectNotice(noticeId);
-            res.setData(Optional.ofNullable(notice));
-            return ResponseEntity.ok(res);
-        } catch (Exception e) {
-            return res.defaultError(e);
-        }
+
+        Notice notice = noticeQueryService.selectNotice(noticeId);
+        res.setData(Optional.ofNullable(notice));
+        return ResponseEntity.ok(res);
     }
 
 
 
     @PostMapping(value = "/add")
     public ResponseEntity<CustomResponse<Notice>> addNotice(@RequestHeader(value = "Authorization") Optional<String> auth,
-                                                            @RequestPart(value = "data") NoticeAddReq data) {
+                                                            @RequestPart(value = "data") NoticeAddReq data) throws Exception {
         CustomResponse<Notice> res = new CustomResponse<>();
         Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
         if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
-        try {
-            if (data.getType() == null) return res.throwError("타입을 입력해주세요.", "INPUT_CHECK_REQUIRED");
-            if (data.getContent() == null) return res.throwError("내용을 입력해주세요.", "INPUT_CHECK_REQUIRED");
-            String title = utils.validateString(data.getTitle(), 200L, "제목");
-            String content = "";
-            Notice
-                    notice =
-                    Notice.builder().content(content).title(title).createdAt(utils.now()).type(data.getType()).build();
-            notice.setContent(s3.uploadEditorStringToS3(data.getContent(),
-                    new ArrayList<>(Arrays.asList("notice", String.valueOf(notice.getId())))));
-            notice = noticeCommandService.addNotice(notice);
-            res.setData(Optional.ofNullable(notice));
-            return ResponseEntity.ok(res);
-        } catch (Exception e) {
-            return res.defaultError(e);
-        }
+
+        if (data.getType() == null) return res.throwError("타입을 입력해주세요.", "INPUT_CHECK_REQUIRED");
+        if (data.getContent() == null) return res.throwError("내용을 입력해주세요.", "INPUT_CHECK_REQUIRED");
+        String title = utils.validateString(data.getTitle(), 200L, "제목");
+        String content = "";
+        Notice
+                notice =
+                Notice.builder().content(content).title(title).createdAt(utils.now()).type(data.getType()).build();
+        notice.setContent(s3.uploadEditorStringToS3(data.getContent(),
+                new ArrayList<>(Arrays.asList("notice", String.valueOf(notice.getId())))));
+        notice = noticeCommandService.addNotice(notice);
+        res.setData(Optional.ofNullable(notice));
+        return ResponseEntity.ok(res);
     }
 
     @PostMapping("/update/{id}")
     public ResponseEntity<CustomResponse<Notice>> updateNotice(@RequestHeader(value = "Authorization") Optional<String> auth,
                                                                @PathVariable("id") Integer noticeId,
-                                                               @RequestPart(value = "data") NoticeAddReq data) {
+                                                               @RequestPart(value = "data") NoticeAddReq data) throws Exception {
         CustomResponse<Notice> res = new CustomResponse<>();
         Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
         if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
-        try {
-            Notice notice = noticeQueryService.selectNotice(noticeId);
-            if (data.getTitle() != null) {
-                String title = utils.validateString(data.getTitle(), 200L, "제목");
-                notice.setTitle(title);
-            }
-            if (data.getContent() != null) {
-                String
-                        content =
-                        s3.uploadEditorStringToS3(data.getContent(),
-                                new ArrayList<>(Arrays.asList("notice", String.valueOf(notice.getId()))));
-                notice.setContent(content);
-            }
-            notice.setUpdateAt(utils.now());
-            noticeCommandService.updateNotice(notice);
-            res.setData(Optional.of(notice));
-            return ResponseEntity.ok(res);
-        } catch (Exception e) {
-            return res.defaultError(e);
+
+        Notice notice = noticeQueryService.selectNotice(noticeId);
+        if (data.getTitle() != null) {
+            String title = utils.validateString(data.getTitle(), 200L, "제목");
+            notice.setTitle(title);
         }
+        if (data.getContent() != null) {
+            String
+                    content =
+                    s3.uploadEditorStringToS3(data.getContent(),
+                            new ArrayList<>(Arrays.asList("notice", String.valueOf(notice.getId()))));
+            notice.setContent(content);
+        }
+        notice.setUpdateAt(utils.now());
+        noticeCommandService.updateNotice(notice);
+        res.setData(Optional.of(notice));
+        return ResponseEntity.ok(res);
     }
 
     @DeleteMapping("/{id}")
@@ -152,13 +137,10 @@ public class NoticeController {
         CustomResponse<Boolean> res = new CustomResponse<>();
         Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
         if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
-        try {
-            Notice notice = noticeQueryService.selectNotice(noticeId);
-            Boolean result = noticeCommandService.deleteNotice(noticeId);
-            res.setData(Optional.ofNullable(result));
-            return ResponseEntity.ok(res);
-        } catch (Exception e) {
-            return res.defaultError(e);
-        }
+
+        Notice notice = noticeQueryService.selectNotice(noticeId);
+        Boolean result = noticeCommandService.deleteNotice(noticeId);
+        res.setData(Optional.ofNullable(result));
+        return ResponseEntity.ok(res);
     }
 }

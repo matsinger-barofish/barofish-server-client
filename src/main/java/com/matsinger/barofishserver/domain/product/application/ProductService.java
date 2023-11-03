@@ -316,7 +316,7 @@ public class ProductService {
 
     public Product findById(Integer id) {
         return productRepository.findById(id).orElseThrow(() -> {
-            throw new Error("상품 정보를 찾을 수 없습니다.");
+            throw new IllegalArgumentException("상품 정보를 찾을 수 없습니다.");
         });
     }
 
