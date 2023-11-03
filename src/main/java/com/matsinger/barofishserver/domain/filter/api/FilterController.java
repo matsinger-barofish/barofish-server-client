@@ -22,18 +22,14 @@ public class FilterController {
     @GetMapping("/list")
     public ResponseEntity<CustomResponse<Filter>> selectFilterList() {
         CustomResponse<Filter> res = new CustomResponse<>();
-        try {
-            Filter filter = new Filter();
-            List<Category> categories = categoryQueryService.findParentCategories();
-            for (Category category : categories) {
-                category.setCategoryList(null);
-            }
-            filter.setCategories(categories);
-            res.setData(Optional.of(filter));
-            return ResponseEntity.ok(res);
-        } catch (Exception e) {
-            return res.defaultError(e);
-        }
 
+        Filter filter = new Filter();
+        List<Category> categories = categoryQueryService.findParentCategories();
+        for (Category category : categories) {
+            category.setCategoryList(null);
+        }
+        filter.setCategories(categories);
+        res.setData(Optional.of(filter));
+        return ResponseEntity.ok(res);
     }
 }

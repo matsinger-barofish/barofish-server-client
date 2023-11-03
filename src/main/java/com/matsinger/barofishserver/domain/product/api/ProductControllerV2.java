@@ -77,20 +77,17 @@ public class ProductControllerV2 {
         CustomResponse<Object> res = new CustomResponse<>();
         Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ALLOW), auth);
 
-        try {
-            Integer userId = null;
-            if (tokenInfo != null && tokenInfo.isPresent() && tokenInfo.get().getType().equals(TokenAuthType.USER)) {
-                userId = tokenInfo.get().getId();
-            }
 
-            PageRequest pageRequest = PageRequest.of(page - 1, take);
-            Page<ProductListDtoV2> result = productQueryService.getPagedProducts(pageRequest, sortBy, keyword);
-
-            res.setData(Optional.ofNullable(result));
-            return ResponseEntity.ok(res);
-        } catch (Exception e) {
-            return res.defaultError(e);
+        Integer userId = null;
+        if (tokenInfo != null && tokenInfo.isPresent() && tokenInfo.get().getType().equals(TokenAuthType.USER)) {
+            userId = tokenInfo.get().getId();
         }
+
+        PageRequest pageRequest = PageRequest.of(page - 1, take);
+        Page<ProductListDtoV2> result = productQueryService.getPagedProducts(pageRequest, sortBy, keyword);
+
+        res.setData(Optional.ofNullable(result));
+        return ResponseEntity.ok(res);
     }
 
     @GetMapping("/arrival-date/{id}")

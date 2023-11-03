@@ -35,24 +35,21 @@ public class AdminLogController {
         CustomResponse<Page<AdminLogDto>> res = new CustomResponse<>();
         Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
         if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
-        try {
-            if (type == null) return res.throwError("타입을 입력해주세요.", "INPUT_CHECK_REQUIRED");
-            if (targetId == null) return res.throwError("대상 아이디를 입력해주세요.", " INPUT_CHECK_REQUIRED");
-            PageRequest pageRequest = PageRequest.of(page, take, Sort.by(Sort.Direction.DESC, "createdAt"));
-            Specification<AdminLog> spec = (root, query, builder) -> {
-                List<Predicate> predicates = new ArrayList<>();
-                predicates.add(builder.equal(root.get("type"), type));
-                predicates.add(builder.equal(root.get("targetId"), targetId));
-                return builder.and(predicates.toArray(new Predicate[0]));
-            };
-            Page<AdminLogDto>
-                    adminLogDtos =
-                    adminLogQueryService.selectAdminLogList(spec, pageRequest).map(AdminLog::convert2Dto);
-            res.setData(Optional.of(adminLogDtos));
-            return ResponseEntity.ok(res);
-        } catch (Exception e) {
-            return res.defaultError(e);
-        }
+
+        if (type == null) return res.throwError("타입을 입력해주세요.", "INPUT_CHECK_REQUIRED");
+        if (targetId == null) return res.throwError("대상 아이디를 입력해주세요.", " INPUT_CHECK_REQUIRED");
+        PageRequest pageRequest = PageRequest.of(page, take, Sort.by(Sort.Direction.DESC, "createdAt"));
+        Specification<AdminLog> spec = (root, query, builder) -> {
+            List<Predicate> predicates = new ArrayList<>();
+            predicates.add(builder.equal(root.get("type"), type));
+            predicates.add(builder.equal(root.get("targetId"), targetId));
+            return builder.and(predicates.toArray(new Predicate[0]));
+        };
+        Page<AdminLogDto>
+                adminLogDtos =
+                adminLogQueryService.selectAdminLogList(spec, pageRequest).map(AdminLog::convert2Dto);
+        res.setData(Optional.of(adminLogDtos));
+        return ResponseEntity.ok(res);
     }
 
 }

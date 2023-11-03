@@ -56,7 +56,6 @@ public class ScheduleTasks {
     }
 
     @Scheduled(cron = "0 0 * * * 1") // 매주 일요일 정각에 실행
-    @Conditional(ProfilesCheck.class)
     public void addDateInfoInTheNextTwoWeeks() throws IOException {
         weeksDateCommandService.saveThisAndNextWeeksDate(LocalDate.now());
     }
