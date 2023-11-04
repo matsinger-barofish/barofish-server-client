@@ -57,7 +57,7 @@ dependencies {
     implementation 'io.micrometer:micrometer-core'             // 마이크로미터
     implementation 'io.micrometer:micrometer-tracing-bridge-brave'
     implementation 'io.zipkin.reporter2:zipkin-reporter-brave'
-    implementation 'com.github.loki4j:loki-logback-appender'
+    implementation group: 'com.github.loki4j', name: 'loki-logback-appender', version: '1.4.2'
     implementation 'org.springframework.boot:spring-boot-starter-actuator' // 엑츄에이터
 
     // ⭐ Spring boot 3.x이상에서 QueryDsl 패키지를 정의하는 방법
