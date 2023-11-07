@@ -25,8 +25,7 @@ public class JwtProvider {
      *     60: 1시간 (60분)
      *     24: 1일 (24시간)
      */
-//    public static final long JWT_TOKEN_VALIDITY = 1000 * 60 * 60 * 24;
-    public static final long JWT_TOKEN_VALIDITY = 1000 * 30;
+    public static final long JWT_TOKEN_VALIDITY = 1000 * 60 * 60 * 24;
 
     // token으로 사용자 id 조회
     public Integer getIdFromToken(String token) {
