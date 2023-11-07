@@ -19,7 +19,12 @@ public class JwtProvider {
     @Value("${spring.jwt.secret}")
     private String secret;
 
-    // 1시간 단위
+    /**
+     *     1000: 1초
+     *     60: 1분 (60초)
+     *     60: 1시간 (60분)
+     *     24: 1일 (24시간)
+     */
     public static final long JWT_TOKEN_VALIDITY = 1000 * 60 * 60 * 24;
 
     // token으로 사용자 id 조회
