@@ -19,16 +19,28 @@ public class JwtProvider {
     @Value("${spring.jwt.secret}")
     private String secret;
 
-    // 1시간 단위
+    /**
+     *     1000: 1초
+     *     60: 1분 (60초)
+     *     60: 1시간 (60분)
+     *     24: 1일 (24시간)
+     */
     public static final long JWT_TOKEN_VALIDITY = 1000 * 60 * 60 * 24;
 
     // token으로 사용자 id 조회
     public Integer getIdFromToken(String token) {
-        return Integer.valueOf(getClaimFromToken(token, Claims::getId));
+        String claimFromToken = getClaimFromToken(token, Claims::getId);
+        if (claimFromToken == null) {
+            return null;
+        }
+        return Integer.valueOf(claimFromToken);
     }
 
     public TokenAuthType getTypeFromToken(String token) {
         String issuer = getClaimFromToken(token, Claims::getIssuer);
+        if (issuer == null) {
+            return TokenAuthType.ALLOW;
+        }
         return switch (issuer) {
             case "USER" -> TokenAuthType.USER;
             case "ADMIN" -> TokenAuthType.ADMIN;
@@ -50,7 +62,7 @@ public class JwtProvider {
     }
 
     // 토근 만료 여부 체크
-    private Boolean isTokenExpired(String token) {
+    public Boolean isTokenExpired(String token) {
         final Date expiration = getExpirationDateFromToken(token);
         return expiration.before(new Date());
     }

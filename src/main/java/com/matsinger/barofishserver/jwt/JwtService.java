@@ -85,36 +85,27 @@ public class JwtService {
         return Optional.of(info);
     }
 
-    public Optional<TokenInfo> validateAndGetTokenInfo(Set<TokenAuthType> allowAuth,
-            Optional<String> authorizationString) {
+    public Optional<TokenInfo> validateAndGetTokenInfo(Set<TokenAuthType> allowAuth, Optional<String> authorizationString) {
         TokenInfo info = new TokenInfo();
         if (!allowAuth.contains(TokenAuthType.ALLOW)) {
             if (!authorizationString.isPresent())
                 return null;
             if (!authorizationString.get().startsWith("Bearer"))
                 return null;
+
         }
 
         String token = authorizationString.isPresent() ? authorizationString.get().substring(7) : null;
 
         if (allowAuth.contains(TokenAuthType.ALLOW)) {
-            if (authorizationString == null || authorizationString.isEmpty()) {
-                info.setId(null);
-                info.setType(TokenAuthType.ALLOW);
-                return Optional.of(info);
-            }
-            info.setId(jwtProvider.getIdFromToken(token));
-            info.setType(jwtProvider.getTypeFromToken(token));
+            info.setId(null);
+            info.setType(TokenAuthType.ALLOW);
             return Optional.of(info);
         } else {
             TokenAuthType auth = TokenAuthType.ALLOW;
             Integer id = null;
-            try {
-                auth = jwtProvider.getTypeFromToken(token);
-                id = jwtProvider.getIdFromToken(token);
-            } catch (Exception e) {
-                return null;
-            }
+            auth = jwtProvider.getTypeFromToken(token);
+            id = jwtProvider.getIdFromToken(token);
             if (id == null || !allowAuth.contains(auth))
                 return null;
             if (auth.equals(TokenAuthType.USER)) {
@@ -147,5 +138,9 @@ public class JwtService {
             }
         }
         return Optional.of(info);
+    }
+
+    public boolean isExpired(String jwtToken) {
+        return jwtProvider.isTokenExpired(jwtToken);
     }
 }
