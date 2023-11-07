@@ -107,13 +107,17 @@ public class ReviewController {
                                                                                        @RequestParam(value = "page", required = false, defaultValue = "1") Integer page,
                                                                                        @RequestParam(value = "take", required = false, defaultValue = "10") Integer take) {
         CustomResponse<Page<ReviewDto>> res = new CustomResponse<>();
-        Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ALLOW), auth);
 
-        if (tokenInfo != null && tokenInfo.isPresent() && tokenInfo.get().getType().equals(TokenAuthType.PARTNER))
-            storeId = tokenInfo.get().getId();
+        Optional<TokenInfo> tokenInfo = null;
         Integer userId = null;
-        if (tokenInfo != null && tokenInfo.isPresent() && tokenInfo.get().getType().equals(TokenAuthType.USER))
+        if (auth.isEmpty()) {
+            tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ALLOW), auth);
+        }
+        if (auth.isPresent()) {
+            tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth);
             userId = tokenInfo.get().getId();
+        }
+
         PageRequest pageRequest = PageRequest.of(page, take);
         Page<Review> reviewData = null;
         if (orderType.equals(ReviewOrderByType.RECENT))
@@ -134,11 +138,16 @@ public class ReviewController {
     public ResponseEntity<CustomResponse<ReviewDto>> selectReview(@RequestHeader(value = "Authorization") Optional<String> auth,
                                                                   @PathVariable("id") Integer id) {
         CustomResponse<ReviewDto> res = new CustomResponse<>();
-        Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ALLOW), auth);
-
+        Optional<TokenInfo> tokenInfo = null;
         Integer userId = null;
-        if (tokenInfo != null && tokenInfo.isPresent() && tokenInfo.get().getType().equals(TokenAuthType.USER))
+        if (auth.isEmpty()) {
+            tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ALLOW), auth);
+        }
+        if (auth.isPresent()) {
+            tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth);
             userId = tokenInfo.get().getId();
+        }
+
         Review review = reviewQueryService.selectReview(id);
         ReviewDto reviewDto = reviewCommandService.convert2Dto(review, userId);
         reviewDto.setSimpleProduct(review.getProduct().convert2ListDto());
@@ -153,7 +162,17 @@ public class ReviewController {
                                                                                          @RequestParam(value = "page", required = false, defaultValue = "0") Integer page,
                                                                                          @RequestParam(value = "take", required = false, defaultValue = "10") Integer take) {
         CustomResponse<Page<ReviewDto>> res = new CustomResponse<>();
-        Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ALLOW), auth);
+
+        Optional<TokenInfo> tokenInfo = null;
+        Integer userId = null;
+        if (auth.isEmpty()) {
+            tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ALLOW), auth);
+            userId = null;
+        }
+        if (auth.isPresent()) {
+            tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth);
+            userId = tokenInfo.get().getId();
+        }
 
         PageRequest pageRequest = PageRequest.of(page, take);
         Page<Review>
@@ -161,11 +180,13 @@ public class ReviewController {
                 orderType.equals(ReviewOrderByType.RECENT) ? reviewQueryService.selectReviewListByProduct(productId,
                         pageRequest) : reviewQueryService.selectReviewListOrderedBestWithProductId(productId,
                         pageRequest);
+
+        Integer finalUserId = userId;
         Page<ReviewDto> reviews = reviewData.map(review -> {
             ReviewDto dto = new ReviewDto();
-            if (tokenInfo != null && tokenInfo.isPresent() && tokenInfo.get().getType().equals(TokenAuthType.USER))
-                dto = reviewCommandService.convert2Dto(review, tokenInfo.get().getId());
-            else dto = reviewCommandService.convert2Dto(review);
+            if (finalUserId != null) {
+                dto = reviewCommandService.convert2Dto(review, finalUserId);
+            } else dto = reviewCommandService.convert2Dto(review);
             dto.setSimpleProduct(productService.selectProduct(review.getProduct().getId()).convert2ListDto());
             return dto;
         });

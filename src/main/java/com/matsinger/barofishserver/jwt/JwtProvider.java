@@ -24,11 +24,18 @@ public class JwtProvider {
 
     // token으로 사용자 id 조회
     public Integer getIdFromToken(String token) {
-        return Integer.valueOf(getClaimFromToken(token, Claims::getId));
+        String claimFromToken = getClaimFromToken(token, Claims::getId);
+        if (claimFromToken == null) {
+            return null;
+        }
+        return Integer.valueOf(claimFromToken);
     }
 
     public TokenAuthType getTypeFromToken(String token) {
         String issuer = getClaimFromToken(token, Claims::getIssuer);
+        if (issuer == null) {
+            return TokenAuthType.ALLOW;
+        }
         return switch (issuer) {
             case "USER" -> TokenAuthType.USER;
             case "ADMIN" -> TokenAuthType.ADMIN;
@@ -50,7 +57,7 @@ public class JwtProvider {
     }
 
     // 토근 만료 여부 체크
-    private Boolean isTokenExpired(String token) {
+    public Boolean isTokenExpired(String token) {
         final Date expiration = getExpirationDateFromToken(token);
         return expiration.before(new Date());
     }
