@@ -1,31 +1,26 @@
 package com.matsinger.barofishserver.global.exception;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.matsinger.barofishserver.utils.CustomResponse;
-import jakarta.servlet.ServletInputStream;
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.MethodParameter;
+import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpInputMessage;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageConverter;
-import org.springframework.util.StreamUtils;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.servlet.mvc.method.annotation.RequestBodyAdvice;
 
 import java.io.IOException;
 import java.lang.reflect.Type;
-import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Enumeration;
-import java.util.Iterator;
 
+@Order(2)
 @Slf4j
 @RestControllerAdvice(basePackages = {"com.matsinger.barofishserver"})
 @RequiredArgsConstructor
@@ -36,7 +31,7 @@ public class GlobalControllerAdvice implements RequestBodyAdvice {
     private ThreadLocal<Boolean> afterBodyReadExecuted = ThreadLocal.withInitial(() -> false);
 
     @ExceptionHandler(value = {RuntimeException.class})
-    public ResponseEntity<CustomResponse<Object>> test(
+    public ResponseEntity<CustomResponse<Object>> catchException(
             HttpServletRequest request,
             Exception e) throws IOException {
 

@@ -23,6 +23,7 @@ import com.matsinger.barofishserver.domain.product.dto.*;
 import com.matsinger.barofishserver.domain.product.optionitem.domain.OptionItem;
 import com.matsinger.barofishserver.domain.product.productfilter.application.ProductFilterService;
 import com.matsinger.barofishserver.domain.product.productfilter.domain.ProductFilterValue;
+import com.matsinger.barofishserver.domain.review.dto.ReviewDto;
 import com.matsinger.barofishserver.domain.search.application.SearchKeywordQueryService;
 import com.matsinger.barofishserver.domain.store.application.StoreService;
 import com.matsinger.barofishserver.domain.store.domain.Store;
@@ -36,6 +37,7 @@ import com.matsinger.barofishserver.domain.searchFilter.domain.ProductSearchFilt
 import com.matsinger.barofishserver.utils.Common;
 import com.matsinger.barofishserver.utils.CustomResponse;
 import com.matsinger.barofishserver.utils.S3.S3Uploader;
+import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -206,11 +208,16 @@ public class ProductController {
                                                                                         @RequestParam(value = "keyword", required = false, defaultValue = "") String keyword,
                                                                                         @RequestParam(value = "storeId", required = false) Integer storeId) {
         CustomResponse<Page<ProductListDto>> res = new CustomResponse<>();
-        Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ALLOW), auth);
-
+        Optional<TokenInfo> tokenInfo = null;
         Integer userId = null;
-        if (tokenInfo != null && tokenInfo.isPresent() && tokenInfo.get().getType().equals(TokenAuthType.USER))
+        if (auth.isEmpty()) {
+            tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ALLOW), auth);
+        }
+        if (auth.isPresent()) {
+            tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth);
             userId = tokenInfo.get().getId();
+        }
+
         Page<ProductListDto>
                 result =
                 productService.selectProductListWithPagination(page - 1,
