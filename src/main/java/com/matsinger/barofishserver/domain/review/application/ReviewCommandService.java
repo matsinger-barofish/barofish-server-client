@@ -82,12 +82,15 @@ public class ReviewCommandService {
 
     public ReviewDto convert2Dto(Review review, Integer userId) {
         ReviewDto dto = review.convert2Dto();
+
         UserInfo
                 userDto =
                 userInfoRepository.findById(review.getUserId()).orElseThrow(() -> new Error("유저 정보를 찾을 수 없습니다."));
         SimpleStore store = storeService.selectStoreInfo(review.getStore().getId()).convert2Dto();
         Integer likeCount = countReviewLike(review.getId());
-        dto.setIsLike(userId != null ? reviewLikeRepository.existsByUserIdAndReviewId(userId, review.getId()) : false);
+        dto.setIsLike(userId != null
+                ? reviewLikeRepository.existsByUserIdAndReviewId(userId, review.getId())
+                : false);
         dto.setLikeCount(likeCount);
         dto.setUser(userDto.convert2Dto());
         dto.setStore(store);
