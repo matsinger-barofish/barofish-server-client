@@ -5,6 +5,8 @@ import com.matsinger.barofishserver.domain.basketProduct.domain.BasketProductOpt
 import com.matsinger.barofishserver.domain.basketProduct.dto.BasketProductDto;
 import com.matsinger.barofishserver.domain.basketProduct.repository.BasketProductInfoRepository;
 import com.matsinger.barofishserver.domain.basketProduct.repository.BasketProductOptionRepository;
+import com.matsinger.barofishserver.domain.product.application.ProductQueryService;
+import com.matsinger.barofishserver.domain.product.domain.ProductState;
 import com.matsinger.barofishserver.domain.product.optionitem.domain.OptionItem;
 import com.matsinger.barofishserver.domain.product.optionitem.dto.OptionItemDto;
 import com.matsinger.barofishserver.domain.product.optionitem.repository.OptionItemRepository;
@@ -22,6 +24,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @RequiredArgsConstructor
 @Service
@@ -34,6 +37,7 @@ public class BasketQueryService {
     private final StoreService storeService;
     private final ProductFilterService productFilterService;
     private final ProductService productService;
+    private final ProductQueryService productQueryService;
 
     public BasketProductInfo selectBasket(Integer id) {
         return infoRepository.findById(id).orElseThrow(() -> {
@@ -53,6 +57,12 @@ public class BasketQueryService {
         for (BasketProductInfo info : infos) {
 
             Product product = productService.selectProduct(info.getProductId());
+
+            Boolean isProductExists = productQueryService.existsByIdAndState(product.getId(), ProductState.ACTIVE);
+            if (!isProductExists) {
+                continue;
+            }
+
             StoreInfo storeInfo = storeService.selectStoreInfo(product.getStoreId());
             SimpleStore store = storeService.convert2SimpleDto(storeInfo, userId);
 
