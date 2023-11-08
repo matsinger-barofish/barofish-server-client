@@ -195,20 +195,6 @@ public class CouponController {
         }
     }
 
-    @GetMapping("/user/{userId}")
-    public ResponseEntity<CustomResponse<List<Coupon>>> selectUserCouponList(@RequestHeader(value = "Authorization", required = false) Optional<String> auth,
-                                                                             @PathVariable("userId") Integer userId) {
-        CustomResponse<List<Coupon>> res = new CustomResponse<>();
-        Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
-        if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
-        try {
-            List<Coupon> coupons = couponQueryService.selectUserCouponList(userId);
-            res.setData(Optional.ofNullable(coupons));
-            return ResponseEntity.ok(res);
-        } catch (Exception e) {
-            return res.defaultError(e);
-        }
-    }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<CustomResponse<Boolean>> deleteCoupon(@RequestHeader(value = "Authorization") Optional<String> auth,
