@@ -123,6 +123,19 @@ public class CouponController {
         return ResponseEntity.ok(res);
     }
 
+    @GetMapping("/users/{id}")
+    public ResponseEntity<CustomResponse<List<Coupon>>> selectUserCoupons(@RequestHeader(value = "Authorization", required = false) Optional<String> auth,
+                                                                          @PathVariable(value = "userId") Integer userId) {
+        CustomResponse<List<Coupon>> res = new CustomResponse<>();
+        Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
+        if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
+
+        List<Coupon> coupons = couponQueryService.selectUserCouponList(userId);
+        res.setData(Optional.ofNullable(coupons));
+
+        return ResponseEntity.ok(res);
+    }
+
     @GetMapping("/downloaded")
     public ResponseEntity<CustomResponse<List<Coupon>>> selectDownloadedCoupon(@RequestHeader(value = "Authorization") Optional<String> auth) {
         CustomResponse<List<Coupon>> res = new CustomResponse<>();
@@ -189,21 +202,6 @@ public class CouponController {
                     AdminLog.builder().id(adminLogQueryService.getAdminLogId()).adminId(adminId).type(AdminLogType.COUPON).targetId(
                             String.valueOf(coupon.getId())).content("쿠폰을 등록하였습니다.").createdAt(utils.now()).build();
             res.setData(Optional.ofNullable(coupon));
-            return ResponseEntity.ok(res);
-        } catch (Exception e) {
-            return res.defaultError(e);
-        }
-    }
-
-    @GetMapping("/user/{userId}")
-    public ResponseEntity<CustomResponse<List<Coupon>>> selectUserCouponList(@RequestHeader(value = "Authorization", required = false) Optional<String> auth,
-                                                                             @PathVariable("userId") Integer userId) {
-        CustomResponse<List<Coupon>> res = new CustomResponse<>();
-        Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
-        if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
-        try {
-            List<Coupon> coupons = couponQueryService.selectUserCouponList(userId);
-            res.setData(Optional.ofNullable(coupons));
             return ResponseEntity.ok(res);
         } catch (Exception e) {
             return res.defaultError(e);
