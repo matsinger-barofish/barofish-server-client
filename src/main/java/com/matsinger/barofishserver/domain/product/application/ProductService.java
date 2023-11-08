@@ -338,8 +338,9 @@ public class ProductService {
         OptionItem optionItem = selectOptionItem(product.getRepresentOptionItemId());
         Boolean
                 isLike =
-                userId != null ? saveProductRepository.existsById(SaveProductId.builder().userId(userId).productId(
-                        product.getId()).build()) : null;
+                userId != null
+                        ? saveProductRepository.existsById(SaveProductId.builder().userId(userId).productId(product.getId()).build())
+                        : null;
         return ProductListDto.builder().id(product.getId()).state(product.getState()).image(product.getImages().substring(
                 1,
                 product.getImages().length() -
