@@ -123,7 +123,7 @@ public class CouponController {
         return ResponseEntity.ok(res);
     }
 
-    @GetMapping("/user/{userId}")
+    @GetMapping("/shit/{userId}")
     public ResponseEntity<CustomResponse<List<Coupon>>> selectUserCoupons(@RequestHeader(value = "Authorization", required = false) Optional<String> auth,
                                                                           @PathVariable(value = "userId") Integer userId) {
         CustomResponse<List<Coupon>> res = new CustomResponse<>();
