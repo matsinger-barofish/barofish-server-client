@@ -132,7 +132,6 @@ public class CouponController {
 
         List<Coupon> coupons = couponQueryService.selectUserCouponList(userId);
         res.setData(Optional.ofNullable(coupons));
-
         return ResponseEntity.ok(res);
     }
 
