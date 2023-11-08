@@ -125,7 +125,7 @@ public class CouponController {
 
     @GetMapping("/user/{userId}")
     public ResponseEntity<CustomResponse<List<Coupon>>> selectUserCoupons(@RequestHeader(value = "Authorization", required = false) Optional<String> auth,
-                                                                          @RequestParam(value = "userId") Integer userId) {
+                                                                          @PathVariable(value = "userId") Integer userId) {
         CustomResponse<List<Coupon>> res = new CustomResponse<>();
         Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
         if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
