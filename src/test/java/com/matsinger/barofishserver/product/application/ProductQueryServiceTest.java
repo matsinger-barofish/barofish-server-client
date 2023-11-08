@@ -1,10 +1,8 @@
 package com.matsinger.barofishserver.product.application;
 
-import com.matsinger.barofishserver.domain.product.application.ProductQueryService;
-import com.matsinger.barofishserver.domain.product.domain.Product;
-import com.matsinger.barofishserver.domain.product.domain.ProductState;
-import com.matsinger.barofishserver.domain.product.weeksdate.domain.WeeksDate;
-import com.matsinger.barofishserver.domain.product.weeksdate.repository.WeeksDateRepository;
+import com.matsinger.barofishserver.product.domain.Product;
+import com.matsinger.barofishserver.product.weeksdate.domain.WeeksDate;
+import com.matsinger.barofishserver.product.weeksdate.repository.WeeksDateRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,6 +22,7 @@ class ProductQueryServiceTest {
 
     @Autowired private ProductQueryService productQueryService;
     @Autowired private WeeksDateRepository weeksDateRepository;
+    @Autowired private ProfilesCheck profilesCheck;
 
     @DisplayName("오늘, 다음날이 휴일이 아니고, 출고시간 전에 주문한 경우 배송도착에정일은 1일이다.")
     @Test

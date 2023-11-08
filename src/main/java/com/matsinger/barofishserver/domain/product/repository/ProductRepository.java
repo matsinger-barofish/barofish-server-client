@@ -920,6 +920,4 @@ public interface ProductRepository extends JpaRepository<Product, Integer>, JpaS
     List<Product> findAllByPromotionEndAtBefore(Timestamp now);
 
     List<Product> findAllByPromotionStartAtBeforeAndPromotionEndAtAfter(Timestamp promotionStart, Timestamp promotionEnd);
-
-    Boolean existsByIdAndState(int productId, ProductState state);
 }

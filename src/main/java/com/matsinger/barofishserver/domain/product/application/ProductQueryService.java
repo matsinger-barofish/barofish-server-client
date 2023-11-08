@@ -6,7 +6,6 @@ import com.matsinger.barofishserver.domain.compare.filter.repository.CompareFilt
 import com.matsinger.barofishserver.domain.compare.domain.SaveProductId;
 import com.matsinger.barofishserver.domain.inquiry.domain.Inquiry;
 import com.matsinger.barofishserver.domain.inquiry.repository.InquiryRepository;
-import com.matsinger.barofishserver.domain.product.domain.ProductState;
 import com.matsinger.barofishserver.domain.product.dto.ProductListDtoV2;
 import com.matsinger.barofishserver.domain.review.application.ReviewQueryService;
 import com.matsinger.barofishserver.domain.review.dto.ReviewTotalStatistic;
@@ -46,7 +45,6 @@ import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 @Service
 @Transactional(readOnly = true)
@@ -176,10 +174,6 @@ public class ProductQueryService {
     public Page<ProductListDtoV2> getPagedProducts(PageRequest pageRequest, ProductSortBy sortBy, String keyword) {
 
         return productRepositoryImpl.getProducts(pageRequest, sortBy, keyword);
-    }
-
-    public Boolean existsByIdAndState(int productId, ProductState state) {
-        return productRepository.existsByIdAndState(productId, state);
     }
 
 
