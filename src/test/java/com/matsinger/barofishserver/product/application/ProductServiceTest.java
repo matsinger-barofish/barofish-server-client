@@ -4,6 +4,8 @@ import com.matsinger.barofishserver.domain.category.repository.CategoryRepositor
 import com.matsinger.barofishserver.domain.product.application.ProductService;
 import com.matsinger.barofishserver.domain.product.domain.Product;
 import com.matsinger.barofishserver.domain.product.repository.ProductRepository;
+import com.matsinger.barofishserver.domain.searchFilter.application.SearchFilterQueryService;
+import com.matsinger.barofishserver.domain.searchFilter.domain.SearchFilterField;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,6 +28,7 @@ class ProductServiceTest {
     @Autowired
     private ProductRepository productRepository;
     @Autowired private CategoryRepository categoryRepository;
+    @Autowired private SearchFilterQueryService searchFilterQueryService;
 
     @DisplayName("상품의 프로모션 기간이 지난 경우 쿼리 테스트")
     @Test
@@ -87,4 +90,18 @@ class ProductServiceTest {
 //
 //        // then
 //    }
+
+    @DisplayName("sample test")
+    @Test
+    void justTest() {
+        // given
+        List<Integer> filterIds = null;
+        List<SearchFilterField>
+                searchFilterFields =
+                searchFilterQueryService.selectSearchFilterListWithIds(List.of(3, 4, 5, 6));
+        filterIds = searchFilterFields.stream().map(SearchFilterField::getSearchFilterId).toList();
+        // when
+
+        // then
+    }
 }

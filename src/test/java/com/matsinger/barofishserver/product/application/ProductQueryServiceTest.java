@@ -1,8 +1,9 @@
 package com.matsinger.barofishserver.product.application;
 
-import com.matsinger.barofishserver.product.domain.Product;
-import com.matsinger.barofishserver.product.weeksdate.domain.WeeksDate;
-import com.matsinger.barofishserver.product.weeksdate.repository.WeeksDateRepository;
+import com.matsinger.barofishserver.domain.product.application.ProductQueryService;
+import com.matsinger.barofishserver.domain.product.domain.Product;
+import com.matsinger.barofishserver.domain.product.weeksdate.domain.WeeksDate;
+import com.matsinger.barofishserver.domain.product.weeksdate.repository.WeeksDateRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,7 +23,6 @@ class ProductQueryServiceTest {
 
     @Autowired private ProductQueryService productQueryService;
     @Autowired private WeeksDateRepository weeksDateRepository;
-    @Autowired private ProfilesCheck profilesCheck;
 
     @DisplayName("오늘, 다음날이 휴일이 아니고, 출고시간 전에 주문한 경우 배송도착에정일은 1일이다.")
     @Test
@@ -44,7 +44,8 @@ class ProductQueryServiceTest {
 
         Product findProduct = productQueryService.findById(10000);
         // when
-        int expectedArrivalDate = productQueryService.calculateExpectedArrivalDate(beforeForwardingTime, findProduct.getForwardingTime(), findProduct.getExpectedDeliverDay(), weeksDates);
+        Integer forwardingTime = Integer.valueOf(findProduct.getForwardingTime());
+        int expectedArrivalDate = productQueryService.calculateExpectedArrivalDate(beforeForwardingTime, forwardingTime, findProduct.getExpectedDeliverDay(), weeksDates);
         // then
         assertThat(expectedArrivalDate).isEqualTo(1);
     }
@@ -66,7 +67,8 @@ class ProductQueryServiceTest {
 
         Product findProduct = productQueryService.findById(10000);
         // when
-        int expectedArrivalDate = productQueryService.calculateExpectedArrivalDate(afterForwardingTime, findProduct.getForwardingTime(), findProduct.getExpectedDeliverDay(), weeksDates);
+        Integer forwardingTime = Integer.valueOf(findProduct.getForwardingTime());
+        int expectedArrivalDate = productQueryService.calculateExpectedArrivalDate(afterForwardingTime, forwardingTime, findProduct.getExpectedDeliverDay(), weeksDates);
         // then
         assertThat(expectedArrivalDate).isEqualTo(2);
     }
@@ -92,8 +94,9 @@ class ProductQueryServiceTest {
 
         Product findProduct = productQueryService.findById(10000);
         // when
-        int beforeForwardingTimeExpectedArrivalDate = productQueryService.calculateExpectedArrivalDate(beforeForwardingTime, findProduct.getForwardingTime(), findProduct.getExpectedDeliverDay(), weeksDates);
-        int afterForwardingTimeExpectedArrivalDate = productQueryService.calculateExpectedArrivalDate(afterForwardingTime, findProduct.getForwardingTime(), findProduct.getExpectedDeliverDay(), weeksDates);
+        Integer forwardingTime = Integer.valueOf(findProduct.getForwardingTime());
+        int beforeForwardingTimeExpectedArrivalDate = productQueryService.calculateExpectedArrivalDate(beforeForwardingTime, forwardingTime, findProduct.getExpectedDeliverDay(), weeksDates);
+        int afterForwardingTimeExpectedArrivalDate = productQueryService.calculateExpectedArrivalDate(afterForwardingTime, forwardingTime, findProduct.getExpectedDeliverDay(), weeksDates);
         // then
         assertThat(beforeForwardingTimeExpectedArrivalDate).isEqualTo(1);
         assertThat(afterForwardingTimeExpectedArrivalDate).isEqualTo(4);
@@ -121,8 +124,9 @@ class ProductQueryServiceTest {
 
         Product findProduct = productQueryService.findById(10000);
         // when
-        int beforeForwardingTimeExpectedArrivalDate = productQueryService.calculateExpectedArrivalDate(beforeForwardingTime, findProduct.getForwardingTime(), findProduct.getExpectedDeliverDay(), weeksDates);
-        int afterForwardingTimeExpectedArrivalDate = productQueryService.calculateExpectedArrivalDate(afterForwardingTime, findProduct.getForwardingTime(), findProduct.getExpectedDeliverDay(), weeksDates);
+        Integer forwardingTime = Integer.valueOf(findProduct.getForwardingTime());
+        int beforeForwardingTimeExpectedArrivalDate = productQueryService.calculateExpectedArrivalDate(beforeForwardingTime, forwardingTime, findProduct.getExpectedDeliverDay(), weeksDates);
+        int afterForwardingTimeExpectedArrivalDate = productQueryService.calculateExpectedArrivalDate(afterForwardingTime, forwardingTime, findProduct.getExpectedDeliverDay(), weeksDates);
         // then
         assertThat(beforeForwardingTimeExpectedArrivalDate).isEqualTo(1);
         assertThat(afterForwardingTimeExpectedArrivalDate).isEqualTo(6);
@@ -147,8 +151,9 @@ class ProductQueryServiceTest {
 
         Product findProduct = productQueryService.findById(10000);
         // when
-        int beforeForwardingTimeExpectedArrivalDate = productQueryService.calculateExpectedArrivalDate(beforeForwardingTime, findProduct.getForwardingTime(), findProduct.getExpectedDeliverDay(), weeksDates);
-        int afterForwardingTimeExpectedArrivalDate = productQueryService.calculateExpectedArrivalDate(afterForwardingTime, findProduct.getForwardingTime(), findProduct.getExpectedDeliverDay(), weeksDates);
+        Integer forwardingTime = Integer.valueOf(findProduct.getForwardingTime());
+        int beforeForwardingTimeExpectedArrivalDate = productQueryService.calculateExpectedArrivalDate(beforeForwardingTime, forwardingTime, findProduct.getExpectedDeliverDay(), weeksDates);
+        int afterForwardingTimeExpectedArrivalDate = productQueryService.calculateExpectedArrivalDate(afterForwardingTime, forwardingTime, findProduct.getExpectedDeliverDay(), weeksDates);
         // then
         assertThat(beforeForwardingTimeExpectedArrivalDate).isEqualTo(3);
         assertThat(afterForwardingTimeExpectedArrivalDate).isEqualTo(3);
@@ -172,8 +177,9 @@ class ProductQueryServiceTest {
 
         Product findProduct = productQueryService.findById(10000);
         // when
-        int beforeForwardingTimeExpectedArrivalDate = productQueryService.calculateExpectedArrivalDate(beforeForwardingTime, findProduct.getForwardingTime(), findProduct.getExpectedDeliverDay(), weeksDates);
-        int afterForwardingTimeExpectedArrivalDate = productQueryService.calculateExpectedArrivalDate(afterForwardingTime, findProduct.getForwardingTime(), findProduct.getExpectedDeliverDay(), weeksDates);
+        Integer forwardingTime = Integer.valueOf(findProduct.getForwardingTime());
+        int beforeForwardingTimeExpectedArrivalDate = productQueryService.calculateExpectedArrivalDate(beforeForwardingTime, forwardingTime, findProduct.getExpectedDeliverDay(), weeksDates);
+        int afterForwardingTimeExpectedArrivalDate = productQueryService.calculateExpectedArrivalDate(afterForwardingTime, forwardingTime, findProduct.getExpectedDeliverDay(), weeksDates);
         // then
         assertThat(beforeForwardingTimeExpectedArrivalDate).isEqualTo(2);
         assertThat(afterForwardingTimeExpectedArrivalDate).isEqualTo(2);
@@ -199,8 +205,9 @@ class ProductQueryServiceTest {
 
         Product findProduct = productQueryService.findById(10000);
         // when
-        int beforeForwardingTimeExpectedArrivalDate = productQueryService.calculateExpectedArrivalDate(beforeForwardingTime, findProduct.getForwardingTime(), findProduct.getExpectedDeliverDay(), weeksDates);
-        int afterForwardingTimeExpectedArrivalDate = productQueryService.calculateExpectedArrivalDate(afterForwardingTime, findProduct.getForwardingTime(), findProduct.getExpectedDeliverDay(), weeksDates);
+        Integer forwardingTime = Integer.valueOf(findProduct.getForwardingTime());
+        int beforeForwardingTimeExpectedArrivalDate = productQueryService.calculateExpectedArrivalDate(beforeForwardingTime, forwardingTime, findProduct.getExpectedDeliverDay(), weeksDates);
+        int afterForwardingTimeExpectedArrivalDate = productQueryService.calculateExpectedArrivalDate(afterForwardingTime, forwardingTime, findProduct.getExpectedDeliverDay(), weeksDates);
         // then
         assertThat(beforeForwardingTimeExpectedArrivalDate).isEqualTo(4);
         assertThat(afterForwardingTimeExpectedArrivalDate).isEqualTo(4);
