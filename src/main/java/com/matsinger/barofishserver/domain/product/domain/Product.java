@@ -68,7 +68,7 @@ public class Product {
     private int expectedDeliverDay;
 
     @Column(name = "forwarding_time", nullable = false)
-    private int forwardingTime;
+    private String forwardingTime;
 
     @Basic
 //    @Max(value = (long) 0.1, message = "상품 적립 포인트는 10퍼센트를 초과할 수 없습니다.")

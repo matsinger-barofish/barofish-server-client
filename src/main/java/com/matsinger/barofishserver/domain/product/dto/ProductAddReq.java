@@ -23,7 +23,7 @@ public class ProductAddReq {
     private Integer minOrderPrice;
     private String deliveryInfo;
     private Integer expectedDeliverDay;
-    private Integer forwardingTime;
+    private String forwardingTime;
     private Integer deliverBoxPerAmount;
     private String descriptionContent;
     private Boolean needTaxation;
@@ -34,4 +34,17 @@ public class ProductAddReq {
     private List<Integer> searchFilterFieldIds;
     private List<ProductFilterValueReq> filterValues;
     private List<OptionAddReq> options;
+
+    @Override
+    public String toString() {
+        return "ProductAddReq{" +
+                "storeId=" + storeId +
+                ", categoryId=" + categoryId +
+                ", forwardingTime=" + forwardingTime +
+                ", pointRate=" + pointRate +
+                ", searchFilterFieldIds=" + searchFilterFieldIds +
+                ", filterValues=" + filterValues +
+                ", options=" + options +
+                '}';
+    }
 }
