@@ -186,7 +186,7 @@ public class ProductQueryService {
 
         int calculateExpectedArrivalDate = findProduct.getExpectedDeliverDay();
         if (findProduct.getExpectedDeliverDay() == 1) {
-            calculateExpectedArrivalDate = calculateExpectedArrivalDate(now, findProduct.getForwardingTime(), findProduct.getExpectedDeliverDay(), weeksDatesWithHoliday);
+            calculateExpectedArrivalDate = calculateExpectedArrivalDate(now, Integer.valueOf(findProduct.getForwardingTime()), findProduct.getExpectedDeliverDay(), weeksDatesWithHoliday);
         }
 
         return ExpectedArrivalDateResponse.builder()
@@ -195,7 +195,7 @@ public class ProductQueryService {
                 .build();
     }
 
-    public int calculateExpectedArrivalDate(LocalDateTime now, int productForwardingTime, int productExpectedArrivalDate, List<WeeksDate> weeksDatesWithHoliday) {
+    public int calculateExpectedArrivalDate(LocalDateTime now, Integer productForwardingTime, int productExpectedArrivalDate, List<WeeksDate> weeksDatesWithHoliday) {
         LocalTime localTime = LocalTime.of(productForwardingTime, 0, 0);
         LocalDateTime forwardingTime = LocalDateTime.of(LocalDate.now(), localTime);
 
