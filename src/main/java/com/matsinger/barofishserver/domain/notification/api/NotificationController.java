@@ -5,8 +5,10 @@ import com.matsinger.barofishserver.domain.notification.domain.Notification;
 import com.matsinger.barofishserver.jwt.JwtService;
 import com.matsinger.barofishserver.jwt.TokenAuthType;
 import com.matsinger.barofishserver.jwt.TokenInfo;
+import com.matsinger.barofishserver.jwt.exception.JwtExceptionMessage;
 import com.matsinger.barofishserver.utils.Common;
 import com.matsinger.barofishserver.utils.CustomResponse;
+import io.jsonwebtoken.JwtException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -32,13 +34,16 @@ public class NotificationController {
                                                                                  @RequestParam(value = "page", required = false, defaultValue = "0") Integer page,
                                                                                  @RequestParam(value = "take", required = false, defaultValue = "10") Integer take) {
         CustomResponse<Page<Notification>> res = new CustomResponse<>();
-        Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth);
-        if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
+
+        if (auth.isEmpty()) {
+            throw new JwtException(JwtExceptionMessage.TOKEN_REQUIRED);
+        }
+        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth.get());
 
         PageRequest pageRequest = PageRequest.of(page, take, Sort.by(Sort.Direction.DESC, "createdAt"));
         Page<Notification>
                 notifications =
-                notificationQueryService.selectNotificationListWithUserId(tokenInfo.get().getId(), pageRequest);
+                notificationQueryService.selectNotificationListWithUserId(tokenInfo.getId(), pageRequest);
         res.setData(Optional.ofNullable(notifications));
         return ResponseEntity.ok(res);
     }

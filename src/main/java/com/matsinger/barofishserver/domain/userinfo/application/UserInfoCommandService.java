@@ -61,8 +61,7 @@ public class UserInfoCommandService {
         return findUserInfo;
     }
 
-    public UserInfo createAndSaveUserInfo(User user, SnsJoinReq request, String profileImage, Grade grade)
-            throws MalformedURLException {
+    public UserInfo createAndSaveUserInfo(User user, SnsJoinReq request, String profileImage, Grade grade) {
         String fixedPhoneNumber = null;
         if (!request.getLoginType().equals(LoginType.APPLE)) {
             String phoneNumber = request.getPhone();
@@ -81,7 +80,7 @@ public class UserInfoCommandService {
         return userInfoRepository.save(userInfo);
     }
 
-    public UserInfo createAndSaveIdPwUserInfo(User user, UserJoinReq request, Grade grade) throws Exception {
+    public UserInfo createAndSaveIdPwUserInfo(User user, UserJoinReq request, Grade grade) {
 
         String phoneNumber = request.getPhone();
         verifyPhoneNumberFormat(phoneNumber);

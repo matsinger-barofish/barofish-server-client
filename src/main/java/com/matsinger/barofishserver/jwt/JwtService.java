@@ -9,7 +9,11 @@ import com.matsinger.barofishserver.domain.store.domain.StoreState;
 import com.matsinger.barofishserver.domain.user.domain.User;
 import com.matsinger.barofishserver.domain.user.application.UserCommandService;
 import com.matsinger.barofishserver.domain.user.domain.UserState;
+import com.matsinger.barofishserver.jwt.exception.JwtExceptionMessage;
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.JwtException;
 import lombok.RequiredArgsConstructor;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
@@ -25,119 +29,53 @@ public class JwtService {
     private final AdminQueryService adminService;
     private final StoreService storeService;
 
-    public Optional<TokenInfo> validateAndGetTokenInfo2(Set<TokenAuthType> allowAuth,
-            Optional<String> authorizationString) {
-        TokenInfo info = new TokenInfo();
-        String token = authorizationString.map(s -> s.substring(7)).orElse(null);
+    public TokenInfo validateAndGetTokenInfo(Set<TokenAuthType> authTypesToAllow, String authorizationString) {
 
-        if (!allowAuth.contains(TokenAuthType.ALLOW)) {
-            if (authorizationString.isEmpty())
-                return null;
-            if (!authorizationString.get().startsWith("Bearer"))
-                return null;
+        if (!authTypesToAllow.contains(TokenAuthType.ALLOW) && !authorizationString.startsWith("Bearer")) {
+            throw new JwtException(JwtExceptionMessage.TOKEN_INVALID);
         }
 
-        if (authorizationString == null || authorizationString.isEmpty()) {
-            info.setId(null);
-            info.setType(TokenAuthType.ALLOW);
-            return Optional.of(info);
+        String token = authorizationString.substring(7);
+
+        if (!authTypesToAllow.contains(TokenAuthType.ALLOW) && isExpired(token)) {
+            throw new JwtException(JwtExceptionMessage.TOKEN_EXPIRED);
         }
 
-        if (allowAuth.contains(TokenAuthType.ALLOW)) {
-            info.setId(jwtProvider.getIdFromToken(token));
-            info.setType(jwtProvider.getTypeFromToken(token));
-            return Optional.of(info);
+        TokenInfo tokenInfo = extractIdAndAuthType(token);
+
+        // 토큰 기한이 만료 됐더라도 접근 권한이 모두에게 허용이면 통과
+        if (authTypesToAllow.contains(TokenAuthType.ALLOW)) {
+            tokenInfo.setId(null);
+            tokenInfo.setType(TokenAuthType.ALLOW);
         }
 
-        TokenAuthType auth = TokenAuthType.ALLOW;
-        Integer id = null;
-        try {
-            auth = jwtProvider.getTypeFromToken(token);
-            id = jwtProvider.getIdFromToken(token);
-        } catch (Exception e) {
-            return null;
-        }
-        if (id == null || !allowAuth.contains(auth)) {
-            return null;
+        if (tokenInfo.getId() == null && tokenInfo.getType() != TokenAuthType.ALLOW) {
+            throw new JwtException(JwtExceptionMessage.TOKEN_INVALID);
         }
 
-        if (auth.equals(TokenAuthType.USER)) {
-            // TODO: 사용자의 상태에 따른 유효성 검증
-            Optional<User> user = userService.selectUserOptional(id);
-            if (!user.isPresent() || !user.get().getState().equals(UserState.ACTIVE)) {
-                return null;
-            }
-        } else if (auth.equals(TokenAuthType.PARTNER)) {
-            // TODO: 파트너의 상태에 따른 유효성 검증
-            Optional<Store> partner = storeService.selectStoreOptional(id);
-            if (!partner.isPresent() || !partner.get().getState().equals(StoreState.ACTIVE)) {
-                return null;
-            }
-        } else if (auth.equals(TokenAuthType.ADMIN)) {
-            // TODO: 관리자의 상태에 따른 유효성 검증
-            Optional<Admin> admin = adminService.selectAdminOptional(id);
-            if (admin == null || !admin.isPresent() || !admin.get().getState().equals(AdminState.ACTIVE)) {
-                return null;
-            }
+        if (!authTypesToAllow.contains(tokenInfo.getType())) {
+            throw new IllegalArgumentException(JwtExceptionMessage.NOT_ALLOWED);
         }
-        info.setType(auth);
-        info.setId(id);
-        return Optional.of(info);
+
+        return tokenInfo;
     }
 
-    public Optional<TokenInfo> validateAndGetTokenInfo(Set<TokenAuthType> allowAuth, Optional<String> authorizationString) {
-        TokenInfo info = new TokenInfo();
-        if (!allowAuth.contains(TokenAuthType.ALLOW)) {
-            if (!authorizationString.isPresent())
-                return null;
-            if (!authorizationString.get().startsWith("Bearer"))
-                return null;
+    @NotNull
+    private TokenInfo extractIdAndAuthType(String token) {
+        TokenInfo tokenInfo = new TokenInfo();
+        TokenAuthType tokenAuthType = jwtProvider.getTypeFromToken(token);
 
+        tokenInfo.setId(jwtProvider.getIdFromToken(token));
+        if (tokenAuthType.equals(TokenAuthType.USER)) {
+            tokenInfo.setType(TokenAuthType.USER);
         }
-
-        String token = authorizationString.isPresent() ? authorizationString.get().substring(7) : null;
-
-        if (allowAuth.contains(TokenAuthType.ALLOW)) {
-            info.setId(null);
-            info.setType(TokenAuthType.ALLOW);
-            return Optional.of(info);
-        } else {
-            TokenAuthType auth = TokenAuthType.ALLOW;
-            Integer id = null;
-            auth = jwtProvider.getTypeFromToken(token);
-            id = jwtProvider.getIdFromToken(token);
-            if (id == null || !allowAuth.contains(auth))
-                return null;
-            if (auth.equals(TokenAuthType.USER)) {
-                // TODO: 사용자의 상태에 따른 유효성 검증
-                Optional<User> user = userService.selectUserOptional(id);
-                if (!user.isPresent() || !user.get().getState().equals(UserState.ACTIVE)) {
-                    return null;
-                }
-                info.setType(auth);
-                info.setId(id);
-                return Optional.of(info);
-            } else if (auth.equals(TokenAuthType.PARTNER)) {
-                // TODO: 파트너의 상태에 따른 유효성 검증
-                Optional<Store> partner = storeService.selectStoreOptional(id);
-                if (!partner.isPresent() || !partner.get().getState().equals(StoreState.ACTIVE)) {
-                    return null;
-                }
-                info.setType(auth);
-                info.setId(id);
-                return Optional.of(info);
-            } else if (auth.equals(TokenAuthType.ADMIN)) {
-                // TODO: 관리자의 상태에 따른 유효성 검증
-                Optional<Admin> admin = adminService.selectAdminOptional(id);
-                if (admin == null || !admin.isPresent() || !admin.get().getState().equals(AdminState.ACTIVE)) {
-                    return null;
-                }
-                info.setType(auth);
-                info.setId(id);
-                return Optional.of(info);
-            }
+        if (tokenAuthType.equals(TokenAuthType.ADMIN)) {
+            tokenInfo.setType(TokenAuthType.ADMIN);
         }
-        return Optional.of(info);
+        if (tokenAuthType.equals(TokenAuthType.PARTNER)) {
+            tokenInfo.setType(TokenAuthType.PARTNER);
+        }
+        return tokenInfo;
     }
 
     public boolean isExpired(String jwtToken) {

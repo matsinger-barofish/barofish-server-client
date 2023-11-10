@@ -49,17 +49,6 @@ public class MainController {
     public ResponseEntity<CustomResponse<Main>> selectMainItems(@RequestHeader(value = "Authorization") Optional<String> auth) {
         CustomResponse<Main> res = new CustomResponse<>();
 
-        Optional<TokenInfo> tokenInfo = null;
-        Integer userId = null;
-        if (auth.isEmpty()) {
-            tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ALLOW), auth);
-            userId = null;
-        }
-        if (auth.isPresent()) {
-            tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth);
-            userId = tokenInfo.get().getId();
-        }
-
         Main data = new Main();
         List<TopBar> topBars = topBarQueryService.selectTopBarList();
         List<Banner> banners = bannerService.selectBannerList();
@@ -77,15 +66,17 @@ public class MainController {
     public ResponseEntity<CustomResponse<List<CurationDto>>> selectMainCurationList(@RequestHeader(value = "Authorization", required = false) Optional<String> auth) {
         CustomResponse<List<CurationDto>> res = new CustomResponse<>();
 
-        Optional<TokenInfo> tokenInfo = null;
+        TokenInfo tokenInfo = null;
         Integer userId = null;
+
+        // 토큰이 없으면 비회원으로 간주
         if (auth.isEmpty()) {
-            tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ALLOW), auth);
             userId = null;
         }
+
         if (auth.isPresent()) {
-            tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth);
-            userId = tokenInfo.get().getId();
+            tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER, TokenAuthType.ALLOW), auth.get());
+            userId = tokenInfo.getId();
         }
 
         List<Curation> curations = curationQueryService.selectCurationState(CurationState.ACTIVE);
@@ -108,15 +99,17 @@ public class MainController {
     public ResponseEntity<CustomResponse<List<SimpleStore>>> selectMainStoreList(@RequestHeader(value = "Authorization") Optional<String> auth) {
         CustomResponse<List<SimpleStore>> res = new CustomResponse<>();
 
-        Optional<TokenInfo> tokenInfo = null;
+        TokenInfo tokenInfo = null;
         Integer userId = null;
+
+        // 토큰이 없으면 비회원으로 간주
         if (auth.isEmpty()) {
-            tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ALLOW), auth);
             userId = null;
         }
+        // 토큰이 있을 때 만료됐으면 비회원으로 간주, 정상적이면 로그인으로 간주
         if (auth.isPresent()) {
-            tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth);
-            userId = tokenInfo.get().getId();
+            tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER, TokenAuthType.ALLOW), auth.get());
+            userId = tokenInfo.getId();
         }
 
         Integer finalUserId = userId;

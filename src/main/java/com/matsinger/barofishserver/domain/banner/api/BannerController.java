@@ -15,10 +15,12 @@ import com.matsinger.barofishserver.domain.data.curation.application.CurationQue
 import com.matsinger.barofishserver.jwt.JwtService;
 import com.matsinger.barofishserver.jwt.TokenAuthType;
 import com.matsinger.barofishserver.jwt.TokenInfo;
+import com.matsinger.barofishserver.jwt.exception.JwtExceptionMessage;
 import com.matsinger.barofishserver.utils.Common;
 import com.matsinger.barofishserver.utils.CustomResponse;
 import com.matsinger.barofishserver.utils.RegexConstructor;
 import com.matsinger.barofishserver.utils.S3.S3Uploader;
+import io.jsonwebtoken.JwtException;
 import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Sort;
@@ -61,8 +63,11 @@ public class BannerController {
     public ResponseEntity<CustomResponse<List<BannerDto>>> sortCuration(@RequestHeader(value = "Authorization") Optional<String> auth,
                                                                         @RequestPart(value = "data") SortBannerReq data) {
         CustomResponse<List<BannerDto>> res = new CustomResponse<>();
-        Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
-        if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
+
+        if (auth.isEmpty()) {
+            throw new JwtException(JwtExceptionMessage.TOKEN_REQUIRED);
+        }
+        jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth.get());
 
         List<BannerDto> bannerDtos = new ArrayList<>();
         List<Banner> banners = new ArrayList<>();
@@ -86,8 +91,11 @@ public class BannerController {
                                                                                    @RequestParam(value = "orderby", defaultValue = "id") BannerOrderBy orderBy,
                                                                                    @RequestParam(value = "orderType", defaultValue = "DESC") Sort.Direction sort) {
         CustomResponse<List<BannerDto>> res = new CustomResponse<>();
-        Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
-        if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
+
+        if (auth.isEmpty()) {
+            throw new JwtException(JwtExceptionMessage.TOKEN_REQUIRED);
+        }
+        jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth.get());
 
         Specification<Banner> spec = (root, query, builder) -> {
             List<Predicate> predicates = new ArrayList<>();
@@ -137,39 +145,39 @@ public class BannerController {
                                                                   @RequestPart(value = "noticeId", required = false) Integer noticeId,
                                                                   @RequestPart(value = "categoryId", required = false) Integer categoryId) {
         CustomResponse<BannerDto> res = new CustomResponse<>();
-        Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
-        if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
-        try {
-            Banner banner = new Banner();
-            if (type == BannerType.CATEGORY) {
-                if (categoryId == null) return res.throwError("카테고리 아이디를 입력해주세요.", "INPUT_CHECK_REQUIRED");
-                categoryQueryService.findById(categoryId);
-                banner.setCategoryId(categoryId);
-            } else if (type == BannerType.CURATION) {
-                if (curationId == null) return res.throwError("큐레이션 아이디를 입력해주세요.", "INPUT_CHECK_REQUIRED");
-                curationQueryService.selectCuration(curationId);
-                banner.setCurationId(curationId);
-            } else if (type == BannerType.NOTICE) {
-                if (noticeId == null) return res.throwError("배너 아이디를 입력해주세요.", "INPUT_CHECK_REQUIRED");
-//                curationService.findById(categoryId);
-                banner.setNoticeId(noticeId);
-            }
-            if (link != null) {
-                if (!Pattern.matches(re.httpUrl, link)) return res.throwError("링크 형식을 확인해주세요.", "INPUT_CHECK_REQUIRED");
-                banner.setLink(link);
-            }
-            banner.setState(BannerState.ACTIVE);
-            banner.setType(type);
-            if (!type.equals(BannerType.MAIN) && !type.equals(BannerType.PC_WEB) && !type.equals(BannerType.MY_PAGE))
-                banner.setSortNo(bannerQueryService.getSortNo());
-            String imageUrl = s3.upload(image, new ArrayList<>(List.of("banner")));
-            banner.setImage(imageUrl);
-            BannerDto result = bannerCommandService.addBanner(banner).convert2Dto();
-            res.setData(Optional.ofNullable(result));
-            return ResponseEntity.ok(res);
-        } catch (Exception e) {
-            return res.defaultError(e);
+
+        if (auth.isEmpty()) {
+            throw new JwtException(JwtExceptionMessage.TOKEN_REQUIRED);
         }
+        jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth.get());
+
+        Banner banner = new Banner();
+        if (type == BannerType.CATEGORY) {
+            if (categoryId == null) return res.throwError("카테고리 아이디를 입력해주세요.", "INPUT_CHECK_REQUIRED");
+            categoryQueryService.findById(categoryId);
+            banner.setCategoryId(categoryId);
+        } else if (type == BannerType.CURATION) {
+            if (curationId == null) return res.throwError("큐레이션 아이디를 입력해주세요.", "INPUT_CHECK_REQUIRED");
+            curationQueryService.selectCuration(curationId);
+            banner.setCurationId(curationId);
+        } else if (type == BannerType.NOTICE) {
+            if (noticeId == null) return res.throwError("배너 아이디를 입력해주세요.", "INPUT_CHECK_REQUIRED");
+//                curationService.findById(categoryId);
+            banner.setNoticeId(noticeId);
+        }
+        if (link != null) {
+            if (!Pattern.matches(re.httpUrl, link)) return res.throwError("링크 형식을 확인해주세요.", "INPUT_CHECK_REQUIRED");
+            banner.setLink(link);
+        }
+        banner.setState(BannerState.ACTIVE);
+        banner.setType(type);
+        if (!type.equals(BannerType.MAIN) && !type.equals(BannerType.PC_WEB) && !type.equals(BannerType.MY_PAGE))
+            banner.setSortNo(bannerQueryService.getSortNo());
+        String imageUrl = s3.upload(image, new ArrayList<>(List.of("banner")));
+        banner.setImage(imageUrl);
+        BannerDto result = bannerCommandService.addBanner(banner).convert2Dto();
+        res.setData(Optional.ofNullable(result));
+        return ResponseEntity.ok(res);
     }
 
     @PostMapping("/update/{id}")
@@ -182,53 +190,53 @@ public class BannerController {
                                                                   @RequestPart(value = "noticeId", required = false) Integer noticeId,
                                                                   @RequestPart(value = "categoryId", required = false) Integer categoryId) {
         CustomResponse<BannerDto> res = new CustomResponse<>();
-        Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
-        if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
-        try {
-            Banner banner = bannerQueryService.selectBanner(id);
-            if (type != null) {
-                if (type.equals(BannerType.NONE)) {
-                    banner.setCurationId(null);
-                    banner.setNoticeId(null);
-                    banner.setCategoryId(null);
-                    banner.setLink(null);
-                } else if (type.equals(BannerType.CATEGORY)) {
-                    if (categoryId == null) return res.throwError("카테고리 아이디를 입력해주세요.", "INPUT_CHECK_REQUIRED");
-                    banner.setCategoryId(categoryId);
-                    banner.setNoticeId(null);
-                    banner.setCurationId(null);
-                    banner.setLink(null);
-                } else if (type.equals(BannerType.NOTICE)) {
-                    if (noticeId == null) return res.throwError("공지사항 아이디를 입력해주세요.", "INPUT_CHECK_REQUIRED");
-                    banner.setNoticeId(noticeId);
-                    banner.setCurationId(null);
-                    banner.setCategoryId(null);
-                    banner.setLink(null);
-                } else if (type.equals(BannerType.CURATION)) {
-                    if (curationId == null) return res.throwError("큐레이션 아이디를 입력해주세요.", "INPUT_CHECK_REQUIRED");
-                    banner.setCurationId(curationId);
-                    banner.setCategoryId(null);
-                    banner.setNoticeId(null);
-                    banner.setLink(null);
-                }
-                banner.setType(type);
-            }
-            if (link != null) {
-                if (!Pattern.matches(re.httpUrl, link)) return res.throwError("링크 형식을 확인해주세요.", "INPUT_CHECK_REQUIRED");
-            }
-            banner.setLink(link);
-            if (image != null) {
-                String
-                        imageUrl =
-                        s3.upload(image, new ArrayList<>(Arrays.asList("banner", String.valueOf(banner.getId()))));
-                banner.setImage(imageUrl);
-            }
-            BannerDto result = bannerCommandService.updateBanner(banner).convert2Dto();
-            res.setData(Optional.ofNullable(result));
-            return ResponseEntity.ok(res);
-        } catch (Exception e) {
-            return res.defaultError(e);
+
+        if (auth.isEmpty()) {
+            throw new JwtException(JwtExceptionMessage.TOKEN_REQUIRED);
         }
+        jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth.get());
+
+        Banner banner = bannerQueryService.selectBanner(id);
+        if (type != null) {
+            if (type.equals(BannerType.NONE)) {
+                banner.setCurationId(null);
+                banner.setNoticeId(null);
+                banner.setCategoryId(null);
+                banner.setLink(null);
+            } else if (type.equals(BannerType.CATEGORY)) {
+                if (categoryId == null) return res.throwError("카테고리 아이디를 입력해주세요.", "INPUT_CHECK_REQUIRED");
+                banner.setCategoryId(categoryId);
+                banner.setNoticeId(null);
+                banner.setCurationId(null);
+                banner.setLink(null);
+            } else if (type.equals(BannerType.NOTICE)) {
+                if (noticeId == null) return res.throwError("공지사항 아이디를 입력해주세요.", "INPUT_CHECK_REQUIRED");
+                banner.setNoticeId(noticeId);
+                banner.setCurationId(null);
+                banner.setCategoryId(null);
+                banner.setLink(null);
+            } else if (type.equals(BannerType.CURATION)) {
+                if (curationId == null) return res.throwError("큐레이션 아이디를 입력해주세요.", "INPUT_CHECK_REQUIRED");
+                banner.setCurationId(curationId);
+                banner.setCategoryId(null);
+                banner.setNoticeId(null);
+                banner.setLink(null);
+            }
+            banner.setType(type);
+        }
+        if (link != null) {
+            if (!Pattern.matches(re.httpUrl, link)) return res.throwError("링크 형식을 확인해주세요.", "INPUT_CHECK_REQUIRED");
+        }
+        banner.setLink(link);
+        if (image != null) {
+            String
+                    imageUrl =
+                    s3.upload(image, new ArrayList<>(Arrays.asList("banner", String.valueOf(banner.getId()))));
+            banner.setImage(imageUrl);
+        }
+        BannerDto result = bannerCommandService.updateBanner(banner).convert2Dto();
+        res.setData(Optional.ofNullable(result));
+        return ResponseEntity.ok(res);
     }
 
 
@@ -237,39 +245,39 @@ public class BannerController {
     public ResponseEntity<CustomResponse<Boolean>> updateBannerState(@RequestHeader(value = "Authorization") Optional<String> auth,
                                                                      @RequestPart(value = "data") UpdateBannerStateReq data) {
         CustomResponse<Boolean> res = new CustomResponse<>();
-        Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
-        if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
-        try {
-            if (data.getIds() == null || data.getIds().size() == 0) return res.throwError("아이디를 입력해주세요.", "INPUT_CHECK_REQUIRED");
-            if (data.getState() == null) return res.throwError("변경할 상태를 입력해주세요.", "INPUT_CHECK_REQUIRED");
-            List<Banner> banners = bannerQueryService.selectBannerListWithIds(data.getIds());
-            banners.forEach(v -> v.setState(data.getState()));
-            bannerCommandService.updateAllBanners(banners);
-            return ResponseEntity.ok(res);
-        } catch (Exception e) {
-            return res.defaultError(e);
+
+        if (auth.isEmpty()) {
+            throw new JwtException(JwtExceptionMessage.TOKEN_REQUIRED);
         }
+        jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth.get());
+
+        if (data.getIds() == null || data.getIds().size() == 0) return res.throwError("아이디를 입력해주세요.", "INPUT_CHECK_REQUIRED");
+        if (data.getState() == null) return res.throwError("변경할 상태를 입력해주세요.", "INPUT_CHECK_REQUIRED");
+        List<Banner> banners = bannerQueryService.selectBannerListWithIds(data.getIds());
+        banners.forEach(v -> v.setState(data.getState()));
+        bannerCommandService.updateAllBanners(banners);
+        return ResponseEntity.ok(res);
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<CustomResponse<Boolean>> deleteBanner(@RequestHeader(value = "Authorization") Optional<String> auth,
                                                                 @PathVariable("id") Integer id) {
         CustomResponse<Boolean> res = new CustomResponse<>();
-        Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
-        if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
-        try {
-            bannerQueryService.selectBanner(id);
-            Boolean result = bannerCommandService.deleteBanner(id);
-            List<Banner> banners = bannerQueryService.selectBannerListWithSortNo();
-            for (int i = 0; i < banners.size(); i++) {
-                banners.get(i).setSortNo(i + 1);
-            }
-            bannerCommandService.updateAllBanners(banners);
-            res.setData(Optional.ofNullable(result));
-            res.setIsSuccess(result);
-            return ResponseEntity.ok(res);
-        } catch (Exception e) {
-            return res.defaultError(e);
+
+        if (auth.isEmpty()) {
+            throw new JwtException(JwtExceptionMessage.TOKEN_REQUIRED);
         }
+        jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth.get());
+
+        bannerQueryService.selectBanner(id);
+        Boolean result = bannerCommandService.deleteBanner(id);
+        List<Banner> banners = bannerQueryService.selectBannerListWithSortNo();
+        for (int i = 0; i < banners.size(); i++) {
+            banners.get(i).setSortNo(i + 1);
+        }
+        bannerCommandService.updateAllBanners(banners);
+        res.setData(Optional.ofNullable(result));
+        res.setIsSuccess(result);
+        return ResponseEntity.ok(res);
     }
 }

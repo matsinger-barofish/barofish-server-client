@@ -28,11 +28,8 @@ public class ProductInfoNoticeController {
                                                           @RequestParam(value = "itemCode", required = true) String itemCode) {
 
         CustomResponse<Object> res = new CustomResponse<>();
-        Set<TokenAuthType> permission = Set.of(TokenAuthType.ADMIN, TokenAuthType.PARTNER);
-        Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(permission, auth);
-        if (tokenInfo == null) {
-            return res.throwError("인증이 필요합니다.", "FORBIDDEN");
-        }
+        if (auth.isEmpty()) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
+        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN, TokenAuthType.PARTNER), auth.get());
 
         if (itemCode == null) {
             return res.throwError("상품이 속한 품목의 코드를 입력해주세요.", "INVALID");
@@ -49,11 +46,9 @@ public class ProductInfoNoticeController {
     public ResponseEntity<CustomResponse<Object>> create(@RequestHeader(value = "Authorization") Optional<String> auth,
                                                          @RequestBody ProductInformation request) {
         CustomResponse<Object> res = new CustomResponse<>();
-        Set<TokenAuthType> permission = Set.of(TokenAuthType.ADMIN, TokenAuthType.PARTNER);
-        Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(permission, auth);
-        if (tokenInfo == null) {
-            return res.throwError("인증이 필요합니다.", "FORBIDDEN");
-        }
+
+        if (auth.isEmpty()) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
+        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN, TokenAuthType.PARTNER), auth.get());
 
         if (request.getItemCode() == null) {
             return res.throwError("상품정보제공고시 품목 코드를 입력해주세요.", "INVALID");
@@ -70,11 +65,9 @@ public class ProductInfoNoticeController {
     public ResponseEntity<CustomResponse<Object>> update(@RequestHeader(value = "Authorization") Optional<String> auth,
                                                          @RequestBody ProductInformation request) {
         CustomResponse<Object> res = new CustomResponse<>();
-        Set<TokenAuthType> permission = Set.of(TokenAuthType.ADMIN, TokenAuthType.PARTNER);
-        Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(permission, auth);
-        if (tokenInfo == null) {
-            return res.throwError("인증이 필요합니다.", "FORBIDDEN");
-        }
+
+        if (auth.isEmpty()) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
+        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN, TokenAuthType.PARTNER), auth.get());
 
         if (request.getItemCode() == null) {
             return res.throwError("상품정보제공고시 품목 코드를 입력해주세요.", "INVALID");
@@ -92,11 +85,10 @@ public class ProductInfoNoticeController {
     public ResponseEntity<CustomResponse<Object>> get(@RequestHeader(value = "Authorization") Optional<String> auth,
                                                       @PathVariable("productId") int productId) {
         CustomResponse<Object> res = new CustomResponse<>();
-        Set<TokenAuthType> permission = Set.of(TokenAuthType.ADMIN, TokenAuthType.PARTNER, TokenAuthType.USER);
-        Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(permission, auth);
-        if (tokenInfo == null) {
-            return res.throwError("인증이 필요합니다.", "FORBIDDEN");
-        }
+
+        if (auth.isEmpty()) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
+        jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ALLOW), auth.get());
+
         ProductInformation
                 productInfoNotification =
                 productInfoNotificationQueryService.getProductInfoNotification(productId);
@@ -109,11 +101,10 @@ public class ProductInfoNoticeController {
     public ResponseEntity<CustomResponse<Object>> delete(@RequestHeader(value = "Authorization") Optional<String> auth,
                                                          @PathVariable("productId") int productId) {
         CustomResponse<Object> res = new CustomResponse<>();
-        Set<TokenAuthType> permission = Set.of(TokenAuthType.ADMIN, TokenAuthType.PARTNER);
-        Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(permission, auth);
-        if (tokenInfo == null) {
-            return res.throwError("인증이 필요합니다.", "FORBIDDEN");
-        }
+
+        if (auth.isEmpty()) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
+        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN, TokenAuthType.PARTNER), auth.get());
+
         productInfoNotificationCommandService.deleteProductInfoNotification(productId);
 
         return ResponseEntity.ok(res);

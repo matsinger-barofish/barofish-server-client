@@ -8,9 +8,11 @@ import com.matsinger.barofishserver.domain.siteInfo.application.SiteInfoCommandS
 import com.matsinger.barofishserver.domain.siteInfo.dto.SiteInfoDto;
 import com.matsinger.barofishserver.domain.siteInfo.domain.SiteInformation;
 import com.matsinger.barofishserver.domain.siteInfo.dto.SiteInfoReq;
+import com.matsinger.barofishserver.jwt.exception.JwtExceptionMessage;
 import com.matsinger.barofishserver.utils.CustomResponse;
 import com.matsinger.barofishserver.utils.RegexConstructor;
 import com.matsinger.barofishserver.utils.S3.S3Uploader;
+import io.jsonwebtoken.JwtException;
 import lombok.*;
 import org.json.JSONArray;
 import org.springframework.http.ResponseEntity;
@@ -56,8 +58,11 @@ public class SiteInfoController {
                                                                       @RequestHeader(value = "Authorization") Optional<String> auth,
                                                                       @RequestPart(value = "data") SiteInfoReq data) {
         CustomResponse<SiteInfoDto> res = new CustomResponse<>();
-        Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
-        if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
+
+        if (auth.isEmpty()) {
+            throw new JwtException(JwtExceptionMessage.TOKEN_REQUIRED);
+        }
+        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth.get());
 
         SiteInformation siteInformation = siteInfoQueryService.selectSiteInfo(id);
         if (id.startsWith("HTML")) {
