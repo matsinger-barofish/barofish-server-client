@@ -46,10 +46,7 @@ public class FcmController {
                                                                  @RequestPart(value = "data") AdminSendFcmReq data) {
         CustomResponse<Boolean> res = new CustomResponse<>();
 
-        if (auth.isEmpty()) {
-            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
-        }
-        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth.get());
+                TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
 
         String title = utils.validateString(data.getTitle(), 100L, "제목");
         if (data.content == null) throw new IllegalArgumentException("내용을 입력해주세요.");

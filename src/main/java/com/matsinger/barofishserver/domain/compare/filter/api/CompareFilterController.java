@@ -34,10 +34,7 @@ public class CompareFilterController {
     public ResponseEntity<CustomResponse<List<CompareFilter>>> selectCompareFilterAllList(@RequestHeader(value = "Authorization") Optional<String> auth) {
         CustomResponse<List<CompareFilter>> res = new CustomResponse<>();
 
-        if (auth.isEmpty()) {
-            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
-        }
-        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth.get());
+        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
 
         List<CompareFilter> compareFilters = compareFilterQueryService.selectCompareFilterList();
         res.setData(Optional.ofNullable(compareFilters));
@@ -54,10 +51,7 @@ public class CompareFilterController {
                                                                              @RequestPart(value = "data") AddCompareFilterReq data) throws Exception {
         CustomResponse<CompareFilterDto> res = new CustomResponse<>();
 
-        if (auth.isEmpty()) {
-            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
-        }
-        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth.get());
+        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
 
         String name = utils.validateString(data.name, 20L, "이름");
         CompareFilter
@@ -73,10 +67,7 @@ public class CompareFilterController {
                                                                              @RequestPart(value = "data") AddCompareFilterReq data) throws Exception {
         CustomResponse<CompareFilterDto> res = new CustomResponse<>();
 
-        if (auth.isEmpty()) {
-            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
-        }
-        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth.get());
+        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
 
         CompareFilter compareFilter = compareFilterQueryService.selectCompareFilter(id);
         if (data.name != null) {
@@ -93,10 +84,7 @@ public class CompareFilterController {
                                                                     @PathVariable("id") Integer id) {
         CustomResponse<Boolean> res = new CustomResponse<>();
 
-        if (auth.isEmpty()) {
-            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
-        }
-        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth.get());
+        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
 
         compareFilterQueryService.selectCompareFilter(id);
         compareFilterCommandService.deleteCompareFilter(id);

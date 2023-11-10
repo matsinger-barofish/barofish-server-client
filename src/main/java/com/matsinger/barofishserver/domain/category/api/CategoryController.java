@@ -63,7 +63,7 @@ public class CategoryController {
         CustomResponse<Category> res = new CustomResponse<>();
 
         if (auth.isEmpty()) throw new JwtBusinessException(ErrorCode.NOT_ALLOWED);
-        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth.get());
+        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
 
         Category category = new Category();
         name = util.validateString(name, 20L, "카테고리명");
@@ -91,7 +91,7 @@ public class CategoryController {
         CustomResponse<Category> res = new CustomResponse<>();
 
         if (auth.isEmpty()) throw new JwtBusinessException(ErrorCode.NOT_ALLOWED);;
-        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth.get());
+        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
 
 
         Category category = categoryQueryService.findById(id);
@@ -115,7 +115,7 @@ public class CategoryController {
         CustomResponse<Category> res = new CustomResponse<>();
 
         if (auth.isEmpty()) throw new JwtBusinessException(ErrorCode.NOT_ALLOWED);;
-        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth.get());
+        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
 
         if (tokenInfo == null) throw new JwtBusinessException(ErrorCode.NOT_ALLOWED);;
 
@@ -176,7 +176,7 @@ public class CategoryController {
         CustomResponse<CompareFilterDto> res = new CustomResponse<>();
 
         if (auth.isEmpty()) throw new JwtBusinessException(ErrorCode.NOT_ALLOWED);;
-        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth.get());
+        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
 
         if (data.getCategoryId() == null) throw new IllegalArgumentException("카테고리 아이디를 입력해주세요.");
         if (data.getCompareFilterId() == null)
@@ -197,7 +197,7 @@ public class CategoryController {
         CustomResponse<CompareFilterDto> res = new CustomResponse<>();
 
         if (auth.isEmpty()) throw new JwtBusinessException(ErrorCode.NOT_ALLOWED);;
-        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth.get());
+        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
 
 
         if (data.getCategoryId() == null) throw new IllegalArgumentException("카테고리 아이디를 입력해주세요.");

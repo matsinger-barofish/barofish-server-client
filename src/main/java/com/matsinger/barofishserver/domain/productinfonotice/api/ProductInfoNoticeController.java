@@ -31,7 +31,7 @@ public class ProductInfoNoticeController {
 
         CustomResponse<Object> res = new CustomResponse<>();
         if (auth.isEmpty()) throw new JwtBusinessException(ErrorCode.NOT_ALLOWED);
-        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN, TokenAuthType.PARTNER, TokenAuthType.ALLOW), auth.get());
+        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN, TokenAuthType.PARTNER, TokenAuthType.ALLOW), auth);
 
         if (itemCode == null) {
             throw new IllegalArgumentException("상품이 속한 품목의 코드를 입력해주세요.");
@@ -50,7 +50,7 @@ public class ProductInfoNoticeController {
         CustomResponse<Object> res = new CustomResponse<>();
 
         if (auth.isEmpty()) throw new JwtBusinessException(ErrorCode.NOT_ALLOWED);;
-        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN, TokenAuthType.PARTNER), auth.get());
+        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN, TokenAuthType.PARTNER), auth);
 
         if (request.getItemCode() == null) {
             throw new IllegalArgumentException("상품정보제공고시 품목 코드를 입력해주세요.");
@@ -69,7 +69,7 @@ public class ProductInfoNoticeController {
         CustomResponse<Object> res = new CustomResponse<>();
 
         if (auth.isEmpty()) throw new JwtBusinessException(ErrorCode.NOT_ALLOWED);;
-        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN, TokenAuthType.PARTNER), auth.get());
+        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN, TokenAuthType.PARTNER), auth);
 
         if (request.getItemCode() == null) {
             throw new IllegalArgumentException("상품정보제공고시 품목 코드를 입력해주세요.");
@@ -89,7 +89,7 @@ public class ProductInfoNoticeController {
         CustomResponse<Object> res = new CustomResponse<>();
 
         if (auth.isEmpty()) throw new JwtBusinessException(ErrorCode.NOT_ALLOWED);;
-        jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ALLOW), auth.get());
+        jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ALLOW), auth);
 
         ProductInformation
                 productInfoNotification =
@@ -105,7 +105,7 @@ public class ProductInfoNoticeController {
         CustomResponse<Object> res = new CustomResponse<>();
 
         if (auth.isEmpty()) throw new JwtBusinessException(ErrorCode.NOT_ALLOWED);;
-        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN, TokenAuthType.PARTNER), auth.get());
+        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN, TokenAuthType.PARTNER), auth);
 
         productInfoNotificationCommandService.deleteProductInfoNotification(productId);
 

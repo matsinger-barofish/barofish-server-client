@@ -83,10 +83,7 @@ public class TipController {
                                                                    @RequestParam(value = "createdAtE", required = false) Timestamp createdAtE) {
         CustomResponse<Page<Tip>> res = new CustomResponse<>();
 
-        if (auth.isEmpty()) {
-            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
-        }
-        jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth.get());
+                jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
 
         Specification<Tip> spec = (root, query, builder) -> {
             List<Predicate> predicates = new ArrayList<>();
@@ -120,10 +117,7 @@ public class TipController {
                                                       @RequestPart(value = "imageDetail") MultipartFile imageDetail) throws Exception {
         CustomResponse<Tip> res = new CustomResponse<>();
 
-        if (auth.isEmpty()) {
-            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
-        }
-        jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth.get());
+                jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
 
         String title = utils.validateString(data.getTitle(), 100L, "제목");
         String description = utils.validateString(data.getDescription(), 200L, "설명");
@@ -148,10 +142,7 @@ public class TipController {
                                                          @RequestPart(value = "imageDetail", required = false) MultipartFile imageDetail) throws Exception {
         CustomResponse<Tip> res = new CustomResponse<>();
 
-        if (auth.isEmpty()) {
-            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
-        }
-        jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth.get());
+                jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
 
         Tip tip = tipQueryService.selectTip(id);
         if (data.getTitle() != null) {
@@ -188,10 +179,7 @@ public class TipController {
                                                                  @RequestPart(value = "thumbnailImage", required = false) MultipartFile thumbnailImage) throws Exception {
         CustomResponse<TipInfo> res = new CustomResponse<>();
 
-        if (auth.isEmpty()) {
-            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
-        }
-        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth.get());
+                TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
 
         SiteInformation info = siteInfoQueryService.selectSiteInfo("INTERNAL_TIP_INFO");
         String jsonStr = info.getContent();
@@ -228,10 +216,7 @@ public class TipController {
                                                                   @RequestPart(value = "data") UpdateTipStateReq data) {
         CustomResponse<Boolean> res = new CustomResponse<>();
 
-        if (auth.isEmpty()) {
-            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
-        }
-        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth.get());
+                TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
 
         if (data.getTipIds() == null) throw new IllegalArgumentException("아이디를 입력해주세요.");
         if (data.getState() == null) throw new IllegalArgumentException("변경할 상태를 입력해주세요.");
@@ -247,10 +232,7 @@ public class TipController {
                                                              @PathVariable("id") Integer id) {
         CustomResponse<Boolean> res = new CustomResponse<>();
 
-        if (auth.isEmpty()) {
-            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
-        }
-        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth.get());
+                TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
 
         tipCommandService.delete(id);
         res.setData(Optional.of(true));

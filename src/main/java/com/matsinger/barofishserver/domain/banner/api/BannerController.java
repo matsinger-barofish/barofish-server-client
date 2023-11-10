@@ -63,10 +63,7 @@ public class BannerController {
                                                                         @RequestPart(value = "data") SortBannerReq data) {
         CustomResponse<List<BannerDto>> res = new CustomResponse<>();
 
-        if (auth.isEmpty()) {
-            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
-        }
-        jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth.get());
+                jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
 
         List<BannerDto> bannerDtos = new ArrayList<>();
         List<Banner> banners = new ArrayList<>();
@@ -91,10 +88,7 @@ public class BannerController {
                                                                                    @RequestParam(value = "orderType", defaultValue = "DESC") Sort.Direction sort) {
         CustomResponse<List<BannerDto>> res = new CustomResponse<>();
 
-        if (auth.isEmpty()) {
-            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
-        }
-        jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth.get());
+                jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
 
         Specification<Banner> spec = (root, query, builder) -> {
             List<Predicate> predicates = new ArrayList<>();
@@ -145,10 +139,7 @@ public class BannerController {
                                                                   @RequestPart(value = "categoryId", required = false) Integer categoryId) {
         CustomResponse<BannerDto> res = new CustomResponse<>();
 
-        if (auth.isEmpty()) {
-            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
-        }
-        jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth.get());
+                jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
 
         Banner banner = new Banner();
         if (type == BannerType.CATEGORY) {
@@ -190,10 +181,7 @@ public class BannerController {
                                                                   @RequestPart(value = "categoryId", required = false) Integer categoryId) {
         CustomResponse<BannerDto> res = new CustomResponse<>();
 
-        if (auth.isEmpty()) {
-            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
-        }
-        jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth.get());
+                jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
 
         Banner banner = bannerQueryService.selectBanner(id);
         if (type != null) {
@@ -245,10 +233,7 @@ public class BannerController {
                                                                      @RequestPart(value = "data") UpdateBannerStateReq data) {
         CustomResponse<Boolean> res = new CustomResponse<>();
 
-        if (auth.isEmpty()) {
-            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
-        }
-        jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth.get());
+                jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
 
         if (data.getIds() == null || data.getIds().size() == 0) throw new IllegalArgumentException("아이디를 입력해주세요.");
         if (data.getState() == null) throw new IllegalArgumentException("변경할 상태를 입력해주세요.");
@@ -263,10 +248,7 @@ public class BannerController {
                                                                 @PathVariable("id") Integer id) {
         CustomResponse<Boolean> res = new CustomResponse<>();
 
-        if (auth.isEmpty()) {
-            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
-        }
-        jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth.get());
+                jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
 
         bannerQueryService.selectBanner(id);
         Boolean result = bannerCommandService.deleteBanner(id);

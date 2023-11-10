@@ -34,7 +34,7 @@ public class GlobalControllerAdvice implements RequestBodyAdvice {
     @ExceptionHandler(value = {RuntimeException.class})
     public ResponseEntity<CustomResponse<Object>> catchException(
             HttpServletRequest request,
-            Exception e) throws IOException {
+            Exception e) {
 
         printExceptionInfo(request, e);
 

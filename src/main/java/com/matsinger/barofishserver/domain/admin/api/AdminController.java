@@ -61,10 +61,7 @@ public class AdminController {
                                                                        @RequestParam(value = "accessSetting", required = false) Boolean accessSetting) {
         CustomResponse<Page<Admin>> res = new CustomResponse<>();
 
-        if (auth.isEmpty()) {
-            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
-        }
-        jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth.get());
+        jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
 
         PageRequest pageRequest = PageRequest.of(page, take, Sort.by(orderType, orderBy.label));
         Specification<Admin> spec = (root, query, builder) -> {
@@ -102,10 +99,7 @@ public class AdminController {
                                                              @PathVariable("id") Integer id) {
         CustomResponse<Admin> res = new CustomResponse<>();
 
-        if (auth.isEmpty()) {
-            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
-        }
-        jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth.get());
+        jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
 
         Admin admin = adminQueryService.selectAdmin(id);
         admin.setPassword(null);
@@ -117,10 +111,7 @@ public class AdminController {
     public ResponseEntity<CustomResponse<Admin>> selectAdminMyInfo(@RequestHeader(value = "Authorization") Optional<String> auth) {
         CustomResponse<Admin> res = new CustomResponse<>();
 
-        if (auth.isEmpty()) {
-            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
-        }
-        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth.get());
+        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
 
         Integer adminId = tokenInfo.getId();
         Admin admin = adminQueryService.selectAdmin(adminId);
@@ -136,10 +127,7 @@ public class AdminController {
                                                                   @RequestPart(value = "data") AddAdminReq data) throws Exception {
         CustomResponse<Admin> res = new CustomResponse<>();
 
-        if (auth.isEmpty()) {
-            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
-        }
-        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth.get());
+        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
 
         Admin master = adminQueryService.selectAdmin(tokenInfo.getId());
         if (!master.getAuthority().equals(AdminAuthority.MASTER))
@@ -181,10 +169,7 @@ public class AdminController {
                                                                      @RequestPart(value = "data") UpdateAdminReq data) throws Exception {
         CustomResponse<Admin> res = new CustomResponse<>();
 
-        if (auth.isEmpty()) {
-            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
-        }
-        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth.get());
+        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
 
         Admin master = adminQueryService.selectAdmin(tokenInfo.getId());
         if (!master.getAuthority().equals(AdminAuthority.MASTER))

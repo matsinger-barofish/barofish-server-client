@@ -81,10 +81,7 @@ public class GradeController {
                                                              @RequestPart(value = "data") AddGradeReq data) {
         CustomResponse<Grade> res = new CustomResponse<>();
 
-        if (auth.isEmpty()) {
-            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
-        }
-        jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth.get());
+                jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
 
         Grade grade = gradeQueryService.selectGrade(id);
         if (data.name != null) {

@@ -72,10 +72,7 @@ public class CurationController {
                                                                                        @RequestParam(value = "orderType", defaultValue = "DESC") Sort.Direction sort) {
         CustomResponse<Page<CurationDto>> res = new CustomResponse<>();
 
-        if (auth.isEmpty()) {
-            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
-        }
-        jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth.get());
+                jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
 
         PageRequest pageRequest = PageRequest.of(page, take, Sort.by(sort, orderBy.label));
         Page<Curation> curations = curationQueryService.selectCurationListByAdmin(pageRequest);
@@ -126,10 +123,7 @@ public class CurationController {
                                                                    @RequestPart(value = "state", required = false) CurationState state) throws Exception {
         CustomResponse<Curation> res = new CustomResponse<>();
 
-        if (auth.isEmpty()) {
-            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
-        }
-        jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth.get());
+                jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
 
         Curation curation = new Curation();
         if (shortName == null && title == null)
@@ -173,10 +167,7 @@ public class CurationController {
                                                                    @RequestPart(value = "state", required = false)CurationState state) throws Exception {
         CustomResponse<Curation> res = new CustomResponse<>();
 
-        if (auth.isEmpty()) {
-            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
-        }
-        jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth.get());
+                jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
 
 
         Curation curation = curationQueryService.selectCuration(id);
@@ -214,10 +205,7 @@ public class CurationController {
                                                                         @RequestPart(value = "data") List<Integer> productIds) {
         CustomResponse<Boolean> res = new CustomResponse<>();
 
-        if (auth.isEmpty()) {
-            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
-        }
-        jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth.get());
+                jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
 
         Curation curation = curationQueryService.selectCuration(id);
         if (curation == null) throw new Error("큐레이션 정보를 찾을 수 없습니다.");
@@ -236,10 +224,7 @@ public class CurationController {
                                                                    @PathVariable("id") Integer id) {
         CustomResponse<Curation> res = new CustomResponse<>();
 
-        if (auth.isEmpty()) {
-            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
-        }
-        jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth.get());
+                jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
 
         if (id == 0) throw new IllegalArgumentException("삭제 불가능한 큐레이션입니다.");
         Curation curation = curationQueryService.selectCuration(id);
@@ -259,10 +244,7 @@ public class CurationController {
                                                                      @RequestPart(value = "data") CurationDeleteProductReq data) {
         CustomResponse<Boolean> res = new CustomResponse<>();
 
-        if (auth.isEmpty()) {
-            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
-        }
-        jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth.get());
+                jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
 
         if (data.getCurationId() == null) throw new IllegalArgumentException("큐레이션 아이디를 입력해주세요.");
         Curation curation = curationQueryService.selectCuration(data.getCurationId());
@@ -277,10 +259,7 @@ public class CurationController {
                                                                           @RequestPart(value = "data") SortCurationReq data) {
         CustomResponse<List<CurationDto>> res = new CustomResponse<>();
 
-        if (auth.isEmpty()) {
-            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
-        }
-        jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth.get());
+                jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
 
         List<CurationDto> curationDtos = new ArrayList<>();
         List<Curation> curations = new ArrayList<>();

@@ -57,10 +57,7 @@ public class NoticeController {
                                                                                 @RequestParam(value = "createdAtE", required = false) Timestamp createdAtE) {
         CustomResponse<Page<Notice>> res = new CustomResponse<>();
 
-        if (auth.isEmpty()) {
-            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
-        }
-        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth.get());
+                TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
 
         Specification<Notice> spec = (root, query, builder) -> {
             List<Predicate> predicates = new ArrayList<>();
@@ -94,10 +91,7 @@ public class NoticeController {
                                                             @RequestPart(value = "data") NoticeAddReq data) throws Exception {
         CustomResponse<Notice> res = new CustomResponse<>();
 
-        if (auth.isEmpty()) {
-            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
-        }
-        jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth.get());
+                jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
 
         if (data.getType() == null) throw new IllegalArgumentException("타입을 입력해주세요.");
         if (data.getContent() == null) throw new IllegalArgumentException("내용을 입력해주세요.");
@@ -119,10 +113,7 @@ public class NoticeController {
                                                                @RequestPart(value = "data") NoticeAddReq data) throws Exception {
         CustomResponse<Notice> res = new CustomResponse<>();
 
-        if (auth.isEmpty()) {
-            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
-        }
-        jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth.get());
+                jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth);
 
         Notice notice = noticeQueryService.selectNotice(noticeId);
         if (data.getTitle() != null) {
@@ -147,10 +138,7 @@ public class NoticeController {
                                                                 @PathVariable("id") Integer noticeId) {
         CustomResponse<Boolean> res = new CustomResponse<>();
 
-        if (auth.isEmpty()) {
-            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
-        }
-        jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth.get());
+                jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
 
         Notice notice = noticeQueryService.selectNotice(noticeId);
         Boolean result = noticeCommandService.deleteNotice(noticeId);

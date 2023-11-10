@@ -66,10 +66,7 @@ public class SettlementController {
     ResponseEntity<CustomResponse<SettlementAmountRes>> selectSettlementAmount(@RequestHeader(value = "Authorization") Optional<String> auth) {
         CustomResponse<SettlementAmountRes> res = new CustomResponse<>();
 
-        if (auth.isEmpty()) {
-            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
-        }
-        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN, TokenAuthType.PARTNER), auth.get());
+                TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN, TokenAuthType.PARTNER), auth);
 
         Integer storeId = tokenInfo.getType().equals(TokenAuthType.PARTNER) ? tokenInfo.getId() : null;
         Integer settledAmount = settlementQueryService.getSettlementAmount(storeId, true);
@@ -91,10 +88,7 @@ public class SettlementController {
                                                                                                @RequestParam(value = "settledAtE", required = false) Timestamp settledAtE) {
         CustomResponse<Page<OrderProductInfoDto>> res = new CustomResponse<>();
 
-        if (auth.isEmpty()) {
-            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
-        }
-        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN, TokenAuthType.PARTNER), auth.get());
+                TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN, TokenAuthType.PARTNER), auth);
 
         Specification<OrderProductInfo> spec = (root, query, builder) -> {
             List<Predicate> predicates = new ArrayList<>();
@@ -129,10 +123,7 @@ public class SettlementController {
                                                                                                       HttpServletResponse httpServletResponse) throws UnsupportedEncodingException {
         CustomResponse<List<SettlementOrderDto>> res = new CustomResponse<>();
 
-        if (auth.isEmpty()) {
-            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
-        }
-        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN, TokenAuthType.PARTNER), auth.get());
+                TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN, TokenAuthType.PARTNER), auth);
 
         String nowDate = new SimpleDateFormat("yyyyMMdd").format(Calendar.getInstance().getTime());
 //        String fileName = nowDate + "_바로피쉬_정산.xlsx";
@@ -180,10 +171,7 @@ public class SettlementController {
                                                                                     @RequestParam(value = "settledAtE", required = false) Timestamp settledAtE) {
         CustomResponse<Page<SettlementDto>> res = new CustomResponse<>();
 
-        if (auth.isEmpty()) {
-            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
-        }
-        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth.get());
+                TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
 
         Specification<Settlement> spec = (root, query, builder) -> {
             List<Predicate> predicates = new ArrayList<>();
@@ -209,10 +197,7 @@ public class SettlementController {
                                                                         @RequestPart(value = "data") ProcessSettleReq data) {
         CustomResponse<Boolean> res = new CustomResponse<>();
 
-        if (auth.isEmpty()) {
-            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
-        }
-        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth.get());
+                TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
 
         Integer adminId = tokenInfo.getId();
         if (data.getStoreId() == null) throw new IllegalArgumentException("파트너를 선택해주세요.");
@@ -279,10 +264,7 @@ public class SettlementController {
                                                                        @RequestPart(value = "data") cancelSettleReq data) {
         CustomResponse<Boolean> res = new CustomResponse<>();
 
-        if (auth.isEmpty()) {
-            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
-        }
-        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth.get());
+                TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
 
         Integer adminId = tokenInfo.getId();
         if (data.getStoreId() == null) throw new IllegalArgumentException("파트너를 선택해주세요.");

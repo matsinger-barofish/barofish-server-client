@@ -79,7 +79,7 @@ public class ProductControllerV2 {
         CustomResponse<Object> res = new CustomResponse<>();
 
         if (auth.isEmpty()) throw new JwtBusinessException(ErrorCode.NOT_ALLOWED);;
-        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ALLOW, TokenAuthType.USER), auth.get());
+        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ALLOW, TokenAuthType.USER), auth);
 
         Integer userId = tokenInfo.getId();
 

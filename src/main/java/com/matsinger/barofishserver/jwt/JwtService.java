@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Service;
 
+import java.util.Optional;
 import java.util.Set;
 
 @RequiredArgsConstructor
@@ -21,13 +22,22 @@ public class JwtService {
     private final AdminQueryService adminService;
     private final StoreService storeService;
 
-    public TokenInfo validateAndGetTokenInfo(Set<TokenAuthType> authTypesToAllow, String authorizationString) {
+    public TokenInfo validateAndGetTokenInfo(Set<TokenAuthType> authTypesToAllow, Optional<String> authorizationString) {
 
-        if (!authTypesToAllow.contains(TokenAuthType.ALLOW) && !authorizationString.startsWith("Bearer")) {
+        if (authTypesToAllow.contains(TokenAuthType.ALLOW) && authorizationString.isEmpty()) {
+            return new TokenInfo(null, TokenAuthType.ALLOW);
+        }
+        if (authorizationString.isEmpty()) {
+            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
+        }
+
+        String rawToken = authorizationString.get();
+
+        if (!rawToken.startsWith("Bearer")) {
             throw new JwtBusinessException(ErrorCode.TOKEN_INVALID);
         }
 
-        String token = authorizationString.substring(7);
+        String token = rawToken.substring(7);
 
         if (!authTypesToAllow.contains(TokenAuthType.ALLOW) && isExpired(token)) {
             throw new JwtBusinessException(ErrorCode.TOKEN_EXPIRED);

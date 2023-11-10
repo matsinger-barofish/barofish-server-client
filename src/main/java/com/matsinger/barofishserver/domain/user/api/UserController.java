@@ -190,10 +190,7 @@ public class UserController {
                                                                   @RequestPart(value = "profileImage", required = false) MultipartFile profileImage) {
         CustomResponse<UserInfoDto> res = new CustomResponse<>();
 
-        if (auth.isEmpty()) {
-            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
-        }
-        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth.get());
+                TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth);
         Integer userId = tokenInfo.getId();
 
         UserInfo userInfo = userCommandService.selectUserInfo(userId);
@@ -268,10 +265,7 @@ public class UserController {
     public ResponseEntity<CustomResponse<UserInfoDto>> selectUserSelfInfo(@RequestHeader(value = "Authorization") Optional<String> auth) {
         CustomResponse<UserInfoDto> res = new CustomResponse<>();
 
-        if (auth.isEmpty()) {
-            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
-        }
-        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth.get());
+                TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth);
         Integer userId = tokenInfo.getId();
         UserInfoDto userInfoDto = userInfoQueryService.showMyPage(userId);
 
@@ -284,10 +278,7 @@ public class UserController {
                                                                       @PathVariable("id") Integer id) {
         CustomResponse<UserInfoDto> res = new CustomResponse<>();
 
-        if (auth.isEmpty()) {
-            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
-        }
-        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth.get());
+                TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
 
         UserInfoDto userInfoDto = userQueryService.manageByUserId(id);
 
@@ -311,10 +302,7 @@ public class UserController {
                                                                             @RequestParam(value = "joinAtE", required = false) Timestamp joinAtE) {
         CustomResponse<Page<UserInfoDto>> res = new CustomResponse<>();
 
-        if (auth.isEmpty()) {
-            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
-        }
-        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth.get());
+                TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
 
         Specification<UserInfo> spec = (root, query, builder) -> {
             List<Predicate> predicates = new ArrayList<>();
@@ -341,10 +329,7 @@ public class UserController {
                                                                    @RequestPart(value = "data") UpdateUserStateReq data) {
         CustomResponse<Boolean> res = new CustomResponse<>();
 
-        if (auth.isEmpty()) {
-            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
-        }
-        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth.get());
+                TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
 
         if (data.getState() == null) throw new IllegalArgumentException("상태를 입력해주세요.");
         userCommandService.updateUserState(data.getUserIds(), data.getState());
@@ -357,10 +342,7 @@ public class UserController {
         CustomResponse<String> res = new CustomResponse<>();
 
         Integer userId = null;
-        if (auth.isEmpty()) {
-            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
-        }
-        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ALLOW), auth.get());
+                TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ALLOW), auth);
 
         res.setData(Optional.of(("" + tokenInfo.getType() + tokenInfo.getId())));
         return ResponseEntity.ok(res);
@@ -370,10 +352,7 @@ public class UserController {
     public ResponseEntity<CustomResponse<Boolean>> withdrawUser(@RequestHeader(value = "Authorization") Optional<String> auth) {
         CustomResponse<Boolean> res = new CustomResponse<>();
 
-        if (auth.isEmpty()) {
-            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
-        }
-        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth.get());
+                TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth);
 
         Integer userId = tokenInfo.getId();
         userCommandService.withdrawUser(userId);
@@ -386,10 +365,7 @@ public class UserController {
                                                              @RequestBody UpdateFcmReq data) {
         CustomResponse<Boolean> res = new CustomResponse<>();
 
-        if (auth.isEmpty()) {
-            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
-        }
-        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth.get());
+                TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth);
 
         Integer userId = tokenInfo.getId();
         if (data.getFcmToken() == null) throw new IllegalArgumentException("토큰을 입력해주세요.");
@@ -452,10 +428,7 @@ public class UserController {
                                                                                           @RequestParam(value = "userId", required = false) Integer userId) {
         CustomResponse<List<PaymentMethodDto>> res = new CustomResponse<>();
 
-        if (auth.isEmpty()) {
-            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
-        }
-        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN, TokenAuthType.USER), auth.get());
+                TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN, TokenAuthType.USER), auth);
 
         if (tokenInfo.getType().equals(TokenAuthType.USER)) {
             userId = tokenInfo.getId();
@@ -472,10 +445,7 @@ public class UserController {
                                                                                 @PathVariable("id") Integer id) {
         CustomResponse<PaymentMethodDto> res = new CustomResponse<>();
 
-        if (auth.isEmpty()) {
-            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
-        }
-        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN, TokenAuthType.USER), auth.get());
+                TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN, TokenAuthType.USER), auth);
 
         PaymentMethod paymentMethod = paymentMethodQueryService.selectPaymentMethod(id);
         if (tokenInfo.getType().equals(TokenAuthType.USER) &&
@@ -490,10 +460,7 @@ public class UserController {
                                                                              @RequestPart(value = "data") AddPaymentMethodReq data) {
         CustomResponse<PaymentMethodDto> res = new CustomResponse<>();
 
-        if (auth.isEmpty()) {
-            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
-        }
-        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth.get());
+                TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth);
         Integer userId = tokenInfo.getId();
 
         PaymentMethod paymentMethod = paymentMethodCommandService.addPaymentMethod(data, tokenInfo.getId());
@@ -507,10 +474,7 @@ public class UserController {
                                                                        @PathVariable("id") Integer id) {
         CustomResponse<Boolean> res = new CustomResponse<>();
 
-        if (auth.isEmpty()) {
-            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
-        }
-        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth.get());
+                TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth);
 
         PaymentMethod paymentMethod = paymentMethodQueryService.selectPaymentMethod(id);
         if (paymentMethod.getUserId() != tokenInfo.getId())

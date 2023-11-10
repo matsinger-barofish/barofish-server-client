@@ -61,10 +61,7 @@ public class StoreController {
                                                                           @RequestParam(value = "orderType", defaultValue = "DESC") Sort.Direction sort) {
         CustomResponse<List<StoreDto>> res = new CustomResponse<>();
 
-        if (auth.isEmpty()) {
-            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
-        }
-        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth.get());
+                TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
 
         Boolean isAdmin = tokenInfo.getType().equals(TokenAuthType.ADMIN);
 
@@ -96,10 +93,7 @@ public class StoreController {
                                                                                  @RequestParam(value = "joinAtE", required = false) Timestamp joinAtE) {
         CustomResponse<Page<StoreDto>> res = new CustomResponse<>();
 
-        if (auth.isEmpty()) {
-            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
-        }
-        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth.get());
+                TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
 
         Specification<Store> spec = (root, query, builder) -> {
             List<Predicate> predicates = new ArrayList<>();
@@ -145,7 +139,7 @@ public class StoreController {
             userId = null;
         }
         if (auth.isPresent()) {
-            tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ALLOW, TokenAuthType.USER), auth.get());
+            tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ALLOW, TokenAuthType.USER), auth);
             userId = tokenInfo.getId();
         }
 
@@ -195,10 +189,7 @@ public class StoreController {
                                                                        @PathVariable(value = "id", required = false) Integer id) {
         CustomResponse<StoreDto> res = new CustomResponse<>();
 
-        if (auth.isEmpty()) {
-            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
-        }
-        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN, TokenAuthType.PARTNER), auth.get());
+                TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN, TokenAuthType.PARTNER), auth);
 
 
         if (tokenInfo.getType().equals(TokenAuthType.PARTNER)) {
@@ -216,10 +207,7 @@ public class StoreController {
     public ResponseEntity<CustomResponse<Boolean>> checkStoreIsActive(@RequestHeader(value = "Authorization") Optional<String> auth) {
         CustomResponse<Boolean> res = new CustomResponse<>();
 
-        if (auth.isEmpty()) {
-            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
-        }
-        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.PARTNER), auth.get());
+                TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.PARTNER), auth);
 
         Integer storeId = tokenInfo.getId();
         Store store = storeService.selectStore(storeId);
@@ -238,7 +226,7 @@ public class StoreController {
             userId = null;
         }
         if (auth.isPresent()) {
-            tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ALLOW, TokenAuthType.USER), auth.get());
+            tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ALLOW, TokenAuthType.USER), auth);
             userId = tokenInfo.getId();
         }
 
@@ -263,10 +251,7 @@ public class StoreController {
                                                                   @RequestPart(value = "data") UpdateStorePasswordReq data) {
         CustomResponse<Boolean> res = new CustomResponse<>();
 
-        if (auth.isEmpty()) {
-            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
-        }
-        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN, TokenAuthType.PARTNER), auth.get());
+                TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN, TokenAuthType.PARTNER), auth);
 
         Integer storeId;
         if (tokenInfo.getType().equals(TokenAuthType.PARTNER)) {
@@ -330,10 +315,7 @@ public class StoreController {
                                                              @RequestPart(value = "bankAccountCopy") MultipartFile bankAccountCopy) {
         CustomResponse<StoreDto> res = new CustomResponse<>();
 
-        if (auth.isEmpty()) {
-            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
-        }
-        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth.get());
+                TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
 
         Integer adminId = tokenInfo.getId();
         loginId = utils.validateString(loginId, 50L, "로그인 아이디");
@@ -428,10 +410,7 @@ public class StoreController {
                                                                     @RequestPart(value = "data") StoreStateUpdateReq data) {
         CustomResponse<Boolean> res = new CustomResponse<>();
 
-        if (auth.isEmpty()) {
-            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
-        }
-        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth.get());
+                TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
 
         Integer adminId = tokenInfo.getId();
         List<Store> stores = new ArrayList<>();
@@ -479,10 +458,7 @@ public class StoreController {
                                                                     @RequestPart(value = "bankAccountCopy", required = false) MultipartFile bankAccountCopy) {
         CustomResponse<StoreDto> res = new CustomResponse<>();
 
-        if (auth.isEmpty()) {
-            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
-        }
-        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN, TokenAuthType.PARTNER), auth.get());
+                TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN, TokenAuthType.PARTNER), auth);
 
         if (tokenInfo.getType().equals(TokenAuthType.PARTNER)) {
             id = tokenInfo.getId();
@@ -640,10 +616,7 @@ public class StoreController {
                                                                    @RequestParam(value = "type") LikePostType type) {
         CustomResponse<Boolean> res = new CustomResponse<>();
 
-        if (auth.isEmpty()) {
-            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
-        }
-        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth.get());
+                TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
 
 
         Boolean check = storeService.checkLikeStore(storeId, tokenInfo.getId());
@@ -661,10 +634,7 @@ public class StoreController {
     public ResponseEntity<CustomResponse<List<SimpleStore>>> selectScrapedStore(@RequestHeader("Authorization") Optional<String> auth) {
         CustomResponse<List<SimpleStore>> res = new CustomResponse<>();
 
-        if (auth.isEmpty()) {
-            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
-        }
-        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth.get());
+                TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
 
 
         List<StoreInfo> storeInfos = storeService.selectScrapedStore(tokenInfo.getId());
@@ -680,10 +650,7 @@ public class StoreController {
     public ResponseEntity<CustomResponse<StoreDto>> selectMainStore(@RequestHeader(value = "Authorization") Optional<String> auth) {
         CustomResponse<StoreDto> res = new CustomResponse<>();
 
-        if (auth.isEmpty()) {
-            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
-        }
-        jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth.get());
+                jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
 
         SiteInformation siteInformation = siteInfoQueryService.selectSiteInfo("INTERNAL_MAIN_STORE");
         Integer storeId = Integer.valueOf(siteInformation.getContent());
@@ -704,10 +671,7 @@ public class StoreController {
                                                                           @RequestPart(value = "data") SetMainPartnerReq data) {
         CustomResponse<StoreDto> res = new CustomResponse<>();
 
-        if (auth.isEmpty()) {
-            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
-        }
-        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth.get());
+                TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
 
 
         SiteInformation siteInformation = siteInfoQueryService.selectSiteInfo("INTERNAL_MAIN_STORE");
@@ -731,10 +695,7 @@ public class StoreController {
                                                                          @RequestPart(value = "data") UpdateStoreIsReliableReq data) {
         CustomResponse<Boolean> res = new CustomResponse<>();
 
-        if (auth.isEmpty()) {
-            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
-        }
-        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth.get());
+                TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
 
         Integer adminId = tokenInfo.getId();
         if (data.getStoreIds() == null || data.getStoreIds().size() == 0)

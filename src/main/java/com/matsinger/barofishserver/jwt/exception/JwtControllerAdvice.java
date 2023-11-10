@@ -17,6 +17,7 @@ import org.springframework.http.HttpInputMessage;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.servlet.mvc.method.annotation.RequestBodyAdvice;
 
@@ -35,16 +36,16 @@ public class JwtControllerAdvice implements RequestBodyAdvice {
 
     private ThreadLocal<Boolean> afterBodyReadExecuted = ThreadLocal.withInitial(() -> false);
 
-    @ExceptionHandler(value = {JwtException.class})
+    @ExceptionHandler(value = {JwtBusinessException.class})
     public ResponseEntity<CustomResponse<Object>> getJwtExpiredMessage(
             HttpServletRequest request,
-            ErrorCode code,
-            Exception e) {
+            JwtBusinessException e) {
         printExceptionInfo(request, e);
 
+        ErrorCode code = e.getCode();
         CustomResponse customResponse = new CustomResponse();
         customResponse.setIsSuccess(false);
-        customResponse.setCode(ErrorCode.TOKEN_EXPIRED);
+        customResponse.setCode(code);
         return ResponseEntity.ok(customResponse);
     }
 
