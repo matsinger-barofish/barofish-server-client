@@ -1,11 +1,13 @@
 package com.matsinger.barofishserver.domain.productinfonotice.api;
 
+import com.matsinger.barofishserver.global.error.ErrorCode;
 import com.matsinger.barofishserver.jwt.JwtService;
 import com.matsinger.barofishserver.jwt.TokenAuthType;
 import com.matsinger.barofishserver.jwt.TokenInfo;
 import com.matsinger.barofishserver.domain.productinfonotice.application.ProductInfoNotificationCommandService;
 import com.matsinger.barofishserver.domain.productinfonotice.application.ProductInfoNotificationQueryService;
 import com.matsinger.barofishserver.domain.productinfonotice.domain.ProductInformation;
+import com.matsinger.barofishserver.jwt.exception.JwtBusinessException;
 import com.matsinger.barofishserver.utils.CustomResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -28,11 +30,11 @@ public class ProductInfoNoticeController {
                                                           @RequestParam(value = "itemCode", required = true) String itemCode) {
 
         CustomResponse<Object> res = new CustomResponse<>();
-        if (auth.isEmpty()) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
+        if (auth.isEmpty()) throw new JwtBusinessException(ErrorCode.NOT_ALLOWED);
         TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN, TokenAuthType.PARTNER, TokenAuthType.ALLOW), auth.get());
 
         if (itemCode == null) {
-            return res.throwError("상품이 속한 품목의 코드를 입력해주세요.", "INVALID");
+            throw new IllegalArgumentException("상품이 속한 품목의 코드를 입력해주세요.");
         }
 
         ProductInformation
@@ -47,15 +49,15 @@ public class ProductInfoNoticeController {
                                                          @RequestBody ProductInformation request) {
         CustomResponse<Object> res = new CustomResponse<>();
 
-        if (auth.isEmpty()) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
+        if (auth.isEmpty()) throw new JwtBusinessException(ErrorCode.NOT_ALLOWED);;
         TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN, TokenAuthType.PARTNER), auth.get());
 
         if (request.getItemCode() == null) {
-            return res.throwError("상품정보제공고시 품목 코드를 입력해주세요.", "INVALID");
+            throw new IllegalArgumentException("상품정보제공고시 품목 코드를 입력해주세요.");
         }
 
         if (request.getProductId() == null) {
-            return res.throwError("상품의 아이디를 입력해주세요.", "INVALID");
+            throw new IllegalArgumentException("상품의 아이디를 입력해주세요.");
         }
         productInfoNotificationCommandService.addProductInfoNotification(request);
         return ResponseEntity.ok(res);
@@ -66,15 +68,15 @@ public class ProductInfoNoticeController {
                                                          @RequestBody ProductInformation request) {
         CustomResponse<Object> res = new CustomResponse<>();
 
-        if (auth.isEmpty()) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
+        if (auth.isEmpty()) throw new JwtBusinessException(ErrorCode.NOT_ALLOWED);;
         TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN, TokenAuthType.PARTNER), auth.get());
 
         if (request.getItemCode() == null) {
-            return res.throwError("상품정보제공고시 품목 코드를 입력해주세요.", "INVALID");
+            throw new IllegalArgumentException("상품정보제공고시 품목 코드를 입력해주세요.");
         }
 
         if (request.getProductId() == null) {
-            return res.throwError("상품의 아이디를 입력해주세요.", "INVALID");
+            throw new IllegalArgumentException("상품의 아이디를 입력해주세요.");
         }
         productInfoNotificationCommandService.updateProductInfoNotification(request);
 
@@ -86,7 +88,7 @@ public class ProductInfoNoticeController {
                                                       @PathVariable("productId") int productId) {
         CustomResponse<Object> res = new CustomResponse<>();
 
-        if (auth.isEmpty()) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
+        if (auth.isEmpty()) throw new JwtBusinessException(ErrorCode.NOT_ALLOWED);;
         jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ALLOW), auth.get());
 
         ProductInformation
@@ -102,7 +104,7 @@ public class ProductInfoNoticeController {
                                                          @PathVariable("productId") int productId) {
         CustomResponse<Object> res = new CustomResponse<>();
 
-        if (auth.isEmpty()) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
+        if (auth.isEmpty()) throw new JwtBusinessException(ErrorCode.NOT_ALLOWED);;
         TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN, TokenAuthType.PARTNER), auth.get());
 
         productInfoNotificationCommandService.deleteProductInfoNotification(productId);

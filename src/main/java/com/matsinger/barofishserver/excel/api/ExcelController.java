@@ -2,13 +2,13 @@ package com.matsinger.barofishserver.excel.api;
 
 import com.matsinger.barofishserver.excel.application.PartnerExcelService;
 import com.matsinger.barofishserver.excel.application.ProductExcelService;
+import com.matsinger.barofishserver.global.error.ErrorCode;
 import com.matsinger.barofishserver.jwt.JwtService;
 import com.matsinger.barofishserver.jwt.TokenAuthType;
 import com.matsinger.barofishserver.jwt.TokenInfo;
 import com.matsinger.barofishserver.domain.product.application.ProductService;
-import com.matsinger.barofishserver.jwt.exception.JwtExceptionMessage;
+import com.matsinger.barofishserver.jwt.exception.JwtBusinessException;
 import com.matsinger.barofishserver.utils.CustomResponse;
-import io.jsonwebtoken.JwtException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -34,14 +34,14 @@ public class ExcelController {
         CustomResponse<Boolean> res = new CustomResponse<>();
 
         if (auth.isEmpty()) {
-            throw new JwtException(JwtExceptionMessage.TOKEN_REQUIRED);
+            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
         }
         TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth.get());
 
-        if (file.isEmpty()) return res.throwError("파일을 입력해주세요.", "INPUT_CHECK_REQUIRED");
+        if (file.isEmpty()) throw new IllegalArgumentException("파일을 입력해주세요.");
         if (!file.getContentType().equals("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")) {
             System.out.println("Partner File Upload mimType " + file.getContentType());
-            return res.throwError("엑셀 파일만 업로드 가능합니다.", "INPUT_CHECK_REQUIRED");
+            throw new IllegalArgumentException("엑셀 파일만 업로드 가능합니다.");
         }
         partnerExcelService.processPartnerExcel(file);
         res.setData(Optional.of(true));
@@ -54,14 +54,14 @@ public class ExcelController {
         CustomResponse<Boolean> res = new CustomResponse<>();
 
         if (auth.isEmpty()) {
-            throw new JwtException(JwtExceptionMessage.TOKEN_REQUIRED);
+            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
         }
         TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth.get());
 
-        if (file.isEmpty()) return res.throwError("파일을 입력해주세요.", "INPUT_CHECK_REQUIRED");
+        if (file.isEmpty()) throw new IllegalArgumentException("파일을 입력해주세요.");
         if (!file.getContentType().equals("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")) {
             System.out.println("Product File Upload mimType " + file.getContentType());
-            return res.throwError("엑셀 파일만 업로드 가능합니다.", "INPUT_CHECK_REQUIRED");
+            throw new IllegalArgumentException("엑셀 파일만 업로드 가능합니다.");
         }
         productExcelService.processProductExcel(file);
         res.setData(Optional.of(true));

@@ -1,5 +1,6 @@
 package com.matsinger.barofishserver.global.exception;
 
+import com.matsinger.barofishserver.global.error.ErrorCode;
 import com.matsinger.barofishserver.utils.CustomResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -39,7 +40,7 @@ public class GlobalControllerAdvice implements RequestBodyAdvice {
 
         CustomResponse customResponse = new CustomResponse();
         customResponse.setIsSuccess(false);
-        customResponse.setErrorMsg("예기치 못한 오류가 발생했습니다. 불편을 드려 죄송합니다.");
+        customResponse.setCode(ErrorCode.DEFAULT_ERROR);
         return ResponseEntity.ok(customResponse);
     }
 

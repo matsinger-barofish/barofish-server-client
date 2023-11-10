@@ -10,6 +10,7 @@ import com.matsinger.barofishserver.domain.coupon.domain.*;
 import com.matsinger.barofishserver.domain.coupon.dto.CouponAddReq;
 import com.matsinger.barofishserver.domain.coupon.dto.CouponDto;
 import com.matsinger.barofishserver.domain.coupon.dto.UpdateSystemCoupon;
+import com.matsinger.barofishserver.global.error.ErrorCode;
 import com.matsinger.barofishserver.jwt.JwtService;
 import com.matsinger.barofishserver.jwt.TokenAuthType;
 import com.matsinger.barofishserver.jwt.TokenInfo;
@@ -17,10 +18,9 @@ import com.matsinger.barofishserver.domain.user.application.UserCommandService;
 import com.matsinger.barofishserver.domain.user.domain.User;
 import com.matsinger.barofishserver.domain.userinfo.domain.UserInfo;
 import com.matsinger.barofishserver.domain.userinfo.dto.UserInfoDto;
-import com.matsinger.barofishserver.jwt.exception.JwtExceptionMessage;
+import com.matsinger.barofishserver.jwt.exception.JwtBusinessException;
 import com.matsinger.barofishserver.utils.Common;
 import com.matsinger.barofishserver.utils.CustomResponse;
-import io.jsonwebtoken.JwtException;
 import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -60,7 +60,7 @@ public class CouponController {
         CustomResponse<Page<CouponDto>> res = new CustomResponse<>();
 
         if (auth.isEmpty()) {
-            throw new JwtException(JwtExceptionMessage.TOKEN_REQUIRED);
+            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
         }
         jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth.get());
 
@@ -111,7 +111,7 @@ public class CouponController {
         CustomResponse<List<Coupon>> res = new CustomResponse<>();
 
         if (auth.isEmpty()) {
-            throw new JwtException(JwtExceptionMessage.TOKEN_REQUIRED);
+            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
         }
         TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth.get());
 
@@ -125,7 +125,7 @@ public class CouponController {
         CustomResponse<List<Coupon>> res = new CustomResponse<>();
 
         if (auth.isEmpty()) {
-            throw new JwtException(JwtExceptionMessage.TOKEN_REQUIRED);
+            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
         }
         TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth.get());
 
@@ -140,7 +140,7 @@ public class CouponController {
         CustomResponse<List<Coupon>> res = new CustomResponse<>();
 
         if (auth.isEmpty()) {
-            throw new JwtException(JwtExceptionMessage.TOKEN_REQUIRED);
+            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
         }
         jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth.get());
 
@@ -154,7 +154,7 @@ public class CouponController {
         CustomResponse<List<Coupon>> res = new CustomResponse<>();
 
         if (auth.isEmpty()) {
-            throw new JwtException(JwtExceptionMessage.TOKEN_REQUIRED);
+            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
         }
         TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth.get());
 
@@ -169,12 +169,12 @@ public class CouponController {
         CustomResponse<Boolean> res = new CustomResponse<>();
 
         if (auth.isEmpty()) {
-            throw new JwtException(JwtExceptionMessage.TOKEN_REQUIRED);
+            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
         }
         TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth.get());
 
         Boolean checkDownloaded = couponQueryService.checkHasCoupon(id, tokenInfo.getId());
-        if (checkDownloaded) return res.throwError("이미 다운로드 받은 쿠폰입니다.", "INPUT_CHECK_REQUIRED");
+        if (checkDownloaded) throw new IllegalArgumentException("이미 다운로드 받은 쿠폰입니다.");
         couponCommandService.downloadCoupon(tokenInfo.getId(), id);
         res.setData(Optional.of(true));
         return ResponseEntity.ok(res);
@@ -187,22 +187,22 @@ public class CouponController {
         CustomResponse<Coupon> res = new CustomResponse<>();
 
         if (auth.isEmpty()) {
-            throw new JwtException(JwtExceptionMessage.TOKEN_REQUIRED);
+            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
         }
         TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth.get());
 
             Integer adminId = tokenInfo.getId();
             String title = utils.validateString(data.getTitle(), 100L, "제목");
-            if (data.getType() == null) return res.throwError("할인 유형을 입력해주세요.", "INPUT_CHECK_REQUIRED");
+            if (data.getType() == null) throw new IllegalArgumentException("할인 유형을 입력해주세요.");
             if (data.getType().equals(CouponType.RATE)) {
-                if (data.getAmount() > 100) return res.throwError("할인율을 100%를 넘을 수 없습니다.", "INPUT_CHECK_REQUIRED");
+                if (data.getAmount() > 100) throw new IllegalArgumentException("할인율을 100%를 넘을 수 없습니다.");
             } else {
                 if (data.getAmount() > data.getMinPrice())
-                    return res.throwError("할인 금액이 주문 최소 금액을 넘을 수 없습니다.", "INPUT_CHECK_REQUIRED");
+                    throw new IllegalArgumentException("할인 금액이 주문 최소 금액을 넘을 수 없습니다.");
             }
-            if (data.getAmount() < 0) return res.throwError("할인율을 확인해주세요.", "INPUT_CHECK_REQUIRED");
+            if (data.getAmount() < 0) throw new IllegalArgumentException("할인율을 확인해주세요.");
             if (data.getMinPrice() == null) data.setMinPrice(0);
-            if (data.getStartAt() == null) return res.throwError("사용 가능 시작 기간을 입력해주세요.", " INPUT_CHECK_REQUIRED");
+            if (data.getStartAt() == null) throw new IllegalArgumentException("사용 가능 시작 기간을 입력해주세요.");
             boolean isPublic = data.getUserIds() == null;
             Coupon
                     coupon =
@@ -233,13 +233,13 @@ public class CouponController {
         CustomResponse<Boolean> res = new CustomResponse<>();
 
         if (auth.isEmpty()) {
-            throw new JwtException(JwtExceptionMessage.TOKEN_REQUIRED);
+            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
         }
         jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth.get());
 
         Coupon coupon = couponQueryService.selectCoupon(id);
         if (coupon.getPublicType().equals(CouponPublicType.SYSTEM))
-            return res.throwError("시스템 발행 쿠폰은 삭제 불가능합니다.", "NOT_ALLOWED");
+            throw new IllegalArgumentException("시스템 발행 쿠폰은 삭제 불가능합니다.");
         coupon.setState(CouponState.DELETED);
         couponCommandService.updateCoupon(coupon);
         res.setData(Optional.of(true));
@@ -252,7 +252,7 @@ public class CouponController {
         CustomResponse<List<Coupon>> res = new CustomResponse<>();
 
         if (auth.isEmpty()) {
-            throw new JwtException(JwtExceptionMessage.TOKEN_REQUIRED);
+            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
         }
         TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth.get());
 
@@ -267,7 +267,7 @@ public class CouponController {
         CustomResponse<List<Coupon>> res = new CustomResponse<>();
 
         if (auth.isEmpty()) {
-            throw new JwtException(JwtExceptionMessage.TOKEN_REQUIRED);
+            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
         }
         jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth.get());
 

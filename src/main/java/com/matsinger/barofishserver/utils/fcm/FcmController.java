@@ -1,5 +1,6 @@
 package com.matsinger.barofishserver.utils.fcm;
 
+import com.matsinger.barofishserver.global.error.ErrorCode;
 import com.matsinger.barofishserver.jwt.JwtService;
 import com.matsinger.barofishserver.jwt.TokenAuthType;
 import com.matsinger.barofishserver.jwt.TokenInfo;
@@ -9,10 +10,9 @@ import com.matsinger.barofishserver.domain.notification.domain.NotificationType;
 import com.matsinger.barofishserver.domain.user.domain.User;
 import com.matsinger.barofishserver.domain.user.domain.UserState;
 import com.matsinger.barofishserver.domain.user.repository.UserRepository;
-import com.matsinger.barofishserver.jwt.exception.JwtExceptionMessage;
+import com.matsinger.barofishserver.jwt.exception.JwtBusinessException;
 import com.matsinger.barofishserver.utils.Common;
 import com.matsinger.barofishserver.utils.CustomResponse;
-import io.jsonwebtoken.JwtException;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
@@ -47,12 +47,12 @@ public class FcmController {
         CustomResponse<Boolean> res = new CustomResponse<>();
 
         if (auth.isEmpty()) {
-            throw new JwtException(JwtExceptionMessage.TOKEN_REQUIRED);
+            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
         }
         TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth.get());
 
         String title = utils.validateString(data.getTitle(), 100L, "제목");
-        if (data.content == null) return res.throwError("내용을 입력해주세요.", "INPUT_CHECK_REQUIRED");
+        if (data.content == null) throw new IllegalArgumentException("내용을 입력해주세요.");
         List<Integer> userIds = data.getUserIds();
         if (userIds == null)
             userIds = userRepository.findAllByState(UserState.ACTIVE).stream().map(User::getId).toList();

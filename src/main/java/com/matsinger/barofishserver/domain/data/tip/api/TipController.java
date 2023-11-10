@@ -1,6 +1,5 @@
 package com.matsinger.barofishserver.domain.data.tip.api;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.matsinger.barofishserver.domain.data.tip.application.TipCommandService;
 import com.matsinger.barofishserver.domain.data.tip.application.TipQueryService;
@@ -8,17 +7,17 @@ import com.matsinger.barofishserver.domain.data.tip.domain.*;
 import com.matsinger.barofishserver.domain.data.tip.dto.AddTipReq;
 import com.matsinger.barofishserver.domain.data.tip.dto.TipInfoUpdateReq;
 import com.matsinger.barofishserver.domain.data.tip.dto.UpdateTipStateReq;
+import com.matsinger.barofishserver.global.error.ErrorCode;
 import com.matsinger.barofishserver.jwt.JwtService;
 import com.matsinger.barofishserver.jwt.TokenAuthType;
 import com.matsinger.barofishserver.jwt.TokenInfo;
 import com.matsinger.barofishserver.domain.siteInfo.application.SiteInfoCommandService;
 import com.matsinger.barofishserver.domain.siteInfo.application.SiteInfoQueryService;
 import com.matsinger.barofishserver.domain.siteInfo.domain.SiteInformation;
-import com.matsinger.barofishserver.jwt.exception.JwtExceptionMessage;
+import com.matsinger.barofishserver.jwt.exception.JwtBusinessException;
 import com.matsinger.barofishserver.utils.Common;
 import com.matsinger.barofishserver.utils.CustomResponse;
 import com.matsinger.barofishserver.utils.S3.S3Uploader;
-import io.jsonwebtoken.JwtException;
 import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
 import org.json.JSONObject;
@@ -85,7 +84,7 @@ public class TipController {
         CustomResponse<Page<Tip>> res = new CustomResponse<>();
 
         if (auth.isEmpty()) {
-            throw new JwtException(JwtExceptionMessage.TOKEN_REQUIRED);
+            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
         }
         jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth.get());
 
@@ -122,7 +121,7 @@ public class TipController {
         CustomResponse<Tip> res = new CustomResponse<>();
 
         if (auth.isEmpty()) {
-            throw new JwtException(JwtExceptionMessage.TOKEN_REQUIRED);
+            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
         }
         jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth.get());
 
@@ -130,7 +129,7 @@ public class TipController {
         String description = utils.validateString(data.getDescription(), 200L, "설명");
         String imageUrl = s3.upload(image, new ArrayList<>(List.of("tip")));
         String imageDetailUrl = s3.upload(imageDetail, new ArrayList<>(List.of("tip")));
-        if (data.getContent() == null) return res.throwError("내용을 입력해주세요.", "INPUT_CHECK_REQUIRED");
+        if (data.getContent() == null) throw new IllegalArgumentException("내용을 입력해주세요.");
         String contentUrl = s3.uploadEditorStringToS3(data.getContent(), new ArrayList<>(List.of("tip")));
         Tip
                 tip =
@@ -150,7 +149,7 @@ public class TipController {
         CustomResponse<Tip> res = new CustomResponse<>();
 
         if (auth.isEmpty()) {
-            throw new JwtException(JwtExceptionMessage.TOKEN_REQUIRED);
+            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
         }
         jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth.get());
 
@@ -190,7 +189,7 @@ public class TipController {
         CustomResponse<TipInfo> res = new CustomResponse<>();
 
         if (auth.isEmpty()) {
-            throw new JwtException(JwtExceptionMessage.TOKEN_REQUIRED);
+            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
         }
         TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth.get());
 
@@ -230,12 +229,12 @@ public class TipController {
         CustomResponse<Boolean> res = new CustomResponse<>();
 
         if (auth.isEmpty()) {
-            throw new JwtException(JwtExceptionMessage.TOKEN_REQUIRED);
+            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
         }
         TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth.get());
 
-        if (data.getTipIds() == null) return res.throwError("아이디를 입력해주세요.", "INPUT_CHECK_REQUIRED");
-        if (data.getState() == null) return res.throwError("변경할 상태를 입력해주세요.", "INPUT_CHECK_REQUIRED");
+        if (data.getTipIds() == null) throw new IllegalArgumentException("아이디를 입력해주세요.");
+        if (data.getState() == null) throw new IllegalArgumentException("변경할 상태를 입력해주세요.");
         List<Tip> tips = tipQueryService.selectTipListWithIds(data.getTipIds());
         tips.forEach(v -> v.setState(data.getState()));
         tipCommandService.updateTipList(tips);
@@ -249,7 +248,7 @@ public class TipController {
         CustomResponse<Boolean> res = new CustomResponse<>();
 
         if (auth.isEmpty()) {
-            throw new JwtException(JwtExceptionMessage.TOKEN_REQUIRED);
+            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
         }
         TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth.get());
 

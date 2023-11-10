@@ -13,6 +13,7 @@ import com.matsinger.barofishserver.domain.user.paymentMethod.application.Paymen
 import com.matsinger.barofishserver.domain.user.paymentMethod.application.PaymentMethodQueryService;
 import com.matsinger.barofishserver.domain.user.paymentMethod.domain.PaymentMethod;
 import com.matsinger.barofishserver.domain.user.paymentMethod.dto.PaymentMethodDto;
+import com.matsinger.barofishserver.global.error.ErrorCode;
 import com.matsinger.barofishserver.jwt.*;
 import com.matsinger.barofishserver.domain.userauth.application.UserAuthCommandService;
 import com.matsinger.barofishserver.domain.userauth.application.UserAuthQueryService;
@@ -22,7 +23,7 @@ import com.matsinger.barofishserver.domain.userinfo.application.UserInfoCommandS
 import com.matsinger.barofishserver.domain.userinfo.application.UserInfoQueryService;
 import com.matsinger.barofishserver.domain.userinfo.domain.UserInfo;
 import com.matsinger.barofishserver.domain.userinfo.dto.UserInfoDto;
-import com.matsinger.barofishserver.jwt.exception.JwtExceptionMessage;
+import com.matsinger.barofishserver.jwt.exception.JwtBusinessException;
 import com.matsinger.barofishserver.utils.Common;
 import com.matsinger.barofishserver.utils.CustomResponse;
 import com.matsinger.barofishserver.utils.RegexConstructor;
@@ -32,10 +33,8 @@ import com.matsinger.barofishserver.utils.fcm.FcmTokenRepository;
 import com.matsinger.barofishserver.utils.sms.SmsService;
 import com.matsinger.barofishserver.domain.verification.Verification;
 import com.matsinger.barofishserver.domain.verification.VerificationService;
-import io.jsonwebtoken.JwtException;
 import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
-import org.apache.el.parser.Token;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -133,7 +132,7 @@ public class UserController {
             directoryElement.add("user");
             directoryElement.add(String.valueOf(userId));
             if (profileImage != null && !profileImage.isEmpty() && !s3.validateImageType(profileImage)) {
-                return res.throwError("지원하지 않는 이미지 확장자입니다.", "INPUT_CHECK_REQUIRED");
+                throw new IllegalArgumentException("지원하지 않는 이미지 확장자입니다.");
             }
             String
                     imageUrl =
@@ -156,7 +155,7 @@ public class UserController {
 
         if (profileImage != null && !profileImage.isEmpty()) {
             if (!s3.validateImageType(profileImage))
-                return res.throwError("지원하지 않는 이미지 확장자입니다.", "INPUT_CHECK_REQUIRED");
+                throw new IllegalArgumentException("지원하지 않는 이미지 확장자입니다.");
         }
 
         String phone = request.getPhone().replaceAll("-", "");
@@ -192,7 +191,7 @@ public class UserController {
         CustomResponse<UserInfoDto> res = new CustomResponse<>();
 
         if (auth.isEmpty()) {
-            throw new JwtException(JwtExceptionMessage.TOKEN_REQUIRED);
+            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
         }
         TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth.get());
         Integer userId = tokenInfo.getId();
@@ -221,27 +220,27 @@ public class UserController {
             userCommandService.updateUserInfo(userInfo);
         }
         if (data.getNewPassword() != null) {
-            if (data.getOldPassword() == null) return res.throwError("변경 전 비밀번호를 입력해주세요.", "INPUT_CHECK_REQUIRED");
+            if (data.getOldPassword() == null) throw new IllegalArgumentException("변경 전 비밀번호를 입력해주세요.");
             Optional<UserAuth> userAuth = userCommandService.findUserAuthWithIDPWType(userId);
-            if (userAuth.isEmpty()) return res.throwError("소셜 로그인 유저입니다.", "NOT_ALLOWED");
+            if (userAuth.isEmpty()) throw new IllegalArgumentException("소셜 로그인 유저입니다.");
             if (!BCrypt.checkpw(data.getOldPassword(), userAuth.get().getPassword()))
-                return res.throwError("이전 비밀번호와 일치하지 않습니다.", "NOT_ALLOWED");
+                throw new IllegalArgumentException("이전 비밀번호와 일치하지 않습니다.");
             if (!Pattern.matches(re.password, data.getNewPassword()))
-                return res.throwError("비밀번호 형식을 확인해주세요.", "INPUT_CHECK_REQUIRED");
+                throw new IllegalArgumentException("비밀번호 형식을 확인해주세요.");
             String password = BCrypt.hashpw(data.getNewPassword(), BCrypt.gensalt());
             userAuth.get().setPassword(password);
             userCommandService.updateUserPassword(userAuth.get());
         }
         if (data.getPhone() != null) {
-            if (data.getVerificationId() == null) return res.throwError("인증 먼저 진행해주세요.", "INPUT_CHECK_REQUIRED");
+            if (data.getVerificationId() == null) throw new IllegalArgumentException("인증 먼저 진행해주세요.");
             if (!Pattern.matches(re.phone, data.getPhone()))
-                return res.throwError("휴대폰 번호 형식을 확인해주세요.", "INPUT_CHECK_REQUIRED");
+                throw new IllegalArgumentException("휴대폰 번호 형식을 확인해주세요.");
             String phone = data.getPhone().replaceAll(re.getPhone(), "0$1$2$3");
             Verification verification = verificationService.selectVerificationById(data.getVerificationId());
-            if (verification.getExpiredAt() != null) return res.throwError("인증을 먼저 진행해주세요.", "NOT_ALLOWED");
+            if (verification.getExpiredAt() != null) throw new IllegalArgumentException("인증을 먼저 진행해주세요.");
             if (userCommandService.checkExistWithPhone(phone) &&
                     (userInfo.getPhone() == null || !userInfo.getPhone().equals(phone)))
-                return res.throwError("이미 등록된 전화번호입니다.", "NOT_ALLOWED");
+                throw new IllegalArgumentException("이미 등록된 전화번호입니다.");
             userInfo.setPhone(phone);
             userCommandService.updateUserInfo(userInfo);
         }
@@ -270,7 +269,7 @@ public class UserController {
         CustomResponse<UserInfoDto> res = new CustomResponse<>();
 
         if (auth.isEmpty()) {
-            throw new JwtException(JwtExceptionMessage.TOKEN_REQUIRED);
+            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
         }
         TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth.get());
         Integer userId = tokenInfo.getId();
@@ -286,7 +285,7 @@ public class UserController {
         CustomResponse<UserInfoDto> res = new CustomResponse<>();
 
         if (auth.isEmpty()) {
-            throw new JwtException(JwtExceptionMessage.TOKEN_REQUIRED);
+            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
         }
         TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth.get());
 
@@ -313,7 +312,7 @@ public class UserController {
         CustomResponse<Page<UserInfoDto>> res = new CustomResponse<>();
 
         if (auth.isEmpty()) {
-            throw new JwtException(JwtExceptionMessage.TOKEN_REQUIRED);
+            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
         }
         TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth.get());
 
@@ -343,11 +342,11 @@ public class UserController {
         CustomResponse<Boolean> res = new CustomResponse<>();
 
         if (auth.isEmpty()) {
-            throw new JwtException(JwtExceptionMessage.TOKEN_REQUIRED);
+            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
         }
         TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth.get());
 
-        if (data.getState() == null) return res.throwError("상태를 입력해주세요.", "INPUT_CHECK_REQUIRED");
+        if (data.getState() == null) throw new IllegalArgumentException("상태를 입력해주세요.");
         userCommandService.updateUserState(data.getUserIds(), data.getState());
         res.setData(Optional.of(true));
         return ResponseEntity.ok(res);
@@ -359,7 +358,7 @@ public class UserController {
 
         Integer userId = null;
         if (auth.isEmpty()) {
-            throw new JwtException(JwtExceptionMessage.TOKEN_REQUIRED);
+            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
         }
         TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ALLOW), auth.get());
 
@@ -372,7 +371,7 @@ public class UserController {
         CustomResponse<Boolean> res = new CustomResponse<>();
 
         if (auth.isEmpty()) {
-            throw new JwtException(JwtExceptionMessage.TOKEN_REQUIRED);
+            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
         }
         TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth.get());
 
@@ -388,12 +387,12 @@ public class UserController {
         CustomResponse<Boolean> res = new CustomResponse<>();
 
         if (auth.isEmpty()) {
-            throw new JwtException(JwtExceptionMessage.TOKEN_REQUIRED);
+            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
         }
         TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth.get());
 
         Integer userId = tokenInfo.getId();
-        if (data.getFcmToken() == null) return res.throwError("토큰을 입력해주세요.", "INPUT_CHECK_REQUIRED");
+        if (data.getFcmToken() == null) throw new IllegalArgumentException("토큰을 입력해주세요.");
         Optional<FcmToken> token = fcmTokenRepository.findById(data.getFcmToken());
         if (data.getSet() == true) {
             if (token.isPresent()) {
@@ -415,12 +414,12 @@ public class UserController {
     public ResponseEntity<CustomResponse<Boolean>> resetPassword(@RequestPart(value = "data") ResetPasswordReq data) {
         CustomResponse<Boolean> res = new CustomResponse<>();
 
-        if (data.getVerificationId() == null) return res.throwError("인증 먼저 진행해주세요.", "INPUT_CHECK_REQUIRED");
+        if (data.getVerificationId() == null) throw new IllegalArgumentException("인증 먼저 진행해주세요.");
         if (!Pattern.matches(re.phone, data.getPhone()))
-            return res.throwError("휴대폰 번호 형식을 확인해주세요.", "INPUT_CHECK_REQUIRED");
+            throw new IllegalArgumentException("휴대폰 번호 형식을 확인해주세요.");
         String phone = data.getPhone().replaceAll(re.getPhone(), "0$1$2$3");
         Verification verification = verificationService.selectVerificationById(data.getVerificationId());
-        if (verification.getExpiredAt() != null) return res.throwError("인증을 먼저 진행해주세요.", "NOT_ALLOWED");
+        if (verification.getExpiredAt() != null) throw new IllegalArgumentException("인증을 먼저 진행해주세요.");
 
         String newPassword = userAuthCommandService.resetPassword(phone);
         smsService.sendSms(phone, "[바로피쉬]\n새로운 비밀번호는 " + newPassword + " 입니다.", null);
@@ -432,15 +431,15 @@ public class UserController {
     public ResponseEntity<CustomResponse<Boolean>> findEmail(@RequestPart(value = "data") FindEmailReq data) {
         CustomResponse<Boolean> res = new CustomResponse<>();
 
-        if (data.getVerificationId() == null) return res.throwError("인증 먼저 진행해주세요.", "INPUT_CHECK_REQUIRED");
+        if (data.getVerificationId() == null) throw new IllegalArgumentException("인증 먼저 진행해주세요.");
         if (!Pattern.matches(re.phone, data.getPhone()))
-            return res.throwError("휴대폰 번호 형식을 확인해주세요.", "INPUT_CHECK_REQUIRED");
+            throw new IllegalArgumentException("휴대폰 번호 형식을 확인해주세요.");
         String phone = data.getPhone().replaceAll(re.getPhone(), "0$1$2$3");
         Verification verification = verificationService.selectVerificationById(data.getVerificationId());
-        if (verification.getExpiredAt() != null) return res.throwError("인증을 먼저 진행해주세요.", "NOT_ALLOWED");
+        if (verification.getExpiredAt() != null) throw new IllegalArgumentException("인증을 먼저 진행해주세요.");
         UserInfo userInfo = userCommandService.selectUserWithPhone(phone);
         UserAuth userAuth = userCommandService.selectUserAuth(userInfo.getUserId());
-        if (!userAuth.getLoginType().equals(LoginType.IDPW)) return res.throwError("소셜 가입 사용자입니다.", "NOT_ALLOWED");
+        if (!userAuth.getLoginType().equals(LoginType.IDPW)) throw new IllegalArgumentException("소셜 가입 사용자입니다.");
         smsService.sendSms(phone, String.format("[바로피쉬]\n회원님의 아이디는\n%s 입니다.", userAuth.getLoginId()), null);
         res.setData(Optional.of(true));
         return ResponseEntity.ok(res);
@@ -454,14 +453,14 @@ public class UserController {
         CustomResponse<List<PaymentMethodDto>> res = new CustomResponse<>();
 
         if (auth.isEmpty()) {
-            throw new JwtException(JwtExceptionMessage.TOKEN_REQUIRED);
+            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
         }
         TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN, TokenAuthType.USER), auth.get());
 
         if (tokenInfo.getType().equals(TokenAuthType.USER)) {
             userId = tokenInfo.getId();
         }
-        if (userId == null) return res.throwError("유저 아이디를 입력해주세요.", "INPUT_CHECK_REQUIRED");
+        if (userId == null) throw new IllegalArgumentException("유저 아이디를 입력해주세요.");
 
         Optional<List<PaymentMethodDto>> paymentMethods = paymentMethodQueryService.getPaymentMethods(userId);
         res.setData(paymentMethods);
@@ -474,14 +473,14 @@ public class UserController {
         CustomResponse<PaymentMethodDto> res = new CustomResponse<>();
 
         if (auth.isEmpty()) {
-            throw new JwtException(JwtExceptionMessage.TOKEN_REQUIRED);
+            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
         }
         TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN, TokenAuthType.USER), auth.get());
 
         PaymentMethod paymentMethod = paymentMethodQueryService.selectPaymentMethod(id);
         if (tokenInfo.getType().equals(TokenAuthType.USER) &&
                 paymentMethod.getUserId() != tokenInfo.getId())
-            return res.throwError("타유저의 결제 수단입니다.", "NOT_ALLOWED");
+            throw new IllegalArgumentException("타유저의 결제 수단입니다.");
         res.setData(Optional.ofNullable(paymentMethodQueryService.convert2Dto(paymentMethod)));
         return ResponseEntity.ok(res);
     }
@@ -492,7 +491,7 @@ public class UserController {
         CustomResponse<PaymentMethodDto> res = new CustomResponse<>();
 
         if (auth.isEmpty()) {
-            throw new JwtException(JwtExceptionMessage.TOKEN_REQUIRED);
+            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
         }
         TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth.get());
         Integer userId = tokenInfo.getId();
@@ -509,13 +508,13 @@ public class UserController {
         CustomResponse<Boolean> res = new CustomResponse<>();
 
         if (auth.isEmpty()) {
-            throw new JwtException(JwtExceptionMessage.TOKEN_REQUIRED);
+            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
         }
         TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth.get());
 
         PaymentMethod paymentMethod = paymentMethodQueryService.selectPaymentMethod(id);
         if (paymentMethod.getUserId() != tokenInfo.getId())
-            return res.throwError("타계정의 결제수단입니다.", "NOT_ALLOWED");
+            throw new IllegalArgumentException("타계정의 결제수단입니다.");
         paymentMethodQueryService.deletePaymentMethod(id);
         return ResponseEntity.ok(res);
     }

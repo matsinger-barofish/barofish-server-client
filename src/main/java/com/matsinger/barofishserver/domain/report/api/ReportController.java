@@ -7,6 +7,7 @@ import com.matsinger.barofishserver.domain.admin.log.domain.AdminLogType;
 import com.matsinger.barofishserver.domain.report.dto.ReportDto;
 import com.matsinger.barofishserver.domain.review.application.ReviewQueryService;
 import com.matsinger.barofishserver.domain.review.domain.Review;
+import com.matsinger.barofishserver.global.error.ErrorCode;
 import com.matsinger.barofishserver.jwt.JwtService;
 import com.matsinger.barofishserver.jwt.TokenAuthType;
 import com.matsinger.barofishserver.jwt.TokenInfo;
@@ -14,10 +15,9 @@ import com.matsinger.barofishserver.domain.report.application.ReportCommandServi
 import com.matsinger.barofishserver.domain.report.application.ReportQueryService;
 import com.matsinger.barofishserver.domain.report.domain.ReportOrderBy;
 import com.matsinger.barofishserver.domain.report.domain.Report;
-import com.matsinger.barofishserver.jwt.exception.JwtExceptionMessage;
+import com.matsinger.barofishserver.jwt.exception.JwtBusinessException;
 import com.matsinger.barofishserver.utils.Common;
 import com.matsinger.barofishserver.utils.CustomResponse;
-import io.jsonwebtoken.JwtException;
 import jakarta.persistence.criteria.Predicate;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -60,7 +60,7 @@ public class ReportController {
         CustomResponse<Page<ReportDto>> res = new CustomResponse<>();
 
         if (auth.isEmpty()) {
-            throw new JwtException(JwtExceptionMessage.TOKEN_REQUIRED);
+            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
         }
         TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth.get());
 
@@ -91,7 +91,7 @@ public class ReportController {
         CustomResponse<ReportDto> res = new CustomResponse<>();
 
         if (auth.isEmpty()) {
-            throw new JwtException(JwtExceptionMessage.TOKEN_REQUIRED);
+            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
         }
         jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth.get());
 
@@ -114,14 +114,14 @@ public class ReportController {
         CustomResponse<ReportDto> res = new CustomResponse<>();
 
         if (auth.isEmpty()) {
-            throw new JwtException(JwtExceptionMessage.TOKEN_REQUIRED);
+            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
         }
         TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth.get());
 
         Integer userId = tokenInfo.getId();
-        if (data.reviewId == null) return res.throwError("리뷰 아이디를 입력해주세요.", "INPUT_CHECK_REQUIRED");
+        if (data.reviewId == null) throw new IllegalArgumentException("리뷰 아이디를 입력해주세요.");
         if (reportQueryService.checkHasReported(userId, data.reviewId))
-            return res.throwError("이미 신고한 리뷰입니다.", "INPUT_CHECK_REQUIRED");
+            throw new IllegalArgumentException("이미 신고한 리뷰입니다.");
         Review review = reviewQueryService.selectReview(data.reviewId);
         String content = utils.validateString(data.content, 300L, "내용");
         Report
@@ -144,7 +144,7 @@ public class ReportController {
         CustomResponse<Boolean> res = new CustomResponse<>();
 
         if (auth.isEmpty()) {
-            throw new JwtException(JwtExceptionMessage.TOKEN_REQUIRED);
+            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
         }
         TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth.get());
 
@@ -177,7 +177,7 @@ public class ReportController {
         CustomResponse<Boolean> res = new CustomResponse<>();
 
         if (auth.isEmpty()) {
-            throw new JwtException(JwtExceptionMessage.TOKEN_REQUIRED);
+            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
         }
         jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth.get());
 

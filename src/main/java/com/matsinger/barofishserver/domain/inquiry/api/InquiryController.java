@@ -10,6 +10,7 @@ import com.matsinger.barofishserver.domain.inquiry.domain.InquiryOrderBy;
 import com.matsinger.barofishserver.domain.inquiry.domain.InquiryType;
 import com.matsinger.barofishserver.domain.inquiry.dto.*;
 import com.matsinger.barofishserver.domain.inquiry.domain.Inquiry;
+import com.matsinger.barofishserver.global.error.ErrorCode;
 import com.matsinger.barofishserver.jwt.JwtService;
 import com.matsinger.barofishserver.jwt.TokenAuthType;
 import com.matsinger.barofishserver.jwt.TokenInfo;
@@ -20,10 +21,9 @@ import com.matsinger.barofishserver.domain.product.application.ProductService;
 import com.matsinger.barofishserver.domain.product.domain.Product;
 import com.matsinger.barofishserver.domain.store.application.StoreService;
 import com.matsinger.barofishserver.domain.store.domain.Store;
-import com.matsinger.barofishserver.jwt.exception.JwtExceptionMessage;
+import com.matsinger.barofishserver.jwt.exception.JwtBusinessException;
 import com.matsinger.barofishserver.utils.Common;
 import com.matsinger.barofishserver.utils.CustomResponse;
-import io.jsonwebtoken.JwtException;
 import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -67,7 +67,7 @@ public class InquiryController {
         CustomResponse<Page<InquiryDto>> res = new CustomResponse<>();
 
         if (auth.isEmpty()) {
-            throw new JwtException(JwtExceptionMessage.TOKEN_REQUIRED);
+            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
         }
         TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN, TokenAuthType.PARTNER), auth.get());
 
@@ -113,7 +113,7 @@ public class InquiryController {
         CustomResponse<List<InquiryDto>> res = new CustomResponse<>();
 
         if (auth.isEmpty()) {
-            throw new JwtException(JwtExceptionMessage.TOKEN_REQUIRED);
+            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
         }
         TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth.get());
         Integer userId = tokenInfo.getId();
@@ -130,7 +130,7 @@ public class InquiryController {
         CustomResponse<List<InquiryDto>> res = new CustomResponse<>();
 
         if (auth.isEmpty()) {
-            throw new JwtException(JwtExceptionMessage.TOKEN_REQUIRED);
+            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
         }
         TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth.get());
         Integer userId = tokenInfo.getId();
@@ -148,7 +148,7 @@ public class InquiryController {
         CustomResponse<Inquiry> res = new CustomResponse<>();
 
         if (auth.isEmpty()) {
-            throw new JwtException(JwtExceptionMessage.TOKEN_REQUIRED);
+            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
         }
         TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth.get());
 
@@ -171,7 +171,7 @@ public class InquiryController {
         CustomResponse<InquiryDto> res = new CustomResponse<>();
 
         if (auth.isEmpty()) {
-            throw new JwtException(JwtExceptionMessage.TOKEN_REQUIRED);
+            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
         }
         TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN, TokenAuthType.PARTNER), auth.get());
 
@@ -180,7 +180,7 @@ public class InquiryController {
         Inquiry inquiry = inquiryQueryService.selectInquiry(inquiryId);
         if (tokenInfo.getType().equals(TokenAuthType.PARTNER) &&
                 inquiry.getProduct().getStoreId() != tokenInfo.getId())
-            return res.throwError("다른 가계의 문의 내용입니다.", "NOT_ALLOWED");
+            throw new IllegalArgumentException("다른 가계의 문의 내용입니다.");
         String content = utils.validateString(data.getContent(), 500L, "내용");
         inquiry.setAnswer(content);
         inquiry.setAnsweredAt(utils.now());
@@ -209,20 +209,20 @@ public class InquiryController {
         CustomResponse<InquiryDto> res = new CustomResponse<>();
 
         if (auth.isEmpty()) {
-            throw new JwtException(JwtExceptionMessage.TOKEN_REQUIRED);
+            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
         }
         TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth.get());
         Integer userId = tokenInfo.getId();
 
         Inquiry inquiry = inquiryQueryService.selectInquiry(inquiryId);
-        if (inquiry.getUserId() != userId) return res.throwError("타인의 문의 내용입니다.", "INPUT_CHECK_REQUIRED");
-        if (inquiry.getAnsweredAt() != null) return res.throwError("답변 완료된 문의입니다.", "NOT_ALLOWED");
+        if (inquiry.getUserId() != userId) throw new IllegalArgumentException("타인의 문의 내용입니다.");
+        if (inquiry.getAnsweredAt() != null) throw new IllegalArgumentException("답변 완료된 문의입니다.");
         if (data.getType() != null) {
             inquiry.setType(data.getType());
         }
         if (data.getContent() != null) {
             String content = data.getContent().trim();
-            if (content.length() == 0) return res.throwError("내용을 입력해주세요.", "INPUT_CHECK_REQUIRED");
+            if (content.length() == 0) throw new IllegalArgumentException("내용을 입력해주세요.");
             inquiry.setContent(content);
         }
         if (data.getIsSecret() != null) {
@@ -239,13 +239,13 @@ public class InquiryController {
         CustomResponse<Boolean> res = new CustomResponse<>();
 
         if (auth.isEmpty()) {
-            throw new JwtException(JwtExceptionMessage.TOKEN_REQUIRED);
+            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
         }
         TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth.get());
         Integer userId = tokenInfo.getId();
 
         Inquiry inquiry = inquiryQueryService.selectInquiry(inquiryId);
-        if (inquiry.getUserId() != userId) return res.throwError("타인의 문의 내용입니다.", "INPUT_CHECK_REQUIRED");
+        if (inquiry.getUserId() != userId) throw new IllegalArgumentException("타인의 문의 내용입니다.");
         inquiryCommandService.deleteInquiry(inquiryId);
         return ResponseEntity.ok(res);
     }
@@ -256,12 +256,12 @@ public class InquiryController {
         CustomResponse<Boolean> res = new CustomResponse<>();
 
         if (auth.isEmpty()) {
-            throw new JwtException(JwtExceptionMessage.TOKEN_REQUIRED);
+            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
         }
         jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth.get());
 
         if (data.getInquiryIds() == null || data.getInquiryIds().size() == 0)
-            return res.throwError("삭제할 문의를 선택해주세요.", "INPUT_CHECK_REQUIRED");
+            throw new IllegalArgumentException("삭제할 문의를 선택해주세요.");
         inquiryCommandService.deleteInquiryWithIds(data.getInquiryIds());
         res.setData(Optional.of(true));
         return ResponseEntity.ok(res);

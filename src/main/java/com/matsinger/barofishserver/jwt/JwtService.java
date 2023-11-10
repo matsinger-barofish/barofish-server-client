@@ -1,22 +1,14 @@
 package com.matsinger.barofishserver.jwt;
 
 import com.matsinger.barofishserver.domain.admin.application.AdminQueryService;
-import com.matsinger.barofishserver.domain.admin.domain.Admin;
-import com.matsinger.barofishserver.domain.admin.domain.AdminState;
-import com.matsinger.barofishserver.domain.store.domain.Store;
 import com.matsinger.barofishserver.domain.store.application.StoreService;
-import com.matsinger.barofishserver.domain.store.domain.StoreState;
-import com.matsinger.barofishserver.domain.user.domain.User;
 import com.matsinger.barofishserver.domain.user.application.UserCommandService;
-import com.matsinger.barofishserver.domain.user.domain.UserState;
-import com.matsinger.barofishserver.jwt.exception.JwtExceptionMessage;
-import io.jsonwebtoken.ExpiredJwtException;
-import io.jsonwebtoken.JwtException;
+import com.matsinger.barofishserver.global.error.ErrorCode;
+import com.matsinger.barofishserver.jwt.exception.JwtBusinessException;
 import lombok.RequiredArgsConstructor;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Service;
 
-import java.util.Optional;
 import java.util.Set;
 
 @RequiredArgsConstructor
@@ -32,13 +24,13 @@ public class JwtService {
     public TokenInfo validateAndGetTokenInfo(Set<TokenAuthType> authTypesToAllow, String authorizationString) {
 
         if (!authTypesToAllow.contains(TokenAuthType.ALLOW) && !authorizationString.startsWith("Bearer")) {
-            throw new JwtException(JwtExceptionMessage.TOKEN_INVALID);
+            throw new JwtBusinessException(ErrorCode.TOKEN_INVALID);
         }
 
         String token = authorizationString.substring(7);
 
         if (!authTypesToAllow.contains(TokenAuthType.ALLOW) && isExpired(token)) {
-            throw new JwtException(JwtExceptionMessage.TOKEN_EXPIRED);
+            throw new JwtBusinessException(ErrorCode.TOKEN_EXPIRED);
         }
 
         TokenInfo tokenInfo = extractIdAndAuthType(token);
@@ -50,11 +42,11 @@ public class JwtService {
         }
 
         if (tokenInfo.getId() == null && tokenInfo.getType() != TokenAuthType.ALLOW) {
-            throw new JwtException(JwtExceptionMessage.TOKEN_INVALID);
+            throw new JwtBusinessException(ErrorCode.TOKEN_INVALID);
         }
 
         if (!authTypesToAllow.contains(tokenInfo.getType())) {
-            throw new IllegalArgumentException(JwtExceptionMessage.NOT_ALLOWED);
+            throw new JwtBusinessException(ErrorCode.NOT_ALLOWED);
         }
 
         return tokenInfo;
