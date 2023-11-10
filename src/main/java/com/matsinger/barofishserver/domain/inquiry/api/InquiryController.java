@@ -66,10 +66,7 @@ public class InquiryController {
                                                                                      @RequestParam(value = "createdAtE", required = false) Timestamp createdAtE) {
         CustomResponse<Page<InquiryDto>> res = new CustomResponse<>();
 
-        if (auth.isEmpty()) {
-            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
-        }
-        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN, TokenAuthType.PARTNER), auth.get());
+                TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN, TokenAuthType.PARTNER), auth);
 
         Specification<Inquiry> spec = (root, query, builder) -> {
             List<Predicate> predicates = new ArrayList<>();
@@ -112,10 +109,7 @@ public class InquiryController {
     public ResponseEntity<CustomResponse<List<InquiryDto>>> selectInquiryListWithUserId(@RequestHeader(value = "Authorization") Optional<String> auth) {
         CustomResponse<List<InquiryDto>> res = new CustomResponse<>();
 
-        if (auth.isEmpty()) {
-            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
-        }
-        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth.get());
+                TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth);
         Integer userId = tokenInfo.getId();
 
         List<Inquiry> inquiries = inquiryQueryService.selectInquiryListWithUserId(userId);
@@ -129,10 +123,7 @@ public class InquiryController {
                                                                                          @PathVariable("productId") Integer productId) {
         CustomResponse<List<InquiryDto>> res = new CustomResponse<>();
 
-        if (auth.isEmpty()) {
-            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
-        }
-        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth.get());
+                TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth);
         Integer userId = tokenInfo.getId();
 
         List<Inquiry> inquiries = inquiryQueryService.selectInquiryListWithProductId(productId);
@@ -147,10 +138,7 @@ public class InquiryController {
                                                               @RequestPart(value = "data") InquiryAddReq data) throws Exception {
         CustomResponse<Inquiry> res = new CustomResponse<>();
 
-        if (auth.isEmpty()) {
-            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
-        }
-        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth.get());
+                TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth);
 
         Product product = productService.findById(data.getProductId());
         String content = utils.validateString(data.getContent(), 500L, "내용");
@@ -170,10 +158,7 @@ public class InquiryController {
                                                                     @RequestPart(value = "data") InquiryAnswerReq data) throws Exception {
         CustomResponse<InquiryDto> res = new CustomResponse<>();
 
-        if (auth.isEmpty()) {
-            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
-        }
-        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN, TokenAuthType.PARTNER), auth.get());
+                TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN, TokenAuthType.PARTNER), auth);
 
         Integer adminId = null;
         if (tokenInfo.getType().equals(TokenAuthType.ADMIN)) adminId = tokenInfo.getId();
@@ -208,10 +193,7 @@ public class InquiryController {
                                                                     @RequestPart(value = "data") InquiryUpdateReq data) {
         CustomResponse<InquiryDto> res = new CustomResponse<>();
 
-        if (auth.isEmpty()) {
-            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
-        }
-        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth.get());
+                TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth);
         Integer userId = tokenInfo.getId();
 
         Inquiry inquiry = inquiryQueryService.selectInquiry(inquiryId);
@@ -238,10 +220,7 @@ public class InquiryController {
                                                                        @PathVariable("id") Integer inquiryId) {
         CustomResponse<Boolean> res = new CustomResponse<>();
 
-        if (auth.isEmpty()) {
-            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
-        }
-        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth.get());
+                TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth);
         Integer userId = tokenInfo.getId();
 
         Inquiry inquiry = inquiryQueryService.selectInquiry(inquiryId);
@@ -255,10 +234,7 @@ public class InquiryController {
                                                                         @RequestPart(value = "data") InquiryDeleteReq data) {
         CustomResponse<Boolean> res = new CustomResponse<>();
 
-        if (auth.isEmpty()) {
-            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
-        }
-        jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth.get());
+                jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
 
         if (data.getInquiryIds() == null || data.getInquiryIds().size() == 0)
             throw new IllegalArgumentException("삭제할 문의를 선택해주세요.");

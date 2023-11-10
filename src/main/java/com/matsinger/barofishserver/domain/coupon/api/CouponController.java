@@ -59,10 +59,7 @@ public class CouponController {
                                                                                    @RequestParam(value = "endAtE", required = false) Timestamp endAtE) {
         CustomResponse<Page<CouponDto>> res = new CustomResponse<>();
 
-        if (auth.isEmpty()) {
-            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
-        }
-        jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth.get());
+                jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
 
         Specification<Coupon> spec = (root, query, builder) -> {
             List<Predicate> predicates = new ArrayList<>();
@@ -110,10 +107,7 @@ public class CouponController {
     public ResponseEntity<CustomResponse<List<Coupon>>> selectCanUseCoupon(@RequestHeader(value = "Authorization") Optional<String> auth) {
         CustomResponse<List<Coupon>> res = new CustomResponse<>();
 
-        if (auth.isEmpty()) {
-            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
-        }
-        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth.get());
+                TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth);
 
         List<Coupon> coupons = couponQueryService.selectCanUseCoupon(tokenInfo.getId());
         res.setData(Optional.ofNullable(coupons));
@@ -124,10 +118,7 @@ public class CouponController {
     public ResponseEntity<CustomResponse<List<Coupon>>> selectCanDownloadCoupon(@RequestHeader(value = "Authorization") Optional<String> auth) {
         CustomResponse<List<Coupon>> res = new CustomResponse<>();
 
-        if (auth.isEmpty()) {
-            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
-        }
-        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth.get());
+                TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth);
 
         List<Coupon> coupons = couponQueryService.selectNotDownloadCoupon(tokenInfo.getId());
         res.setData(Optional.ofNullable(coupons));
@@ -139,10 +130,7 @@ public class CouponController {
                                                                           @PathVariable(value = "userId") Integer userId) {
         CustomResponse<List<Coupon>> res = new CustomResponse<>();
 
-        if (auth.isEmpty()) {
-            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
-        }
-        jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth.get());
+                jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
 
         List<Coupon> coupons = couponQueryService.selectUserCouponList(userId);
         res.setData(Optional.ofNullable(coupons));
@@ -153,10 +141,7 @@ public class CouponController {
     public ResponseEntity<CustomResponse<List<Coupon>>> selectDownloadedCoupon(@RequestHeader(value = "Authorization") Optional<String> auth) {
         CustomResponse<List<Coupon>> res = new CustomResponse<>();
 
-        if (auth.isEmpty()) {
-            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
-        }
-        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth.get());
+                TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth);
 
         List<Coupon> coupons = couponQueryService.selectDownloadedCoupon(tokenInfo.getId());
         res.setData(Optional.ofNullable(coupons));
@@ -168,10 +153,7 @@ public class CouponController {
                                                                         @PathVariable("id") Integer id) {
         CustomResponse<Boolean> res = new CustomResponse<>();
 
-        if (auth.isEmpty()) {
-            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
-        }
-        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth.get());
+                TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth);
 
         Boolean checkDownloaded = couponQueryService.checkHasCoupon(id, tokenInfo.getId());
         if (checkDownloaded) throw new IllegalArgumentException("이미 다운로드 받은 쿠폰입니다.");
@@ -186,10 +168,7 @@ public class CouponController {
                                                             @RequestPart(value = "data") CouponAddReq data) {
         CustomResponse<Coupon> res = new CustomResponse<>();
 
-        if (auth.isEmpty()) {
-            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
-        }
-        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth.get());
+                TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
 
             Integer adminId = tokenInfo.getId();
             String title = utils.validateString(data.getTitle(), 100L, "제목");
@@ -232,10 +211,7 @@ public class CouponController {
                                                                 @PathVariable("id") Integer id) {
         CustomResponse<Boolean> res = new CustomResponse<>();
 
-        if (auth.isEmpty()) {
-            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
-        }
-        jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth.get());
+                jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
 
         Coupon coupon = couponQueryService.selectCoupon(id);
         if (coupon.getPublicType().equals(CouponPublicType.SYSTEM))
@@ -251,10 +227,7 @@ public class CouponController {
     public ResponseEntity<CustomResponse<List<Coupon>>> selectSystemCoupon(@RequestHeader(value = "Authorization") Optional<String> auth) {
         CustomResponse<List<Coupon>> res = new CustomResponse<>();
 
-        if (auth.isEmpty()) {
-            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
-        }
-        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth.get());
+                TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
 
         List<Coupon> coupons = couponQueryService.selectCouponWithPublicType(CouponPublicType.SYSTEM);
         res.setData(Optional.ofNullable(coupons));
@@ -266,10 +239,7 @@ public class CouponController {
                                                                            @RequestPart(value = "data") UpdateSystemCoupon data) {
         CustomResponse<List<Coupon>> res = new CustomResponse<>();
 
-        if (auth.isEmpty()) {
-            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
-        }
-        jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth.get());
+                jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
 
         if (data.getOrder_1stAmount() != null) {
             Coupon coupon = couponQueryService.selectCoupon(1);

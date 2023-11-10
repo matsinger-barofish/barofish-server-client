@@ -2,7 +2,9 @@ package com.matsinger.barofishserver.jwt.exception;
 
 import com.matsinger.barofishserver.global.error.ErrorCode;
 import io.jsonwebtoken.JwtException;
+import lombok.Getter;
 
+@Getter
 public class JwtBusinessException extends RuntimeException {
 
     private final ErrorCode code;

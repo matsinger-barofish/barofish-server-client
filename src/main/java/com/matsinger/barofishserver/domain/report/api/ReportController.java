@@ -59,10 +59,7 @@ public class ReportController {
                                                                             @RequestParam(value = "createdAtE", required = false) Timestamp createdAtE) {
         CustomResponse<Page<ReportDto>> res = new CustomResponse<>();
 
-        if (auth.isEmpty()) {
-            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
-        }
-        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth.get());
+                TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
 
         Specification<Report> spec = (root, query, builder) -> {
             List<Predicate> predicates = new ArrayList<>();
@@ -90,10 +87,7 @@ public class ReportController {
                                                                   @PathVariable("id") Integer id) {
         CustomResponse<ReportDto> res = new CustomResponse<>();
 
-        if (auth.isEmpty()) {
-            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
-        }
-        jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth.get());
+                jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
 
         Report report = reportQueryService.selectReport(id);
         ReportDto reportDto = reportCommandService.convert2Dto(report);
@@ -113,10 +107,7 @@ public class ReportController {
                                                                @RequestPart(value = "data") AddReportReq data) {
         CustomResponse<ReportDto> res = new CustomResponse<>();
 
-        if (auth.isEmpty()) {
-            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
-        }
-        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth.get());
+                TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth);
 
         Integer userId = tokenInfo.getId();
         if (data.reviewId == null) throw new IllegalArgumentException("리뷰 아이디를 입력해주세요.");
@@ -143,10 +134,7 @@ public class ReportController {
                                                                   @RequestPart(value = "data") confirmReportReq data) {
         CustomResponse<Boolean> res = new CustomResponse<>();
 
-        if (auth.isEmpty()) {
-            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
-        }
-        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth.get());
+                TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
 
 
         Integer adminId = tokenInfo.getId();
@@ -176,10 +164,7 @@ public class ReportController {
                                                                  @RequestPart(value = "data") deleteReportReq data) {
         CustomResponse<Boolean> res = new CustomResponse<>();
 
-        if (auth.isEmpty()) {
-            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
-        }
-        jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth.get());
+                jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
 
 
         reportCommandService.deleteReportList(data.getReportIds());

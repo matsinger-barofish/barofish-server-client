@@ -114,10 +114,7 @@ public class TopBarController {
                                                             @RequestPart(value = "name") String name) throws Exception {
         CustomResponse<TopBar> res = new CustomResponse<>();
 
-        if (auth.isEmpty()) {
-            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
-        }
-        jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth.get());
+                jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
 
         name = utils.validateString(name, 20L, "이름");
         TopBar topBar = new TopBar();
@@ -133,10 +130,7 @@ public class TopBarController {
                                                                @RequestPart(value = "name") String name) throws Exception {
         CustomResponse<TopBar> res = new CustomResponse<>();
 
-        if (auth.isEmpty()) {
-            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
-        }
-        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth.get());
+                TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
 
         TopBar topbar = topBarQueryService.selectTopBar(id);
         name = utils.validateString(name, 20L, "이름");
@@ -152,10 +146,7 @@ public class TopBarController {
                                                                                @RequestPart(value = "productId") Integer productId) {
         CustomResponse<TopBarProductMap> res = new CustomResponse<>();
 
-        if (auth.isEmpty()) {
-            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
-        }
-        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth.get());
+                TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
 
         TopBar topBar = topBarQueryService.selectTopBar(topBarId);
         Product product = productService.findById(productId);
@@ -172,10 +163,7 @@ public class TopBarController {
                                                                 @PathVariable("id") Integer id) {
         CustomResponse<Boolean> res = new CustomResponse<>();
 
-        if (auth.isEmpty()) {
-            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
-        }
-        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth.get());
+                TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
 
         TopBar topBar = topBarQueryService.selectTopBar(id);
         Boolean result = topBarCommandService.delete(id);

@@ -27,7 +27,8 @@ public class JwtProvider {
      *     60: 1시간 (60분)
      *     24: 1일 (24시간)
      */
-    public static final long JWT_TOKEN_VALIDITY = 1000 * 60 * 60 * 24;
+//    public static final long JWT_TOKEN_VALIDITY = 1000 * 60 * 60 * 24;
+    public static final long JWT_TOKEN_VALIDITY = 1000 * 10;
 
     // token으로 사용자 id 조회
     public Integer getIdFromToken(String token) {
@@ -65,8 +66,12 @@ public class JwtProvider {
 
     // 토근 만료 여부 체크
     public Boolean isTokenExpired(String token) {
-        final Date expiration = getExpirationDateFromToken(token);
-        return expiration.before(new Date());
+        try {
+            final Date expiration = getExpirationDateFromToken(token);
+            return expiration.before(new Date());
+        } catch (RuntimeException e) {
+            throw new JwtBusinessException(e, ErrorCode.TOKEN_INVALID);
+        }
     }
 
     // 토큰 만료일자 조회

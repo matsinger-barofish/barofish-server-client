@@ -48,10 +48,7 @@ public class BasketController {
         CustomResponse<List<BasketProductDto>> res = new CustomResponse<>();
 
         Integer userId = null;
-        if (auth.isEmpty()) {
-            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
-        }
-        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth.get());
+                TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth);
 
         List<BasketProductDto> dtos = basketQueryService.selectBasketList(tokenInfo.getId());
         res.setData(Optional.ofNullable(dtos));
@@ -62,13 +59,17 @@ public class BasketController {
     public ResponseEntity<CustomResponse<Integer>> countBasket(@RequestHeader(value = "Authorization") Optional<String> auth) {
         CustomResponse<Integer> res = new CustomResponse<>();
 
-        Integer count = null;
-
-        Integer userId = null;
+        Integer count = 0;
         if (auth.isEmpty()) {
-            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
+            res.setData(Optional.of(count));
+            return ResponseEntity.ok(res);
         }
-        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth.get());
+
+        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER, TokenAuthType.ALLOW), auth);
+
+        if (tokenInfo.getType() == TokenAuthType.USER) {
+            count = basketQueryService.countBasketList(tokenInfo.getId());
+        }
 
         res.setData(Optional.ofNullable(count));
         return ResponseEntity.ok(res);
@@ -80,10 +81,7 @@ public class BasketController {
         CustomResponse<Boolean> res = new CustomResponse<>();
 
         Integer userId = null;
-        if (auth.isEmpty()) {
-            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
-        }
-        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth.get());
+                TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth);
 
         if (data.getProductId() == null) throw new IllegalArgumentException("상품 아이디를 입력하세요.");
         if (data.getOptions() == null || data.getOptions().size() == 0)
@@ -107,10 +105,7 @@ public class BasketController {
         CustomResponse<BasketProductDto> res = new CustomResponse<>();
 
         Integer userId = null;
-        if (auth.isEmpty()) {
-            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
-        }
-        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth.get());
+                TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth);
 
         if (amount == null) throw new IllegalArgumentException("갯수를 입력해주세요.");
         BasketProductInfo info = basketQueryService.selectBasket(id);
@@ -140,10 +135,7 @@ public class BasketController {
         CustomResponse<Boolean> res = new CustomResponse<>();
 
         Integer userId = null;
-        if (auth.isEmpty()) {
-            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
-        }
-        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth.get());
+                TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth);
 
         for (Integer basketId : data.getIds()) {
             BasketProductInfo info = basketQueryService.selectBasket(basketId);

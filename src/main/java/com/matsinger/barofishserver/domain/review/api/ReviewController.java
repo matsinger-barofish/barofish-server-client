@@ -68,10 +68,7 @@ public class ReviewController {
                                                                                       @RequestParam(value = "createdAtE", required = false) Timestamp createdAtE) {
         CustomResponse<Page<ReviewDto>> res = new CustomResponse<>();
 
-        if (auth.isEmpty()) {
-            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
-        }
-        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN, TokenAuthType.PARTNER), auth.get());
+                TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN, TokenAuthType.PARTNER), auth);
 
         Specification<Review> spec = (root, query, builder) -> {
             List<Predicate> predicates = new ArrayList<>();
@@ -117,7 +114,7 @@ public class ReviewController {
             userId = null;
         }
         if (auth.isPresent()) {
-            tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ALLOW, TokenAuthType.USER), auth.get());
+            tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ALLOW, TokenAuthType.USER), auth);
             userId = tokenInfo.getId();
         }
 
@@ -148,7 +145,7 @@ public class ReviewController {
             userId = null;
         }
         if (auth.isPresent()) {
-            tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ALLOW, TokenAuthType.USER), auth.get());
+            tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ALLOW, TokenAuthType.USER), auth);
             userId = tokenInfo.getId();
         }
 
@@ -173,7 +170,7 @@ public class ReviewController {
             userId = null;
         }
         if (auth.isPresent()) {
-            tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ALLOW, TokenAuthType.USER), auth.get());
+            tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ALLOW, TokenAuthType.USER), auth);
             userId = tokenInfo.getId();
         }
 
@@ -203,10 +200,7 @@ public class ReviewController {
                                                                               @RequestParam(value = "take", required = false, defaultValue = "10") Integer take) {
         CustomResponse<Page<ReviewDto>> res = new CustomResponse<>();
 
-        if (auth.isEmpty()) {
-            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
-        }
-        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth.get());
+                TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth);
         Integer userId = tokenInfo.getId();
 
         Page<ReviewDto>
@@ -227,10 +221,7 @@ public class ReviewController {
                                                                      @RequestPart(value = "images", required = false) List<MultipartFile> images) throws Exception {
         CustomResponse<ReviewDto> res = new CustomResponse<>();
 
-        if (auth.isEmpty()) {
-            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
-        }
-        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth.get());
+                TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
 
         Integer userId = tokenInfo.getId();
         UserInfo user = userService.selectUserInfo(userId);
@@ -273,10 +264,7 @@ public class ReviewController {
                                                                   @RequestPart(value = "newImages", required = false) List<MultipartFile> newImages) throws Exception {
         CustomResponse<ReviewDto> res = new CustomResponse<>();
 
-        if (auth.isEmpty()) {
-            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
-        }
-        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth.get());
+                TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
         Integer userId = tokenInfo.getId();
 
         Review review = reviewQueryService.selectReview(id);
@@ -350,10 +338,7 @@ public class ReviewController {
                                                                     @PathVariable("id") Integer reviewId) {
         CustomResponse<Boolean> res = new CustomResponse<>();
 
-        if (auth.isEmpty()) {
-            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
-        }
-        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth.get());
+                TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
         Integer userId = tokenInfo.getId();
 
         Review review = reviewQueryService.selectReview(reviewId);
@@ -367,10 +352,7 @@ public class ReviewController {
                                                                       @PathVariable("id") Integer reviewId) {
         CustomResponse<Boolean> res = new CustomResponse<>();
 
-        if (auth.isEmpty()) {
-            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
-        }
-        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth.get());
+                TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
         Integer userId = tokenInfo.getId();
         Review review = reviewQueryService.selectReview(reviewId);
         reviewCommandService.unlikeReview(userId, review.getId());
@@ -384,10 +366,7 @@ public class ReviewController {
                                                                       @PathVariable("id") Integer reviewId) {
         CustomResponse<Boolean> res = new CustomResponse<>();
 
-        if (auth.isEmpty()) {
-            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
-        }
-        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER, TokenAuthType.PARTNER, TokenAuthType.ADMIN), auth.get());
+                TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER, TokenAuthType.PARTNER, TokenAuthType.ADMIN), auth);
 
         Review review = reviewQueryService.selectReview(reviewId);
         if (tokenInfo.getType().equals(TokenAuthType.USER) &&

@@ -57,13 +57,9 @@ public class ReviewControllerV2 {
     ) {
         CustomResponse<Page<AdminReviewDto>> res = new CustomResponse<>();
 
-        if (auth.isEmpty()) {
-            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
-        }
-
-        TokenInfo tokenInfo = null;
+                TokenInfo tokenInfo = null;
         if (auth.isPresent()) {
-            tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN, TokenAuthType.PARTNER), auth.get());
+            tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN, TokenAuthType.PARTNER), auth);
         }
 
         PageRequest pageRequest = PageRequest.of(page, take);
@@ -82,13 +78,10 @@ public class ReviewControllerV2 {
     public ResponseEntity<CustomResponse<Boolean>> deleteReview(@RequestHeader(value = "Authorization") Optional<String> auth, @PathVariable("id") Integer reviewId) {
         CustomResponse<Boolean> res = new CustomResponse<>();
 
-        if (auth.isEmpty()) {
-            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
-        }
-
+        
         TokenInfo tokenInfo = null;
         if (auth.isPresent()) {
-            tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER, TokenAuthType.ADMIN, TokenAuthType.PARTNER), auth.get());
+            tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER, TokenAuthType.ADMIN, TokenAuthType.PARTNER), auth);
         }
 
         Review review = reviewQueryService.selectReview(reviewId);
@@ -110,7 +103,7 @@ public class ReviewControllerV2 {
             userId = null;
         }
         if (auth.isPresent()) {
-            TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ALLOW, TokenAuthType.USER), auth.get());
+            TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ALLOW, TokenAuthType.USER), auth);
             userId = tokenInfo.getId();
         }
 
@@ -139,7 +132,7 @@ public class ReviewControllerV2 {
             userId = null;
         }
         if (auth.isPresent()) {
-            tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ALLOW), auth.get());
+            tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ALLOW), auth);
             userId = tokenInfo.getId();
         }
 
@@ -158,11 +151,8 @@ public class ReviewControllerV2 {
         CustomResponse<UserReviewDto> res = new CustomResponse<>();
 
         Integer userId = null;
-        if (auth.isEmpty()) {
-            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
-        }
-        if (auth.isPresent()) {
-            TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth.get());
+                if (auth.isPresent()) {
+            TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth);
             userId = tokenInfo.getId();
         }
 
@@ -182,11 +172,8 @@ public class ReviewControllerV2 {
         CustomResponse<Object> res = new CustomResponse<>();
 
         Integer userId = null;
-        if (auth.isEmpty()) {
-            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
-        }
-        if (auth.isPresent()) {
-            TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth.get());
+                if (auth.isPresent()) {
+            TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth);
             userId = tokenInfo.getId();
         }
 

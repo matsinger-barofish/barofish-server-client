@@ -75,7 +75,7 @@ public class MainController {
         }
 
         if (auth.isPresent()) {
-            tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER, TokenAuthType.ALLOW), auth.get());
+            tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER, TokenAuthType.ALLOW), auth);
             userId = tokenInfo.getId();
         }
 
@@ -108,7 +108,7 @@ public class MainController {
         }
         // 토큰이 있을 때 만료됐으면 비회원으로 간주, 정상적이면 로그인으로 간주
         if (auth.isPresent()) {
-            tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER, TokenAuthType.ALLOW), auth.get());
+            tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER, TokenAuthType.ALLOW), auth);
             userId = tokenInfo.getId();
         }
 

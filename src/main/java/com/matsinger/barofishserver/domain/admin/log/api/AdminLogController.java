@@ -36,10 +36,7 @@ public class AdminLogController {
                                                                                 @RequestParam(value = "targetId") String targetId) {
         CustomResponse<Page<AdminLogDto>> res = new CustomResponse<>();
 
-        if (auth.isEmpty()) {
-            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
-        }
-        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth.get());
+                TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
 
         if (type == null) throw new IllegalArgumentException("타입을 입력해주세요.");
         if (targetId == null) throw new IllegalArgumentException("대상 아이디를 입력해주세요.");

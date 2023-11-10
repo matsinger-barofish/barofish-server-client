@@ -59,10 +59,7 @@ public class SiteInfoController {
                                                                       @RequestPart(value = "data") SiteInfoReq data) {
         CustomResponse<SiteInfoDto> res = new CustomResponse<>();
 
-        if (auth.isEmpty()) {
-            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
-        }
-        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth.get());
+                TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
 
         SiteInformation siteInformation = siteInfoQueryService.selectSiteInfo(id);
         if (id.startsWith("HTML")) {

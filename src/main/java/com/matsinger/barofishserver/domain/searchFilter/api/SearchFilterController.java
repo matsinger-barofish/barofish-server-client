@@ -69,10 +69,7 @@ public class SearchFilterController {
                                                                            @RequestPart(value = "data") AddSearchFilterReq data) throws Exception {
         CustomResponse<SearchFilterDto> res = new CustomResponse<>();
 
-        if (auth.isEmpty()) {
-            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
-        }
-        jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth.get());
+                jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
 
         String name = utils.validateString(data.name, 20L, "이름");
         SearchFilter searchFilter = SearchFilter.builder().name(name).build();
@@ -89,10 +86,7 @@ public class SearchFilterController {
                                                                            @RequestPart(value = "data") AddSearchFilterReq data) throws Exception {
         CustomResponse<SearchFilterDto> res = new CustomResponse<>();
 
-        if (auth.isEmpty()) {
-            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
-        }
-        jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth.get());
+                jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
 
         SearchFilter searchFilter = searchFilterQueryService.selectSearchFilter(id);
         if (data.name != null) {
@@ -112,10 +106,7 @@ public class SearchFilterController {
                                                                       @PathVariable("id") Integer id) {
         CustomResponse<Boolean> res = new CustomResponse<>();
 
-        if (auth.isEmpty()) {
-            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
-        }
-        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth.get());
+                TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
 
         SearchFilter searchFilter = searchFilterQueryService.selectSearchFilter(id);
         searchFilterCommandService.deleteSearchFilter(id);
@@ -147,10 +138,7 @@ public class SearchFilterController {
                                                                                      @RequestPart(value = "data") AddSearchFilterFiledReq data) throws Exception {
         CustomResponse<SearchFilterFieldDto> res = new CustomResponse<>();
 
-        if (auth.isEmpty()) {
-            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
-        }
-        jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth.get());
+                jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
 
         if (data.searchFilterId == null) throw new IllegalArgumentException("필터 아이디를 입력해주세요.");
         if (data.field == null) throw new IllegalArgumentException("필드를 입력해주세요.");
@@ -177,10 +165,7 @@ public class SearchFilterController {
                                                                                         @RequestPart(value = "data") UpdateSearchFilterFiledReq data) throws Exception {
         CustomResponse<SearchFilterFieldDto> res = new CustomResponse<>();
 
-        if (auth.isEmpty()) {
-            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
-        }
-        jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth.get());
+                jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
 
         SearchFilterField searchFilterField = searchFilterQueryService.selectSearchFilterField(id);
         if (data.field != null) {
@@ -197,10 +182,7 @@ public class SearchFilterController {
                                                                            @PathVariable("id") Integer id) {
         CustomResponse<Boolean> res = new CustomResponse<>();
 
-        if (auth.isEmpty()) {
-            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
-        }
-        jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth.get());
+                jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
 
         SearchFilterField searchFilterField = searchFilterQueryService.selectSearchFilterField(id);
         searchFilterCommandService.deleteSearchFilterField(id);

@@ -36,10 +36,7 @@ public class DeliverPlaceController {
     public ResponseEntity<CustomResponse<List<DeliverPlace>>> selectDeliverPlace(@RequestHeader(value = "Authorization") Optional<String> auth) {
         CustomResponse<List<DeliverPlace>> res = new CustomResponse<>();
 
-        if (auth.isEmpty()) {
-            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
-        }
-        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth.get());
+                TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth);
         Integer userId = tokenInfo.getId();
 
         List<DeliverPlace> deliverPlaces = deliverPlaceService.selectDeliverPlaceList(userId);
@@ -66,10 +63,7 @@ public class DeliverPlaceController {
                                                                         @RequestPart(value = "data") AddDeliverPlaceReq data) {
         CustomResponse<DeliverPlace> res = new CustomResponse<>();
 
-        if (auth.isEmpty()) {
-            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
-        }
-        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth.get());
+                TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth);
         Integer userId = tokenInfo.getId();
 
         String name = utils.validateString(data.name, 50L, "배송지명");
@@ -105,10 +99,7 @@ public class DeliverPlaceController {
                                                                            @RequestPart(value = "data") AddDeliverPlaceReq data) {
         CustomResponse<DeliverPlace> res = new CustomResponse<>();
 
-        if (auth.isEmpty()) {
-            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
-        }
-        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth.get());
+                TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth);
 
         DeliverPlace deliverPlace = deliverPlaceService.selectDeliverPlace(id);
         if (data.name != null) {
@@ -167,10 +158,7 @@ public class DeliverPlaceController {
                                                                       @PathVariable("id") Integer id) {
         CustomResponse<Boolean> res = new CustomResponse<>();
 
-        if (auth.isEmpty()) {
-            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
-        }
-        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth.get());
+                TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth);
         Integer userId = tokenInfo.getId();
 
         DeliverPlace deliverPlace = deliverPlaceService.selectDeliverPlace(id);

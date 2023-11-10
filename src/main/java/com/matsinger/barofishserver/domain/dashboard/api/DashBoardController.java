@@ -36,10 +36,7 @@ public class DashBoardController {
     public ResponseEntity<CustomResponse<DashBoard>> selectDashBoard(@RequestHeader(value = "Authorization") Optional<String> auth) {
         CustomResponse<DashBoard> res = new CustomResponse<>();
 
-        if (auth.isEmpty()) {
-            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
-        }
-        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN, TokenAuthType.PARTNER), auth.get());
+                TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN, TokenAuthType.PARTNER), auth);
 
         Integer storeId = null;
         if (tokenInfo.getType().equals(TokenAuthType.PARTNER)) storeId = tokenInfo.getId();

@@ -52,10 +52,7 @@ public class CompareController {
 
         CustomResponse<CompareMain> res = new CustomResponse<>();
 
-        if (auth.isEmpty()) {
-            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
-        }
-        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth.get());
+        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth);
         Integer userId = tokenInfo.getId();
 
         CompareMain mainData = new CompareMain();
@@ -78,11 +75,7 @@ public class CompareController {
             @RequestHeader("Authorization") Optional<String> auth) {
         CustomResponse<List<CompareSetDto>> res = new CustomResponse<>();
 
-        Integer userId = null;
-        if (auth.isEmpty()) {
-            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
-        }
-        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth.get());
+        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth);
 
         List<CompareSet> compareSets = compareItemQueryService.selectCompareSetList(tokenInfo.getId());
         List<CompareSetDto> compareSetDtos = compareSets.stream().map(compareSet -> {
@@ -103,10 +96,7 @@ public class CompareController {
             @PathVariable("id") Integer id) {
         CustomResponse<List<CompareProductDto>> res = new CustomResponse<>();
 
-        if (auth.isEmpty()) {
-            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
-        }
-        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth.get());
+                jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER, TokenAuthType.ALLOW), auth);
 
         CompareSet compareSet = compareItemQueryService.selectCompareSet(id);
         List<CompareProductDto> products = compareItemQueryService.selectCompareItems(compareSet.getId()).stream()
@@ -122,10 +112,7 @@ public class CompareController {
             @RequestHeader("Authorization") Optional<String> auth) {
         CustomResponse<List<ProductListDto>> res = new CustomResponse<>();
 
-        if (auth.isEmpty()) {
-            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
-        }
-        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth.get());
+        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth);
 
             List<ProductListDto> products = compareItemQueryService.selectSaveProducts(tokenInfo.getId()).stream()
                     .map(productService::convert2ListDto).toList();
@@ -139,10 +126,7 @@ public class CompareController {
             @RequestParam(value = "productIdStr") String productIdStr) {
         CustomResponse<List<CompareProductDto>> res = new CustomResponse<>();
 
-        if (auth.isEmpty()) {
-            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
-        }
-        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth.get());
+        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER, TokenAuthType.ALLOW), auth);
         Integer userId = tokenInfo.getId();
 
         List<Integer> productIds = utils.str2IntList(productIdStr);
@@ -167,10 +151,7 @@ public class CompareController {
             @RequestBody List<Integer> productIds) {
         CustomResponse<CompareSet> res = new CustomResponse<>();
 
-        if (auth.isEmpty()) {
-            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
-        }
-        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth.get());
+        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth);
 
         if (productIds.size() != 3 && productIds.size() != 2)
             throw new IllegalArgumentException("비교하기는 2~3개의 상품만 가능합니다.");
@@ -192,10 +173,7 @@ public class CompareController {
             @RequestPart(value = "data") SaveProductReq data) {
         CustomResponse<Boolean> res = new CustomResponse<>();
 
-        if (auth.isEmpty()) {
-            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
-        }
-        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth.get());
+        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth);
 
         Boolean result = compareItemCommandService.addSaveProduct(tokenInfo.getId(), data.getProductId());
         res.setData(Optional.ofNullable(result));
@@ -208,10 +186,7 @@ public class CompareController {
             @RequestPart(value = "data") DeleteCompareSetReq data) {
         CustomResponse<Boolean> res = new CustomResponse<>();
 
-        if (auth.isEmpty()) {
-            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
-        }
-        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth.get());
+        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth);
 
         for (Integer setId : data.getCompareSetIds()) {
             CompareSet compareSet = compareItemQueryService.selectCompareSet(setId);
@@ -231,10 +206,7 @@ public class CompareController {
             @RequestPart(value = "data") DeleteSaveProductReq data) {
         CustomResponse<Boolean> res = new CustomResponse<>();
 
-        if (auth.isEmpty()) {
-            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
-        }
-        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth.get());
+                TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth);
 
         List<SaveProduct> saveProducts = new ArrayList<>();
         for (Integer productId : data.getProductIds()) {
@@ -252,10 +224,7 @@ public class CompareController {
             @RequestParam(value = "type") RecommendCompareSetType type) {
         CustomResponse<List<RecommendCompareSetDto>> res = new CustomResponse<>();
 
-        if (auth.isEmpty()) {
-            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
-        }
-        jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth.get());
+                jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
 
         List<RecommendCompareSetDto> recommendCompareSetDtos = recommendCompareSetService
                 .selectRecommendCompareSetList(type).stream().map(v -> recommendCompareSetService.convert2Dto(
@@ -284,10 +253,7 @@ public class CompareController {
             @RequestPart(value = "data") AddRecommendCompareSet data) {
         CustomResponse<RecommendCompareSetDto> res = new CustomResponse<>();
 
-        if (auth.isEmpty()) {
-            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
-        }
-        jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth.get());
+                jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
 
         if (data.getType() == null)
             throw new IllegalArgumentException("타입을 입력해주세요.");
@@ -318,10 +284,7 @@ public class CompareController {
             @PathVariable("id") Integer id) {
         CustomResponse<RecommendCompareSetDto> res = new CustomResponse<>();
 
-        if (auth.isEmpty()) {
-            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
-        }
-        jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth.get());
+                jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
 
         RecommendCompareSet set = recommendCompareSetService.selectRecommendCompareSet(id);
         if (data.getProductIds() == null)
@@ -352,10 +315,7 @@ public class CompareController {
             @PathVariable("id") Integer id) {
         CustomResponse<Boolean> res = new CustomResponse<>();
 
-        if (auth.isEmpty()) {
-            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
-        }
-        jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth.get());
+                jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
 
         RecommendCompareSet set = recommendCompareSetService.selectRecommendCompareSet(id);
         recommendCompareSetService.deleteRecommendCompareSet(id);

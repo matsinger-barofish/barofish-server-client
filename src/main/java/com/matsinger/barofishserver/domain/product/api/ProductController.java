@@ -132,7 +132,7 @@ public class ProductController {
             tokenInfo.setId(null);
         }
         if (auth.isPresent()) {
-            tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN, TokenAuthType.PARTNER, TokenAuthType.USER, TokenAuthType.ALLOW), auth.get());
+            tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN, TokenAuthType.PARTNER, TokenAuthType.USER, TokenAuthType.ALLOW), auth);
         }
 
         TokenInfo finalTokenInfo = tokenInfo;
@@ -221,7 +221,7 @@ public class ProductController {
 
         Integer userId = null;
         if (auth.isEmpty()) throw new JwtBusinessException(ErrorCode.NOT_ALLOWED);;
-        jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ALLOW, TokenAuthType.USER), auth.get());
+        jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ALLOW, TokenAuthType.USER), auth);
 
         Page<ProductListDto>
                 result =
@@ -246,7 +246,7 @@ public class ProductController {
 
         Integer userId = null;
         if (auth.isEmpty()) throw new JwtBusinessException(ErrorCode.NOT_ALLOWED);;
-        jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth.get());
+        jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
 
         List<Integer> ids = null;
         if (idsStr != null) ids = utils.str2IntList(idsStr);
@@ -270,7 +270,7 @@ public class ProductController {
         if (auth.isEmpty()) throw new JwtBusinessException(ErrorCode.NOT_ALLOWED);;
         TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(
                 Set.of(TokenAuthType.ALLOW, TokenAuthType.USER, TokenAuthType.ADMIN, TokenAuthType.PARTNER),
-                auth.get()
+                auth
         );
 
         Product product = productService.findById(id);
@@ -298,7 +298,7 @@ public class ProductController {
         CustomResponse<SimpleProductDto> res = new CustomResponse<>();
 
         if (auth.isEmpty()) throw new JwtBusinessException(ErrorCode.NOT_ALLOWED);;
-        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.PARTNER, TokenAuthType.ADMIN), auth.get());
+        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.PARTNER, TokenAuthType.ADMIN), auth);
 
         Integer adminId = null;
         if (tokenInfo.getType().equals(TokenAuthType.ADMIN)) adminId = tokenInfo.getId();
@@ -461,7 +461,7 @@ public class ProductController {
         CustomResponse<SimpleProductDto> res = new CustomResponse<>();
 
         if (auth.isEmpty()) throw new JwtBusinessException(ErrorCode.NOT_ALLOWED);;
-        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN, TokenAuthType.PARTNER), auth.get());
+        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN, TokenAuthType.PARTNER), auth);
 
 
         Integer adminId = null;
@@ -746,7 +746,7 @@ public class ProductController {
         CustomResponse<Boolean> res = new CustomResponse<>();
 
         if (auth.isEmpty()) throw new JwtBusinessException(ErrorCode.NOT_ALLOWED);;
-        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth.get());
+        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
 
         Integer adminId = tokenInfo.getId();
         if (data.getProductIds() == null || data.getProductIds().size() == 0)
@@ -780,7 +780,7 @@ public class ProductController {
         CustomResponse<Boolean> res = new CustomResponse<>();
 
         if (auth.isEmpty()) throw new JwtBusinessException(ErrorCode.NOT_ALLOWED);;
-        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER, TokenAuthType.USER), auth.get());
+        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER, TokenAuthType.USER), auth);
 
         Integer check = productService.checkLikeProduct(productId, tokenInfo.getId());
         if (check == 0 && type.equals(LikePostType.LIKE)) {
@@ -799,7 +799,7 @@ public class ProductController {
         CustomResponse<Boolean> res = new CustomResponse<>();
 
         if (auth.isEmpty()) throw new JwtBusinessException(ErrorCode.NOT_ALLOWED);;
-        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN, TokenAuthType.PARTNER), auth.get());
+        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN, TokenAuthType.PARTNER), auth);
 
 
         Integer adminId = null;
