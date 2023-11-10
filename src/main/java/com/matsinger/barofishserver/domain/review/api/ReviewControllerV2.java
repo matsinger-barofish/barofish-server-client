@@ -126,18 +126,12 @@ public class ReviewControllerV2 {
 
         CustomResponse<StoreReviewDto> res = new CustomResponse<>();
 
-        Integer userId = null;
-        TokenInfo tokenInfo = null;
-        if (auth.isEmpty()) {
-            userId = null;
-        }
-        if (auth.isPresent()) {
-            tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ALLOW), auth);
+        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ALLOW), auth);
+
+        Integer userId = tokenInfo.getId();
+        if (tokenInfo.getType().equals(TokenAuthType.USER)) {
             userId = tokenInfo.getId();
         }
-
-        if (tokenInfo.getType().equals(TokenAuthType.PARTNER)) storeId = tokenInfo.getId();
-        if (tokenInfo.getType().equals(TokenAuthType.USER)) userId = tokenInfo.getId();
 
         PageRequest pageRequest = PageRequest.of(page-1, take);
 
