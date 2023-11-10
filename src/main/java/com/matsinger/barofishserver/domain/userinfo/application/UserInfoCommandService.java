@@ -131,7 +131,6 @@ public class UserInfoCommandService {
     private void verifyPhoneNumberFormat(String phoneNumber) {
         if (!Pattern.matches(re.phone, phoneNumber)) {
             throw new IllegalArgumentException("휴대폰 번호 형식을 확인해주세요.");
-            // customResponse.throwError("휴대폰 번호 형식을 확인해주세요.", "INPUT_CHECK_REQUIRED");
         }
     }
 }

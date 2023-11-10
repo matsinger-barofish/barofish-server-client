@@ -9,6 +9,7 @@ import com.matsinger.barofishserver.domain.basketProduct.domain.BasketProductInf
 import com.matsinger.barofishserver.domain.basketProduct.domain.BasketProductOption;
 import com.matsinger.barofishserver.domain.basketProduct.dto.DeleteBasketReq;
 import com.matsinger.barofishserver.domain.basketProduct.repository.BasketProductOptionRepository;
+import com.matsinger.barofishserver.global.error.ErrorCode;
 import com.matsinger.barofishserver.jwt.JwtService;
 import com.matsinger.barofishserver.jwt.TokenAuthType;
 import com.matsinger.barofishserver.jwt.TokenInfo;
@@ -17,15 +18,13 @@ import com.matsinger.barofishserver.domain.product.optionitem.dto.OptionItemDto;
 import com.matsinger.barofishserver.domain.product.domain.Product;
 import com.matsinger.barofishserver.domain.store.application.StoreService;
 import com.matsinger.barofishserver.domain.store.domain.StoreInfo;
-import com.matsinger.barofishserver.jwt.exception.JwtExceptionMessage;
+import com.matsinger.barofishserver.jwt.exception.JwtBusinessException;
 import com.matsinger.barofishserver.utils.Common;
 import com.matsinger.barofishserver.utils.CustomResponse;
-import io.jsonwebtoken.JwtException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -50,7 +49,7 @@ public class BasketController {
 
         Integer userId = null;
         if (auth.isEmpty()) {
-            throw new JwtException(JwtExceptionMessage.TOKEN_REQUIRED);
+            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
         }
         TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth.get());
 
@@ -67,7 +66,7 @@ public class BasketController {
 
         Integer userId = null;
         if (auth.isEmpty()) {
-            throw new JwtException(JwtExceptionMessage.TOKEN_REQUIRED);
+            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
         }
         TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth.get());
 
@@ -82,13 +81,13 @@ public class BasketController {
 
         Integer userId = null;
         if (auth.isEmpty()) {
-            throw new JwtException(JwtExceptionMessage.TOKEN_REQUIRED);
+            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
         }
         TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth.get());
 
-        if (data.getProductId() == null) return res.throwError("상품 아이디를 입력하세요.", "INPUT_CHECK_REQUIRED");
+        if (data.getProductId() == null) throw new IllegalArgumentException("상품 아이디를 입력하세요.");
         if (data.getOptions() == null || data.getOptions().size() == 0)
-            return res.throwError("상품 옵션을 입력해주세요.", "INPUT_CHECK_REQUIRED");
+            throw new IllegalArgumentException("상품 옵션을 입력해주세요.");
         Product product = productService.findById(data.getProductId());
 
         for (AddBasketOptionReq optionReq : data.getOptions()) {
@@ -109,13 +108,13 @@ public class BasketController {
 
         Integer userId = null;
         if (auth.isEmpty()) {
-            throw new JwtException(JwtExceptionMessage.TOKEN_REQUIRED);
+            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
         }
         TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth.get());
 
-        if (amount == null) return res.throwError("갯수를 입력해주세요.", "INPUT_CHECK_REQUIRED");
+        if (amount == null) throw new IllegalArgumentException("갯수를 입력해주세요.");
         BasketProductInfo info = basketQueryService.selectBasket(id);
-        if (tokenInfo.getId() != info.getUserId()) return res.throwError("타인의 장바구니 정보입니다.", "NOT_ALLOWED");
+        if (tokenInfo.getId() != info.getUserId()) throw new IllegalArgumentException("타인의 장바구니 정보입니다.");
         basketCommandService.updateAmountBasket(info.getId(), amount);
         Product product = productService.findById(info.getProductId());
         StoreInfo storeInfo = storeService.selectStoreInfo(product.getStoreId());
@@ -142,14 +141,14 @@ public class BasketController {
 
         Integer userId = null;
         if (auth.isEmpty()) {
-            throw new JwtException(JwtExceptionMessage.TOKEN_REQUIRED);
+            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
         }
         TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth.get());
 
         for (Integer basketId : data.getIds()) {
             BasketProductInfo info = basketQueryService.selectBasket(basketId);
             if (tokenInfo.getId() != info.getUserId())
-                return res.throwError("타인의 장바구니 정보입니다.", "NOT_ALLOWED");
+                throw new IllegalArgumentException("타인의 장바구니 정보입니다.");
         }
         basketCommandService.deleteBasket(data.getIds());
         return ResponseEntity.ok(res);

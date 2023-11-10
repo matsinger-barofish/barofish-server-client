@@ -12,12 +12,14 @@ import com.matsinger.barofishserver.domain.category.dto.CategoryDto;
 import com.matsinger.barofishserver.domain.compare.filter.application.CompareFilterQueryService;
 import com.matsinger.barofishserver.domain.compare.filter.domain.CompareFilter;
 import com.matsinger.barofishserver.domain.compare.filter.dto.CompareFilterDto;
+import com.matsinger.barofishserver.global.error.ErrorCode;
 import com.matsinger.barofishserver.jwt.JwtService;
 import com.matsinger.barofishserver.jwt.TokenAuthType;
 import com.matsinger.barofishserver.jwt.TokenInfo;
 import com.matsinger.barofishserver.domain.product.application.ProductService;
 import com.matsinger.barofishserver.domain.product.domain.Product;
 import com.matsinger.barofishserver.domain.product.domain.ProductState;
+import com.matsinger.barofishserver.jwt.exception.JwtBusinessException;
 import com.matsinger.barofishserver.utils.Common;
 import com.matsinger.barofishserver.utils.CustomResponse;
 import com.matsinger.barofishserver.utils.S3.S3Uploader;
@@ -60,7 +62,7 @@ public class CategoryController {
                                                                 @RequestPart(value = "image", required = false) MultipartFile file) throws Exception {
         CustomResponse<Category> res = new CustomResponse<>();
 
-        if (auth.isEmpty()) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
+        if (auth.isEmpty()) throw new JwtBusinessException(ErrorCode.NOT_ALLOWED);
         TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth.get());
 
         Category category = new Category();
@@ -68,7 +70,7 @@ public class CategoryController {
         category.setName(name);
         String imageUrl = null;
         if (categoryId == null) {
-            if (file == null) return res.throwError("상위 카테고리의 경우 이미지는 필수입니다.", "INPUT_CHECK_REQUIRED");
+            if (file == null) throw new IllegalArgumentException("상위 카테고리의 경우 이미지는 필수입니다.");
             imageUrl = s3.upload(file, new ArrayList<>(List.of("category")));
             category.setImage(imageUrl);
         } else {
@@ -88,7 +90,7 @@ public class CategoryController {
                                                                    @RequestPart(value = "image", required = false) MultipartFile image) throws Exception {
         CustomResponse<Category> res = new CustomResponse<>();
 
-        if (auth.isEmpty()) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
+        if (auth.isEmpty()) throw new JwtBusinessException(ErrorCode.NOT_ALLOWED);;
         TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth.get());
 
 
@@ -112,10 +114,10 @@ public class CategoryController {
                                                                    @PathVariable("id") Integer id) {
         CustomResponse<Category> res = new CustomResponse<>();
 
-        if (auth.isEmpty()) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
+        if (auth.isEmpty()) throw new JwtBusinessException(ErrorCode.NOT_ALLOWED);;
         TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth.get());
 
-        if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
+        if (tokenInfo == null) throw new JwtBusinessException(ErrorCode.NOT_ALLOWED);;
 
         Category category = categoryQueryService.findById(id);
         if (category.getCategoryId() == null) {
@@ -124,7 +126,7 @@ public class CategoryController {
         }
         List<Product> products = productService.selectProductWithCategoryId(category.getId());
         if (products.stream().anyMatch(v -> v.getState().equals(ProductState.ACTIVE)))
-            return res.throwError("활성화 중인 상품이 있습니다.", "NOT_ALLOWED");
+            throw new IllegalArgumentException("활성화 중인 상품이 있습니다.");
         productService.saveAllProduct(products.stream().peek(v -> v.setCategory(null)).toList());
         categoryCommandService.delete(id);
         return ResponseEntity.ok(res);
@@ -173,14 +175,14 @@ public class CategoryController {
                                                                                      @RequestPart(value = "data") AddCategoryCompareFilterReq data) {
         CustomResponse<CompareFilterDto> res = new CustomResponse<>();
 
-        if (auth.isEmpty()) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
+        if (auth.isEmpty()) throw new JwtBusinessException(ErrorCode.NOT_ALLOWED);;
         TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth.get());
 
-        if (data.getCategoryId() == null) return res.throwError("카테고리 아이디를 입력해주세요.", "INPUT_CHECK_REQUIRED");
+        if (data.getCategoryId() == null) throw new IllegalArgumentException("카테고리 아이디를 입력해주세요.");
         if (data.getCompareFilterId() == null)
-            return res.throwError("비교하기 필터 아이디를 입력해주세요.", "INPUT_CHECK_REQUIRED");
+            throw new IllegalArgumentException("비교하기 필터 아이디를 입력해주세요.");
         Category category = categoryQueryService.findById(data.getCategoryId());
-        if (category.getCategoryId() != null) return res.throwError("1차 카테고리만 선택해주세요.", "INPUT_CHECK_REQUIRED");
+        if (category.getCategoryId() != null) throw new IllegalArgumentException("1차 카테고리만 선택해주세요.");
         CompareFilter compareFilter = compareFilterQueryService.selectCompareFilter(data.getCompareFilterId());
         CategoryFilterMap
                 categoryFilterMap =
@@ -194,13 +196,13 @@ public class CategoryController {
                                                                                         @RequestPart(value = "data") AddCategoryCompareFilterReq data) {
         CustomResponse<CompareFilterDto> res = new CustomResponse<>();
 
-        if (auth.isEmpty()) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
+        if (auth.isEmpty()) throw new JwtBusinessException(ErrorCode.NOT_ALLOWED);;
         TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth.get());
 
 
-        if (data.getCategoryId() == null) return res.throwError("카테고리 아이디를 입력해주세요.", "INPUT_CHECK_REQUIRED");
+        if (data.getCategoryId() == null) throw new IllegalArgumentException("카테고리 아이디를 입력해주세요.");
         if (data.getCompareFilterId() == null)
-            return res.throwError("비교하기 필터 아이디를 입력해주세요.", "INPUT_CHECK_REQUIRED");
+            throw new IllegalArgumentException("비교하기 필터 아이디를 입력해주세요.");
         Category category = categoryQueryService.findById(data.getCategoryId());
         CompareFilter compareFilter = compareFilterQueryService.selectCompareFilter(data.getCompareFilterId());
         CategoryFilterId categoryFilterId = new CategoryFilterId();

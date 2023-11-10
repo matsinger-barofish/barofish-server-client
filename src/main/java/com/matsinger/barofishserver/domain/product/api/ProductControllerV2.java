@@ -16,10 +16,12 @@ import com.matsinger.barofishserver.domain.product.dto.ProductListDtoV2;
 import com.matsinger.barofishserver.domain.product.productfilter.application.ProductFilterService;
 import com.matsinger.barofishserver.domain.search.application.SearchKeywordQueryService;
 import com.matsinger.barofishserver.domain.store.application.StoreService;
+import com.matsinger.barofishserver.global.error.ErrorCode;
 import com.matsinger.barofishserver.jwt.JwtService;
 import com.matsinger.barofishserver.jwt.TokenAuthType;
 import com.matsinger.barofishserver.jwt.TokenInfo;
 import com.matsinger.barofishserver.domain.searchFilter.application.SearchFilterQueryService;
+import com.matsinger.barofishserver.jwt.exception.JwtBusinessException;
 import com.matsinger.barofishserver.utils.Common;
 import com.matsinger.barofishserver.utils.CustomResponse;
 import com.matsinger.barofishserver.utils.S3.S3Uploader;
@@ -76,7 +78,7 @@ public class ProductControllerV2 {
 
         CustomResponse<Object> res = new CustomResponse<>();
 
-        if (auth.isEmpty()) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
+        if (auth.isEmpty()) throw new JwtBusinessException(ErrorCode.NOT_ALLOWED);;
         TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ALLOW, TokenAuthType.USER), auth.get());
 
         Integer userId = tokenInfo.getId();

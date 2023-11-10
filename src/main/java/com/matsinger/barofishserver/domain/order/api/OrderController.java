@@ -36,13 +36,13 @@ import com.matsinger.barofishserver.domain.user.deliverplace.DeliverPlace;
 import com.matsinger.barofishserver.domain.user.paymentMethod.application.PaymentMethodService;
 import com.matsinger.barofishserver.domain.user.paymentMethod.domain.PaymentMethod;
 import com.matsinger.barofishserver.domain.userinfo.domain.UserInfo;
+import com.matsinger.barofishserver.global.error.ErrorCode;
 import com.matsinger.barofishserver.jwt.JwtService;
 import com.matsinger.barofishserver.jwt.TokenAuthType;
 import com.matsinger.barofishserver.jwt.TokenInfo;
-import com.matsinger.barofishserver.jwt.exception.JwtExceptionMessage;
+import com.matsinger.barofishserver.jwt.exception.JwtBusinessException;
 import com.matsinger.barofishserver.utils.Common;
 import com.matsinger.barofishserver.utils.CustomResponse;
-import io.jsonwebtoken.JwtException;
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.JoinType;
 import jakarta.persistence.criteria.Predicate;
@@ -84,7 +84,7 @@ public class OrderController {
         CustomResponse<PointRuleRes> res = new CustomResponse<>();
 
         if (auth.isEmpty()) {
-            throw new JwtException(JwtExceptionMessage.TOKEN_REQUIRED);
+            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
         }
         TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth.get());
         Integer userId = tokenInfo.getId();
@@ -105,13 +105,13 @@ public class OrderController {
         CustomResponse<Boolean> res = new CustomResponse<>();
 
         if (auth.isEmpty()) {
-            throw new JwtException(JwtExceptionMessage.TOKEN_REQUIRED);
+            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
         }
         TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER, TokenAuthType.ADMIN), auth.get());
 
         Orders order = orderService.selectOrder(id);
         if (!tokenInfo.getType().equals(TokenAuthType.ADMIN) && tokenInfo.getId() != order.getUserId())
-            return res.throwError(JwtExceptionMessage.NOT_ALLOWED, "NOT_ALLOWED");
+            throw new JwtBusinessException(ErrorCode.NOT_ALLOWED);
         res.setData(Optional.of(order.getState().equals(OrderState.PAYMENT_DONE)));
         return ResponseEntity.ok(res);
     }
@@ -122,7 +122,7 @@ public class OrderController {
         CustomResponse<OrderDto> res = new CustomResponse<>();
 
         if (auth.isEmpty()) {
-            throw new JwtException(JwtExceptionMessage.TOKEN_REQUIRED);
+            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
         }
         TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN, TokenAuthType.PARTNER), auth.get());
 
@@ -130,7 +130,7 @@ public class OrderController {
         if (!tokenInfo.getType().equals(TokenAuthType.ADMIN)) {
             if (tokenInfo.getType().equals(TokenAuthType.USER) &&
                     tokenInfo.getId() != order.getUserId())
-                return res.throwError(JwtExceptionMessage.NOT_ALLOWED, "NOT_ALLOWED");
+                throw new JwtBusinessException(ErrorCode.NOT_ALLOWED);
         }
         UserInfo userInfo = userService.selectUserInfo(order.getUserId());
         res.setData(Optional.ofNullable(orderService.convert2Dto(order,
@@ -158,7 +158,7 @@ public class OrderController {
         CustomResponse<Page<OrderDto>> res = new CustomResponse<>();
 
         if (auth.isEmpty()) {
-            throw new JwtException(JwtExceptionMessage.TOKEN_REQUIRED);
+            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
         }
         TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN, TokenAuthType.PARTNER), auth.get());
 
@@ -234,7 +234,7 @@ public class OrderController {
         CustomResponse<List<OrderDto>> res = new CustomResponse<>();
 
         if (auth.isEmpty()) {
-            throw new JwtException(JwtExceptionMessage.TOKEN_REQUIRED);
+            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
         }
         TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth.get());
 
@@ -255,7 +255,7 @@ public class OrderController {
         CustomResponse<List<OrderDto>> res = new CustomResponse<>();
 
         if (auth.isEmpty()) {
-            throw new JwtException(JwtExceptionMessage.TOKEN_REQUIRED);
+            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
         }
         TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth.get());
 
@@ -275,7 +275,7 @@ public class OrderController {
         CustomResponse<Integer> res = new CustomResponse<>();
 
         if (auth.isEmpty()) {
-            throw new JwtException(JwtExceptionMessage.TOKEN_REQUIRED);
+            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
         }
         TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth.get());
 
@@ -290,7 +290,7 @@ public class OrderController {
         CustomResponse<List<OrderDto>> res = new CustomResponse<>();
 
         if (auth.isEmpty()) {
-            throw new JwtException(JwtExceptionMessage.TOKEN_REQUIRED);
+            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
         }
         TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth.get());
 
@@ -320,7 +320,7 @@ public class OrderController {
         CustomResponse<OrderDto> res = new CustomResponse<>();
 
         if (auth.isEmpty()) {
-            throw new JwtException(JwtExceptionMessage.TOKEN_REQUIRED);
+            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
         }
         TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth.get());
 
@@ -333,9 +333,9 @@ public class OrderController {
         VBankRefundInfo vBankRefundInfo = null;
         if (data.getPaymentWay().equals(OrderPaymentWay.VIRTUAL_ACCOUNT)) {
             if (data.getVbankRefundInfo() == null)
-                return res.throwError("가상계좌 환불 정보를 입력해주세요.", "INPUT_CHECK_REQUIRED");
+                throw new IllegalArgumentException("가상계좌 환불 정보를 입력해주세요.");
             if (data.getVbankRefundInfo().getBankCodeId() == null)
-                return res.throwError("은행 코드 아이디를 입력해주세요.", "INPUT_CHECK_REQUIRED");
+                throw new IllegalArgumentException("은행 코드 아이디를 입력해주세요.");
             BankCode bankCode = orderService.selectBankCode(data.getVbankRefundInfo().getBankCodeId());
             String bankHolder = utils.validateString(data.getVbankRefundInfo().getBankHolder(), 20L, "환불 예금주명");
             String bankAccount = data.getVbankRefundInfo().getBankAccount().replaceAll("-", "");
@@ -347,7 +347,7 @@ public class OrderController {
         Coupon coupon = null;
         if (data.getCouponId() != null) coupon = couponQueryService.selectCoupon(data.getCouponId());
         if (data.getPoint() != null && userInfo.getPoint() < data.getPoint())
-            return res.throwError("보유한 적립금보다 많은 적립금입니다.", "INPUT_CHECK_REQUIRED");
+            throw new IllegalArgumentException("보유한 적립금보다 많은 적립금입니다.");
         List<OrderProductInfo> infos = new ArrayList<>();
         List<OptionItem> optionItems = new ArrayList<>();
         int taxFreeAmount = 0;
@@ -358,23 +358,23 @@ public class OrderController {
             if ((product.getPromotionStartAt() != null && product.getPromotionStartAt().after(utils.now())) ||
                     (product.getPromotionEndAt() != null && product.getPromotionEndAt().before(utils.now()))) {
                 basketCommandService.deleteBasket(product.getId(), userId);
-                return res.throwError("프로모션 기간이 아닌 상품이 포함되어 있습니다.", "NOT_ALLOWED");
+                throw new IllegalArgumentException("프로모션 기간이 아닌 상품이 포함되어 있습니다.");
             }
 
 
             if (!product.getState().equals(ProductState.ACTIVE)) {
                 if (product.getState().equals(ProductState.SOLD_OUT))
-                    return res.throwError("품절된 상품입니다.", "NOT_ALLOWED");
+                    throw new IllegalArgumentException("품절된 상품입니다.");
                 if (product.getState().equals(ProductState.DELETED))
-                    return res.throwError("주문 불가능한 상품입니다.", "NOT_ALLOWED");
+                    throw new IllegalArgumentException("주문 불가능한 상품입니다.");
                 if (product.getState().equals(ProductState.INACTIVE))
-                    return res.throwError("주문 불가능한 상품입니다.", "NOT_ALLOWED");
+                    throw new IllegalArgumentException("주문 불가능한 상품입니다.");
             }
 
             OptionItem optionItem = productService.selectOptionItem(productReq.getOptionId());
             if (optionItem.getMaxAvailableAmount() != null &&
                     optionItem.getMaxAvailableAmount() < productReq.getAmount())
-                return res.throwError("최대 주문 수량을 초과하였습니다.", "INPUT_CHECK_REQUIRED");
+                throw new IllegalArgumentException("최대 주문 수량을 초과하였습니다.");
             optionItem.reduceAmount(productReq.getAmount());
             int price = orderService.getProductPrice(product, productReq.getOptionId(), productReq.getAmount());
             productPrice += price;
@@ -411,7 +411,7 @@ public class OrderController {
         });
         if (coupon != null) {
             if (productPrice < coupon.getMinPrice())
-                return res.throwError("쿠폰 최소 금액에 맞지 않습니다.", "INPUT_CHECK_REQUIRED");
+                throw new IllegalArgumentException("쿠폰 최소 금액에 맞지 않습니다.");
             couponQueryService.checkValidCoupon(coupon.getId(), userId);
         }
         int originTotalPrice = infos.stream().mapToInt(OrderProductInfo::getPrice).sum();
@@ -421,8 +421,8 @@ public class OrderController {
                         data.getPoint() -
                         data.getCouponDiscountPrice();
         if (!Objects.equals(data.getTotalPrice(), totalPrice))
-            return res.throwError("총 금액을 확인해주세요.", "INPUT_CHECK_REQUIRED");
-        if (data.getDeliverPlaceId() == null) return res.throwError("배송지를 입력해주세요.", "INPUT_CHECK_REQUIRED");
+            throw new IllegalArgumentException("총 금액을 확인해주세요.");
+        if (data.getDeliverPlaceId() == null) throw new IllegalArgumentException("배송지를 입력해주세요.");
         DeliverPlace deliverPlace = userService.selectDeliverPlace(data.getDeliverPlaceId());
         OrderDeliverPlace
                 orderDeliverPlace =
@@ -431,7 +431,7 @@ public class OrderController {
                         deliverPlace.getDeliverMessage()).postalCode(deliverPlace.getPostalCode()).bcode(
                         deliverPlace.getBcode()).build();
         if (infos.stream().anyMatch(v -> !orderService.checkProductCanDeliver(orderDeliverPlace, v)))
-            return res.throwError("배송지에 배송 불가능한 상품이 포함돼 있습니다.", "NOT_ALLOWED");
+            throw new IllegalArgumentException("배송지에 배송 불가능한 상품이 포함돼 있습니다.");
         Orders
                 order =
                 Orders.builder().id(orderId).userId(tokenInfo.getId()).paymentWay(data.getPaymentWay()).state(
@@ -454,7 +454,7 @@ public class OrderController {
                     KeyInPaymentReq.builder().paymentMethod(paymentMethod).order_name(name).orderId(orderId).total_amount(
                             data.getTotalPrice()).order_name(product.getTitle()).taxFree(taxFreeAmount).build();
             Boolean keyInResult = paymentService.processKeyInPayment(req);
-            if (!keyInResult) return res.throwError("결제에 실패하였습니다.", "NOT_ALLOWED");
+            if (!keyInResult) throw new IllegalArgumentException("결제에 실패하였습니다.");
         }
         res.setData(Optional.ofNullable(orderService.convert2Dto(result, null, null)));
         if (data.getTotalPrice() == 0) {
@@ -481,7 +481,7 @@ public class OrderController {
         CustomResponse<Boolean> res = new CustomResponse<>();
 
         if (auth.isEmpty()) {
-            throw new JwtException(JwtExceptionMessage.TOKEN_REQUIRED);
+            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
         }
         TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth.get());
 
@@ -489,7 +489,7 @@ public class OrderController {
         if (tokenInfo.getType().equals(TokenAuthType.ADMIN)) adminId = tokenInfo.getId();
         Orders order = orderService.selectOrder(orderId);
         if (!order.getPaymentWay().equals(OrderPaymentWay.DEPOSIT))
-            return res.throwError("무통장 입금의 경우만 확인 처리 가능합니다.", "NOT_ALLOWED");
+            throw new IllegalArgumentException("무통장 입금의 경우만 확인 처리 가능합니다.");
         List<OrderProductInfo> infos = orderService.selectOrderProductInfoListWithOrderId(orderId);
         infos.forEach(v -> {
             Product product = productService.selectProduct(v.getProductId());
@@ -519,14 +519,14 @@ public class OrderController {
         CustomResponse<Boolean> res = new CustomResponse<>();
 
         if (auth.isEmpty()) {
-            throw new JwtException(JwtExceptionMessage.TOKEN_REQUIRED);
+            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
         }
         TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth.get());
 
         OrderProductInfo info = orderService.selectOrderProductInfo(orderProductInfoId);
         Orders order = orderService.selectOrder(info.getOrderId());
-        if (tokenInfo.getId() != order.getUserId()) return res.throwError("타인의 주문 내역입니다.", "NOT_ALLOWED");
-        if (data.getCancelReason() == null) return res.throwError("취소/환불 사유를 선택해주세요.", "INPUT_CHECK_REQUIRED");
+        if (tokenInfo.getId() != order.getUserId()) throw new IllegalArgumentException("타인의 주문 내역입니다.");
+        if (data.getCancelReason() == null) throw new IllegalArgumentException("취소/환불 사유를 선택해주세요.");
         String content = null;
         if (data.getContent() != null) content = utils.validateString(data.getContent(), 1000L, "사유");
         info.setCancelReason(data.getCancelReason());
@@ -552,7 +552,7 @@ public class OrderController {
         CustomResponse<Boolean> res = new CustomResponse<>();
 
         if (auth.isEmpty()) {
-            throw new JwtException(JwtExceptionMessage.TOKEN_REQUIRED);
+            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
         }
         TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.PARTNER, TokenAuthType.ADMIN), auth.get());
 
@@ -562,9 +562,9 @@ public class OrderController {
                 infos =
                 orderProductInfoIds.stream().map(orderService::selectOrderProductInfo).toList();
         if (infos.stream().map(OrderProductInfo::getOrderId).distinct().count() != 1)
-            return res.throwError("동일 주문 내역에 대해 취소 가능합니다.", "INPUT_CHECK_REQUIRED");
+            throw new IllegalArgumentException("동일 주문 내역에 대해 취소 가능합니다.");
         if (infos.stream().anyMatch(v -> v.getState().equals(OrderProductState.CANCELED)))
-            return res.throwError("이미 취소된 주문이 포함되어 있습니다.", "INPUT_CHECK_REQUIRED");
+            throw new IllegalArgumentException("이미 취소된 주문이 포함되어 있습니다.");
         Orders order = orderService.selectOrder(infos.get(0).getOrderId());
         if (order.getCouponId() != null) {
             List<OrderProductInfo> orderInfos = orderService.selectOrderProductInfoListWithOrderId(order.getId());
@@ -573,11 +573,11 @@ public class OrderController {
                         storeIds =
                         orderInfos.stream().map(v -> v.getProduct().getStoreId()).distinct().toList();
                 if (storeIds.size() != 1 || !Objects.equals(storeIds.get(0), tokenInfo.getId())) {
-                    return res.throwError("타파트너사의 주문과 같이 있어 취소 불가합니다.", "NOT_ALLOWED");
+                    throw new IllegalArgumentException("타파트너사의 주문과 같이 있어 취소 불가합니다.");
                 }
             }
             if (infos.size() != orderInfos.size())
-                return res.throwError("쿠폰이 적용된 주문은 전체 취소만 가능합니다.", "NOT_ALLOWED");
+                throw new IllegalArgumentException("쿠폰이 적용된 주문은 전체 취소만 가능합니다.");
         }
         GetCancelPriceDto cancelData = orderService.getCancelPrice(order, infos);
         int
@@ -624,7 +624,7 @@ public class OrderController {
         CustomResponse<Boolean> res = new CustomResponse<>();
 
         if (auth.isEmpty()) {
-            throw new JwtException(JwtExceptionMessage.TOKEN_REQUIRED);
+            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
         }
         TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN, TokenAuthType.PARTNER), auth.get());
 
@@ -658,7 +658,7 @@ public class OrderController {
         CustomResponse<Boolean> res = new CustomResponse<>();
 
         if (auth.isEmpty()) {
-            throw new JwtException(JwtExceptionMessage.TOKEN_REQUIRED);
+            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
         }
         TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN, TokenAuthType.PARTNER), auth.get());
 
@@ -667,7 +667,7 @@ public class OrderController {
         if (tokenInfo.getType().equals(TokenAuthType.ADMIN)) adminId = tokenInfo.getId();
         OrderProductInfo info = orderService.selectOrderProductInfo(orderProductInfoId);
         if (!info.getState().equals(OrderProductState.CANCEL_REQUEST))
-            return res.throwError("취소 신청된 상품이 아닙니다.", "INPUT_CHECK_REQUIRED");
+            throw new IllegalArgumentException("취소 신청된 상품이 아닙니다.");
         info.setState(OrderProductState.DELIVERY_READY);
         orderService.updateOrderProductInfos(new ArrayList<>(List.of(info)));
         Orders order = orderService.selectOrder(info.getOrderId());
@@ -692,7 +692,7 @@ public class OrderController {
         CustomResponse<Boolean> res = new CustomResponse<>();
 
         if (auth.isEmpty()) {
-            throw new JwtException(JwtExceptionMessage.TOKEN_REQUIRED);
+            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
         }
         TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN, TokenAuthType.PARTNER), auth.get());
 
@@ -701,7 +701,7 @@ public class OrderController {
         if (tokenInfo.getType().equals(TokenAuthType.ADMIN)) adminId = tokenInfo.getId();
         OrderProductInfo info = orderService.selectOrderProductInfo(orderProductInfoId);
         if (!info.getState().equals(OrderProductState.CANCEL_REQUEST))
-            return res.throwError("취소 신청된 상품이 아닙니다.", "INPUT_CHECK_REQUIRED");
+            throw new IllegalArgumentException("취소 신청된 상품이 아닙니다.");
         orderService.cancelOrderedProduct(orderProductInfoId);
         info.setState(OrderProductState.CANCELED);
         orderService.updateOrderProductInfos(List.of(info));
@@ -723,7 +723,7 @@ public class OrderController {
         CustomResponse<Boolean> res = new CustomResponse<>();
 
         if (auth.isEmpty()) {
-            throw new JwtException(JwtExceptionMessage.TOKEN_REQUIRED);
+            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
         }
         TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN, TokenAuthType.PARTNER), auth.get());
 
@@ -733,11 +733,11 @@ public class OrderController {
         if (!info.getState().equals(OrderProductState.PAYMENT_DONE)) {
             if (info.getState().equals(OrderProductState.DELIVERY_READY) ||
                     info.getState().equals(OrderProductState.ON_DELIVERY))
-                return res.throwError("이미 발송 준비 처리된 주문입니다.", "NOT_ALLOWED");
+                throw new IllegalArgumentException("이미 발송 준비 처리된 주문입니다.");
             if (info.getState().equals(OrderProductState.DELIVERY_DONE) ||
                     info.getState().equals(OrderProductState.FINAL_CONFIRM))
-                return res.throwError("이미 배송 완료된 주문입니다.", "NOT_ALLOWED");
-            return res.throwError("발송 처리 불가능한 상품입니다.", "NOT_ALLOWED");
+                throw new IllegalArgumentException("이미 배송 완료된 주문입니다.");
+            throw new IllegalArgumentException("발송 처리 불가능한 상품입니다.");
         }
 
         if (adminId != null) {
@@ -769,7 +769,7 @@ public class OrderController {
         CustomResponse<Boolean> res = new CustomResponse<>();
 
         if (auth.isEmpty()) {
-            throw new JwtException(JwtExceptionMessage.TOKEN_REQUIRED);
+            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
         }
         TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN, TokenAuthType.PARTNER), auth.get());
 
@@ -779,13 +779,13 @@ public class OrderController {
         if (!info.getState().equals(OrderProductState.DELIVERY_READY) &&
                 !info.getState().equals(OrderProductState.ON_DELIVERY) &&
                 !info.getState().equals(OrderProductState.EXCHANGE_ACCEPT))
-            return res.throwError("변경 불가능한 상태입니다.", "NOT_ALLOWED");
-        if (data.getDeliverCompanyCode() == null) return res.throwError("택배사 코드를 입력해주세요.", "INPUT_CHECK_REQUIRED");
-        if (data.getInvoice() == null) return res.throwError("운송장 번호를 입력해주세요.", "INPUT_CHECK_REQUIRED");
+            throw new IllegalArgumentException("변경 불가능한 상태입니다.");
+        if (data.getDeliverCompanyCode() == null) throw new IllegalArgumentException("택배사 코드를 입력해주세요.");
+        if (data.getInvoice() == null) throw new IllegalArgumentException("운송장 번호를 입력해주세요.");
         Deliver.TrackingInfo
                 trackingInfo =
                 deliverService.selectTrackingInfo(data.getDeliverCompanyCode(), data.getInvoice());
-        if (trackingInfo == null) return res.throwError("유효하지 않은 운송장 번호입니다.", "NOT_ALLOWED");
+        if (trackingInfo == null) throw new IllegalArgumentException("유효하지 않은 운송장 번호입니다.");
         info.setDeliverCompanyCode(data.getDeliverCompanyCode());
         info.setInvoiceCode(data.getInvoice());
         info.setState(OrderProductState.ON_DELIVERY);
@@ -815,16 +815,16 @@ public class OrderController {
         CustomResponse<Boolean> res = new CustomResponse<>();
 
         if (auth.isEmpty()) {
-            throw new JwtException(JwtExceptionMessage.TOKEN_REQUIRED);
+            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
         }
         TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth.get());
 
         OrderProductInfo info = orderService.selectOrderProductInfo(orderProductInfoId);
         Orders order = orderService.selectOrder(info.getOrderId());
-        if (tokenInfo.getId() != order.getUserId()) return res.throwError("타인의 주문 내역입니다.", "NOT_ALLOWED");
+        if (tokenInfo.getId() != order.getUserId()) throw new IllegalArgumentException("타인의 주문 내역입니다.");
         if (!info.getState().equals(OrderProductState.DELIVERY_DONE))
-            return res.throwError("교환 요청 가능한 상품이 아닙니다.", "INPUT_CHECK_REQUIRED");
-        if (data.getReasonContent() == null) return res.throwError("교환 사유를 입력해주세요.", "INPUT_CHECK_REQUIRED");
+            throw new IllegalArgumentException("교환 요청 가능한 상품이 아닙니다.");
+        if (data.getReasonContent() == null) throw new IllegalArgumentException("교환 사유를 입력해주세요.");
         String content = data.getReasonContent().trim();
         info.setState(OrderProductState.EXCHANGE_REQUEST);
         orderService.updateOrderProductInfo(new ArrayList<>(List.of(info)));
@@ -839,7 +839,7 @@ public class OrderController {
         CustomResponse<Boolean> res = new CustomResponse<>();
 
         if (auth.isEmpty()) {
-            throw new JwtException(JwtExceptionMessage.TOKEN_REQUIRED);
+            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
         }
         TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN, TokenAuthType.PARTNER), auth.get());
 
@@ -848,7 +848,7 @@ public class OrderController {
         if (tokenInfo.getType().equals(TokenAuthType.ADMIN)) adminId = tokenInfo.getId();
         OrderProductInfo info = orderService.selectOrderProductInfo(orderProductInfoId);
         if (!info.getState().equals(OrderProductState.EXCHANGE_REQUEST))
-            return res.throwError("교환 요청된 주문이 아닙니다.", "INPUT_CHECK_REQUIRED");
+            throw new IllegalArgumentException("교환 요청된 주문이 아닙니다.");
         info.setState(OrderProductState.DELIVERY_DONE);
         orderService.updateOrderProductInfo(new ArrayList<>(List.of(info)));
         Orders order = orderService.selectOrder(info.getOrderId());
@@ -874,7 +874,7 @@ public class OrderController {
         CustomResponse<Boolean> res = new CustomResponse<>();
 
         if (auth.isEmpty()) {
-            throw new JwtException(JwtExceptionMessage.TOKEN_REQUIRED);
+            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
         }
         TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN, TokenAuthType.PARTNER), auth.get());
         Integer userId = tokenInfo.getId();
@@ -883,7 +883,7 @@ public class OrderController {
         if (tokenInfo.getType().equals(TokenAuthType.ADMIN)) adminId = tokenInfo.getId();
         OrderProductInfo info = orderService.selectOrderProductInfo(orderProductInfoId);
         if (!info.getState().equals(OrderProductState.EXCHANGE_REQUEST))
-            return res.throwError("교환 요청된 주문이 아닙니다.", "INPUT_CHECK_REQUIRED");
+            throw new IllegalArgumentException("교환 요청된 주문이 아닙니다.");
         info.setState(OrderProductState.EXCHANGE_ACCEPT);
         orderService.updateOrderProductInfo(new ArrayList<>(List.of(info)));
         Orders order = orderService.selectOrder(info.getOrderId());
@@ -909,7 +909,7 @@ public class OrderController {
         CustomResponse<Boolean> res = new CustomResponse<>();
 
         if (auth.isEmpty()) {
-            throw new JwtException(JwtExceptionMessage.TOKEN_REQUIRED);
+            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
         }
         TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth.get());
 
@@ -917,9 +917,9 @@ public class OrderController {
         Integer userId = tokenInfo.getId();
         OrderProductInfo info = orderService.selectOrderProductInfo(orderProductInfoId);
         Orders order = orderService.selectOrder(info.getOrderId());
-        if (userId != order.getUserId()) return res.throwError("타인의 주문 내역입니다.", "NOT_ALLOWED");
+        if (userId != order.getUserId()) throw new IllegalArgumentException("타인의 주문 내역입니다.");
         if (!info.getState().equals(OrderProductState.DELIVERY_DONE))
-            return res.throwError("배송 완료 후 처리 가능합니다.", "INPUT_CHECK_REQUIRED");
+            throw new IllegalArgumentException("배송 완료 후 처리 가능합니다.");
         UserInfo userInfo = userService.selectUserInfo(userId);
         Product product = productService.selectProduct(info.getProductId());
         Grade grade = userInfo.getGrade();
@@ -942,15 +942,15 @@ public class OrderController {
         CustomResponse<Boolean> res = new CustomResponse<>();
 
         if (auth.isEmpty()) {
-            throw new JwtException(JwtExceptionMessage.TOKEN_REQUIRED);
+            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
         }
         TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth.get());
 
         OrderProductInfo info = orderService.selectOrderProductInfo(orderProductInfoId);
         Orders order = orderService.selectOrder(info.getOrderId());
-        if (tokenInfo.getId() != order.getUserId()) return res.throwError("타인의 주문 내역입니다.", "NOT_ALLOWED");
+        if (tokenInfo.getId() != order.getUserId()) throw new IllegalArgumentException("타인의 주문 내역입니다.");
         info.setState(OrderProductState.REFUND_REQUEST);
-        if (data.getCancelReason() == null) return res.throwError("취소/환불 사유를 선택해주세요.", "INPUT_CHECK_REQUIRED");
+        if (data.getCancelReason() == null) throw new IllegalArgumentException("취소/환불 사유를 선택해주세요.");
         String content = null;
         if (data.getContent() != null) content = utils.validateString(data.getContent(), 1000L, "사유");
         info.setCancelReason(data.getCancelReason());
@@ -967,7 +967,7 @@ public class OrderController {
         CustomResponse<Boolean> res = new CustomResponse<>();
 
         if (auth.isEmpty()) {
-            throw new JwtException(JwtExceptionMessage.TOKEN_REQUIRED);
+            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
         }
         TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN, TokenAuthType.PARTNER), auth.get());
 
@@ -1001,7 +1001,7 @@ public class OrderController {
         CustomResponse<Boolean> res = new CustomResponse<>();
 
         if (auth.isEmpty()) {
-            throw new JwtException(JwtExceptionMessage.TOKEN_REQUIRED);
+            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
         }
         TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN, TokenAuthType.PARTNER), auth.get());
 
@@ -1034,7 +1034,7 @@ public class OrderController {
         CustomResponse<Boolean> res = new CustomResponse<>();
 
         if (auth.isEmpty()) {
-            throw new JwtException(JwtExceptionMessage.TOKEN_REQUIRED);
+            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
         }
         TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN, TokenAuthType.PARTNER), auth.get());
         Integer userId = tokenInfo.getId();

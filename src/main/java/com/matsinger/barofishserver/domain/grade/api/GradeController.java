@@ -3,13 +3,12 @@ package com.matsinger.barofishserver.domain.grade.api;
 import com.matsinger.barofishserver.domain.grade.application.GradeCommandService;
 import com.matsinger.barofishserver.domain.grade.application.GradeQueryService;
 import com.matsinger.barofishserver.domain.grade.domain.Grade;
+import com.matsinger.barofishserver.global.error.ErrorCode;
 import com.matsinger.barofishserver.jwt.JwtService;
 import com.matsinger.barofishserver.jwt.TokenAuthType;
-import com.matsinger.barofishserver.jwt.TokenInfo;
-import com.matsinger.barofishserver.jwt.exception.JwtExceptionMessage;
+import com.matsinger.barofishserver.jwt.exception.JwtBusinessException;
 import com.matsinger.barofishserver.utils.Common;
 import com.matsinger.barofishserver.utils.CustomResponse;
-import io.jsonwebtoken.JwtException;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
@@ -62,10 +61,10 @@ public class GradeController {
                                                           @RequestPart(value = "data") AddGradeReq data) {
         CustomResponse<Grade> res = new CustomResponse<>();
 
-        if (data.name == null) return res.throwError("이름을 입력해주세요.", "INPUT_CHECK_REQUIRED");
-        if (data.pointRate == null) return res.throwError("포인트 적립율을 입력해주세요.", "INPUT_CHECK_REQUIRED");
-        if (data.minOrderPrice == null) return res.throwError("최소 주문 금액을 입력해주세요.", "INPUT_CHECK_REQUIRED");
-        if (data.minOrderCount == null) return res.throwError("최소 주문 수량을 입력해주세요.", "INPUT_CHECK_REQUIRED");
+        if (data.name == null) throw new IllegalArgumentException("이름을 입력해주세요.");
+        if (data.pointRate == null) throw new IllegalArgumentException("포인트 적립율을 입력해주세요.");
+        if (data.minOrderPrice == null) throw new IllegalArgumentException("최소 주문 금액을 입력해주세요.");
+        if (data.minOrderCount == null) throw new IllegalArgumentException("최소 주문 수량을 입력해주세요.");
         String name = utils.validateString(data.name, 20L, "이름");
         Grade
                 grade =
@@ -83,7 +82,7 @@ public class GradeController {
         CustomResponse<Grade> res = new CustomResponse<>();
 
         if (auth.isEmpty()) {
-            throw new JwtException(JwtExceptionMessage.TOKEN_REQUIRED);
+            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
         }
         jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth.get());
 

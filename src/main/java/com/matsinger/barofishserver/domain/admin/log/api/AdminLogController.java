@@ -4,12 +4,12 @@ import com.matsinger.barofishserver.domain.admin.log.application.AdminLogQuerySe
 import com.matsinger.barofishserver.domain.admin.log.domain.AdminLog;
 import com.matsinger.barofishserver.domain.admin.log.domain.AdminLogType;
 import com.matsinger.barofishserver.domain.admin.log.dto.AdminLogDto;
+import com.matsinger.barofishserver.global.error.ErrorCode;
 import com.matsinger.barofishserver.jwt.JwtService;
 import com.matsinger.barofishserver.jwt.TokenAuthType;
 import com.matsinger.barofishserver.jwt.TokenInfo;
-import com.matsinger.barofishserver.jwt.exception.JwtExceptionMessage;
+import com.matsinger.barofishserver.jwt.exception.JwtBusinessException;
 import com.matsinger.barofishserver.utils.CustomResponse;
-import io.jsonwebtoken.JwtException;
 import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -37,12 +37,12 @@ public class AdminLogController {
         CustomResponse<Page<AdminLogDto>> res = new CustomResponse<>();
 
         if (auth.isEmpty()) {
-            throw new JwtException(JwtExceptionMessage.TOKEN_REQUIRED);
+            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
         }
         TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth.get());
 
-        if (type == null) return res.throwError("타입을 입력해주세요.", "INPUT_CHECK_REQUIRED");
-        if (targetId == null) return res.throwError("대상 아이디를 입력해주세요.", " INPUT_CHECK_REQUIRED");
+        if (type == null) throw new IllegalArgumentException("타입을 입력해주세요.");
+        if (targetId == null) throw new IllegalArgumentException("대상 아이디를 입력해주세요.");
         PageRequest pageRequest = PageRequest.of(page, take, Sort.by(Sort.Direction.DESC, "createdAt"));
         Specification<AdminLog> spec = (root, query, builder) -> {
             List<Predicate> predicates = new ArrayList<>();

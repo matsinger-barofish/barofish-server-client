@@ -1,5 +1,6 @@
 package com.matsinger.barofishserver.jwt.exception;
 
+import com.matsinger.barofishserver.global.error.ErrorCode;
 import com.matsinger.barofishserver.utils.CustomResponse;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;
@@ -37,12 +38,13 @@ public class JwtControllerAdvice implements RequestBodyAdvice {
     @ExceptionHandler(value = {JwtException.class})
     public ResponseEntity<CustomResponse<Object>> getJwtExpiredMessage(
             HttpServletRequest request,
+            ErrorCode code,
             Exception e) {
         printExceptionInfo(request, e);
 
         CustomResponse customResponse = new CustomResponse();
         customResponse.setIsSuccess(false);
-        customResponse.setErrorMsg(JwtExceptionMessage.TOKEN_EXPIRED);
+        customResponse.setCode(ErrorCode.TOKEN_EXPIRED);
         return ResponseEntity.ok(customResponse);
     }
 
@@ -61,6 +63,7 @@ public class JwtControllerAdvice implements RequestBodyAdvice {
         request.getParameterNames().asIterator().forEachRemaining(
                 parameter -> logger.warn("parameter = {}", request.getParameter(parameter))
         );
+
         e.printStackTrace();
 
         logger.warn("### Exception End ###");

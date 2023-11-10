@@ -27,21 +27,21 @@ public class UserException {
 
     public void nullCheck(LoginType loginType) {
         if (loginType == null) {
-            customResponse.throwError("로그인 타입을 입력해주세요.", "INPUT_CHECK_REQUIRED");
+            throw new IllegalArgumentException("로그인 타입을 입력해주세요.");
         }
     }
     public void nullCheck(String loginId) {
         if (loginId == null) {
-            customResponse.throwError("로그인 아이디를 입력해주세요.", "INPUT_CHECK_REQUIRED");
+            throw new IllegalArgumentException("로그인 아이디를 입력해주세요.");
         }
     }
 
     public void checkUserState(User user) {
         if (user.getState().equals(UserState.BANNED)) {
-            customResponse.throwError("정지된 사용자입니다.", "NOT_ALLOWED");
+            throw new IllegalArgumentException("정지된 사용자입니다.");
         }
         if (user.getState().equals(UserState.DELETED)) {
-            customResponse.throwError("삭제된 사용자입니다.", "NOT_ALLOWED");
+            throw new IllegalArgumentException("삭제된 사용자입니다.");
         }
     }
 }
