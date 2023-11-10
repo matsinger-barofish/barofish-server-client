@@ -30,7 +30,7 @@ public class ProductInfoNoticeController {
                                                           @RequestParam(value = "itemCode", required = true) String itemCode) {
 
         CustomResponse<Object> res = new CustomResponse<>();
-        if (auth.isEmpty()) throw new JwtBusinessException(ErrorCode.NOT_ALLOWED);
+        
         TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN, TokenAuthType.PARTNER, TokenAuthType.ALLOW), auth);
 
         if (itemCode == null) {
@@ -49,7 +49,7 @@ public class ProductInfoNoticeController {
                                                          @RequestBody ProductInformation request) {
         CustomResponse<Object> res = new CustomResponse<>();
 
-        if (auth.isEmpty()) throw new JwtBusinessException(ErrorCode.NOT_ALLOWED);;
+        
         TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN, TokenAuthType.PARTNER), auth);
 
         if (request.getItemCode() == null) {
@@ -68,7 +68,7 @@ public class ProductInfoNoticeController {
                                                          @RequestBody ProductInformation request) {
         CustomResponse<Object> res = new CustomResponse<>();
 
-        if (auth.isEmpty()) throw new JwtBusinessException(ErrorCode.NOT_ALLOWED);;
+        
         TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN, TokenAuthType.PARTNER), auth);
 
         if (request.getItemCode() == null) {
@@ -88,7 +88,7 @@ public class ProductInfoNoticeController {
                                                       @PathVariable("productId") int productId) {
         CustomResponse<Object> res = new CustomResponse<>();
 
-        if (auth.isEmpty()) throw new JwtBusinessException(ErrorCode.NOT_ALLOWED);;
+        
         jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ALLOW), auth);
 
         ProductInformation
@@ -104,7 +104,7 @@ public class ProductInfoNoticeController {
                                                          @PathVariable("productId") int productId) {
         CustomResponse<Object> res = new CustomResponse<>();
 
-        if (auth.isEmpty()) throw new JwtBusinessException(ErrorCode.NOT_ALLOWED);;
+        
         TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN, TokenAuthType.PARTNER), auth);
 
         productInfoNotificationCommandService.deleteProductInfoNotification(productId);

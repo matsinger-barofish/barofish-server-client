@@ -220,7 +220,7 @@ public class ProductController {
         CustomResponse<Page<ProductListDto>> res = new CustomResponse<>();
 
         Integer userId = null;
-        if (auth.isEmpty()) throw new JwtBusinessException(ErrorCode.NOT_ALLOWED);;
+        
         jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ALLOW, TokenAuthType.USER), auth);
 
         Page<ProductListDto>
@@ -245,7 +245,7 @@ public class ProductController {
         CustomResponse<List<List<ExcelProductDto2>>> res = new CustomResponse<>();
 
         Integer userId = null;
-        if (auth.isEmpty()) throw new JwtBusinessException(ErrorCode.NOT_ALLOWED);;
+        
         jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
 
         List<Integer> ids = null;
@@ -267,7 +267,7 @@ public class ProductController {
 
         CustomResponse<SimpleProductDto> res = new CustomResponse<>();
 
-        if (auth.isEmpty()) throw new JwtBusinessException(ErrorCode.NOT_ALLOWED);;
+        
         TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(
                 Set.of(TokenAuthType.ALLOW, TokenAuthType.USER, TokenAuthType.ADMIN, TokenAuthType.PARTNER),
                 auth
@@ -297,7 +297,7 @@ public class ProductController {
                                                                        @RequestPart(value = "images") List<MultipartFile> images) throws Exception {
         CustomResponse<SimpleProductDto> res = new CustomResponse<>();
 
-        if (auth.isEmpty()) throw new JwtBusinessException(ErrorCode.NOT_ALLOWED);;
+        
         TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.PARTNER, TokenAuthType.ADMIN), auth);
 
         Integer adminId = null;
@@ -460,7 +460,7 @@ public class ProductController {
                                                                           @RequestPart(value = "newImages", required = false) List<MultipartFile> newImages) {
         CustomResponse<SimpleProductDto> res = new CustomResponse<>();
 
-        if (auth.isEmpty()) throw new JwtBusinessException(ErrorCode.NOT_ALLOWED);;
+        
         TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN, TokenAuthType.PARTNER), auth);
 
 
@@ -745,7 +745,7 @@ public class ProductController {
                                                                        @RequestPart(value = "data") UpdateStateProductsReq data) {
         CustomResponse<Boolean> res = new CustomResponse<>();
 
-        if (auth.isEmpty()) throw new JwtBusinessException(ErrorCode.NOT_ALLOWED);;
+        
         TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
 
         Integer adminId = tokenInfo.getId();
@@ -779,7 +779,7 @@ public class ProductController {
                                                                      @RequestParam(value = "type") LikePostType type) {
         CustomResponse<Boolean> res = new CustomResponse<>();
 
-        if (auth.isEmpty()) throw new JwtBusinessException(ErrorCode.NOT_ALLOWED);;
+        
         TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER, TokenAuthType.USER), auth);
 
         Integer check = productService.checkLikeProduct(productId, tokenInfo.getId());
@@ -798,7 +798,7 @@ public class ProductController {
                                                                  @RequestHeader(value = "Authorization") Optional<String> auth) {
         CustomResponse<Boolean> res = new CustomResponse<>();
 
-        if (auth.isEmpty()) throw new JwtBusinessException(ErrorCode.NOT_ALLOWED);;
+        
         TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN, TokenAuthType.PARTNER), auth);
 
 
