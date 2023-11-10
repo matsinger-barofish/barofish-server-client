@@ -6,6 +6,7 @@ import com.amazonaws.services.s3.model.PutObjectRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -35,7 +36,7 @@ public class S3Uploader {
         return this.s3Url;
     }
 
-    public List<String> uploadFiles(List<MultipartFile> files, ArrayList<String> path) throws Exception {
+    public List<String> uploadFiles(List<MultipartFile> files, ArrayList<String> path) {
         List<String> fileUrls = new ArrayList<>();
         for (MultipartFile file : files) {
             String imageUrl = upload(file, path);
@@ -45,11 +46,16 @@ public class S3Uploader {
     }
 
     // MultipartFile을 전달받아 File로 전환한 후 S3에 업로드
-    public String upload(MultipartFile multipartFile, ArrayList<String> dirName) throws Exception {
+    public String upload(MultipartFile multipartFile, ArrayList<String> dirName) {
         if (multipartFile.getContentType().startsWith("image") && !validateImageType(multipartFile))
-            throw new Exception("허용되지 않는 확장자입니다.");
-        File uploadFile = convert(multipartFile)
-                .orElseThrow(() -> new IllegalArgumentException("MultipartFile -> File 전환 실패"));
+            throw new IllegalArgumentException("허용되지 않는 확장자입니다.");
+        File uploadFile = null;
+        try {
+            uploadFile = convert(multipartFile)
+                    .orElseThrow(() -> new IllegalArgumentException("MultipartFile -> File 전환 실패"));
+        } catch (IOException e) {
+            throw new RuntimeException("이미지 파일 변환에 실패했습니다.");
+        }
         return upload(uploadFile, dirName);
     }
 
@@ -101,7 +107,7 @@ public class S3Uploader {
         }
     }
 
-    public Boolean validateImageType(MultipartFile file) throws IOException {
+    public Boolean validateImageType(MultipartFile file) {
         List<String> allowedImageType = List.of("image/jpeg", "image/png", "image/webp", "image/gif", "image/svg+xml");
         return allowedImageType.contains(file.getContentType());
     }
@@ -123,12 +129,8 @@ public class S3Uploader {
                     throw new Error("파일을 입력해주세요.");
                 result.add(file.getExistingFile());
             } else if (file.getNewFile() != null) {
-                try {
-                    String fileUrl = upload(file.getNewFile(), path);
-                    result.add(fileUrl);
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
+                String fileUrl = upload(file.getNewFile(), path);
+                result.add(fileUrl);
             }
         }
         return result;
@@ -194,8 +196,14 @@ public class S3Uploader {
 
     }
 
-    public File extractBase64FromImageUrl(String imageUrl) throws MalformedURLException {
-        URL url = new URL(imageUrl);
+    public File extractBase64FromImageUrl(String imageUrl) {
+        URL url = null;
+        try {
+            url = new URL(imageUrl);
+        } catch (MalformedURLException e) {
+            throw new IllegalArgumentException("이미지 url이 올바르지 않습니다.");
+        }
+
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
         try (InputStream inputStream = url.openStream()) {
             byte[] buffer = new byte[4096];

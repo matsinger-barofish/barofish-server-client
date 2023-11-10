@@ -40,7 +40,7 @@ public class PaymentMethodQueryService {
         return paymentMethodDtos;
     }
 
-    public PaymentMethodDto convert2Dto(PaymentMethod paymentMethod) throws Exception {
+    public PaymentMethodDto convert2Dto(PaymentMethod paymentMethod) {
         return PaymentMethodDto.builder().id(paymentMethod.getId()).userId(paymentMethod.getUserId()).cardNo(aes256.decrypt(
                 paymentMethod.getCardNo()).replaceAll("(\\d{6})(\\d{6})(\\d{3})(\\d)", "$1******$3*")).expiryAt(
                 paymentMethod.getExpiryAt()).birth(paymentMethod.getBirth()).cardName(paymentMethod.getCardName()).name(

@@ -7,7 +7,9 @@ import com.matsinger.barofishserver.domain.admin.log.dto.AdminLogDto;
 import com.matsinger.barofishserver.jwt.JwtService;
 import com.matsinger.barofishserver.jwt.TokenAuthType;
 import com.matsinger.barofishserver.jwt.TokenInfo;
+import com.matsinger.barofishserver.jwt.exception.JwtExceptionMessage;
 import com.matsinger.barofishserver.utils.CustomResponse;
+import io.jsonwebtoken.JwtException;
 import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -33,8 +35,11 @@ public class AdminLogController {
                                                                                 @RequestParam(value = "type") AdminLogType type,
                                                                                 @RequestParam(value = "targetId") String targetId) {
         CustomResponse<Page<AdminLogDto>> res = new CustomResponse<>();
-        Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
-        if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
+
+        if (auth.isEmpty()) {
+            throw new JwtException(JwtExceptionMessage.TOKEN_REQUIRED);
+        }
+        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth.get());
 
         if (type == null) return res.throwError("타입을 입력해주세요.", "INPUT_CHECK_REQUIRED");
         if (targetId == null) return res.throwError("대상 아이디를 입력해주세요.", " INPUT_CHECK_REQUIRED");

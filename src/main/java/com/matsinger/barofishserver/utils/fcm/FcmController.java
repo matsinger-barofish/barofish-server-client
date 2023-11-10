@@ -9,8 +9,10 @@ import com.matsinger.barofishserver.domain.notification.domain.NotificationType;
 import com.matsinger.barofishserver.domain.user.domain.User;
 import com.matsinger.barofishserver.domain.user.domain.UserState;
 import com.matsinger.barofishserver.domain.user.repository.UserRepository;
+import com.matsinger.barofishserver.jwt.exception.JwtExceptionMessage;
 import com.matsinger.barofishserver.utils.Common;
 import com.matsinger.barofishserver.utils.CustomResponse;
+import io.jsonwebtoken.JwtException;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
@@ -43,26 +45,26 @@ public class FcmController {
     public ResponseEntity<CustomResponse<Boolean>> sendFcmToUser(@RequestHeader(value = "Authorization") Optional<String> auth,
                                                                  @RequestPart(value = "data") AdminSendFcmReq data) {
         CustomResponse<Boolean> res = new CustomResponse<>();
-        Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
-        if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
-        try {
-            String title = utils.validateString(data.getTitle(), 100L, "제목");
-            if (data.content == null) return res.throwError("내용을 입력해주세요.", "INPUT_CHECK_REQUIRED");
-            List<Integer> userIds = data.getUserIds();
-            if (userIds == null)
-                userIds = userRepository.findAllByState(UserState.ACTIVE).stream().map(User::getId).toList();
-            Notification
-                    notification =
-                    Notification.builder().type(NotificationType.ADMIN).title(title).content(data.getContent()).createdAt(
-                            utils.now()).build();
-            for (Integer userId : userIds) {
-                notification.setUserId(userId);
-                notificationCommandService.addNotification(notification);
-                fcmService.sendFcmByToken(FcmRequestDto.builder().targetUserId(userId).title(title).body(data.getContent()).build());
-            }
-            return ResponseEntity.ok(res);
-        } catch (Exception e) {
-            return res.defaultError(e);
+
+        if (auth.isEmpty()) {
+            throw new JwtException(JwtExceptionMessage.TOKEN_REQUIRED);
         }
+        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth.get());
+
+        String title = utils.validateString(data.getTitle(), 100L, "제목");
+        if (data.content == null) return res.throwError("내용을 입력해주세요.", "INPUT_CHECK_REQUIRED");
+        List<Integer> userIds = data.getUserIds();
+        if (userIds == null)
+            userIds = userRepository.findAllByState(UserState.ACTIVE).stream().map(User::getId).toList();
+        Notification
+                notification =
+                Notification.builder().type(NotificationType.ADMIN).title(title).content(data.getContent()).createdAt(
+                        utils.now()).build();
+        for (Integer userId : userIds) {
+            notification.setUserId(userId);
+            notificationCommandService.addNotification(notification);
+            fcmService.sendFcmByToken(FcmRequestDto.builder().targetUserId(userId).title(title).body(data.getContent()).build());
+        }
+        return ResponseEntity.ok(res);
     }
 }

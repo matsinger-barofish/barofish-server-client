@@ -110,7 +110,7 @@ public class UserCommandService {
     private final NotificationCommandService notificationCommandService;
 
     @Transactional
-    public SnsJoinLoginResponseDto createSnsUserAndSave(SnsJoinReq request) throws MalformedURLException {
+    public SnsJoinLoginResponseDto createSnsUserAndSave(SnsJoinReq request) {
 
         userJoinValidator.nullCheck(request.getLoginType());
         userJoinValidator.nullCheck(request.getLoginId());
@@ -136,7 +136,7 @@ public class UserCommandService {
     }
 
     @Transactional
-    public int createIdPwUserAndSave(UserJoinReq request) throws Exception {
+    public int createIdPwUserAndSave(UserJoinReq request) {
         User
                 createdUser =
                 User.builder().state(UserState.ACTIVE).joinAt(new Timestamp(System.currentTimeMillis())).build();
@@ -164,8 +164,7 @@ public class UserCommandService {
     }
 
     @Transactional
-    public int addAppleUser(AppleJoinReq request, String phoneNumber, MultipartFile profileImage)
-            throws Exception {
+    public int addAppleUser(AppleJoinReq request, String phoneNumber, MultipartFile profileImage) {
 
         utils.validateString(request.getName(), 20L, "이름");
         utils.validateString(request.getNickname(), 50L, "닉네임");
@@ -204,7 +203,7 @@ public class UserCommandService {
         return savedUser.getId();
     }
 
-    public DeliverPlace setAndSaveDeliverPlace(User user, UserInfo userInfo, UserJoinReq request) throws Exception {
+    public DeliverPlace setAndSaveDeliverPlace(User user, UserInfo userInfo, UserJoinReq request) {
 
         String address = utils.validateString(request.getAddress(), 100L, "주소");
         String addressDetail = utils.validateString(request.getAddressDetail(), 100L, "상세 주소");
@@ -441,7 +440,7 @@ public class UserCommandService {
     }
 
     @Transactional
-    public boolean addUserAuthIfPhoneNumberExists(UserJoinReq request) throws Exception {
+    public boolean addUserAuthIfPhoneNumberExists(UserJoinReq request) {
 
         Optional<UserInfo> optionalUserInfo = userInfoRepository.findByPhone(request.getPhone().replace("-", ""));
 

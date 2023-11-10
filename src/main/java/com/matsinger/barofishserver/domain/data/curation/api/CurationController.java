@@ -14,9 +14,11 @@ import com.matsinger.barofishserver.domain.product.domain.Product;
 import com.matsinger.barofishserver.domain.product.application.ProductService;
 import com.matsinger.barofishserver.domain.product.dto.ProductListDto;
 
+import com.matsinger.barofishserver.jwt.exception.JwtExceptionMessage;
 import com.matsinger.barofishserver.utils.Common;
 import com.matsinger.barofishserver.utils.CustomResponse;
 import com.matsinger.barofishserver.utils.S3.S3Uploader;
+import io.jsonwebtoken.JwtException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Description;
 import org.springframework.data.domain.Page;
@@ -70,8 +72,11 @@ public class CurationController {
                                                                                        @RequestParam(value = "orderby", defaultValue = "id") CurationOrderBy orderBy,
                                                                                        @RequestParam(value = "orderType", defaultValue = "DESC") Sort.Direction sort) {
         CustomResponse<Page<CurationDto>> res = new CustomResponse<>();
-        Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
-        if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
+
+        if (auth.isEmpty()) {
+            throw new JwtException(JwtExceptionMessage.TOKEN_REQUIRED);
+        }
+        jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth.get());
 
         PageRequest pageRequest = PageRequest.of(page, take, Sort.by(sort, orderBy.label));
         Page<Curation> curations = curationQueryService.selectCurationListByAdmin(pageRequest);
@@ -85,7 +90,6 @@ public class CurationController {
         res.setData(Optional.of(curationDtos));
         return ResponseEntity.ok(res);
     }
-
 
     @GetMapping("/{id}")
     public ResponseEntity<CustomResponse<CurationDto>> selectCuration(@PathVariable("id") Integer id) {
@@ -122,8 +126,11 @@ public class CurationController {
                                                                    @RequestPart(value = "type", required = false) CurationType type,
                                                                    @RequestPart(value = "state", required = false) CurationState state) throws Exception {
         CustomResponse<Curation> res = new CustomResponse<>();
-        Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
-        if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
+
+        if (auth.isEmpty()) {
+            throw new JwtException(JwtExceptionMessage.TOKEN_REQUIRED);
+        }
+        jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth.get());
 
         Curation curation = new Curation();
         if (shortName == null && title == null)
@@ -167,8 +174,10 @@ public class CurationController {
                                                                    @RequestPart(value = "state", required = false)CurationState state) throws Exception {
         CustomResponse<Curation> res = new CustomResponse<>();
 
-        Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
-        if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
+        if (auth.isEmpty()) {
+            throw new JwtException(JwtExceptionMessage.TOKEN_REQUIRED);
+        }
+        jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth.get());
 
 
         Curation curation = curationQueryService.selectCuration(id);
@@ -205,8 +214,11 @@ public class CurationController {
                                                                         @PathVariable("id") Integer id,
                                                                         @RequestPart(value = "data") List<Integer> productIds) {
         CustomResponse<Boolean> res = new CustomResponse<>();
-        Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
-        if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
+
+        if (auth.isEmpty()) {
+            throw new JwtException(JwtExceptionMessage.TOKEN_REQUIRED);
+        }
+        jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth.get());
 
         Curation curation = curationQueryService.selectCuration(id);
         if (curation == null) throw new Error("큐레이션 정보를 찾을 수 없습니다.");
@@ -224,8 +236,11 @@ public class CurationController {
     public ResponseEntity<CustomResponse<Curation>> deleteCuration(@RequestHeader(value = "Authorization") Optional<String> auth,
                                                                    @PathVariable("id") Integer id) {
         CustomResponse<Curation> res = new CustomResponse<>();
-        Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
-        if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
+
+        if (auth.isEmpty()) {
+            throw new JwtException(JwtExceptionMessage.TOKEN_REQUIRED);
+        }
+        jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth.get());
 
         if (id == 0) return res.throwError("삭제 불가능한 큐레이션입니다.", "NOT_ALLOWED");
         Curation curation = curationQueryService.selectCuration(id);
@@ -244,8 +259,11 @@ public class CurationController {
     public ResponseEntity<CustomResponse<Boolean>> deleteProductList(@RequestHeader(value = "Authorization") Optional<String> auth,
                                                                      @RequestPart(value = "data") CurationDeleteProductReq data) {
         CustomResponse<Boolean> res = new CustomResponse<>();
-        Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
-        if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
+
+        if (auth.isEmpty()) {
+            throw new JwtException(JwtExceptionMessage.TOKEN_REQUIRED);
+        }
+        jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth.get());
 
         if (data.getCurationId() == null) return res.throwError("큐레이션 아이디를 입력해주세요.", "INPUT_CHECK_REQUIRED");
         Curation curation = curationQueryService.selectCuration(data.getCurationId());
@@ -259,8 +277,12 @@ public class CurationController {
     public ResponseEntity<CustomResponse<List<CurationDto>>> sortCuration(@RequestHeader(value = "Authorization") Optional<String> auth,
                                                                           @RequestPart(value = "data") SortCurationReq data) {
         CustomResponse<List<CurationDto>> res = new CustomResponse<>();
-        Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
-        if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
+
+        if (auth.isEmpty()) {
+            throw new JwtException(JwtExceptionMessage.TOKEN_REQUIRED);
+        }
+        jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth.get());
+
         List<CurationDto> curationDtos = new ArrayList<>();
         List<Curation> curations = new ArrayList<>();
         for (int i = 0; i < data.getCurationIds().size(); i++) {

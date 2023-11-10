@@ -69,8 +69,7 @@ public class BasketCommandService {
         infoRepository.deleteAllByIdIn(basketIds);
     }
 
-    public void processBasketProductAdd(Integer userId, Integer productId, Integer optionId, Integer amount)
-            throws Exception {
+    public void processBasketProductAdd(Integer userId, Integer productId, Integer optionId, Integer amount) {
         List<BasketProductInfo> infos = infoRepository.findByUserIdAndProductId(userId, productId);
         boolean isExist = false;
         for (BasketProductInfo info : infos) {

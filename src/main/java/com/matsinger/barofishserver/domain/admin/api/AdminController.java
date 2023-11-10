@@ -10,9 +10,11 @@ import com.matsinger.barofishserver.domain.admin.domain.AdminAuthority;
 import com.matsinger.barofishserver.domain.admin.dto.AddAdminReq;
 import com.matsinger.barofishserver.domain.admin.dto.UpdateAdminReq;
 import com.matsinger.barofishserver.jwt.*;
+import com.matsinger.barofishserver.jwt.exception.JwtExceptionMessage;
 import com.matsinger.barofishserver.utils.Common;
 import com.matsinger.barofishserver.utils.CustomResponse;
 import com.matsinger.barofishserver.utils.RegexConstructor;
+import io.jsonwebtoken.JwtException;
 import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -58,8 +60,11 @@ public class AdminController {
                                                                        @RequestParam(value = "accessPromotion", required = false) Boolean accessPromotion,
                                                                        @RequestParam(value = "accessSetting", required = false) Boolean accessSetting) {
         CustomResponse<Page<Admin>> res = new CustomResponse<>();
-        Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
-        if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
+
+        if (auth.isEmpty()) {
+            throw new JwtException(JwtExceptionMessage.TOKEN_REQUIRED);
+        }
+        jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth.get());
 
         PageRequest pageRequest = PageRequest.of(page, take, Sort.by(orderType, orderBy.label));
         Specification<Admin> spec = (root, query, builder) -> {
@@ -96,8 +101,11 @@ public class AdminController {
     public ResponseEntity<CustomResponse<Admin>> selectAdmin(@RequestHeader(value = "Authorization") Optional<String> auth,
                                                              @PathVariable("id") Integer id) {
         CustomResponse<Admin> res = new CustomResponse<>();
-        Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
-        if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
+
+        if (auth.isEmpty()) {
+            throw new JwtException(JwtExceptionMessage.TOKEN_REQUIRED);
+        }
+        jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth.get());
 
         Admin admin = adminQueryService.selectAdmin(id);
         admin.setPassword(null);
@@ -108,10 +116,13 @@ public class AdminController {
     @GetMapping("/my-info")
     public ResponseEntity<CustomResponse<Admin>> selectAdminMyInfo(@RequestHeader(value = "Authorization") Optional<String> auth) {
         CustomResponse<Admin> res = new CustomResponse<>();
-        Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
-        if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
 
-        Integer adminId = tokenInfo.get().getId();
+        if (auth.isEmpty()) {
+            throw new JwtException(JwtExceptionMessage.TOKEN_REQUIRED);
+        }
+        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth.get());
+
+        Integer adminId = tokenInfo.getId();
         Admin admin = adminQueryService.selectAdmin(adminId);
         admin.setPassword(null);
         res.setData(Optional.ofNullable(admin));
@@ -124,10 +135,13 @@ public class AdminController {
     public ResponseEntity<CustomResponse<Admin>> addAdminByMaster(@RequestHeader(value = "Authorization") Optional<String> auth,
                                                                   @RequestPart(value = "data") AddAdminReq data) throws Exception {
         CustomResponse<Admin> res = new CustomResponse<>();
-        Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
-        if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
 
-        Admin master = adminQueryService.selectAdmin(tokenInfo.get().getId());
+        if (auth.isEmpty()) {
+            throw new JwtException(JwtExceptionMessage.TOKEN_REQUIRED);
+        }
+        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth.get());
+
+        Admin master = adminQueryService.selectAdmin(tokenInfo.getId());
         if (!master.getAuthority().equals(AdminAuthority.MASTER))
             return res.throwError("최고 관리자만 생성 가능합니다.", "NOT_ALLOWED");
         if (data.getLoginId() == null) return res.throwError("로그인 아이디를 입력해주세요.", "INPUT_CHECK_REQUIRED");
@@ -166,10 +180,13 @@ public class AdminController {
                                                                      @PathVariable("id") Integer id,
                                                                      @RequestPart(value = "data") UpdateAdminReq data) throws Exception {
         CustomResponse<Admin> res = new CustomResponse<>();
-        Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
-        if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
 
-        Admin master = adminQueryService.selectAdmin(tokenInfo.get().getId());
+        if (auth.isEmpty()) {
+            throw new JwtException(JwtExceptionMessage.TOKEN_REQUIRED);
+        }
+        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth.get());
+
+        Admin master = adminQueryService.selectAdmin(tokenInfo.getId());
         if (!master.getAuthority().equals(AdminAuthority.MASTER))
             return res.throwError("최고 관리자의 경우 수정 가능합니다.", "NOT_ALLOWED");
         Admin admin = adminQueryService.selectAdmin(id);

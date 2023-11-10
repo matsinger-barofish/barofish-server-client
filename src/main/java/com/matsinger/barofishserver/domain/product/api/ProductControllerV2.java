@@ -75,13 +75,11 @@ public class ProductControllerV2 {
                                                                                           @RequestParam(value = "storeId", required = false) Integer storeId) {
 
         CustomResponse<Object> res = new CustomResponse<>();
-        Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ALLOW), auth);
 
+        if (auth.isEmpty()) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
+        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ALLOW, TokenAuthType.USER), auth.get());
 
-        Integer userId = null;
-        if (tokenInfo != null && tokenInfo.isPresent() && tokenInfo.get().getType().equals(TokenAuthType.USER)) {
-            userId = tokenInfo.get().getId();
-        }
+        Integer userId = tokenInfo.getId();
 
         PageRequest pageRequest = PageRequest.of(page - 1, take);
         Page<ProductListDtoV2> result = productQueryService.getPagedProducts(pageRequest, sortBy, keyword);
@@ -94,7 +92,6 @@ public class ProductControllerV2 {
     public ResponseEntity<CustomResponse<Object>> getExpectedArrivalDate(@PathVariable(value = "id") Integer productId,
                                                                          @RequestParam(value = "Authorization") Optional<String> auth) {
 
-//        Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
         CustomResponse<Object> res = new CustomResponse<>();
 
         LocalDateTime now = LocalDateTime.now();
