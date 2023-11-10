@@ -12,6 +12,7 @@ import com.matsinger.barofishserver.domain.product.application.ProductService;
 import com.matsinger.barofishserver.domain.settlement.dto.*;
 import com.matsinger.barofishserver.domain.store.application.StoreService;
 import com.matsinger.barofishserver.domain.store.domain.StoreInfo;
+import com.matsinger.barofishserver.global.error.ErrorCode;
 import com.matsinger.barofishserver.jwt.JwtService;
 import com.matsinger.barofishserver.jwt.TokenAuthType;
 import com.matsinger.barofishserver.jwt.TokenInfo;
@@ -24,10 +25,9 @@ import com.matsinger.barofishserver.domain.settlement.domain.SettlementState;
 import com.matsinger.barofishserver.domain.settlement.domain.OrderProductInfoOrderBy;
 import com.matsinger.barofishserver.domain.settlement.domain.Settlement;
 import com.matsinger.barofishserver.domain.settlement.dto.cancelSettleReq;
-import com.matsinger.barofishserver.jwt.exception.JwtExceptionMessage;
+import com.matsinger.barofishserver.jwt.exception.JwtBusinessException;
 import com.matsinger.barofishserver.utils.Common;
 import com.matsinger.barofishserver.utils.CustomResponse;
-import io.jsonwebtoken.JwtException;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -67,7 +67,7 @@ public class SettlementController {
         CustomResponse<SettlementAmountRes> res = new CustomResponse<>();
 
         if (auth.isEmpty()) {
-            throw new JwtException(JwtExceptionMessage.TOKEN_REQUIRED);
+            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
         }
         TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN, TokenAuthType.PARTNER), auth.get());
 
@@ -92,7 +92,7 @@ public class SettlementController {
         CustomResponse<Page<OrderProductInfoDto>> res = new CustomResponse<>();
 
         if (auth.isEmpty()) {
-            throw new JwtException(JwtExceptionMessage.TOKEN_REQUIRED);
+            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
         }
         TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN, TokenAuthType.PARTNER), auth.get());
 
@@ -130,7 +130,7 @@ public class SettlementController {
         CustomResponse<List<SettlementOrderDto>> res = new CustomResponse<>();
 
         if (auth.isEmpty()) {
-            throw new JwtException(JwtExceptionMessage.TOKEN_REQUIRED);
+            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
         }
         TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN, TokenAuthType.PARTNER), auth.get());
 
@@ -181,7 +181,7 @@ public class SettlementController {
         CustomResponse<Page<SettlementDto>> res = new CustomResponse<>();
 
         if (auth.isEmpty()) {
-            throw new JwtException(JwtExceptionMessage.TOKEN_REQUIRED);
+            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
         }
         TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth.get());
 
@@ -210,20 +210,20 @@ public class SettlementController {
         CustomResponse<Boolean> res = new CustomResponse<>();
 
         if (auth.isEmpty()) {
-            throw new JwtException(JwtExceptionMessage.TOKEN_REQUIRED);
+            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
         }
         TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth.get());
 
         Integer adminId = tokenInfo.getId();
-        if (data.getStoreId() == null) return res.throwError("파트너를 선택해주세요.", "INPUT_CHECK_REQUIRED");
+        if (data.getStoreId() == null) throw new IllegalArgumentException("파트너를 선택해주세요.");
         if (data.getOrderProductInfoIds() == null || data.getOrderProductInfoIds().size() == 0)
-            return res.throwError("정산 처리할 주문 내역을 선택해주세요.", "INPUT_CHECK_REQUIRED");
+            throw new IllegalArgumentException("정산 처리할 주문 내역을 선택해주세요.");
         StoreInfo storeInfo = storeService.selectStoreInfo(data.getStoreId());
         List<OrderProductInfo>
                 productInfos =
                 orderService.selectOrderProductInfoWithIds(data.getOrderProductInfoIds());
         if (productInfos.stream().map(v -> productService.findById(v.getProductId())).anyMatch(v -> v.getStoreId() !=
-                data.getStoreId())) return res.throwError("동일한 파트너의 주문만 묶어서 정산 처리 진행해주세요.", "INPUT_CHECK_REQUIRED");
+                data.getStoreId())) throw new IllegalArgumentException("동일한 파트너의 주문만 묶어서 정산 처리 진행해주세요.");
         int totalPrice = settlementQueryService.getSettlementAmount(productInfos, storeInfo.getStoreId());
 
         for (OrderProductInfo info : productInfos) {
@@ -257,13 +257,13 @@ public class SettlementController {
 //                                                             @RequestPart(value = "data") CancelSettlementReq data) {
 //        CustomResponse<Boolean> res = new CustomResponse<>();
 //        Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
-//        if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
+//        if (tokenInfo == null) throw new JwtBusinessException(ErrorCode.NOT_ALLOWED);;
 //        try {
-//            if (data.cancelReason == null) return res.throwError("취소 사유를 입력해주세요.", "INPUT_CHECK_REQUIRED");
+//            if (data.cancelReason == null) throw new IllegalArgumentException()("취소 사유를 입력해주세요);
 //            Settlement settlement = settlementService.selectSettlement(id);
 //            String cancelReason = utils.validateString(data.cancelReason, 500L, "취소 사유");
 //            if (settlement.getState().equals(SettlementState.CANCELED))
-//                return res.throwError("이미 취소된 정산입니다.", "NOT_ALLOWED");
+//                throw new IllegalArgumentException()("이미 취소된 정산입니다);
 //            settlement.setCancelReason(cancelReason);
 //            settlementService.updateSettlement(settlement);
 //            res.setData(Optional.of(true));
@@ -280,20 +280,20 @@ public class SettlementController {
         CustomResponse<Boolean> res = new CustomResponse<>();
 
         if (auth.isEmpty()) {
-            throw new JwtException(JwtExceptionMessage.TOKEN_REQUIRED);
+            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
         }
         TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth.get());
 
         Integer adminId = tokenInfo.getId();
-        if (data.getStoreId() == null) return res.throwError("파트너를 선택해주세요.", "INPUT_CHECK_REQUIRED");
+        if (data.getStoreId() == null) throw new IllegalArgumentException("파트너를 선택해주세요.");
         if (data.getOrderProductInfoIds() == null || data.getOrderProductInfoIds().size() == 0)
-            return res.throwError("정산 처리할 주문 내역을 선택해주세요.", "INPUT_CHECK_REQUIRED");
+            throw new IllegalArgumentException("정산 처리할 주문 내역을 선택해주세요.");
         StoreInfo storeInfo = storeService.selectStoreInfo(data.getStoreId());
         List<OrderProductInfo>
                 productInfos =
                 orderService.selectOrderProductInfoWithIds(data.getOrderProductInfoIds());
         if (productInfos.stream().map(v -> productService.findById(v.getProductId())).anyMatch(v -> v.getStoreId() !=
-                data.getStoreId())) return res.throwError("동일한 파트너의 주문만 묶어서 정산 처리 진행해주세요.", "INPUT_CHECK_REQUIRED");
+                data.getStoreId())) throw new IllegalArgumentException("동일한 파트너의 주문만 묶어서 정산 처리 진행해주세요.");
         int totalPrice = settlementQueryService.getSettlementAmount(productInfos, storeInfo.getStoreId());
         for (OrderProductInfo info : productInfos) {
             info.setIsSettled(false);
