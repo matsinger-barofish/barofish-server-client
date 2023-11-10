@@ -9,6 +9,7 @@ import com.matsinger.barofishserver.utils.AES256;
 import com.matsinger.barofishserver.utils.Common;
 import com.matsinger.barofishserver.utils.RegexConstructor;
 import com.siot.IamportRestClient.IamportClient;
+import com.siot.IamportRestClient.exception.IamportResponseException;
 import com.siot.IamportRestClient.request.BillingCustomerData;
 import com.siot.IamportRestClient.response.BillingCustomer;
 import com.siot.IamportRestClient.response.IamportResponse;
@@ -16,6 +17,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
 import java.util.regex.Pattern;
 
 @Service
@@ -34,7 +36,7 @@ public class PaymentMethodCommandService {
     @Value("${iamport.credentials.keyin-pg}")
     public String keyinPg;
 
-    public PaymentMethod addPaymentMethod(AddPaymentMethodReq request, int userId) throws Exception {
+    public PaymentMethod addPaymentMethod(AddPaymentMethodReq request, int userId) {
 
         String name = util.validateString(request.getName(), 20L, "이름");
 
@@ -89,7 +91,7 @@ public class PaymentMethodCommandService {
         }
     }
 
-    private CheckValidCardRes checkValidCard(PaymentMethod paymentMethod) throws Exception {
+    private CheckValidCardRes checkValidCard(PaymentMethod paymentMethod) {
         IamportClient iamportClient = callbackService.getIamportClient();
         String customerUid = "customer_" + paymentMethod.getUserId() + "_" + paymentMethod.getId();
         String cardNo = aes256.decrypt(paymentMethod.getCardNo());
@@ -102,8 +104,17 @@ public class PaymentMethodCommandService {
         BillingCustomerData billingCustomerData = new BillingCustomerData(customerUid, cardNo, expiry, birth);
         billingCustomerData.setPwd2Digit(aes256.decrypt(paymentMethod.getPasswordTwoDigit()));
         billingCustomerData.setPg(keyinPg);
-        IamportResponse<BillingCustomer> billingCustomerRes = iamportClient.postBillingCustomer(customerUid,
-                billingCustomerData);
+
+        IamportResponse<BillingCustomer> billingCustomerRes = null;
+        try {
+            billingCustomerRes = iamportClient.postBillingCustomer(customerUid,
+                    billingCustomerData);
+        } catch (IOException e) {
+            throw new IllegalArgumentException("결제 요청에 실패했습니다.");
+        } catch (IamportResponseException e) {
+            throw new IllegalArgumentException("결제 요청에 실패했습니다.");
+        }
+
         if (billingCustomerRes.getCode() != 0) {
             System.out.println(billingCustomerRes.getCode() + ": " + billingCustomerRes.getMessage());
             return null;

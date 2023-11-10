@@ -34,7 +34,7 @@ public class JwtControllerAdvice implements RequestBodyAdvice {
 
     private ThreadLocal<Boolean> afterBodyReadExecuted = ThreadLocal.withInitial(() -> false);
 
-    @ExceptionHandler(value = {ExpiredJwtException.class})
+    @ExceptionHandler(value = {JwtException.class})
     public ResponseEntity<CustomResponse<Object>> getJwtExpiredMessage(
             HttpServletRequest request,
             Exception e) {
@@ -42,7 +42,7 @@ public class JwtControllerAdvice implements RequestBodyAdvice {
 
         CustomResponse customResponse = new CustomResponse();
         customResponse.setIsSuccess(false);
-        customResponse.setErrorMsg("토큰 정보가 만료되었습니다. 다시 로그인해 주세요.");
+        customResponse.setErrorMsg(JwtExceptionMessage.TOKEN_EXPIRED);
         return ResponseEntity.ok(customResponse);
     }
 

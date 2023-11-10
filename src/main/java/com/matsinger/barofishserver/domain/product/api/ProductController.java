@@ -122,10 +122,11 @@ public class ProductController {
                                                                                     @RequestParam(value = "createdAtS", required = false) Timestamp createdAtS,
                                                                                     @RequestParam(value = "createdAtE", required = false) Timestamp createdAtE) {
         CustomResponse<Page<SimpleProductDto>> res = new CustomResponse<>();
-        Optional<TokenInfo>
-                tokenInfo =
-                jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN, TokenAuthType.PARTNER), auth);
-        if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
+
+        Integer userId = null;
+        if (auth.isEmpty()) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
+        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN, TokenAuthType.PARTNER), auth.get());
+
         Specification<Product> spec = (root, query, builder) -> {
             List<Predicate> predicates = new ArrayList<>();
             if (partnerName != null) predicates.add(builder.like(root.get("store").get("storeInfo").get("name"),
@@ -143,8 +144,8 @@ public class ProductController {
                         Integer::valueOf).toList())));
             if (createdAtS != null) predicates.add(builder.greaterThan(root.get("createdAt"), createdAtS));
             if (createdAtE != null) predicates.add(builder.lessThan(root.get("createdAt"), createdAtE));
-            if (tokenInfo.get().getType().equals(TokenAuthType.PARTNER))
-                predicates.add(builder.equal(root.get("storeId"), tokenInfo.get().getId()));
+            if (tokenInfo.getType().equals(TokenAuthType.PARTNER))
+                predicates.add(builder.equal(root.get("storeId"), tokenInfo.getId()));
             predicates.add(builder.notEqual(root.get("state"), ProductState.DELETED));
             return builder.and(predicates.toArray(new Predicate[0]));
         };
@@ -208,15 +209,10 @@ public class ProductController {
                                                                                         @RequestParam(value = "keyword", required = false, defaultValue = "") String keyword,
                                                                                         @RequestParam(value = "storeId", required = false) Integer storeId) {
         CustomResponse<Page<ProductListDto>> res = new CustomResponse<>();
-        Optional<TokenInfo> tokenInfo = null;
+
         Integer userId = null;
-        if (auth.isEmpty()) {
-            tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ALLOW), auth);
-        }
-        if (auth.isPresent()) {
-            tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth);
-            userId = tokenInfo.get().getId();
-        }
+        if (auth.isEmpty()) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
+        jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ALLOW, TokenAuthType.USER), auth.get());
 
         Page<ProductListDto>
                 result =
@@ -238,8 +234,10 @@ public class ProductController {
     public ResponseEntity<CustomResponse<List<List<ExcelProductDto2>>>> selectProductListForExcel(@RequestHeader(value = "Authorization") Optional<String> auth,
                                                                                                   @RequestParam(value = "ids", required = false) String idsStr) {
         CustomResponse<List<List<ExcelProductDto2>>> res = new CustomResponse<>();
-        Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
-        if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
+
+        Integer userId = null;
+        if (auth.isEmpty()) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
+        jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth.get());
 
         List<Integer> ids = null;
         if (idsStr != null) ids = utils.str2IntList(idsStr);
@@ -257,19 +255,20 @@ public class ProductController {
     @GetMapping("/{id}")
     public ResponseEntity<CustomResponse<SimpleProductDto>> selectProduct(@RequestHeader(value = "Authorization") Optional<String> auth,
                                                                           @PathVariable("id") Integer id) {
-        Optional<TokenInfo>
-                tokenInfo =
-                auth.isPresent() ? jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER,
-                        TokenAuthType.PARTNER,
-                        TokenAuthType.ADMIN), auth) : Optional.empty();
+
         CustomResponse<SimpleProductDto> res = new CustomResponse<>();
+
+        if (auth.isEmpty()) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
+        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(
+                Set.of(TokenAuthType.ALLOW, TokenAuthType.USER, TokenAuthType.ADMIN, TokenAuthType.PARTNER),
+                auth.get()
+        );
+
         Product product = productService.findById(id);
-        SimpleProductDto
-                productDto =
-                productService.convert2SimpleDto(product,
-                        tokenInfo != null &&
-                                tokenInfo.isPresent() &&
-                                tokenInfo.get().getType().equals(TokenAuthType.USER) ? tokenInfo.get().getId() : null);
+        SimpleProductDto productDto = productService.convert2SimpleDto(
+                product,
+                tokenInfo.getType().equals(TokenAuthType.USER) ? tokenInfo.getId() : null);
+
         res.setData(Optional.ofNullable(productDto));
         return ResponseEntity.ok(res);
     }
@@ -288,16 +287,15 @@ public class ProductController {
                                                                        @RequestPart(value = "data") ProductAddReq data,
                                                                        @RequestPart(value = "images") List<MultipartFile> images) throws Exception {
         CustomResponse<SimpleProductDto> res = new CustomResponse<>();
-        Optional<TokenInfo>
-                tokenInfo =
-                jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN, TokenAuthType.PARTNER), auth);
-        if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
+
+        if (auth.isEmpty()) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
+        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.PARTNER, TokenAuthType.ADMIN), auth.get());
 
         Integer adminId = null;
-        if (tokenInfo.get().getType().equals(TokenAuthType.ADMIN)) adminId = tokenInfo.get().getId();
-        if (tokenInfo.get().getType().equals(TokenAuthType.ADMIN) && data.getStoreId() == null)
+        if (tokenInfo.getType().equals(TokenAuthType.ADMIN)) adminId = tokenInfo.getId();
+        if (tokenInfo.getType().equals(TokenAuthType.ADMIN) && data.getStoreId() == null)
             return res.throwError("상점 아이디를 입력해주세요.", "INPUT_CHECK_REQUIRED");
-        else if (tokenInfo.get().getType().equals(TokenAuthType.PARTNER)) data.setStoreId(tokenInfo.get().getId());
+        else if (tokenInfo.getType().equals(TokenAuthType.PARTNER)) data.setStoreId(tokenInfo.getId());
         Optional<Store> store = storeService.selectStoreOptional(data.getStoreId());
         if (store.isEmpty()) return res.throwError("가게 정보를 찾을 수 없습니다.", "NO_SUCH_DATA");
         Category category = categoryQueryService.findById(data.getCategoryId());
@@ -452,19 +450,19 @@ public class ProductController {
                                                                           @RequestPart(value = "existingImages", required = false) List<String> existingImages,
                                                                           @RequestPart(value = "newImages", required = false) List<MultipartFile> newImages) {
         CustomResponse<SimpleProductDto> res = new CustomResponse<>();
-        Optional<TokenInfo>
-                tokenInfo =
-                jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN, TokenAuthType.PARTNER), auth);
-        if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
+
+        if (auth.isEmpty()) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
+        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN, TokenAuthType.PARTNER), auth.get());
+
         try {
             Integer adminId = null;
-            if (tokenInfo.get().getType().equals(TokenAuthType.ADMIN)) adminId = tokenInfo.get().getId();
-            if (tokenInfo.get().getType().equals(TokenAuthType.ADMIN) && data.getStoreId() == null)
+            if (tokenInfo.getType().equals(TokenAuthType.ADMIN)) adminId = tokenInfo.getId();
+            if (tokenInfo.getType().equals(TokenAuthType.ADMIN) && data.getStoreId() == null)
                 return res.throwError("상점 아이디를 입력해주세요.", "INPUT_CHECK_REQUIRED");
-            else if (tokenInfo.get().getType().equals(TokenAuthType.PARTNER)) data.setStoreId(tokenInfo.get().getId());
+            else if (tokenInfo.getType().equals(TokenAuthType.PARTNER)) data.setStoreId(tokenInfo.getId());
             Product product = productService.findById(id);
-            if (tokenInfo.get().getType().equals(TokenAuthType.PARTNER) &&
-                    product.getStoreId() != tokenInfo.get().getId())
+            if (tokenInfo.getType().equals(TokenAuthType.PARTNER) &&
+                    product.getStoreId() != tokenInfo.getId())
                 return res.throwError("타지점의 상품입니다.", "UNAUTHORIZED");
             if (data.getCategoryId() != null) {
                 Category category = categoryQueryService.findById(data.getCategoryId());
@@ -710,7 +708,7 @@ public class ProductController {
             String
                     content =
                     String.format("상품 정보를 수정하였습니다.[%s]",
-                            tokenInfo.get().getType().equals(TokenAuthType.PARTNER) ? "파트너" : admin.getName());
+                            tokenInfo.getType().equals(TokenAuthType.PARTNER) ? "파트너" : admin.getName());
             AdminLog
                     adminLog =
                     AdminLog.builder().id(adminLogQueryService.getAdminLogId()).adminId(adminId).type(AdminLogType.PRODUCT).targetId(
@@ -740,35 +738,33 @@ public class ProductController {
     public ResponseEntity<CustomResponse<Boolean>> updateStateProducts(@RequestHeader(value = "Authorization") Optional<String> auth,
                                                                        @RequestPart(value = "data") UpdateStateProductsReq data) {
         CustomResponse<Boolean> res = new CustomResponse<>();
-        Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
-        if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
-        try {
-            Integer adminId = tokenInfo.get().getId();
-            if (data.getProductIds() == null || data.getProductIds().size() == 0)
-                return res.throwError("상품 아이디를 입력해주세요", "INPUT_CHECK_REQUIRED");
-            if (data.getIsActive() == null) return res.throwError("노출 여부를 입력해주세요.", "INPUT_CHECK_REQUIRED");
-            List<Product> products = productService.selectProductListWithIds(data.getProductIds());
-            Admin admin = adminQueryService.selectAdmin(adminId);
-            products.forEach(v -> {
-                String
-                        content =
-                        String.format("%s -> %s 상태 변경하였습니다.[%s]",
-                                v.getState().equals(ProductState.ACTIVE) ? "노출" : "미노출",
-                                data.getIsActive() ? "노출" : "미노출",
-                                admin.getAuthority().equals(AdminAuthority.MASTER) ? "관리자" : "서브관리자");
-                v.setState(data.getIsActive() ? ProductState.ACTIVE : ProductState.INACTIVE);
-                AdminLog
-                        adminLog =
-                        AdminLog.builder().id(adminLogQueryService.getAdminLogId()).adminId(adminId).type(AdminLogType.PRODUCT).targetId(
-                                String.valueOf(v.getId())).createdAt(utils.now()).content(content).build();
-                adminLogCommandService.saveAdminLog(adminLog);
-            });
-            productService.updateProducts(products);
-            res.setData(Optional.of(true));
-            return ResponseEntity.ok(res);
-        } catch (Exception e) {
-            return res.defaultError(e);
-        }
+
+        if (auth.isEmpty()) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
+        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth.get());
+
+        Integer adminId = tokenInfo.getId();
+        if (data.getProductIds() == null || data.getProductIds().size() == 0)
+            return res.throwError("상품 아이디를 입력해주세요", "INPUT_CHECK_REQUIRED");
+        if (data.getIsActive() == null) return res.throwError("노출 여부를 입력해주세요.", "INPUT_CHECK_REQUIRED");
+        List<Product> products = productService.selectProductListWithIds(data.getProductIds());
+        Admin admin = adminQueryService.selectAdmin(adminId);
+        products.forEach(v -> {
+            String
+                    content =
+                    String.format("%s -> %s 상태 변경하였습니다.[%s]",
+                            v.getState().equals(ProductState.ACTIVE) ? "노출" : "미노출",
+                            data.getIsActive() ? "노출" : "미노출",
+                            admin.getAuthority().equals(AdminAuthority.MASTER) ? "관리자" : "서브관리자");
+            v.setState(data.getIsActive() ? ProductState.ACTIVE : ProductState.INACTIVE);
+            AdminLog
+                    adminLog =
+                    AdminLog.builder().id(adminLogQueryService.getAdminLogId()).adminId(adminId).type(AdminLogType.PRODUCT).targetId(
+                            String.valueOf(v.getId())).createdAt(utils.now()).content(content).build();
+            adminLogCommandService.saveAdminLog(adminLog);
+        });
+        productService.updateProducts(products);
+        res.setData(Optional.of(true));
+        return ResponseEntity.ok(res);
     }
 
     @PostMapping("/like")
@@ -776,53 +772,48 @@ public class ProductController {
                                                                      @RequestParam(value = "productId") Integer productId,
                                                                      @RequestParam(value = "type") LikePostType type) {
         CustomResponse<Boolean> res = new CustomResponse<>();
-        Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth);
-        if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
-        try {
-            Integer check = productService.checkLikeProduct(productId, tokenInfo.get().getId());
-            if (check == 0 && type.equals(LikePostType.LIKE)) {
-                productService.likeProduct(productId, tokenInfo.get().getId());
-                res.setData(Optional.of(true));
-            } else if (check == 1 && type.equals(LikePostType.UNLIKE)) {
-                productService.unlikeProduct(productId, tokenInfo.get().getId());
-                res.setData(Optional.of(true));
-            }
-            return ResponseEntity.ok(res);
-        } catch (Exception e) {
-            return res.defaultError(e);
+
+        if (auth.isEmpty()) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
+        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER, TokenAuthType.USER), auth.get());
+
+        Integer check = productService.checkLikeProduct(productId, tokenInfo.getId());
+        if (check == 0 && type.equals(LikePostType.LIKE)) {
+            productService.likeProduct(productId, tokenInfo.getId());
+            res.setData(Optional.of(true));
+        } else if (check == 1 && type.equals(LikePostType.UNLIKE)) {
+            productService.unlikeProduct(productId, tokenInfo.getId());
+            res.setData(Optional.of(true));
         }
+        return ResponseEntity.ok(res);
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<CustomResponse<Boolean>> deleteProduct(@PathVariable("id") Integer id,
                                                                  @RequestHeader(value = "Authorization") Optional<String> auth) {
         CustomResponse<Boolean> res = new CustomResponse<>();
-        Optional<TokenInfo>
-                tokenInfo =
-                jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.PARTNER, TokenAuthType.ADMIN), auth);
-        if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
-        try {
-            Integer adminId = null;
-            if (tokenInfo.get().getType().equals(TokenAuthType.ADMIN)) adminId = tokenInfo.get().getId();
-            Product product = productService.findById(id);
-            if (tokenInfo.get().getType().equals(TokenAuthType.PARTNER) &&
-                    product.getStoreId() != tokenInfo.get().getId())
-                return res.throwError("삭제 권한이 없습니다.", "NOT_ALLOWED");
-            curationCommandService.deleteWithProductId(product.getId());
-            product.setState(ProductState.DELETED);
-            product = productService.update(product.getId(), product);
-            if (adminId != null) {
-                String content = "삭제 처리 되었습니다.";
-                AdminLog
-                        adminLog =
-                        AdminLog.builder().id(adminLogQueryService.getAdminLogId()).adminId(adminId).type(AdminLogType.PRODUCT).targetId(
-                                String.valueOf(product.getId())).content(content).createdAt(utils.now()).build();
-                adminLogCommandService.saveAdminLog(adminLog);
-            }
-            res.setData(Optional.of(true));
-            return ResponseEntity.ok(res);
-        } catch (Exception e) {
-            return res.defaultError(e);
+
+        if (auth.isEmpty()) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
+        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN, TokenAuthType.PARTNER), auth.get());
+
+
+        Integer adminId = null;
+        if (tokenInfo.getType().equals(TokenAuthType.ADMIN)) adminId = tokenInfo.getId();
+        Product product = productService.findById(id);
+        if (tokenInfo.getType().equals(TokenAuthType.PARTNER) &&
+                product.getStoreId() != tokenInfo.getId())
+            return res.throwError("삭제 권한이 없습니다.", "NOT_ALLOWED");
+        curationCommandService.deleteWithProductId(product.getId());
+        product.setState(ProductState.DELETED);
+        product = productService.update(product.getId(), product);
+        if (adminId != null) {
+            String content = "삭제 처리 되었습니다.";
+            AdminLog
+                    adminLog =
+                    AdminLog.builder().id(adminLogQueryService.getAdminLogId()).adminId(adminId).type(AdminLogType.PRODUCT).targetId(
+                            String.valueOf(product.getId())).content(content).createdAt(utils.now()).build();
+            adminLogCommandService.saveAdminLog(adminLog);
         }
+        res.setData(Optional.of(true));
+        return ResponseEntity.ok(res);
     }
 }

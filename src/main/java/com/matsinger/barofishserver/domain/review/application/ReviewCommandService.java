@@ -140,7 +140,7 @@ public class ReviewCommandService {
     }
 
     @Transactional
-    public Integer update(Integer userId, Integer reviewId, UpdateReviewReq data, List<MultipartFile> images) throws Exception {
+    public Integer update(Integer userId, Integer reviewId, UpdateReviewReq data, List<MultipartFile> images) {
 
         Review findReview = reviewQueryService.findById(reviewId);
         if (findReview.getUserId() != userId) {
@@ -173,7 +173,7 @@ public class ReviewCommandService {
         }
     }
 
-    private void deleteExistingImagesAndSetNewImages(List<MultipartFile> images, Review findReview) throws Exception {
+    private void deleteExistingImagesAndSetNewImages(List<MultipartFile> images, Review findReview) {
         if (images != null) {
             String processedUrls = findReview.getImages().substring(1, findReview.getImages().length() - 1);
             String[] parsedUrls = processedUrls.split(", ");
