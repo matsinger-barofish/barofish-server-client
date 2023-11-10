@@ -29,7 +29,7 @@ public class ProductInfoNoticeController {
 
         CustomResponse<Object> res = new CustomResponse<>();
         if (auth.isEmpty()) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
-        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN, TokenAuthType.PARTNER), auth.get());
+        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN, TokenAuthType.PARTNER, TokenAuthType.ALLOW), auth.get());
 
         if (itemCode == null) {
             return res.throwError("상품이 속한 품목의 코드를 입력해주세요.", "INVALID");

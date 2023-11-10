@@ -124,9 +124,16 @@ public class ProductController {
         CustomResponse<Page<SimpleProductDto>> res = new CustomResponse<>();
 
         Integer userId = null;
-        if (auth.isEmpty()) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
-        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN, TokenAuthType.PARTNER), auth.get());
+        TokenInfo tokenInfo = new TokenInfo();
+        if (auth.isEmpty()) {
+            tokenInfo.setType(null);
+            tokenInfo.setId(null);
+        }
+        if (auth.isPresent()) {
+            tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN, TokenAuthType.PARTNER, TokenAuthType.USER, TokenAuthType.ALLOW), auth.get());
+        }
 
+        TokenInfo finalTokenInfo = tokenInfo;
         Specification<Product> spec = (root, query, builder) -> {
             List<Predicate> predicates = new ArrayList<>();
             if (partnerName != null) predicates.add(builder.like(root.get("store").get("storeInfo").get("name"),
@@ -144,8 +151,8 @@ public class ProductController {
                         Integer::valueOf).toList())));
             if (createdAtS != null) predicates.add(builder.greaterThan(root.get("createdAt"), createdAtS));
             if (createdAtE != null) predicates.add(builder.lessThan(root.get("createdAt"), createdAtE));
-            if (tokenInfo.getType().equals(TokenAuthType.PARTNER))
-                predicates.add(builder.equal(root.get("storeId"), tokenInfo.getId()));
+            if (finalTokenInfo.getType().equals(TokenAuthType.PARTNER))
+                predicates.add(builder.equal(root.get("storeId"), finalTokenInfo.getId()));
             predicates.add(builder.notEqual(root.get("state"), ProductState.DELETED));
             return builder.and(predicates.toArray(new Predicate[0]));
         };
