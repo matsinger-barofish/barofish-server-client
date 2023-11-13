@@ -126,7 +126,7 @@ public class ReviewControllerV2 {
 
         CustomResponse<StoreReviewDto> res = new CustomResponse<>();
 
-        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ALLOW), auth);
+        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ALLOW, TokenAuthType.USER), auth);
 
         Integer userId = tokenInfo.getId();
         if (tokenInfo.getType().equals(TokenAuthType.USER)) {
