@@ -16,10 +16,12 @@ import com.matsinger.barofishserver.domain.product.dto.ProductListDtoV2;
 import com.matsinger.barofishserver.domain.product.productfilter.application.ProductFilterService;
 import com.matsinger.barofishserver.domain.search.application.SearchKeywordQueryService;
 import com.matsinger.barofishserver.domain.store.application.StoreService;
+import com.matsinger.barofishserver.global.error.ErrorCode;
 import com.matsinger.barofishserver.jwt.JwtService;
 import com.matsinger.barofishserver.jwt.TokenAuthType;
 import com.matsinger.barofishserver.jwt.TokenInfo;
 import com.matsinger.barofishserver.domain.searchFilter.application.SearchFilterQueryService;
+import com.matsinger.barofishserver.jwt.exception.JwtBusinessException;
 import com.matsinger.barofishserver.utils.Common;
 import com.matsinger.barofishserver.utils.CustomResponse;
 import com.matsinger.barofishserver.utils.S3.S3Uploader;
@@ -75,13 +77,11 @@ public class ProductControllerV2 {
                                                                                           @RequestParam(value = "storeId", required = false) Integer storeId) {
 
         CustomResponse<Object> res = new CustomResponse<>();
-        Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ALLOW), auth);
 
+        
+        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ALLOW, TokenAuthType.USER), auth);
 
-        Integer userId = null;
-        if (tokenInfo != null && tokenInfo.isPresent() && tokenInfo.get().getType().equals(TokenAuthType.USER)) {
-            userId = tokenInfo.get().getId();
-        }
+        Integer userId = tokenInfo.getId();
 
         PageRequest pageRequest = PageRequest.of(page - 1, take);
         Page<ProductListDtoV2> result = productQueryService.getPagedProducts(pageRequest, sortBy, keyword);
@@ -94,7 +94,6 @@ public class ProductControllerV2 {
     public ResponseEntity<CustomResponse<Object>> getExpectedArrivalDate(@PathVariable(value = "id") Integer productId,
                                                                          @RequestParam(value = "Authorization") Optional<String> auth) {
 
-//        Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
         CustomResponse<Object> res = new CustomResponse<>();
 
         LocalDateTime now = LocalDateTime.now();

@@ -10,6 +10,7 @@ import com.matsinger.barofishserver.domain.coupon.domain.*;
 import com.matsinger.barofishserver.domain.coupon.dto.CouponAddReq;
 import com.matsinger.barofishserver.domain.coupon.dto.CouponDto;
 import com.matsinger.barofishserver.domain.coupon.dto.UpdateSystemCoupon;
+import com.matsinger.barofishserver.global.error.ErrorCode;
 import com.matsinger.barofishserver.jwt.JwtService;
 import com.matsinger.barofishserver.jwt.TokenAuthType;
 import com.matsinger.barofishserver.jwt.TokenInfo;
@@ -17,6 +18,7 @@ import com.matsinger.barofishserver.domain.user.application.UserCommandService;
 import com.matsinger.barofishserver.domain.user.domain.User;
 import com.matsinger.barofishserver.domain.userinfo.domain.UserInfo;
 import com.matsinger.barofishserver.domain.userinfo.dto.UserInfoDto;
+import com.matsinger.barofishserver.jwt.exception.JwtBusinessException;
 import com.matsinger.barofishserver.utils.Common;
 import com.matsinger.barofishserver.utils.CustomResponse;
 import jakarta.persistence.criteria.Predicate;
@@ -56,8 +58,8 @@ public class CouponController {
                                                                                    @RequestParam(value = "endAtS", required = false) Timestamp endAtS,
                                                                                    @RequestParam(value = "endAtE", required = false) Timestamp endAtE) {
         CustomResponse<Page<CouponDto>> res = new CustomResponse<>();
-        Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
-        if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
+
+                jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
 
         Specification<Coupon> spec = (root, query, builder) -> {
             List<Predicate> predicates = new ArrayList<>();
@@ -104,10 +106,10 @@ public class CouponController {
     @GetMapping("/can-use")
     public ResponseEntity<CustomResponse<List<Coupon>>> selectCanUseCoupon(@RequestHeader(value = "Authorization") Optional<String> auth) {
         CustomResponse<List<Coupon>> res = new CustomResponse<>();
-        Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth);
-        if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
 
-        List<Coupon> coupons = couponQueryService.selectCanUseCoupon(tokenInfo.get().getId());
+                TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth);
+
+        List<Coupon> coupons = couponQueryService.selectCanUseCoupon(tokenInfo.getId());
         res.setData(Optional.ofNullable(coupons));
         return ResponseEntity.ok(res);
     }
@@ -115,10 +117,10 @@ public class CouponController {
     @GetMapping("/can-download")
     public ResponseEntity<CustomResponse<List<Coupon>>> selectCanDownloadCoupon(@RequestHeader(value = "Authorization") Optional<String> auth) {
         CustomResponse<List<Coupon>> res = new CustomResponse<>();
-        Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth);
-        if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
 
-        List<Coupon> coupons = couponQueryService.selectNotDownloadCoupon(tokenInfo.get().getId());
+                TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth);
+
+        List<Coupon> coupons = couponQueryService.selectNotDownloadCoupon(tokenInfo.getId());
         res.setData(Optional.ofNullable(coupons));
         return ResponseEntity.ok(res);
     }
@@ -127,8 +129,8 @@ public class CouponController {
     public ResponseEntity<CustomResponse<List<Coupon>>> selectUserCoupons(@RequestHeader(value = "Authorization", required = false) Optional<String> auth,
                                                                           @PathVariable(value = "userId") Integer userId) {
         CustomResponse<List<Coupon>> res = new CustomResponse<>();
-        Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
-        if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
+
+                jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
 
         List<Coupon> coupons = couponQueryService.selectUserCouponList(userId);
         res.setData(Optional.ofNullable(coupons));
@@ -138,10 +140,10 @@ public class CouponController {
     @GetMapping("/downloaded")
     public ResponseEntity<CustomResponse<List<Coupon>>> selectDownloadedCoupon(@RequestHeader(value = "Authorization") Optional<String> auth) {
         CustomResponse<List<Coupon>> res = new CustomResponse<>();
-        Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth);
-        if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
 
-        List<Coupon> coupons = couponQueryService.selectDownloadedCoupon(tokenInfo.get().getId());
+                TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth);
+
+        List<Coupon> coupons = couponQueryService.selectDownloadedCoupon(tokenInfo.getId());
         res.setData(Optional.ofNullable(coupons));
         return ResponseEntity.ok(res);
     }
@@ -150,12 +152,12 @@ public class CouponController {
     public ResponseEntity<CustomResponse<Boolean>> selectDownloadCoupon(@RequestHeader(value = "Authorization") Optional<String> auth,
                                                                         @PathVariable("id") Integer id) {
         CustomResponse<Boolean> res = new CustomResponse<>();
-        Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth);
-        if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
 
-        Boolean checkDownloaded = couponQueryService.checkHasCoupon(id, tokenInfo.get().getId());
-        if (checkDownloaded) return res.throwError("이미 다운로드 받은 쿠폰입니다.", "INPUT_CHECK_REQUIRED");
-        couponCommandService.downloadCoupon(tokenInfo.get().getId(), id);
+                TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth);
+
+        Boolean checkDownloaded = couponQueryService.checkHasCoupon(id, tokenInfo.getId());
+        if (checkDownloaded) throw new IllegalArgumentException("이미 다운로드 받은 쿠폰입니다.");
+        couponCommandService.downloadCoupon(tokenInfo.getId(), id);
         res.setData(Optional.of(true));
         return ResponseEntity.ok(res);
     }
@@ -165,21 +167,21 @@ public class CouponController {
     public ResponseEntity<CustomResponse<Coupon>> addCoupon(@RequestHeader(value = "Authorization") Optional<String> auth,
                                                             @RequestPart(value = "data") CouponAddReq data) {
         CustomResponse<Coupon> res = new CustomResponse<>();
-        Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
-        if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
-        try {
-            Integer adminId = tokenInfo.get().getId();
+
+                TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
+
+            Integer adminId = tokenInfo.getId();
             String title = utils.validateString(data.getTitle(), 100L, "제목");
-            if (data.getType() == null) return res.throwError("할인 유형을 입력해주세요.", "INPUT_CHECK_REQUIRED");
+            if (data.getType() == null) throw new IllegalArgumentException("할인 유형을 입력해주세요.");
             if (data.getType().equals(CouponType.RATE)) {
-                if (data.getAmount() > 100) return res.throwError("할인율을 100%를 넘을 수 없습니다.", "INPUT_CHECK_REQUIRED");
+                if (data.getAmount() > 100) throw new IllegalArgumentException("할인율을 100%를 넘을 수 없습니다.");
             } else {
                 if (data.getAmount() > data.getMinPrice())
-                    return res.throwError("할인 금액이 주문 최소 금액을 넘을 수 없습니다.", "INPUT_CHECK_REQUIRED");
+                    throw new IllegalArgumentException("할인 금액이 주문 최소 금액을 넘을 수 없습니다.");
             }
-            if (data.getAmount() < 0) return res.throwError("할인율을 확인해주세요.", "INPUT_CHECK_REQUIRED");
+            if (data.getAmount() < 0) throw new IllegalArgumentException("할인율을 확인해주세요.");
             if (data.getMinPrice() == null) data.setMinPrice(0);
-            if (data.getStartAt() == null) return res.throwError("사용 가능 시작 기간을 입력해주세요.", " INPUT_CHECK_REQUIRED");
+            if (data.getStartAt() == null) throw new IllegalArgumentException("사용 가능 시작 기간을 입력해주세요.");
             boolean isPublic = data.getUserIds() == null;
             Coupon
                     coupon =
@@ -202,70 +204,58 @@ public class CouponController {
                             String.valueOf(coupon.getId())).content("쿠폰을 등록하였습니다.").createdAt(utils.now()).build();
             res.setData(Optional.ofNullable(coupon));
             return ResponseEntity.ok(res);
-        } catch (Exception e) {
-            return res.defaultError(e);
-        }
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<CustomResponse<Boolean>> deleteCoupon(@RequestHeader(value = "Authorization") Optional<String> auth,
                                                                 @PathVariable("id") Integer id) {
         CustomResponse<Boolean> res = new CustomResponse<>();
-        Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
-        if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
-        try {
-            Coupon coupon = couponQueryService.selectCoupon(id);
-            if (coupon.getPublicType().equals(CouponPublicType.SYSTEM))
-                return res.throwError("시스템 발행 쿠폰은 삭제 불가능합니다.", "NOT_ALLOWED");
-            coupon.setState(CouponState.DELETED);
-            couponCommandService.updateCoupon(coupon);
-            res.setData(Optional.of(true));
-            return ResponseEntity.ok(res);
-        } catch (Exception e) {
-            return res.defaultError(e);
-        }
+
+                jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
+
+        Coupon coupon = couponQueryService.selectCoupon(id);
+        if (coupon.getPublicType().equals(CouponPublicType.SYSTEM))
+            throw new IllegalArgumentException("시스템 발행 쿠폰은 삭제 불가능합니다.");
+        coupon.setState(CouponState.DELETED);
+        couponCommandService.updateCoupon(coupon);
+        res.setData(Optional.of(true));
+        return ResponseEntity.ok(res);
     }
 
     // ------ 시스템 쿠폰 처리
     @GetMapping("/system-coupon")
     public ResponseEntity<CustomResponse<List<Coupon>>> selectSystemCoupon(@RequestHeader(value = "Authorization") Optional<String> auth) {
         CustomResponse<List<Coupon>> res = new CustomResponse<>();
-        Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
-        if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
-        try {
-            List<Coupon> coupons = couponQueryService.selectCouponWithPublicType(CouponPublicType.SYSTEM);
-            res.setData(Optional.ofNullable(coupons));
-            return ResponseEntity.ok(res);
-        } catch (Exception e) {
-            return res.defaultError(e);
-        }
+
+                TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
+
+        List<Coupon> coupons = couponQueryService.selectCouponWithPublicType(CouponPublicType.SYSTEM);
+        res.setData(Optional.ofNullable(coupons));
+        return ResponseEntity.ok(res);
     }
 
     @PostMapping("/system-coupon/update")
     public ResponseEntity<CustomResponse<List<Coupon>>> updateSystemCoupon(@RequestHeader(value = "Authorization") Optional<String> auth,
                                                                            @RequestPart(value = "data") UpdateSystemCoupon data) {
         CustomResponse<List<Coupon>> res = new CustomResponse<>();
-        Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
-        if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
-        try {
-            if (data.getOrder_1stAmount() != null) {
-                Coupon coupon = couponQueryService.selectCoupon(1);
-                coupon.setAmount(data.getOrder_1stAmount());
-                couponCommandService.updateCoupon(coupon);
-            }
-            if (data.getOrder_3rdAmount() != null) {
-                Coupon coupon = couponQueryService.selectCoupon(2);
-                coupon.setAmount(data.getOrder_3rdAmount());
-                couponCommandService.updateCoupon(coupon);
-            }
-            if (data.getOrder_5thAmount() != null) {
-                Coupon coupon = couponQueryService.selectCoupon(3);
-                coupon.setAmount(data.getOrder_5thAmount());
-                couponCommandService.updateCoupon(coupon);
-            }
-            return ResponseEntity.ok(res);
-        } catch (Exception e) {
-            return res.defaultError(e);
+
+                jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
+
+        if (data.getOrder_1stAmount() != null) {
+            Coupon coupon = couponQueryService.selectCoupon(1);
+            coupon.setAmount(data.getOrder_1stAmount());
+            couponCommandService.updateCoupon(coupon);
         }
+        if (data.getOrder_3rdAmount() != null) {
+            Coupon coupon = couponQueryService.selectCoupon(2);
+            coupon.setAmount(data.getOrder_3rdAmount());
+            couponCommandService.updateCoupon(coupon);
+        }
+        if (data.getOrder_5thAmount() != null) {
+            Coupon coupon = couponQueryService.selectCoupon(3);
+            coupon.setAmount(data.getOrder_5thAmount());
+            couponCommandService.updateCoupon(coupon);
+        }
+        return ResponseEntity.ok(res);
     }
 }

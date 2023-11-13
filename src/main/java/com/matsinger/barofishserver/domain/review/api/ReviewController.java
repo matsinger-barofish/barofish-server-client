@@ -3,6 +3,7 @@ package com.matsinger.barofishserver.domain.review.api;
 import com.matsinger.barofishserver.domain.review.application.ReviewCommandService;
 import com.matsinger.barofishserver.domain.review.application.ReviewQueryService;
 import com.matsinger.barofishserver.domain.review.domain.*;
+import com.matsinger.barofishserver.global.error.ErrorCode;
 import com.matsinger.barofishserver.jwt.JwtService;
 import com.matsinger.barofishserver.jwt.TokenAuthType;
 import com.matsinger.barofishserver.jwt.TokenInfo;
@@ -17,6 +18,7 @@ import com.matsinger.barofishserver.domain.store.domain.Store;
 import com.matsinger.barofishserver.domain.user.application.UserCommandService;
 import com.matsinger.barofishserver.domain.userinfo.domain.UserInfo;
 import com.matsinger.barofishserver.domain.order.orderprductinfo.domain.OrderProductInfo;
+import com.matsinger.barofishserver.jwt.exception.JwtBusinessException;
 import com.matsinger.barofishserver.utils.Common;
 import com.matsinger.barofishserver.utils.CustomResponse;
 import com.matsinger.barofishserver.utils.S3.S3Uploader;
@@ -65,10 +67,8 @@ public class ReviewController {
                                                                                       @RequestParam(value = "createdAtS", required = false) Timestamp createdAtS,
                                                                                       @RequestParam(value = "createdAtE", required = false) Timestamp createdAtE) {
         CustomResponse<Page<ReviewDto>> res = new CustomResponse<>();
-        Optional<TokenInfo>
-                tokenInfo =
-                jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN, TokenAuthType.PARTNER), auth);
-        if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
+
+                TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN, TokenAuthType.PARTNER), auth);
 
         Specification<Review> spec = (root, query, builder) -> {
             List<Predicate> predicates = new ArrayList<>();
@@ -81,8 +81,8 @@ public class ReviewController {
                 predicates.add(builder.like(root.get("user").get("userInfo").get("name"), "%" + reviewer + "%"));
             if (createdAtS != null) predicates.add(builder.greaterThan(root.get("createdAt"), createdAtS));
             if (createdAtE != null) predicates.add(builder.lessThan(root.get("createdAt"), createdAtE));
-            if (tokenInfo.get().getType().equals(TokenAuthType.PARTNER))
-                predicates.add(builder.equal(root.get("product").get("storeId"), tokenInfo.get().getId()));
+            if (tokenInfo.getType().equals(TokenAuthType.PARTNER))
+                predicates.add(builder.equal(root.get("product").get("storeId"), tokenInfo.getId()));
             if (evaluation != null) {
                 Join<Review, ReviewEvaluation> t = root.join("evaluations", JoinType.LEFT);
                 predicates.add(builder.and(t.get("evaluation").in(Arrays.stream(evaluation.split(",")).map(
@@ -108,14 +108,14 @@ public class ReviewController {
                                                                                        @RequestParam(value = "take", required = false, defaultValue = "10") Integer take) {
         CustomResponse<Page<ReviewDto>> res = new CustomResponse<>();
 
-        Optional<TokenInfo> tokenInfo = null;
         Integer userId = null;
+        TokenInfo tokenInfo = null;
         if (auth.isEmpty()) {
-            tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ALLOW), auth);
+            userId = null;
         }
         if (auth.isPresent()) {
-            tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth);
-            userId = tokenInfo.get().getId();
+            tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ALLOW, TokenAuthType.USER), auth);
+            userId = tokenInfo.getId();
         }
 
         PageRequest pageRequest = PageRequest.of(page, take);
@@ -138,14 +138,15 @@ public class ReviewController {
     public ResponseEntity<CustomResponse<ReviewDto>> selectReview(@RequestHeader(value = "Authorization") Optional<String> auth,
                                                                   @PathVariable("id") Integer id) {
         CustomResponse<ReviewDto> res = new CustomResponse<>();
-        Optional<TokenInfo> tokenInfo = null;
+
         Integer userId = null;
+        TokenInfo tokenInfo = null;
         if (auth.isEmpty()) {
-            tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ALLOW), auth);
+            userId = null;
         }
         if (auth.isPresent()) {
-            tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth);
-            userId = tokenInfo.get().getId();
+            tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ALLOW, TokenAuthType.USER), auth);
+            userId = tokenInfo.getId();
         }
 
         Review review = reviewQueryService.selectReview(id);
@@ -163,15 +164,14 @@ public class ReviewController {
                                                                                          @RequestParam(value = "take", required = false, defaultValue = "10") Integer take) {
         CustomResponse<Page<ReviewDto>> res = new CustomResponse<>();
 
-        Optional<TokenInfo> tokenInfo = null;
         Integer userId = null;
+        TokenInfo tokenInfo = null;
         if (auth.isEmpty()) {
-            tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ALLOW), auth);
             userId = null;
         }
         if (auth.isPresent()) {
-            tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth);
-            userId = tokenInfo.get().getId();
+            tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ALLOW, TokenAuthType.USER), auth);
+            userId = tokenInfo.getId();
         }
 
         PageRequest pageRequest = PageRequest.of(page, take);
@@ -199,10 +199,10 @@ public class ReviewController {
                                                                               @RequestParam(value = "page", required = false, defaultValue = "0") Integer page,
                                                                               @RequestParam(value = "take", required = false, defaultValue = "10") Integer take) {
         CustomResponse<Page<ReviewDto>> res = new CustomResponse<>();
-        Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth);
-        if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
 
-        Integer userId = tokenInfo.get().getId();
+                TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth);
+        Integer userId = tokenInfo.getId();
+
         Page<ReviewDto>
                 reviews =
                 reviewQueryService.selectAllReviewListByUserId(userId, page - 1, take).map(review -> {
@@ -220,23 +220,23 @@ public class ReviewController {
                                                                      @RequestPart(value = "data") ReviewAddReq data,
                                                                      @RequestPart(value = "images", required = false) List<MultipartFile> images) throws Exception {
         CustomResponse<ReviewDto> res = new CustomResponse<>();
-        Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth);
-        if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
 
-        Integer userId = tokenInfo.get().getId();
+                TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
+
+        Integer userId = tokenInfo.getId();
         UserInfo user = userService.selectUserInfo(userId);
         if (data.getOrderProductInfoId() == null)
-            return res.throwError("주문 상품 아이디를 입력해주세요.", "INPUT_CHECK_REQUIRED");
+            throw new IllegalArgumentException("주문 상품 아이디를 입력해주세요.");
         OrderProductInfo orderProductInfo = orderService.selectOrderProductInfo(data.getOrderProductInfoId());
-        if (data.getProductId() == null) return res.throwError("상품 아이디를 입력해주세요.", "INPUT_CHECK_REQUIRED");
+        if (data.getProductId() == null) throw new IllegalArgumentException("상품 아이디를 입력해주세요.");
         Product product = productService.findById(data.getProductId());
         Store store = storeService.selectStore(product.getStoreId());
         String content = data.getContent();
         Boolean
                 isWritten =
                 reviewQueryService.checkReviewWritten(userId, product.getId(), orderProductInfo.getId());
-        if (isWritten) return res.throwError("이미 리뷰를 작성하였습니다.", "NOT_ALLOWED");
-        if (content.length() == 0) return res.throwError("내용을 입력해주세요.", "INPUT_CHECK_REQUIRED");
+        if (isWritten) throw new IllegalArgumentException("이미 리뷰를 작성하였습니다.");
+        if (content.length() == 0) throw new IllegalArgumentException("내용을 입력해주세요.");
         Review
                 review =
                 Review.builder().productId(product.getId()).store(store).storeId(store.getId()).userId(userId).content(
@@ -263,15 +263,14 @@ public class ReviewController {
                                                                   @RequestPart(value = "imageUrlsToRemain", required = false) List<String> imageUrlsToRemain,
                                                                   @RequestPart(value = "newImages", required = false) List<MultipartFile> newImages) throws Exception {
         CustomResponse<ReviewDto> res = new CustomResponse<>();
-        Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth);
-        System.out.println("userId = " + tokenInfo.get().getId());
-        if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
 
-        Integer userId = tokenInfo.get().getId();
+                TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
+        Integer userId = tokenInfo.getId();
+
         Review review = reviewQueryService.selectReview(id);
-        if (review.getUserId() != userId) return res.throwError("타인의 리뷰입니다.", "NOT_ALLOWED");
+        if (review.getUserId() != userId) throw new IllegalArgumentException("타인의 리뷰입니다.");
         if (data.getContent() != null) {
-            if (data.getContent().length() == 0) return res.throwError("리뷰 내용을 입력해주세요.", "INPUT_CHECK_REQUIRED");
+            if (data.getContent().length() == 0) throw new IllegalArgumentException("리뷰 내용을 입력해주세요.");
             review.setContent(data.getContent());
         }
         if (data.getEvaluations() != null) {
@@ -338,10 +337,10 @@ public class ReviewController {
     public ResponseEntity<CustomResponse<Boolean>> likeReviewByUser(@RequestHeader(value = "Authorization") Optional<String> auth,
                                                                     @PathVariable("id") Integer reviewId) {
         CustomResponse<Boolean> res = new CustomResponse<>();
-        Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth);
-        if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
 
-        Integer userId = tokenInfo.get().getId();
+                TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
+        Integer userId = tokenInfo.getId();
+
         Review review = reviewQueryService.selectReview(reviewId);
         reviewCommandService.likeReview(userId, reviewId);
         res.setData(Optional.of(true));
@@ -352,12 +351,11 @@ public class ReviewController {
     public ResponseEntity<CustomResponse<Boolean>> unlikeReviewByUser(@RequestHeader(value = "Authorization") Optional<String> auth,
                                                                       @PathVariable("id") Integer reviewId) {
         CustomResponse<Boolean> res = new CustomResponse<>();
-        Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth);
-        if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
 
-        Integer userId = tokenInfo.get().getId();
+                TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
+        Integer userId = tokenInfo.getId();
         Review review = reviewQueryService.selectReview(reviewId);
-        reviewCommandService.unlikeReview(userId, reviewId);
+        reviewCommandService.unlikeReview(userId, review.getId());
         res.setData(Optional.of(false));
         return ResponseEntity.ok(res);
     }
@@ -367,21 +365,16 @@ public class ReviewController {
     public ResponseEntity<CustomResponse<Boolean>> deleteReviewByUser(@RequestHeader(value = "Authorization") Optional<String> auth,
                                                                       @PathVariable("id") Integer reviewId) {
         CustomResponse<Boolean> res = new CustomResponse<>();
-        Optional<TokenInfo>
-                tokenInfo =
-                jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER, TokenAuthType.PARTNER, TokenAuthType.ADMIN),
-                        auth);
-        if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
+
+                TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER, TokenAuthType.PARTNER, TokenAuthType.ADMIN), auth);
 
         Review review = reviewQueryService.selectReview(reviewId);
-        if (tokenInfo.isPresent() &&
-                tokenInfo.get().getType().equals(TokenAuthType.USER) &&
-                review.getUserId() != tokenInfo.get().getId())
-            return res.throwError("타인의 리뷰는 삭제할 수 없습니다.", "NOT_ALLOWED");
-        else if (tokenInfo.isPresent() &&
-                tokenInfo.get().getType().equals(TokenAuthType.PARTNER) &&
-                review.getStore().getId() != tokenInfo.get().getId())
-            return res.throwError("타 상점의 리뷰입니다.", "NOT_ALLOWED");
+        if (tokenInfo.getType().equals(TokenAuthType.USER) &&
+                review.getUserId() != tokenInfo.getId())
+            throw new IllegalArgumentException("타인의 리뷰는 삭제할 수 없습니다.");
+        else if (tokenInfo.getType().equals(TokenAuthType.PARTNER) &&
+                review.getStore().getId() != tokenInfo.getId())
+            throw new IllegalArgumentException("타 상점의 리뷰입니다.");
         Boolean result = reviewCommandService.deleteReview(reviewId);
         res.setData(Optional.ofNullable(result));
         return ResponseEntity.ok(res);

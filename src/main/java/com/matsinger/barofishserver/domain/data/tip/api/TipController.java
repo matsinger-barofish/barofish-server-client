@@ -1,6 +1,5 @@
 package com.matsinger.barofishserver.domain.data.tip.api;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.matsinger.barofishserver.domain.data.tip.application.TipCommandService;
 import com.matsinger.barofishserver.domain.data.tip.application.TipQueryService;
@@ -8,12 +7,14 @@ import com.matsinger.barofishserver.domain.data.tip.domain.*;
 import com.matsinger.barofishserver.domain.data.tip.dto.AddTipReq;
 import com.matsinger.barofishserver.domain.data.tip.dto.TipInfoUpdateReq;
 import com.matsinger.barofishserver.domain.data.tip.dto.UpdateTipStateReq;
+import com.matsinger.barofishserver.global.error.ErrorCode;
 import com.matsinger.barofishserver.jwt.JwtService;
 import com.matsinger.barofishserver.jwt.TokenAuthType;
 import com.matsinger.barofishserver.jwt.TokenInfo;
 import com.matsinger.barofishserver.domain.siteInfo.application.SiteInfoCommandService;
 import com.matsinger.barofishserver.domain.siteInfo.application.SiteInfoQueryService;
 import com.matsinger.barofishserver.domain.siteInfo.domain.SiteInformation;
+import com.matsinger.barofishserver.jwt.exception.JwtBusinessException;
 import com.matsinger.barofishserver.utils.Common;
 import com.matsinger.barofishserver.utils.CustomResponse;
 import com.matsinger.barofishserver.utils.S3.S3Uploader;
@@ -81,8 +82,8 @@ public class TipController {
                                                                    @RequestParam(value = "createdAtS", required = false) Timestamp createdAtS,
                                                                    @RequestParam(value = "createdAtE", required = false) Timestamp createdAtE) {
         CustomResponse<Page<Tip>> res = new CustomResponse<>();
-        Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
-        if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
+
+                jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
 
         Specification<Tip> spec = (root, query, builder) -> {
             List<Predicate> predicates = new ArrayList<>();
@@ -115,14 +116,14 @@ public class TipController {
                                                       @RequestPart(value = "image") MultipartFile image,
                                                       @RequestPart(value = "imageDetail") MultipartFile imageDetail) throws Exception {
         CustomResponse<Tip> res = new CustomResponse<>();
-        Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
-        if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
+
+                jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
 
         String title = utils.validateString(data.getTitle(), 100L, "제목");
         String description = utils.validateString(data.getDescription(), 200L, "설명");
         String imageUrl = s3.upload(image, new ArrayList<>(List.of("tip")));
         String imageDetailUrl = s3.upload(imageDetail, new ArrayList<>(List.of("tip")));
-        if (data.getContent() == null) return res.throwError("내용을 입력해주세요.", "INPUT_CHECK_REQUIRED");
+        if (data.getContent() == null) throw new IllegalArgumentException("내용을 입력해주세요.");
         String contentUrl = s3.uploadEditorStringToS3(data.getContent(), new ArrayList<>(List.of("tip")));
         Tip
                 tip =
@@ -140,8 +141,8 @@ public class TipController {
                                                          @RequestPart(value = "image", required = false) MultipartFile image,
                                                          @RequestPart(value = "imageDetail", required = false) MultipartFile imageDetail) throws Exception {
         CustomResponse<Tip> res = new CustomResponse<>();
-        Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
-        if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
+
+                jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
 
         Tip tip = tipQueryService.selectTip(id);
         if (data.getTitle() != null) {
@@ -177,8 +178,8 @@ public class TipController {
                                                                  @RequestPart(value = "data") TipInfoUpdateReq data,
                                                                  @RequestPart(value = "thumbnailImage", required = false) MultipartFile thumbnailImage) throws Exception {
         CustomResponse<TipInfo> res = new CustomResponse<>();
-        Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
-        if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
+
+                TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
 
         SiteInformation info = siteInfoQueryService.selectSiteInfo("INTERNAL_TIP_INFO");
         String jsonStr = info.getContent();
@@ -214,11 +215,11 @@ public class TipController {
     public ResponseEntity<CustomResponse<Boolean>> updateTipState(@RequestHeader(value = "Authorization") Optional<String> auth,
                                                                   @RequestPart(value = "data") UpdateTipStateReq data) {
         CustomResponse<Boolean> res = new CustomResponse<>();
-        Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
-        if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
 
-        if (data.getTipIds() == null) return res.throwError("아이디를 입력해주세요.", "INPUT_CHECK_REQUIRED");
-        if (data.getState() == null) return res.throwError("변경할 상태를 입력해주세요.", "INPUT_CHECK_REQUIRED");
+                TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
+
+        if (data.getTipIds() == null) throw new IllegalArgumentException("아이디를 입력해주세요.");
+        if (data.getState() == null) throw new IllegalArgumentException("변경할 상태를 입력해주세요.");
         List<Tip> tips = tipQueryService.selectTipListWithIds(data.getTipIds());
         tips.forEach(v -> v.setState(data.getState()));
         tipCommandService.updateTipList(tips);
@@ -230,8 +231,8 @@ public class TipController {
     public ResponseEntity<CustomResponse<Boolean>> deleteTip(@RequestHeader(value = "Authorization") Optional<String> auth,
                                                              @PathVariable("id") Integer id) {
         CustomResponse<Boolean> res = new CustomResponse<>();
-        Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
-        if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
+
+                TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
 
         tipCommandService.delete(id);
         res.setData(Optional.of(true));
