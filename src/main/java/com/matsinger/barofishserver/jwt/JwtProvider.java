@@ -61,7 +61,11 @@ public class JwtProvider {
 
     // 모든 token에 대한 사용자 속성정보 조회
     private Claims getAllClaimsFromToken(String token) {
-        return Jwts.parser().setSigningKey(secret).parseClaimsJws(token).getBody();
+        try {
+            return Jwts.parser().setSigningKey(secret).parseClaimsJws(token).getBody();
+        } catch (RuntimeException e) {
+            throw new JwtBusinessException(e, ErrorCode.TOKEN_INVALID);
+        }
     }
 
     // 토근 만료 여부 체크
@@ -102,19 +106,21 @@ public class JwtProvider {
     // id를 입력받아 accessToken 생성
     public String generateRefreshToken(String id, TokenAuthType issuer) {
 
-        String
-                issuerString =
-                issuer.equals(TokenAuthType.USER) ? "USER" : issuer.equals(TokenAuthType.PARTNER) ? "PARTNER" : "ADMIN";
+        String issuerString =
+                issuer.equals(TokenAuthType.USER) ? "USER"
+                        : issuer.equals(TokenAuthType.PARTNER) ? "PARTNER"
+                        : "ADMIN";
         return doGenerateRefreshToken(id, issuerString);
     }
 
     // JWT accessToken 생성
     private String doGenerateRefreshToken(String id, String issuer) {
 
-        return Jwts.builder().setId(id).setExpiration(new Date(System.currentTimeMillis() +
-                    JWT_TOKEN_VALIDITY * 31))
-           .setIssuedAt(new Date(System.currentTimeMillis())).signWith(SignatureAlgorithm.HS512,
-                    secret).compact();
+        return Jwts.builder()
+                .setId(id)
+                .setExpiration(new Date(System.currentTimeMillis() + JWT_TOKEN_VALIDITY * 31))
+                .setIssuedAt(new Date(System.currentTimeMillis()))
+                .signWith(SignatureAlgorithm.HS512, secret).compact();
     }
 
     // id를 입력받아 accessToken, refreshToken 생성
