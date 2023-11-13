@@ -221,7 +221,7 @@ public class ReviewController {
                                                                      @RequestPart(value = "images", required = false) List<MultipartFile> images) throws Exception {
         CustomResponse<ReviewDto> res = new CustomResponse<>();
 
-                TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
+                TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth);
 
         Integer userId = tokenInfo.getId();
         UserInfo user = userService.selectUserInfo(userId);
@@ -264,7 +264,7 @@ public class ReviewController {
                                                                   @RequestPart(value = "newImages", required = false) List<MultipartFile> newImages) throws Exception {
         CustomResponse<ReviewDto> res = new CustomResponse<>();
 
-                TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
+                TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth);
         Integer userId = tokenInfo.getId();
 
         Review review = reviewQueryService.selectReview(id);
@@ -338,7 +338,7 @@ public class ReviewController {
                                                                     @PathVariable("id") Integer reviewId) {
         CustomResponse<Boolean> res = new CustomResponse<>();
 
-                TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
+                TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth);
         Integer userId = tokenInfo.getId();
 
         Review review = reviewQueryService.selectReview(reviewId);
