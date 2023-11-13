@@ -348,6 +348,27 @@ public class UserController {
         return ResponseEntity.ok(res);
     }
 
+    @PostMapping(value = "renew-token")
+    public ResponseEntity<CustomResponse<Jwt>> renewToken(@RequestPart(value = "accessToken") String accessToken,
+                                                          @RequestPart(value = "refreshToken") String refreshToken) {
+        CustomResponse<Jwt> res = new CustomResponse<>();
+
+        if (jwtProvider.isTokenExpired(refreshToken)) {
+            return ResponseEntity.of((Optional<CustomResponse<Jwt>>) null);
+        }
+
+        TokenAuthType authType = jwtProvider.getTypeFromToken(refreshToken);
+        Integer id = jwtProvider.getIdFromToken(refreshToken);
+        accessToken = jwtProvider.generateAccessToken(String.valueOf(id), authType);
+        refreshToken = jwtProvider.generateRefreshToken(String.valueOf(id), authType);
+
+        Jwt token = new Jwt();
+        token.setAccessToken(accessToken);
+        token.setRefreshToken(refreshToken);
+        res.setData(Optional.of(token));
+        return ResponseEntity.ok(res);
+    }
+
     @PostMapping("/withdraw")
     public ResponseEntity<CustomResponse<Boolean>> withdrawUser(@RequestHeader(value = "Authorization") Optional<String> auth) {
         CustomResponse<Boolean> res = new CustomResponse<>();
