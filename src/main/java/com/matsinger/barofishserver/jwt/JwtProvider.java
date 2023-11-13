@@ -27,8 +27,7 @@ public class JwtProvider {
      *     60: 1시간 (60분)
      *     24: 1일 (24시간)
      */
-//    public static final long JWT_TOKEN_VALIDITY = 1000 * 60 * 60 * 24;
-    public static final long JWT_TOKEN_VALIDITY = 1000 * 10;
+    public static final long JWT_TOKEN_VALIDITY = 1000 * 60 * 60 * 24;
 
     // token으로 사용자 id 조회
     public Integer getIdFromToken(String token) {
@@ -140,13 +139,13 @@ public class JwtProvider {
         String
                 accessToken =
                 Jwts.builder().setClaims(claims).setId(id).setIssuedAt(new Date(System.currentTimeMillis())).setExpiration(
-                            new Date(System.currentTimeMillis() + JWT_TOKEN_VALIDITY * 7))// 1시간
+                            new Date(System.currentTimeMillis() + JWT_TOKEN_VALIDITY * 7))
                     .signWith(SignatureAlgorithm.HS512, secret).compact();
 
         String
                 refreshToken =
                 Jwts.builder().setId(id).setExpiration(new Date(System.currentTimeMillis() +
-                            JWT_TOKEN_VALIDITY * 31)) // 5시간
+                            JWT_TOKEN_VALIDITY * 31))
                     .setIssuedAt(new Date(System.currentTimeMillis())).signWith(SignatureAlgorithm.HS512,
                             secret).compact();
 
