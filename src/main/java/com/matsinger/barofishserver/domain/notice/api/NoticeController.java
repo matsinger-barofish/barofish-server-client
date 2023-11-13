@@ -5,10 +5,12 @@ import com.matsinger.barofishserver.domain.notice.application.NoticeQueryService
 import com.matsinger.barofishserver.domain.notice.domain.Notice;
 import com.matsinger.barofishserver.domain.notice.domain.NoticeOrderBy;
 import com.matsinger.barofishserver.domain.notice.domain.NoticeType;
+import com.matsinger.barofishserver.global.error.ErrorCode;
 import com.matsinger.barofishserver.jwt.JwtService;
 import com.matsinger.barofishserver.jwt.TokenAuthType;
 import com.matsinger.barofishserver.jwt.TokenInfo;
 import com.matsinger.barofishserver.domain.notice.dto.NoticeAddReq;
+import com.matsinger.barofishserver.jwt.exception.JwtBusinessException;
 import com.matsinger.barofishserver.utils.Common;
 import com.matsinger.barofishserver.utils.CustomResponse;
 import com.matsinger.barofishserver.utils.S3.S3Uploader;
@@ -54,16 +56,16 @@ public class NoticeController {
                                                                                 @RequestParam(value = "createdAtS", required = false) Timestamp createdAtS,
                                                                                 @RequestParam(value = "createdAtE", required = false) Timestamp createdAtE) {
         CustomResponse<Page<Notice>> res = new CustomResponse<>();
-        Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
-        if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
+
+                TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
 
         Specification<Notice> spec = (root, query, builder) -> {
             List<Predicate> predicates = new ArrayList<>();
             if (title != null) predicates.add(builder.like(root.get("title"), "%" + title + "%"));
             if (createdAtS != null) predicates.add(builder.greaterThan(root.get("createdAt"), createdAtS));
             if (createdAtE != null) predicates.add(builder.lessThan(root.get("createdAt"), createdAtE));
-            if (tokenInfo.get().getType().equals(TokenAuthType.PARTNER))
-                predicates.add(builder.equal(root.get("product").get("storeId"), tokenInfo.get().getId()));
+            if (tokenInfo.getType().equals(TokenAuthType.PARTNER))
+                predicates.add(builder.equal(root.get("product").get("storeId"), tokenInfo.getId()));
             predicates.add(builder.equal(root.get("type"), type));
             return builder.and(predicates.toArray(new Predicate[0]));
         };
@@ -88,11 +90,11 @@ public class NoticeController {
     public ResponseEntity<CustomResponse<Notice>> addNotice(@RequestHeader(value = "Authorization") Optional<String> auth,
                                                             @RequestPart(value = "data") NoticeAddReq data) throws Exception {
         CustomResponse<Notice> res = new CustomResponse<>();
-        Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
-        if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
 
-        if (data.getType() == null) return res.throwError("타입을 입력해주세요.", "INPUT_CHECK_REQUIRED");
-        if (data.getContent() == null) return res.throwError("내용을 입력해주세요.", "INPUT_CHECK_REQUIRED");
+                jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
+
+        if (data.getType() == null) throw new IllegalArgumentException("타입을 입력해주세요.");
+        if (data.getContent() == null) throw new IllegalArgumentException("내용을 입력해주세요.");
         String title = utils.validateString(data.getTitle(), 200L, "제목");
         String content = "";
         Notice
@@ -110,8 +112,8 @@ public class NoticeController {
                                                                @PathVariable("id") Integer noticeId,
                                                                @RequestPart(value = "data") NoticeAddReq data) throws Exception {
         CustomResponse<Notice> res = new CustomResponse<>();
-        Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
-        if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
+
+                jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth);
 
         Notice notice = noticeQueryService.selectNotice(noticeId);
         if (data.getTitle() != null) {
@@ -135,8 +137,8 @@ public class NoticeController {
     public ResponseEntity<CustomResponse<Boolean>> updateNotice(@RequestHeader(value = "Authorization") Optional<String> auth,
                                                                 @PathVariable("id") Integer noticeId) {
         CustomResponse<Boolean> res = new CustomResponse<>();
-        Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
-        if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
+
+                jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
 
         Notice notice = noticeQueryService.selectNotice(noticeId);
         Boolean result = noticeCommandService.deleteNotice(noticeId);

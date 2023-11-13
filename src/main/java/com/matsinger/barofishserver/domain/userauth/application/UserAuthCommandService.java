@@ -58,7 +58,7 @@ public class UserAuthCommandService {
         return userAuthRepository.save(userAuth);
     }
 
-    public UserAuth createIdPwUserAuthAndSave(User createdUser, UserJoinReq request) throws Exception {
+    public UserAuth createIdPwUserAuthAndSave(User createdUser, UserJoinReq request) {
 
         String email = util.validateString(request.getEmail(), 300L, "이메일");
         String password = request.getPassword();

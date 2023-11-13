@@ -61,8 +61,7 @@ public class UserInfoCommandService {
         return findUserInfo;
     }
 
-    public UserInfo createAndSaveUserInfo(User user, SnsJoinReq request, String profileImage, Grade grade)
-            throws MalformedURLException {
+    public UserInfo createAndSaveUserInfo(User user, SnsJoinReq request, String profileImage, Grade grade) {
         String fixedPhoneNumber = null;
         if (!request.getLoginType().equals(LoginType.APPLE)) {
             String phoneNumber = request.getPhone();
@@ -81,7 +80,7 @@ public class UserInfoCommandService {
         return userInfoRepository.save(userInfo);
     }
 
-    public UserInfo createAndSaveIdPwUserInfo(User user, UserJoinReq request, Grade grade) throws Exception {
+    public UserInfo createAndSaveIdPwUserInfo(User user, UserJoinReq request, Grade grade) {
 
         String phoneNumber = request.getPhone();
         verifyPhoneNumberFormat(phoneNumber);
@@ -132,7 +131,6 @@ public class UserInfoCommandService {
     private void verifyPhoneNumberFormat(String phoneNumber) {
         if (!Pattern.matches(re.phone, phoneNumber)) {
             throw new IllegalArgumentException("휴대폰 번호 형식을 확인해주세요.");
-            // customResponse.throwError("휴대폰 번호 형식을 확인해주세요.", "INPUT_CHECK_REQUIRED");
         }
     }
 }

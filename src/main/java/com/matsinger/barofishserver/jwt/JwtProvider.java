@@ -1,5 +1,7 @@
 package com.matsinger.barofishserver.jwt;
 
+import com.matsinger.barofishserver.global.error.ErrorCode;
+import com.matsinger.barofishserver.jwt.exception.JwtBusinessException;
 import io.jsonwebtoken.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -63,8 +65,12 @@ public class JwtProvider {
 
     // 토근 만료 여부 체크
     public Boolean isTokenExpired(String token) {
-        final Date expiration = getExpirationDateFromToken(token);
-        return expiration.before(new Date());
+        try {
+            final Date expiration = getExpirationDateFromToken(token);
+            return expiration.before(new Date());
+        } catch (RuntimeException e) {
+            throw new JwtBusinessException(e, ErrorCode.TOKEN_INVALID);
+        }
     }
 
     // 토큰 만료일자 조회
@@ -127,13 +133,13 @@ public class JwtProvider {
         String
                 accessToken =
                 Jwts.builder().setClaims(claims).setId(id).setIssuedAt(new Date(System.currentTimeMillis())).setExpiration(
-                            new Date(System.currentTimeMillis() + JWT_TOKEN_VALIDITY * 7))// 1시간
+                            new Date(System.currentTimeMillis() + JWT_TOKEN_VALIDITY * 7))
                     .signWith(SignatureAlgorithm.HS512, secret).compact();
 
         String
                 refreshToken =
                 Jwts.builder().setId(id).setExpiration(new Date(System.currentTimeMillis() +
-                            JWT_TOKEN_VALIDITY * 31)) // 5시간
+                            JWT_TOKEN_VALIDITY * 31))
                     .setIssuedAt(new Date(System.currentTimeMillis())).signWith(SignatureAlgorithm.HS512,
                             secret).compact();
 
@@ -152,13 +158,13 @@ public class JwtProvider {
             throw new JwtException("토큰 정보가 유효하지 않습니다.");
         } catch (ExpiredJwtException e) {
             log.warn("JWT token is expired: {}", e.getMessage());
-            throw new JwtException("토큰 정보가 만료되었습니다. 다시 로그인해 주세요.");
+            throw new JwtBusinessException(ErrorCode.TOKEN_EXPIRED);
         } catch (UnsupportedJwtException e) {
             log.warn("JWT token is unsupported: {}", e.getMessage());
             throw new JwtException("지원하지 않는 토큰 정보입니다.");
         } catch (IllegalArgumentException e) {
             log.warn("JWT claims string is empty: {}", e.getMessage());
-            throw new JwtException("토큰 정보가 없습니다. 다시 로그인해 주세요.");
+            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
         }
     }
 }

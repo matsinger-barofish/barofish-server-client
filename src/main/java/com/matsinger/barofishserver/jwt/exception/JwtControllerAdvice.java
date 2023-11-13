@@ -1,5 +1,6 @@
 package com.matsinger.barofishserver.jwt.exception;
 
+import com.matsinger.barofishserver.global.error.ErrorCode;
 import com.matsinger.barofishserver.utils.CustomResponse;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;
@@ -16,6 +17,7 @@ import org.springframework.http.HttpInputMessage;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.servlet.mvc.method.annotation.RequestBodyAdvice;
 
@@ -34,15 +36,16 @@ public class JwtControllerAdvice implements RequestBodyAdvice {
 
     private ThreadLocal<Boolean> afterBodyReadExecuted = ThreadLocal.withInitial(() -> false);
 
-    @ExceptionHandler(value = {ExpiredJwtException.class})
+    @ExceptionHandler(value = {JwtBusinessException.class})
     public ResponseEntity<CustomResponse<Object>> getJwtExpiredMessage(
             HttpServletRequest request,
-            Exception e) {
+            JwtBusinessException e) {
         printExceptionInfo(request, e);
 
+        ErrorCode code = e.getCode();
         CustomResponse customResponse = new CustomResponse();
         customResponse.setIsSuccess(false);
-        customResponse.setErrorMsg("토큰 정보가 만료되었습니다. 다시 로그인해 주세요.");
+        customResponse.setCode(code);
         return ResponseEntity.ok(customResponse);
     }
 
@@ -61,6 +64,7 @@ public class JwtControllerAdvice implements RequestBodyAdvice {
         request.getParameterNames().asIterator().forEachRemaining(
                 parameter -> logger.warn("parameter = {}", request.getParameter(parameter))
         );
+
         e.printStackTrace();
 
         logger.warn("### Exception End ###");

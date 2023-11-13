@@ -2,9 +2,11 @@ package com.matsinger.barofishserver.domain.notification.api;
 
 import com.matsinger.barofishserver.domain.notification.application.NotificationQueryService;
 import com.matsinger.barofishserver.domain.notification.domain.Notification;
+import com.matsinger.barofishserver.global.error.ErrorCode;
 import com.matsinger.barofishserver.jwt.JwtService;
 import com.matsinger.barofishserver.jwt.TokenAuthType;
 import com.matsinger.barofishserver.jwt.TokenInfo;
+import com.matsinger.barofishserver.jwt.exception.JwtBusinessException;
 import com.matsinger.barofishserver.utils.Common;
 import com.matsinger.barofishserver.utils.CustomResponse;
 import lombok.RequiredArgsConstructor;
@@ -32,13 +34,13 @@ public class NotificationController {
                                                                                  @RequestParam(value = "page", required = false, defaultValue = "0") Integer page,
                                                                                  @RequestParam(value = "take", required = false, defaultValue = "10") Integer take) {
         CustomResponse<Page<Notification>> res = new CustomResponse<>();
-        Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth);
-        if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
+
+                TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth);
 
         PageRequest pageRequest = PageRequest.of(page, take, Sort.by(Sort.Direction.DESC, "createdAt"));
         Page<Notification>
                 notifications =
-                notificationQueryService.selectNotificationListWithUserId(tokenInfo.get().getId(), pageRequest);
+                notificationQueryService.selectNotificationListWithUserId(tokenInfo.getId(), pageRequest);
         res.setData(Optional.ofNullable(notifications));
         return ResponseEntity.ok(res);
     }

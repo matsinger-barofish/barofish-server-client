@@ -4,12 +4,14 @@ import com.matsinger.barofishserver.domain.product.application.ProductService;
 import com.matsinger.barofishserver.domain.searchFilter.domain.SearchFilter;
 import com.matsinger.barofishserver.domain.searchFilter.domain.SearchFilterField;
 import com.matsinger.barofishserver.domain.searchFilter.dto.SearchFilterFieldDto;
+import com.matsinger.barofishserver.global.error.ErrorCode;
 import com.matsinger.barofishserver.jwt.JwtService;
 import com.matsinger.barofishserver.jwt.TokenAuthType;
 import com.matsinger.barofishserver.jwt.TokenInfo;
 import com.matsinger.barofishserver.domain.searchFilter.application.SearchFilterCommandService;
 import com.matsinger.barofishserver.domain.searchFilter.application.SearchFilterQueryService;
 import com.matsinger.barofishserver.domain.searchFilter.dto.SearchFilterDto;
+import com.matsinger.barofishserver.jwt.exception.JwtBusinessException;
 import com.matsinger.barofishserver.utils.Common;
 import com.matsinger.barofishserver.utils.CustomResponse;
 import lombok.Getter;
@@ -48,7 +50,7 @@ public class SearchFilterController {
     public ResponseEntity<CustomResponse<SearchFilterDto>> selectSearchFilter(@PathVariable("id") Integer id) {
         CustomResponse<SearchFilterDto> res = new CustomResponse<>();
 
-        if (id == null) return res.throwError("검색 필터 아이디를 입력해주세요.", "INPUT_CHECK_REQUIRED");
+        if (id == null) throw new IllegalArgumentException("검색 필터 아이디를 입력해주세요.");
         SearchFilterDto
                 searchFilterDto =
                 searchFilterCommandService.convertFilterDto(searchFilterQueryService.selectSearchFilter(id));
@@ -66,8 +68,8 @@ public class SearchFilterController {
     public ResponseEntity<CustomResponse<SearchFilterDto>> addSearchFilter(@RequestHeader(value = "Authorization") Optional<String> auth,
                                                                            @RequestPart(value = "data") AddSearchFilterReq data) throws Exception {
         CustomResponse<SearchFilterDto> res = new CustomResponse<>();
-        Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
-        if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
+
+                jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
 
         String name = utils.validateString(data.name, 20L, "이름");
         SearchFilter searchFilter = SearchFilter.builder().name(name).build();
@@ -83,8 +85,8 @@ public class SearchFilterController {
                                                                            @PathVariable("id") Integer id,
                                                                            @RequestPart(value = "data") AddSearchFilterReq data) throws Exception {
         CustomResponse<SearchFilterDto> res = new CustomResponse<>();
-        Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
-        if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
+
+                jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
 
         SearchFilter searchFilter = searchFilterQueryService.selectSearchFilter(id);
         if (data.name != null) {
@@ -103,8 +105,8 @@ public class SearchFilterController {
     public ResponseEntity<CustomResponse<Boolean>> deleteSearchFilter(@RequestHeader(value = "Authorization") Optional<String> auth,
                                                                       @PathVariable("id") Integer id) {
         CustomResponse<Boolean> res = new CustomResponse<>();
-        Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
-        if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
+
+                TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
 
         SearchFilter searchFilter = searchFilterQueryService.selectSearchFilter(id);
         searchFilterCommandService.deleteSearchFilter(id);
@@ -135,11 +137,11 @@ public class SearchFilterController {
     public ResponseEntity<CustomResponse<SearchFilterFieldDto>> addSearchFilterField(@RequestHeader(value = "Authorization") Optional<String> auth,
                                                                                      @RequestPart(value = "data") AddSearchFilterFiledReq data) throws Exception {
         CustomResponse<SearchFilterFieldDto> res = new CustomResponse<>();
-        Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
-        if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
 
-        if (data.searchFilterId == null) return res.throwError("필터 아이디를 입력해주세요.", "INPUT_CHECK_REQUIRED");
-        if (data.field == null) return res.throwError("필드를 입력해주세요.", "INPUT_CHECK_REQUIRED");
+                jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
+
+        if (data.searchFilterId == null) throw new IllegalArgumentException("필터 아이디를 입력해주세요.");
+        if (data.field == null) throw new IllegalArgumentException("필드를 입력해주세요.");
         String field = utils.validateString(data.field, 20L, "필드명");
         SearchFilterField
                 searchFilterField =
@@ -162,8 +164,8 @@ public class SearchFilterController {
                                                                                         @PathVariable("id") Integer id,
                                                                                         @RequestPart(value = "data") UpdateSearchFilterFiledReq data) throws Exception {
         CustomResponse<SearchFilterFieldDto> res = new CustomResponse<>();
-        Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
-        if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
+
+                jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
 
         SearchFilterField searchFilterField = searchFilterQueryService.selectSearchFilterField(id);
         if (data.field != null) {
@@ -179,8 +181,8 @@ public class SearchFilterController {
     public ResponseEntity<CustomResponse<Boolean>> deleteSearchFilterField(@RequestHeader(value = "Authorization") Optional<String> auth,
                                                                            @PathVariable("id") Integer id) {
         CustomResponse<Boolean> res = new CustomResponse<>();
-        Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
-        if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
+
+                jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
 
         SearchFilterField searchFilterField = searchFilterQueryService.selectSearchFilterField(id);
         searchFilterCommandService.deleteSearchFilterField(id);

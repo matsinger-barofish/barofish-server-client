@@ -9,7 +9,9 @@ import com.matsinger.barofishserver.domain.admin.domain.AdminAuth;
 import com.matsinger.barofishserver.domain.admin.domain.AdminAuthority;
 import com.matsinger.barofishserver.domain.admin.dto.AddAdminReq;
 import com.matsinger.barofishserver.domain.admin.dto.UpdateAdminReq;
+import com.matsinger.barofishserver.global.error.ErrorCode;
 import com.matsinger.barofishserver.jwt.*;
+import com.matsinger.barofishserver.jwt.exception.JwtBusinessException;
 import com.matsinger.barofishserver.utils.Common;
 import com.matsinger.barofishserver.utils.CustomResponse;
 import com.matsinger.barofishserver.utils.RegexConstructor;
@@ -58,8 +60,8 @@ public class AdminController {
                                                                        @RequestParam(value = "accessPromotion", required = false) Boolean accessPromotion,
                                                                        @RequestParam(value = "accessSetting", required = false) Boolean accessSetting) {
         CustomResponse<Page<Admin>> res = new CustomResponse<>();
-        Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
-        if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
+
+        jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
 
         PageRequest pageRequest = PageRequest.of(page, take, Sort.by(orderType, orderBy.label));
         Specification<Admin> spec = (root, query, builder) -> {
@@ -96,8 +98,8 @@ public class AdminController {
     public ResponseEntity<CustomResponse<Admin>> selectAdmin(@RequestHeader(value = "Authorization") Optional<String> auth,
                                                              @PathVariable("id") Integer id) {
         CustomResponse<Admin> res = new CustomResponse<>();
-        Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
-        if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
+
+        jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
 
         Admin admin = adminQueryService.selectAdmin(id);
         admin.setPassword(null);
@@ -108,10 +110,10 @@ public class AdminController {
     @GetMapping("/my-info")
     public ResponseEntity<CustomResponse<Admin>> selectAdminMyInfo(@RequestHeader(value = "Authorization") Optional<String> auth) {
         CustomResponse<Admin> res = new CustomResponse<>();
-        Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
-        if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
 
-        Integer adminId = tokenInfo.get().getId();
+        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
+
+        Integer adminId = tokenInfo.getId();
         Admin admin = adminQueryService.selectAdmin(adminId);
         admin.setPassword(null);
         res.setData(Optional.ofNullable(admin));
@@ -124,19 +126,19 @@ public class AdminController {
     public ResponseEntity<CustomResponse<Admin>> addAdminByMaster(@RequestHeader(value = "Authorization") Optional<String> auth,
                                                                   @RequestPart(value = "data") AddAdminReq data) throws Exception {
         CustomResponse<Admin> res = new CustomResponse<>();
-        Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
-        if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
 
-        Admin master = adminQueryService.selectAdmin(tokenInfo.get().getId());
+        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
+
+        Admin master = adminQueryService.selectAdmin(tokenInfo.getId());
         if (!master.getAuthority().equals(AdminAuthority.MASTER))
-            return res.throwError("최고 관리자만 생성 가능합니다.", "NOT_ALLOWED");
-        if (data.getLoginId() == null) return res.throwError("로그인 아이디를 입력해주세요.", "INPUT_CHECK_REQUIRED");
+            throw new IllegalArgumentException("최고 관리자만 생성 가능합니다.");
+        if (data.getLoginId() == null) throw new IllegalArgumentException("로그인 아이디를 입력해주세요.");
         Admin checkExist = adminQueryService.selectAdminByLoginId(data.getLoginId());
-        if (checkExist != null) return res.throwError("이미 존재하는 아이디입니다.", "NOT_ALLOWED");
-        if (data.getPassword() == null) return res.throwError("비밀번호를 입력해주세요.", "INPUT_CHECK_REQUIRED");
+        if (checkExist != null) throw new IllegalArgumentException("이미 존재하는 아이디입니다.");
+        if (data.getPassword() == null) throw new IllegalArgumentException("비밀번호를 입력해주세요.");
         String password = BCrypt.hashpw(data.getPassword(), BCrypt.gensalt());
         String name = utils.validateString(data.getName(), 20L, "이름");
-        if (!Pattern.matches(reg.tel, data.getTel())) return res.throwError("전화번호 형식을 확인해주세요.", "INPUT_CHECK_REQUIRED");
+        if (!Pattern.matches(reg.tel, data.getTel())) throw new IllegalArgumentException("전화번호 형식을 확인해주세요.");
         String tel = data.getTel().replaceAll("[^\\d]*", "");
         Admin
                 admin =
@@ -166,12 +168,12 @@ public class AdminController {
                                                                      @PathVariable("id") Integer id,
                                                                      @RequestPart(value = "data") UpdateAdminReq data) throws Exception {
         CustomResponse<Admin> res = new CustomResponse<>();
-        Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
-        if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
 
-        Admin master = adminQueryService.selectAdmin(tokenInfo.get().getId());
+        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
+
+        Admin master = adminQueryService.selectAdmin(tokenInfo.getId());
         if (!master.getAuthority().equals(AdminAuthority.MASTER))
-            return res.throwError("최고 관리자의 경우 수정 가능합니다.", "NOT_ALLOWED");
+            throw new IllegalArgumentException("최고 관리자의 경우 수정 가능합니다.");
         Admin admin = adminQueryService.selectAdmin(id);
         AdminAuth adminAuth = adminQueryService.selectAdminAuth(id);
         if (data.getPassword() != null) {
@@ -185,7 +187,7 @@ public class AdminController {
         }
         if (data.getTel() != null) {
             if (!Pattern.matches(reg.tel, data.getTel()))
-                return res.throwError("전화번호 형식을 확인해주세요.", "INPUT_CHECK_REQUIRED");
+                throw new IllegalArgumentException("전화번호 형식을 확인해주세요.");
             String tel = data.getTel().replaceAll("[^\\d]*", "");
             admin.setTel(tel);
         }
@@ -215,12 +217,12 @@ public class AdminController {
         CustomResponse<Jwt> res = new CustomResponse<>();
 
         Admin admin = adminQueryService.selectAdminByLoginId(loginId);
-        if (admin == null) return res.throwError("아이디 및 비밀번호를 확인해주세요.", "INPUT_CHECK_REQUIRED");
+        if (admin == null) throw new IllegalArgumentException("아이디 및 비밀번호를 확인해주세요.");
         if (!BCrypt.checkpw(password, admin.getPassword()))
-            return res.throwError("아이디 및 비밀번호를 확인해주세요.", "INPUT_CHECK_REQUIRED");
+            throw new IllegalArgumentException("아이디 및 비밀번호를 확인해주세요.");
         if (!admin.getState().equals(AdminState.ACTIVE)) {
-            if (admin.getState().equals(AdminState.BANNED)) return res.throwError("정지된 관리자입니다.", "NOT_ALLOWED");
-            if (admin.getState().equals(AdminState.DELETED)) return res.throwError("삭제된 관리자입니다.", "NOT_ALLOWED");
+            if (admin.getState().equals(AdminState.BANNED)) throw new IllegalArgumentException("정지된 관리자입니다.");
+            if (admin.getState().equals(AdminState.DELETED)) throw new IllegalArgumentException("삭제된 관리자입니다.");
         }
         String accessToken = jwtProvider.generateAccessToken(String.valueOf(admin.getId()), TokenAuthType.ADMIN);
         String refreshToken = jwtProvider.generateRefreshToken(String.valueOf(admin.getId()), TokenAuthType.ADMIN);
