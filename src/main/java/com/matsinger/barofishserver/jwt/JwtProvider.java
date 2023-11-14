@@ -61,7 +61,7 @@ public class JwtProvider {
     // 모든 token에 대한 사용자 속성정보 조회
     private Claims getAllClaimsFromToken(String token) {
         try {
-            return Jwts.parser().setSigningKey(secret).parseClaimsJws(token).getBody();
+            return Jwts.parser().setSigningKey(secret.getBytes()).parseClaimsJws(token).getBody();
         } catch (RuntimeException e) {
             throw new JwtBusinessException(e, ErrorCode.TOKEN_INVALID);
         }
@@ -99,7 +99,7 @@ public class JwtProvider {
     private String doGenerateAccessToken(String id, String issuer, Map<String, Object> claims) {
         return Jwts.builder().setClaims(claims).setIssuer(issuer).setId(id).setIssuedAt(new Date(System.currentTimeMillis())).setExpiration(
                 new Date(System.currentTimeMillis() +
-                        JWT_TOKEN_VALIDITY * 7)).signWith(SignatureAlgorithm.HS512, secret).compact();
+                        JWT_TOKEN_VALIDITY * 7)).signWith(SignatureAlgorithm.HS512, secret.getBytes()).compact();
     }
 
     // id를 입력받아 accessToken 생성
@@ -119,7 +119,7 @@ public class JwtProvider {
                 .setId(id)
                 .setExpiration(new Date(System.currentTimeMillis() + JWT_TOKEN_VALIDITY * 31))
                 .setIssuedAt(new Date(System.currentTimeMillis()))
-                .signWith(SignatureAlgorithm.HS512, secret).compact();
+                .signWith(SignatureAlgorithm.HS512, secret.getBytes()).compact();
     }
 
     // id를 입력받아 accessToken, refreshToken 생성
@@ -140,14 +140,14 @@ public class JwtProvider {
                 accessToken =
                 Jwts.builder().setClaims(claims).setId(id).setIssuedAt(new Date(System.currentTimeMillis())).setExpiration(
                             new Date(System.currentTimeMillis() + JWT_TOKEN_VALIDITY * 7))
-                    .signWith(SignatureAlgorithm.HS512, secret).compact();
+                    .signWith(SignatureAlgorithm.HS512, secret.getBytes()).compact();
 
         String
                 refreshToken =
                 Jwts.builder().setId(id).setExpiration(new Date(System.currentTimeMillis() +
                             JWT_TOKEN_VALIDITY * 31))
                     .setIssuedAt(new Date(System.currentTimeMillis())).signWith(SignatureAlgorithm.HS512,
-                            secret).compact();
+                            secret.getBytes()).compact();
 
         tokens.put("accessToken", accessToken);
         tokens.put("refreshToken", refreshToken);
@@ -157,7 +157,7 @@ public class JwtProvider {
     // 토근 검증
     public Boolean validateToken(String token) {
         try {
-            Jwts.parser().setSigningKey(secret).parseClaimsJws(token);
+            Jwts.parser().setSigningKey(secret.getBytes()).parseClaimsJws(token);
             return true;
         } catch (MalformedJwtException e) {
             log.warn("Invalid JWT token: {}", e.getMessage());
