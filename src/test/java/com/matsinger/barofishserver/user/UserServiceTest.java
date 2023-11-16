@@ -60,7 +60,7 @@ class UserServiceTest {
 
         // when // then
         assertThatThrownBy(() -> userService.createSnsUserAndSave(request))
-                .isInstanceOf(IllegalArgumentException.class)
+                .isInstanceOf(BusinessException.class)
                 .hasMessageContaining("중복된 아이디가 존재합니다.");
     }
 

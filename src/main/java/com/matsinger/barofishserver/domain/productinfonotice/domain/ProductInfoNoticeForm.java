@@ -1,5 +1,6 @@
 package com.matsinger.barofishserver.domain.productinfonotice.domain;
 
+import com.matsinger.barofishserver.global.exception.BusinessException;
 import lombok.Getter;
 
 import java.util.Arrays;
@@ -24,7 +25,7 @@ public enum ProductInfoNoticeForm {
         ProductInfoNoticeForm productInfoNoticeManager = Arrays.stream(ProductInfoNoticeForm.values())
                 .filter(productInformation -> productInformation.getItemCode().equals(productCode))
                 .findFirst()
-                .orElseThrow(() -> new IllegalArgumentException("상품 고시 정보를 찾을 수 없습니다."));
+                .orElseThrow(() -> new BusinessException("상품 고시 정보를 찾을 수 없습니다."));
 
         return productInfoNoticeManager.getProductInfoForm();
     }

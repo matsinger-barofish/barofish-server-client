@@ -1,20 +1,21 @@
 package com.matsinger.barofishserver.domain.store.application;
 
 
+import com.matsinger.barofishserver.domain.product.repository.ProductRepository;
 import com.matsinger.barofishserver.domain.review.domain.Review;
 import com.matsinger.barofishserver.domain.review.dto.ReviewDto;
 import com.matsinger.barofishserver.domain.review.dto.ReviewStatistic;
-import com.matsinger.barofishserver.domain.review.repository.ReviewRepository;
-import com.matsinger.barofishserver.domain.store.domain.*;
-import com.matsinger.barofishserver.domain.product.repository.ProductRepository;
 import com.matsinger.barofishserver.domain.review.dto.v2.ReviewEvaluationSummaryDto;
+import com.matsinger.barofishserver.domain.review.repository.ReviewRepository;
 import com.matsinger.barofishserver.domain.review.repository.ReviewRepositoryImpl;
-import com.matsinger.barofishserver.domain.store.repository.StoreInfoRepository;
-import com.matsinger.barofishserver.domain.store.repository.StoreRepository;
-import com.matsinger.barofishserver.domain.store.repository.StoreScrapRepository;
+import com.matsinger.barofishserver.domain.store.domain.*;
 import com.matsinger.barofishserver.domain.store.dto.SimpleStore;
 import com.matsinger.barofishserver.domain.store.dto.StoreAdditionalDto;
 import com.matsinger.barofishserver.domain.store.dto.StoreDto;
+import com.matsinger.barofishserver.domain.store.repository.StoreInfoRepository;
+import com.matsinger.barofishserver.domain.store.repository.StoreRepository;
+import com.matsinger.barofishserver.domain.store.repository.StoreScrapRepository;
+import com.matsinger.barofishserver.global.exception.BusinessException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -151,13 +152,13 @@ public class StoreService {
 
     public Store selectStore(Integer id) {
         return storeRepository.findById(id).orElseThrow(() -> {
-            throw new IllegalArgumentException("상점 정보를 찾을 수 없습니다.");
+            throw new BusinessException("상점 정보를 찾을 수 없습니다.");
         });
     }
 
     public StoreInfo selectStoreInfo(Integer id) {
         return storeInfoRepository.findById(id).orElseThrow(() -> {
-            throw new IllegalArgumentException("상점 정보를 찾을 수 없습니다.");
+            throw new BusinessException("상점 정보를 찾을 수 없습니다.");
         });
     }
 
@@ -171,7 +172,7 @@ public class StoreService {
 
     public Store selectStoreByLoginId(String loginId) {
         Store store = storeRepository.findByLoginId(loginId).orElseThrow(() -> {
-            throw new IllegalArgumentException("스토어 정보를 찾을 수 없습니다.");
+            throw new BusinessException("스토어 정보를 찾을 수 없습니다.");
         });
         return store;
     }

@@ -5,27 +5,25 @@ import com.matsinger.barofishserver.domain.admin.log.application.AdminLogCommand
 import com.matsinger.barofishserver.domain.admin.log.application.AdminLogQueryService;
 import com.matsinger.barofishserver.domain.admin.log.domain.AdminLog;
 import com.matsinger.barofishserver.domain.admin.log.domain.AdminLogType;
+import com.matsinger.barofishserver.domain.order.application.OrderService;
 import com.matsinger.barofishserver.domain.order.orderprductinfo.domain.OrderProductInfo;
 import com.matsinger.barofishserver.domain.order.orderprductinfo.domain.OrderProductState;
 import com.matsinger.barofishserver.domain.order.orderprductinfo.dto.OrderProductInfoDto;
 import com.matsinger.barofishserver.domain.product.application.ProductService;
-import com.matsinger.barofishserver.domain.settlement.dto.*;
-import com.matsinger.barofishserver.domain.store.application.StoreService;
-import com.matsinger.barofishserver.domain.store.domain.StoreInfo;
-import com.matsinger.barofishserver.global.error.ErrorCode;
-import com.matsinger.barofishserver.jwt.JwtService;
-import com.matsinger.barofishserver.jwt.TokenAuthType;
-import com.matsinger.barofishserver.jwt.TokenInfo;
-import com.matsinger.barofishserver.domain.order.application.OrderService;
 import com.matsinger.barofishserver.domain.settlement.application.SettlementCommandService;
 import com.matsinger.barofishserver.domain.settlement.application.SettlementExcelService;
 import com.matsinger.barofishserver.domain.settlement.application.SettlementQueryService;
-import com.matsinger.barofishserver.domain.settlement.domain.SettlementOrderBy;
-import com.matsinger.barofishserver.domain.settlement.domain.SettlementState;
 import com.matsinger.barofishserver.domain.settlement.domain.OrderProductInfoOrderBy;
 import com.matsinger.barofishserver.domain.settlement.domain.Settlement;
-import com.matsinger.barofishserver.domain.settlement.dto.cancelSettleReq;
-import com.matsinger.barofishserver.jwt.exception.JwtBusinessException;
+import com.matsinger.barofishserver.domain.settlement.domain.SettlementOrderBy;
+import com.matsinger.barofishserver.domain.settlement.domain.SettlementState;
+import com.matsinger.barofishserver.domain.settlement.dto.*;
+import com.matsinger.barofishserver.domain.store.application.StoreService;
+import com.matsinger.barofishserver.domain.store.domain.StoreInfo;
+import com.matsinger.barofishserver.global.exception.BusinessException;
+import com.matsinger.barofishserver.jwt.JwtService;
+import com.matsinger.barofishserver.jwt.TokenAuthType;
+import com.matsinger.barofishserver.jwt.TokenInfo;
 import com.matsinger.barofishserver.utils.Common;
 import com.matsinger.barofishserver.utils.CustomResponse;
 import jakarta.persistence.criteria.Predicate;
@@ -39,7 +37,8 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.io.*;
+import java.io.ByteArrayInputStream;
+import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.sql.Timestamp;
@@ -200,15 +199,15 @@ public class SettlementController {
                 TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
 
         Integer adminId = tokenInfo.getId();
-        if (data.getStoreId() == null) throw new IllegalArgumentException("파트너를 선택해주세요.");
+        if (data.getStoreId() == null) throw new BusinessException("파트너를 선택해주세요.");
         if (data.getOrderProductInfoIds() == null || data.getOrderProductInfoIds().size() == 0)
-            throw new IllegalArgumentException("정산 처리할 주문 내역을 선택해주세요.");
+            throw new BusinessException("정산 처리할 주문 내역을 선택해주세요.");
         StoreInfo storeInfo = storeService.selectStoreInfo(data.getStoreId());
         List<OrderProductInfo>
                 productInfos =
                 orderService.selectOrderProductInfoWithIds(data.getOrderProductInfoIds());
         if (productInfos.stream().map(v -> productService.findById(v.getProductId())).anyMatch(v -> v.getStoreId() !=
-                data.getStoreId())) throw new IllegalArgumentException("동일한 파트너의 주문만 묶어서 정산 처리 진행해주세요.");
+                data.getStoreId())) throw new BusinessException("동일한 파트너의 주문만 묶어서 정산 처리 진행해주세요.");
         int totalPrice = settlementQueryService.getSettlementAmount(productInfos, storeInfo.getStoreId());
 
         for (OrderProductInfo info : productInfos) {
@@ -244,11 +243,11 @@ public class SettlementController {
 //        Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
 //        if (tokenInfo == null) throw new JwtBusinessException(ErrorCode.NOT_ALLOWED);;
 //        try {
-//            if (data.cancelReason == null) throw new IllegalArgumentException()("취소 사유를 입력해주세요);
+//            if (data.cancelReason == null) throw new BusinessException()("취소 사유를 입력해주세요);
 //            Settlement settlement = settlementService.selectSettlement(id);
 //            String cancelReason = utils.validateString(data.cancelReason, 500L, "취소 사유");
 //            if (settlement.getState().equals(SettlementState.CANCELED))
-//                throw new IllegalArgumentException()("이미 취소된 정산입니다);
+//                throw new BusinessException()("이미 취소된 정산입니다);
 //            settlement.setCancelReason(cancelReason);
 //            settlementService.updateSettlement(settlement);
 //            res.setData(Optional.of(true));
@@ -267,15 +266,15 @@ public class SettlementController {
                 TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
 
         Integer adminId = tokenInfo.getId();
-        if (data.getStoreId() == null) throw new IllegalArgumentException("파트너를 선택해주세요.");
+        if (data.getStoreId() == null) throw new BusinessException("파트너를 선택해주세요.");
         if (data.getOrderProductInfoIds() == null || data.getOrderProductInfoIds().size() == 0)
-            throw new IllegalArgumentException("정산 처리할 주문 내역을 선택해주세요.");
+            throw new BusinessException("정산 처리할 주문 내역을 선택해주세요.");
         StoreInfo storeInfo = storeService.selectStoreInfo(data.getStoreId());
         List<OrderProductInfo>
                 productInfos =
                 orderService.selectOrderProductInfoWithIds(data.getOrderProductInfoIds());
         if (productInfos.stream().map(v -> productService.findById(v.getProductId())).anyMatch(v -> v.getStoreId() !=
-                data.getStoreId())) throw new IllegalArgumentException("동일한 파트너의 주문만 묶어서 정산 처리 진행해주세요.");
+                data.getStoreId())) throw new BusinessException("동일한 파트너의 주문만 묶어서 정산 처리 진행해주세요.");
         int totalPrice = settlementQueryService.getSettlementAmount(productInfos, storeInfo.getStoreId());
         for (OrderProductInfo info : productInfos) {
             info.setIsSettled(false);

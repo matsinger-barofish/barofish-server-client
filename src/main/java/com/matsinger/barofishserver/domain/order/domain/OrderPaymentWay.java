@@ -1,5 +1,7 @@
 package com.matsinger.barofishserver.domain.order.domain;
 
+import com.matsinger.barofishserver.global.exception.BusinessException;
+
 public enum OrderPaymentWay {
     CARD("신용카드"),
     KEY_IN("키인결제"),
@@ -22,6 +24,6 @@ public enum OrderPaymentWay {
                 return paymentWay.name();
             }
         }
-        throw new IllegalArgumentException("결제 수단을 찾을 수 없습니다.");
+        throw new BusinessException("결제 수단을 찾을 수 없습니다.");
     }
 }

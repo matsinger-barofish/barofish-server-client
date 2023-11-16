@@ -1,17 +1,16 @@
 package com.matsinger.barofishserver.domain.searchFilter.api;
 
 import com.matsinger.barofishserver.domain.product.application.ProductService;
+import com.matsinger.barofishserver.domain.searchFilter.application.SearchFilterCommandService;
+import com.matsinger.barofishserver.domain.searchFilter.application.SearchFilterQueryService;
 import com.matsinger.barofishserver.domain.searchFilter.domain.SearchFilter;
 import com.matsinger.barofishserver.domain.searchFilter.domain.SearchFilterField;
+import com.matsinger.barofishserver.domain.searchFilter.dto.SearchFilterDto;
 import com.matsinger.barofishserver.domain.searchFilter.dto.SearchFilterFieldDto;
-import com.matsinger.barofishserver.global.error.ErrorCode;
+import com.matsinger.barofishserver.global.exception.BusinessException;
 import com.matsinger.barofishserver.jwt.JwtService;
 import com.matsinger.barofishserver.jwt.TokenAuthType;
 import com.matsinger.barofishserver.jwt.TokenInfo;
-import com.matsinger.barofishserver.domain.searchFilter.application.SearchFilterCommandService;
-import com.matsinger.barofishserver.domain.searchFilter.application.SearchFilterQueryService;
-import com.matsinger.barofishserver.domain.searchFilter.dto.SearchFilterDto;
-import com.matsinger.barofishserver.jwt.exception.JwtBusinessException;
 import com.matsinger.barofishserver.utils.Common;
 import com.matsinger.barofishserver.utils.CustomResponse;
 import lombok.Getter;
@@ -50,7 +49,7 @@ public class SearchFilterController {
     public ResponseEntity<CustomResponse<SearchFilterDto>> selectSearchFilter(@PathVariable("id") Integer id) {
         CustomResponse<SearchFilterDto> res = new CustomResponse<>();
 
-        if (id == null) throw new IllegalArgumentException("검색 필터 아이디를 입력해주세요.");
+        if (id == null) throw new BusinessException("검색 필터 아이디를 입력해주세요.");
         SearchFilterDto
                 searchFilterDto =
                 searchFilterCommandService.convertFilterDto(searchFilterQueryService.selectSearchFilter(id));
@@ -140,8 +139,8 @@ public class SearchFilterController {
 
                 jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
 
-        if (data.searchFilterId == null) throw new IllegalArgumentException("필터 아이디를 입력해주세요.");
-        if (data.field == null) throw new IllegalArgumentException("필드를 입력해주세요.");
+        if (data.searchFilterId == null) throw new BusinessException("필터 아이디를 입력해주세요.");
+        if (data.field == null) throw new BusinessException("필드를 입력해주세요.");
         String field = utils.validateString(data.field, 20L, "필드명");
         SearchFilterField
                 searchFilterField =

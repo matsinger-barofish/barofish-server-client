@@ -1,21 +1,17 @@
 package com.matsinger.barofishserver.domain.product.application;
 
-import com.matsinger.barofishserver.domain.compare.repository.SaveProductRepository;
+import com.matsinger.barofishserver.domain.compare.domain.SaveProductId;
 import com.matsinger.barofishserver.domain.compare.filter.domain.CompareFilter;
 import com.matsinger.barofishserver.domain.compare.filter.repository.CompareFilterRepository;
-import com.matsinger.barofishserver.domain.compare.domain.SaveProductId;
+import com.matsinger.barofishserver.domain.compare.repository.SaveProductRepository;
 import com.matsinger.barofishserver.domain.inquiry.domain.Inquiry;
 import com.matsinger.barofishserver.domain.inquiry.repository.InquiryRepository;
-import com.matsinger.barofishserver.domain.product.dto.ProductListDtoV2;
-import com.matsinger.barofishserver.domain.review.application.ReviewQueryService;
-import com.matsinger.barofishserver.domain.review.dto.ReviewTotalStatistic;
-import com.matsinger.barofishserver.domain.review.repository.ReviewRepository;
-import com.matsinger.barofishserver.domain.store.application.StoreService;
 import com.matsinger.barofishserver.domain.product.domain.Product;
 import com.matsinger.barofishserver.domain.product.domain.ProductSortBy;
 import com.matsinger.barofishserver.domain.product.domain.SimpleProductDto;
 import com.matsinger.barofishserver.domain.product.dto.ExpectedArrivalDateResponse;
 import com.matsinger.barofishserver.domain.product.dto.ProductListDto;
+import com.matsinger.barofishserver.domain.product.dto.ProductListDtoV2;
 import com.matsinger.barofishserver.domain.product.optionitem.domain.OptionItem;
 import com.matsinger.barofishserver.domain.product.optionitem.repository.OptionItemRepository;
 import com.matsinger.barofishserver.domain.product.productfilter.domain.ProductFilterValue;
@@ -26,12 +22,17 @@ import com.matsinger.barofishserver.domain.product.repository.ProductRepositoryI
 import com.matsinger.barofishserver.domain.product.weeksdate.application.WeeksDateQueryService;
 import com.matsinger.barofishserver.domain.product.weeksdate.domain.WeeksDate;
 import com.matsinger.barofishserver.domain.product.weeksdate.repository.WeeksDateRepository;
+import com.matsinger.barofishserver.domain.review.application.ReviewQueryService;
+import com.matsinger.barofishserver.domain.review.dto.ReviewTotalStatistic;
+import com.matsinger.barofishserver.domain.review.repository.ReviewRepository;
 import com.matsinger.barofishserver.domain.searchFilter.domain.ProductSearchFilterMap;
 import com.matsinger.barofishserver.domain.searchFilter.dto.SearchFilterFieldDto;
 import com.matsinger.barofishserver.domain.searchFilter.repository.ProductSearchFilterMapRepository;
 import com.matsinger.barofishserver.domain.searchFilter.repository.SearchFilterFieldRepository;
-import com.matsinger.barofishserver.domain.store.repository.StoreInfoRepository;
+import com.matsinger.barofishserver.domain.store.application.StoreService;
 import com.matsinger.barofishserver.domain.store.domain.StoreInfo;
+import com.matsinger.barofishserver.domain.store.repository.StoreInfoRepository;
+import com.matsinger.barofishserver.global.exception.BusinessException;
 import lombok.RequiredArgsConstructor;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.data.domain.Page;
@@ -168,7 +169,7 @@ public class ProductQueryService {
 
     public Product findById(int productId) {
         return productRepository.findById(productId)
-                                .orElseThrow(() -> new IllegalArgumentException("상품 정보를 찾을 수 없습니다."));
+                                .orElseThrow(() -> new BusinessException("상품 정보를 찾을 수 없습니다."));
     }
 
     public Page<ProductListDtoV2> getPagedProducts(PageRequest pageRequest, ProductSortBy sortBy, String keyword) {

@@ -2,16 +2,11 @@ package com.matsinger.barofishserver.domain.admin.api;
 
 import com.matsinger.barofishserver.domain.admin.application.AdminCommandService;
 import com.matsinger.barofishserver.domain.admin.application.AdminQueryService;
-import com.matsinger.barofishserver.domain.admin.domain.AdminOrderBy;
-import com.matsinger.barofishserver.domain.admin.domain.AdminState;
-import com.matsinger.barofishserver.domain.admin.domain.Admin;
-import com.matsinger.barofishserver.domain.admin.domain.AdminAuth;
-import com.matsinger.barofishserver.domain.admin.domain.AdminAuthority;
+import com.matsinger.barofishserver.domain.admin.domain.*;
 import com.matsinger.barofishserver.domain.admin.dto.AddAdminReq;
 import com.matsinger.barofishserver.domain.admin.dto.UpdateAdminReq;
-import com.matsinger.barofishserver.global.error.ErrorCode;
+import com.matsinger.barofishserver.global.exception.BusinessException;
 import com.matsinger.barofishserver.jwt.*;
-import com.matsinger.barofishserver.jwt.exception.JwtBusinessException;
 import com.matsinger.barofishserver.utils.Common;
 import com.matsinger.barofishserver.utils.CustomResponse;
 import com.matsinger.barofishserver.utils.RegexConstructor;
@@ -131,14 +126,14 @@ public class AdminController {
 
         Admin master = adminQueryService.selectAdmin(tokenInfo.getId());
         if (!master.getAuthority().equals(AdminAuthority.MASTER))
-            throw new IllegalArgumentException("최고 관리자만 생성 가능합니다.");
-        if (data.getLoginId() == null) throw new IllegalArgumentException("로그인 아이디를 입력해주세요.");
+            throw new BusinessException("최고 관리자만 생성 가능합니다.");
+        if (data.getLoginId() == null) throw new BusinessException("로그인 아이디를 입력해주세요.");
         Admin checkExist = adminQueryService.selectAdminByLoginId(data.getLoginId());
-        if (checkExist != null) throw new IllegalArgumentException("이미 존재하는 아이디입니다.");
-        if (data.getPassword() == null) throw new IllegalArgumentException("비밀번호를 입력해주세요.");
+        if (checkExist != null) throw new BusinessException("이미 존재하는 아이디입니다.");
+        if (data.getPassword() == null) throw new BusinessException("비밀번호를 입력해주세요.");
         String password = BCrypt.hashpw(data.getPassword(), BCrypt.gensalt());
         String name = utils.validateString(data.getName(), 20L, "이름");
-        if (!Pattern.matches(reg.tel, data.getTel())) throw new IllegalArgumentException("전화번호 형식을 확인해주세요.");
+        if (!Pattern.matches(reg.tel, data.getTel())) throw new BusinessException("전화번호 형식을 확인해주세요.");
         String tel = data.getTel().replaceAll("[^\\d]*", "");
         Admin
                 admin =
@@ -173,7 +168,7 @@ public class AdminController {
 
         Admin master = adminQueryService.selectAdmin(tokenInfo.getId());
         if (!master.getAuthority().equals(AdminAuthority.MASTER))
-            throw new IllegalArgumentException("최고 관리자의 경우 수정 가능합니다.");
+            throw new BusinessException("최고 관리자의 경우 수정 가능합니다.");
         Admin admin = adminQueryService.selectAdmin(id);
         AdminAuth adminAuth = adminQueryService.selectAdminAuth(id);
         if (data.getPassword() != null) {
@@ -187,7 +182,7 @@ public class AdminController {
         }
         if (data.getTel() != null) {
             if (!Pattern.matches(reg.tel, data.getTel()))
-                throw new IllegalArgumentException("전화번호 형식을 확인해주세요.");
+                throw new BusinessException("전화번호 형식을 확인해주세요.");
             String tel = data.getTel().replaceAll("[^\\d]*", "");
             admin.setTel(tel);
         }
@@ -217,12 +212,12 @@ public class AdminController {
         CustomResponse<Jwt> res = new CustomResponse<>();
 
         Admin admin = adminQueryService.selectAdminByLoginId(loginId);
-        if (admin == null) throw new IllegalArgumentException("아이디 및 비밀번호를 확인해주세요.");
+        if (admin == null) throw new BusinessException("아이디 및 비밀번호를 확인해주세요.");
         if (!BCrypt.checkpw(password, admin.getPassword()))
-            throw new IllegalArgumentException("아이디 및 비밀번호를 확인해주세요.");
+            throw new BusinessException("아이디 및 비밀번호를 확인해주세요.");
         if (!admin.getState().equals(AdminState.ACTIVE)) {
-            if (admin.getState().equals(AdminState.BANNED)) throw new IllegalArgumentException("정지된 관리자입니다.");
-            if (admin.getState().equals(AdminState.DELETED)) throw new IllegalArgumentException("삭제된 관리자입니다.");
+            if (admin.getState().equals(AdminState.BANNED)) throw new BusinessException("정지된 관리자입니다.");
+            if (admin.getState().equals(AdminState.DELETED)) throw new BusinessException("삭제된 관리자입니다.");
         }
         String accessToken = jwtProvider.generateAccessToken(String.valueOf(admin.getId()), TokenAuthType.ADMIN);
         String refreshToken = jwtProvider.generateRefreshToken(String.valueOf(admin.getId()), TokenAuthType.ADMIN);

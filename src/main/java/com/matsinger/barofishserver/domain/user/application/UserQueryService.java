@@ -13,6 +13,7 @@ import com.matsinger.barofishserver.domain.userauth.repository.UserAuthRepositor
 import com.matsinger.barofishserver.domain.userinfo.domain.UserInfo;
 import com.matsinger.barofishserver.domain.userinfo.dto.UserInfoDto;
 import com.matsinger.barofishserver.domain.userinfo.repository.UserInfoRepository;
+import com.matsinger.barofishserver.global.exception.BusinessException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -41,7 +42,7 @@ public class UserQueryService {
         UserAuth userAuth = userAuthQueryService.login(request);
         User findUser = userRepository.findById(userAuth.getUserId())
                 .orElseThrow(() -> {
-                    throw new IllegalArgumentException("유저 정보를 찾을 수 없습니다.");
+                    throw new BusinessException("유저 정보를 찾을 수 없습니다.");
                 });
         userValidator.validateUserState(findUser);
         return findUser;
@@ -54,7 +55,7 @@ public class UserQueryService {
             int userId = userInfo.getUserId();
 
             User findUser = userRepository.findById(userId)
-                    .orElseThrow(() -> new IllegalArgumentException("유저 정보를 찾을 수 없습니다."));
+                    .orElseThrow(() -> new BusinessException("유저 정보를 찾을 수 없습니다."));
             userInfoDto.setUser(findUser.convert2Dto());
 
             UserAuth findUserAuth = userAuthRepository.findFirstByUserId(userId);
@@ -73,11 +74,11 @@ public class UserQueryService {
     public UserInfoDto manageByUserId(Integer userId) {
         UserInfo findUserInfo = userInfoRepository.findByUserId(userId)
                 .orElseThrow(() -> {
-                    throw new IllegalArgumentException("유저를 찾을 수 없습니다.");
+                    throw new BusinessException("유저를 찾을 수 없습니다.");
                 });
         User findUser = userRepository.findById(userId)
                 .orElseThrow(() -> {
-                    throw new IllegalArgumentException("유저를 찾을 수 없습니다.");
+                    throw new BusinessException("유저를 찾을 수 없습니다.");
                 });
         List<DeliverPlace> deliverPlaces = deliverPlaceRepository.findAllByUserId(userId);
 
@@ -101,6 +102,6 @@ public class UserQueryService {
 
     public User findById(int userId) {
         return userRepository.findById(userId)
-                             .orElseThrow(() -> new IllegalArgumentException("유저 정보를 찾을 수 없습니다."));
+                             .orElseThrow(() -> new BusinessException("유저 정보를 찾을 수 없습니다."));
     }
 }
