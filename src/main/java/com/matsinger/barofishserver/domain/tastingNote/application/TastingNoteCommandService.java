@@ -1,6 +1,5 @@
 package com.matsinger.barofishserver.domain.tastingNote.application;
 
-import com.matsinger.barofishserver.domain.order.application.OrderQueryService;
 import com.matsinger.barofishserver.domain.order.domain.Orders;
 import com.matsinger.barofishserver.domain.order.orderprductinfo.application.OrderProductInfoQueryService;
 import com.matsinger.barofishserver.domain.order.orderprductinfo.domain.OrderProductInfo;
@@ -42,8 +41,28 @@ public class TastingNoteCommandService {
             throw new IllegalArgumentException("테이스팅 노트 정보가 이미 존재합니다.");
         }
 
+        convertTastingNoteRequestToEntity(request, findedOrderProductInfo, findedUser);
+
         TastingNote tastingNote = request.toEntity();
         tastingNoteRepository.save(tastingNote);
         return true;
+    }
+
+    private TastingNote convertTastingNoteRequestToEntity(TastingNoteCreateRequest request, OrderProductInfo findedOrderProductInfo, User findedUser) {
+        return TastingNote.builder()
+                .orderProductInfoId(findedOrderProductInfo.getId())
+                .productId(findedOrderProductInfo.getProductId())
+                .userId(findedUser.getId())
+                .oily(request.getTaste1())
+                .taste2(request.getTaste2())
+                .taste3(request.getTaste3())
+                .taste4(request.getTaste4())
+                .taste5(request.getTaste5())
+                .tendernessSoftness(request.getTexture1())
+                .texture2(request.getTexture2())
+                .texture3(request.getTexture3())
+                .texture4(request.getTexture4())
+                .texture5(request.getTexture5())
+                .build();
     }
 }

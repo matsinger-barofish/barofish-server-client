@@ -4,6 +4,11 @@ import com.matsinger.barofishserver.domain.tastingNote.basketTastingNote.domain.
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
+
 @Repository
 public interface BasketTastingNoteRepository extends JpaRepository<BasketTastingNote, Integer> {
+    List<BasketTastingNote> findAllByUserId(int userId);
+
+    void deleteByUserIdAndProductId(Integer userId, Integer productId);
 }

@@ -4,7 +4,6 @@ import com.matsinger.barofishserver.domain.order.domain.Orders;
 import com.matsinger.barofishserver.domain.order.orderprductinfo.application.OrderProductInfoQueryService;
 import com.matsinger.barofishserver.domain.order.orderprductinfo.domain.OrderProductInfo;
 import com.matsinger.barofishserver.domain.order.orderprductinfo.domain.OrderProductState;
-import com.matsinger.barofishserver.domain.tastingNote.domain.TastingNote;
 import com.matsinger.barofishserver.domain.tastingNote.dto.TastingNoteCreateRequest;
 import com.matsinger.barofishserver.domain.tastingNote.repository.TastingNoteRepository;
 import com.matsinger.barofishserver.domain.user.application.UserQueryService;
