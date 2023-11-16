@@ -1,12 +1,11 @@
 package com.matsinger.barofishserver.domain.user.deliverplace.api;
 
-import com.matsinger.barofishserver.global.error.ErrorCode;
+import com.matsinger.barofishserver.domain.user.deliverplace.DeliverPlace;
+import com.matsinger.barofishserver.domain.user.deliverplace.application.DeliverPlaceService;
+import com.matsinger.barofishserver.global.exception.BusinessException;
 import com.matsinger.barofishserver.jwt.JwtService;
 import com.matsinger.barofishserver.jwt.TokenAuthType;
 import com.matsinger.barofishserver.jwt.TokenInfo;
-import com.matsinger.barofishserver.domain.user.deliverplace.application.DeliverPlaceService;
-import com.matsinger.barofishserver.domain.user.deliverplace.DeliverPlace;
-import com.matsinger.barofishserver.jwt.exception.JwtBusinessException;
 import com.matsinger.barofishserver.utils.Common;
 import com.matsinger.barofishserver.utils.CustomResponse;
 import com.matsinger.barofishserver.utils.RegexConstructor;
@@ -69,8 +68,8 @@ public class DeliverPlaceController {
         String name = utils.validateString(data.name, 50L, "배송지명");
         String receiverName = utils.validateString(data.receiverName, 20L, "수령인");
         String tel = utils.validateString(data.tel, 11L, "연락처");
-        if (data.postalCode == null) throw new IllegalArgumentException("우편번호를 입력해주세요.");
-        if (!Pattern.matches(re.phone, tel)) throw new IllegalArgumentException("연락처 번호 형식을 확인해주세요.");
+        if (data.postalCode == null) throw new BusinessException("우편번호를 입력해주세요.");
+        if (!Pattern.matches(re.phone, tel)) throw new BusinessException("연락처 번호 형식을 확인해주세요.");
         String address = utils.validateString(data.address, 100L, "주소");
         String addressDetail = utils.validateString(data.addressDetail, 100L, "상세 주소");
         String deliverMessage = utils.validateString(data.deliverMessage, 100L, "배송메시지");
@@ -116,12 +115,12 @@ public class DeliverPlaceController {
         if (data.tel != null) {
             String tel = utils.validateString(data.tel, 11L, "연락처");
             if (!Pattern.matches(re.phone, tel))
-                throw new IllegalArgumentException("연락처 번호 형식을 확인해주세요.");
+                throw new BusinessException("연락처 번호 형식을 확인해주세요.");
             deliverPlace.setTel(tel);
         }
         if (data.address != null) {
             if (data.getBcode() == null)
-                throw new IllegalArgumentException("주소 변경 시 법정동 코드도 같이 입력해주세요.");
+                throw new BusinessException("주소 변경 시 법정동 코드도 같이 입력해주세요.");
             String address = utils.validateString(data.address, 100L, "주소");
             deliverPlace.setAddress(address);
             deliverPlace.setBcode(data.getBcode());

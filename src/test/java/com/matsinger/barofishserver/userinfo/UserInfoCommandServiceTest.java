@@ -57,7 +57,7 @@
 //
 //        // when // then
 //        assertThatThrownBy(() -> userInfoCommandService.createAndSaveUserInfo(createdUser, request, "", grade))
-//                .isInstanceOf(IllegalArgumentException.class)
+//                .isInstanceOf(BusinessException.class)
 //                .hasMessageContaining("휴대폰 번호 형식을 확인해주세요.");
 //    }
 //
@@ -142,7 +142,7 @@
 //
 //        // then
 //        assertThatThrownBy(() -> userInfoCommandService.updateUserInfo(createdUser.getId(), request, imageUrl))
-//                .isInstanceOf(IllegalArgumentException.class)
+//                .isInstanceOf(BusinessException.class)
 //                .hasMessageContaining("휴대폰 번호 형식을 확인해주세요.");
 //    }
 //

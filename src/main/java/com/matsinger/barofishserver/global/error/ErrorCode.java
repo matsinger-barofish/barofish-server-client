@@ -19,4 +19,9 @@ public enum ErrorCode {
         this.code = code;
         this.message = message;
     }
+
+    ErrorCode(String message) {
+        this.code = "1000";
+        this.message = message;
+    }
 }

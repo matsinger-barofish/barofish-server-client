@@ -21,8 +21,8 @@ import java.lang.reflect.Type;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
-@Order(2)
 @Slf4j
+@Order(2)
 @RestControllerAdvice(basePackages = {"com.matsinger.barofishserver"})
 @RequiredArgsConstructor
 public class GlobalControllerAdvice implements RequestBodyAdvice {
@@ -41,6 +41,22 @@ public class GlobalControllerAdvice implements RequestBodyAdvice {
         CustomResponse customResponse = new CustomResponse();
         customResponse.setIsSuccess(false);
         customResponse.setCode(ErrorCode.DEFAULT_ERROR);
+        return ResponseEntity.ok(customResponse);
+    }
+
+    @ExceptionHandler(value = {BusinessException.class})
+    public ResponseEntity<CustomResponse<Object>> catchBusinessException(
+            HttpServletRequest request,
+            Exception e) {
+
+        printExceptionInfo(request, e);
+
+        CustomResponse customResponse = new CustomResponse();
+        customResponse.setIsSuccess(false);
+
+        customResponse.setErrorMsg(e.getMessage());
+        customResponse.setCode("1000");
+
         return ResponseEntity.ok(customResponse);
     }
 

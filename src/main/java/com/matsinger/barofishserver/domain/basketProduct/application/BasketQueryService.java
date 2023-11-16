@@ -5,17 +5,18 @@ import com.matsinger.barofishserver.domain.basketProduct.domain.BasketProductOpt
 import com.matsinger.barofishserver.domain.basketProduct.dto.BasketProductDto;
 import com.matsinger.barofishserver.domain.basketProduct.repository.BasketProductInfoRepository;
 import com.matsinger.barofishserver.domain.basketProduct.repository.BasketProductOptionRepository;
-import com.matsinger.barofishserver.domain.product.optionitem.domain.OptionItem;
-import com.matsinger.barofishserver.domain.product.optionitem.dto.OptionItemDto;
-import com.matsinger.barofishserver.domain.product.optionitem.repository.OptionItemRepository;
 import com.matsinger.barofishserver.domain.product.application.ProductService;
 import com.matsinger.barofishserver.domain.product.domain.Product;
 import com.matsinger.barofishserver.domain.product.dto.ProductListDto;
+import com.matsinger.barofishserver.domain.product.optionitem.domain.OptionItem;
+import com.matsinger.barofishserver.domain.product.optionitem.dto.OptionItemDto;
+import com.matsinger.barofishserver.domain.product.optionitem.repository.OptionItemRepository;
 import com.matsinger.barofishserver.domain.product.productfilter.application.ProductFilterService;
 import com.matsinger.barofishserver.domain.review.repository.ReviewRepository;
 import com.matsinger.barofishserver.domain.store.application.StoreService;
 import com.matsinger.barofishserver.domain.store.domain.StoreInfo;
 import com.matsinger.barofishserver.domain.store.dto.SimpleStore;
+import com.matsinger.barofishserver.global.exception.BusinessException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -65,7 +66,7 @@ public class BasketQueryService {
             } else {
                 OptionItem
                         optionItem =
-                        optionItemRepository.findById(option.getOptionId()).orElseThrow(() -> new IllegalArgumentException(
+                        optionItemRepository.findById(option.getOptionId()).orElseThrow(() -> new BusinessException(
                                 "옵션 아이템 정보를 찾을 수 없습니다."));
                 optionDto = optionItem.convert2Dto();
                 optionDto.setDeliverBoxPerAmount(product.getDeliverBoxPerAmount());

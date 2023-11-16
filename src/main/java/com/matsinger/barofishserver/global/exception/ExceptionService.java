@@ -12,7 +12,7 @@ public class ExceptionService {
     }
 
     public String serviceExceptionMethod(String argument) {
-        throw new IllegalArgumentException(String.format("서비스 예외 발생! - json"));
+        throw new BusinessException(String.format("서비스 예외 발생! - json"));
     }
 
 }

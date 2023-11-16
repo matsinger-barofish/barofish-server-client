@@ -14,6 +14,7 @@ import com.matsinger.barofishserver.domain.user.domain.UserState;
 import com.matsinger.barofishserver.domain.user.repository.UserRepository;
 import com.matsinger.barofishserver.domain.userinfo.domain.UserInfo;
 import com.matsinger.barofishserver.domain.userinfo.repository.UserInfoRepository;
+import com.matsinger.barofishserver.global.exception.BusinessException;
 import com.matsinger.barofishserver.utils.Common;
 import jakarta.persistence.Tuple;
 import lombok.RequiredArgsConstructor;
@@ -105,7 +106,7 @@ public class CouponCommandService {
             couponUserMapRepository.save(couponUserMap);
 
             UserInfo findUserInfo = userInfoRepository.findByUserId(userId)
-                    .orElseThrow(() -> new IllegalArgumentException("유저 정보를 찾을 수 없습니다."));
+                    .orElseThrow(() -> new BusinessException("유저 정보를 찾을 수 없습니다."));
 
             notificationCommandService.sendFcmToUser(
                     findUserInfo.getUserId(),
@@ -119,11 +120,11 @@ public class CouponCommandService {
 
     public Coupon publishNewUserCoupon(Integer userId) {
         Coupon signUpCoupon = couponRepository.findById(7)
-                .orElseThrow(() -> new IllegalArgumentException("회원가입 쿠폰을 찾을 수 없습니다."));
+                .orElseThrow(() -> new BusinessException("회원가입 쿠폰을 찾을 수 없습니다."));
 
         if (couponUserMapRepository.findById(
                 new CouponUserMapId(userId, signUpCoupon.getId())).isPresent()) {
-            throw new IllegalArgumentException("이미 회원가입 쿠폰을 발급 받으셨습니다.");
+            throw new BusinessException("이미 회원가입 쿠폰을 발급 받으셨습니다.");
         }
         CouponUserMap userSignUpCoupon = CouponUserMap.builder()
                 .userId(userId)
