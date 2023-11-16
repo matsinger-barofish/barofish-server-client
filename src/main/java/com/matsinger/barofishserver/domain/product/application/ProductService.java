@@ -11,43 +11,43 @@ import com.matsinger.barofishserver.domain.compare.filter.repository.CompareFilt
 import com.matsinger.barofishserver.domain.compare.repository.SaveProductRepository;
 import com.matsinger.barofishserver.domain.inquiry.application.InquiryQueryService;
 import com.matsinger.barofishserver.domain.inquiry.domain.Inquiry;
-import com.matsinger.barofishserver.domain.product.domain.*;
-import com.matsinger.barofishserver.domain.product.optionitem.domain.OptionItem;
-import com.matsinger.barofishserver.domain.product.optionitem.dto.OptionItemDto;
-import com.matsinger.barofishserver.domain.product.optionitem.repository.OptionItemRepository;
-import com.matsinger.barofishserver.domain.review.application.ReviewQueryService;
-import com.matsinger.barofishserver.domain.review.domain.Review;
-import com.matsinger.barofishserver.domain.review.dto.ReviewDto;
-import com.matsinger.barofishserver.domain.review.dto.ReviewTotalStatistic;
-import com.matsinger.barofishserver.domain.review.repository.ReviewLikeRepository;
-import com.matsinger.barofishserver.domain.review.repository.ReviewRepository;
-import com.matsinger.barofishserver.domain.store.application.StoreService;
-import com.matsinger.barofishserver.domain.store.domain.Store;
-import com.matsinger.barofishserver.domain.store.repository.StoreInfoRepository;
 import com.matsinger.barofishserver.domain.product.difficultDeliverAddress.application.DifficultDeliverAddressQueryService;
+import com.matsinger.barofishserver.domain.product.domain.*;
 import com.matsinger.barofishserver.domain.product.dto.ExcelProductDto;
 import com.matsinger.barofishserver.domain.product.dto.ExcelProductDto2;
 import com.matsinger.barofishserver.domain.product.dto.ProductListDto;
 import com.matsinger.barofishserver.domain.product.option.domain.Option;
 import com.matsinger.barofishserver.domain.product.option.dto.OptionDto;
 import com.matsinger.barofishserver.domain.product.option.repository.OptionRepository;
+import com.matsinger.barofishserver.domain.product.optionitem.domain.OptionItem;
+import com.matsinger.barofishserver.domain.product.optionitem.dto.OptionItemDto;
+import com.matsinger.barofishserver.domain.product.optionitem.repository.OptionItemRepository;
+import com.matsinger.barofishserver.domain.product.productfilter.application.ProductFilterService;
 import com.matsinger.barofishserver.domain.product.productfilter.domain.ProductFilterValue;
 import com.matsinger.barofishserver.domain.product.productfilter.dto.ProductFilterValueDto;
 import com.matsinger.barofishserver.domain.product.productfilter.repository.ProductFilterRepository;
 import com.matsinger.barofishserver.domain.product.repository.ProductRepository;
-import com.matsinger.barofishserver.domain.product.productfilter.application.ProductFilterService;
+import com.matsinger.barofishserver.domain.review.application.ReviewQueryService;
+import com.matsinger.barofishserver.domain.review.domain.Review;
+import com.matsinger.barofishserver.domain.review.dto.ReviewDto;
+import com.matsinger.barofishserver.domain.review.dto.ReviewTotalStatistic;
+import com.matsinger.barofishserver.domain.review.repository.ReviewLikeRepository;
+import com.matsinger.barofishserver.domain.review.repository.ReviewRepository;
 import com.matsinger.barofishserver.domain.searchFilter.application.SearchFilterQueryService;
 import com.matsinger.barofishserver.domain.searchFilter.domain.ProductSearchFilterMap;
 import com.matsinger.barofishserver.domain.searchFilter.domain.SearchFilterField;
 import com.matsinger.barofishserver.domain.searchFilter.dto.SearchFilterFieldDto;
 import com.matsinger.barofishserver.domain.searchFilter.repository.ProductSearchFilterMapRepository;
+import com.matsinger.barofishserver.domain.store.application.StoreService;
+import com.matsinger.barofishserver.domain.store.domain.Store;
 import com.matsinger.barofishserver.domain.store.domain.StoreInfo;
+import com.matsinger.barofishserver.domain.store.repository.StoreInfoRepository;
+import com.matsinger.barofishserver.global.exception.BusinessException;
 import com.matsinger.barofishserver.utils.Common;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.data.domain.Page;
-
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -316,7 +316,7 @@ public class ProductService {
 
     public Product findById(Integer id) {
         return productRepository.findById(id).orElseThrow(() -> {
-            throw new IllegalArgumentException("상품 정보를 찾을 수 없습니다.");
+            throw new BusinessException("상품 정보를 찾을 수 없습니다.");
         });
     }
 

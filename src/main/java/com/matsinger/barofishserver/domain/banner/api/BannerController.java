@@ -12,10 +12,9 @@ import com.matsinger.barofishserver.domain.banner.dto.UpdateBannerStateReq;
 import com.matsinger.barofishserver.domain.banner.repository.BannerRepository;
 import com.matsinger.barofishserver.domain.category.application.CategoryQueryService;
 import com.matsinger.barofishserver.domain.data.curation.application.CurationQueryService;
-import com.matsinger.barofishserver.global.error.ErrorCode;
+import com.matsinger.barofishserver.global.exception.BusinessException;
 import com.matsinger.barofishserver.jwt.JwtService;
 import com.matsinger.barofishserver.jwt.TokenAuthType;
-import com.matsinger.barofishserver.jwt.exception.JwtBusinessException;
 import com.matsinger.barofishserver.utils.Common;
 import com.matsinger.barofishserver.utils.CustomResponse;
 import com.matsinger.barofishserver.utils.RegexConstructor;
@@ -143,20 +142,20 @@ public class BannerController {
 
         Banner banner = new Banner();
         if (type == BannerType.CATEGORY) {
-            if (categoryId == null) throw new IllegalArgumentException("카테고리 아이디를 입력해주세요.");
+            if (categoryId == null) throw new BusinessException("카테고리 아이디를 입력해주세요.");
             categoryQueryService.findById(categoryId);
             banner.setCategoryId(categoryId);
         } else if (type == BannerType.CURATION) {
-            if (curationId == null) throw new IllegalArgumentException("큐레이션 아이디를 입력해주세요.");
+            if (curationId == null) throw new BusinessException("큐레이션 아이디를 입력해주세요.");
             curationQueryService.selectCuration(curationId);
             banner.setCurationId(curationId);
         } else if (type == BannerType.NOTICE) {
-            if (noticeId == null) throw new IllegalArgumentException("배너 아이디를 입력해주세요.");
+            if (noticeId == null) throw new BusinessException("배너 아이디를 입력해주세요.");
 //                curationService.findById(categoryId);
             banner.setNoticeId(noticeId);
         }
         if (link != null) {
-            if (!Pattern.matches(re.httpUrl, link)) throw new IllegalArgumentException("링크 형식을 확인해주세요.");
+            if (!Pattern.matches(re.httpUrl, link)) throw new BusinessException("링크 형식을 확인해주세요.");
             banner.setLink(link);
         }
         banner.setState(BannerState.ACTIVE);
@@ -191,19 +190,19 @@ public class BannerController {
                 banner.setCategoryId(null);
                 banner.setLink(null);
             } else if (type.equals(BannerType.CATEGORY)) {
-                if (categoryId == null) throw new IllegalArgumentException("카테고리 아이디를 입력해주세요.");
+                if (categoryId == null) throw new BusinessException("카테고리 아이디를 입력해주세요.");
                 banner.setCategoryId(categoryId);
                 banner.setNoticeId(null);
                 banner.setCurationId(null);
                 banner.setLink(null);
             } else if (type.equals(BannerType.NOTICE)) {
-                if (noticeId == null) throw new IllegalArgumentException("공지사항 아이디를 입력해주세요.");
+                if (noticeId == null) throw new BusinessException("공지사항 아이디를 입력해주세요.");
                 banner.setNoticeId(noticeId);
                 banner.setCurationId(null);
                 banner.setCategoryId(null);
                 banner.setLink(null);
             } else if (type.equals(BannerType.CURATION)) {
-                if (curationId == null) throw new IllegalArgumentException("큐레이션 아이디를 입력해주세요.");
+                if (curationId == null) throw new BusinessException("큐레이션 아이디를 입력해주세요.");
                 banner.setCurationId(curationId);
                 banner.setCategoryId(null);
                 banner.setNoticeId(null);
@@ -212,7 +211,7 @@ public class BannerController {
             banner.setType(type);
         }
         if (link != null) {
-            if (!Pattern.matches(re.httpUrl, link)) throw new IllegalArgumentException("링크 형식을 확인해주세요.");
+            if (!Pattern.matches(re.httpUrl, link)) throw new BusinessException("링크 형식을 확인해주세요.");
         }
         banner.setLink(link);
         if (image != null) {
@@ -235,8 +234,8 @@ public class BannerController {
 
                 jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
 
-        if (data.getIds() == null || data.getIds().size() == 0) throw new IllegalArgumentException("아이디를 입력해주세요.");
-        if (data.getState() == null) throw new IllegalArgumentException("변경할 상태를 입력해주세요.");
+        if (data.getIds() == null || data.getIds().size() == 0) throw new BusinessException("아이디를 입력해주세요.");
+        if (data.getState() == null) throw new BusinessException("변경할 상태를 입력해주세요.");
         List<Banner> banners = bannerQueryService.selectBannerListWithIds(data.getIds());
         banners.forEach(v -> v.setState(data.getState()));
         bannerCommandService.updateAllBanners(banners);

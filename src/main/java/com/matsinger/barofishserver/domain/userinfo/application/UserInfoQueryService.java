@@ -8,6 +8,7 @@ import com.matsinger.barofishserver.domain.user.deliverplace.repository.DeliverP
 import com.matsinger.barofishserver.domain.userinfo.domain.UserInfo;
 import com.matsinger.barofishserver.domain.userinfo.dto.UserInfoDto;
 import com.matsinger.barofishserver.domain.userinfo.repository.UserInfoRepository;
+import com.matsinger.barofishserver.global.exception.BusinessException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -30,7 +31,7 @@ public class UserInfoQueryService {
 
         UserInfo findUserInfo = userInfoRepository.findByUserId(userId)
                 .orElseThrow(() -> {
-                    throw new IllegalArgumentException("유저 정보를 찾을 수 없습니다.");
+                    throw new BusinessException("유저 정보를 찾을 수 없습니다.");
                 });
 
         List<DeliverPlace> deliverPlaces = deliverPlaceRepository.findAllByUserId(userId);

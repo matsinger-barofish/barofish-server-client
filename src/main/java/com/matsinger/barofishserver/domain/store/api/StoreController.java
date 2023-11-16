@@ -5,19 +5,18 @@ import com.matsinger.barofishserver.domain.admin.log.application.AdminLogQuerySe
 import com.matsinger.barofishserver.domain.admin.log.domain.AdminLog;
 import com.matsinger.barofishserver.domain.admin.log.domain.AdminLogType;
 import com.matsinger.barofishserver.domain.product.LikePostType;
+import com.matsinger.barofishserver.domain.product.application.ProductService;
 import com.matsinger.barofishserver.domain.product.domain.Product;
 import com.matsinger.barofishserver.domain.siteInfo.application.SiteInfoCommandService;
 import com.matsinger.barofishserver.domain.siteInfo.application.SiteInfoQueryService;
 import com.matsinger.barofishserver.domain.siteInfo.domain.SiteInformation;
 import com.matsinger.barofishserver.domain.store.application.StoreService;
 import com.matsinger.barofishserver.domain.store.domain.*;
-import com.matsinger.barofishserver.domain.store.repository.StoreInfoRepository;
-import com.matsinger.barofishserver.global.error.ErrorCode;
-import com.matsinger.barofishserver.jwt.*;
-import com.matsinger.barofishserver.domain.product.application.ProductService;
 import com.matsinger.barofishserver.domain.store.dto.SimpleStore;
 import com.matsinger.barofishserver.domain.store.dto.StoreDto;
-import com.matsinger.barofishserver.jwt.exception.JwtBusinessException;
+import com.matsinger.barofishserver.domain.store.repository.StoreInfoRepository;
+import com.matsinger.barofishserver.global.exception.BusinessException;
+import com.matsinger.barofishserver.jwt.*;
 import com.matsinger.barofishserver.utils.Common;
 import com.matsinger.barofishserver.utils.CustomResponse;
 import com.matsinger.barofishserver.utils.S3.S3Uploader;
@@ -162,14 +161,14 @@ public class StoreController {
         CustomResponse<Jwt> res = new CustomResponse<>();
 
         Optional<Store> store = storeService.selectOptionalStoreByLoginId(loginId);
-        if (store == null || store.isEmpty()) throw new IllegalArgumentException("아이디 및 비밀번호를 확인해주세요.");
+        if (store == null || store.isEmpty()) throw new BusinessException("아이디 및 비밀번호를 확인해주세요.");
         if (!BCrypt.checkpw(password, store.get().getPassword()))
-            throw new IllegalArgumentException("아이디 및 비밀번호를 확인해주세요.");
+            throw new BusinessException("아이디 및 비밀번호를 확인해주세요.");
         if (!store.get().getState().equals(StoreState.ACTIVE)) {
             if (store.get().getState().equals(StoreState.BANNED))
-                throw new IllegalArgumentException("정지된 계정입니다.");
+                throw new BusinessException("정지된 계정입니다.");
             if (store.get().getState().equals(StoreState.DELETED))
-                throw new IllegalArgumentException("삭제된 계정입니다.");
+                throw new BusinessException("삭제된 계정입니다.");
         }
         String
                 accessToken =
@@ -195,7 +194,7 @@ public class StoreController {
         if (tokenInfo.getType().equals(TokenAuthType.PARTNER)) {
             id = tokenInfo.getId();
         } else {
-            if (id == null) throw new IllegalArgumentException("스토어 아이디를 입력해주세요.");
+            if (id == null) throw new BusinessException("스토어 아이디를 입력해주세요.");
         }
         Store store = storeService.selectStore(id);
 
@@ -255,19 +254,19 @@ public class StoreController {
 
         Integer storeId;
         if (tokenInfo.getType().equals(TokenAuthType.PARTNER)) {
-            if (data.oldPassword == null) throw new IllegalArgumentException("이전 비밀번호를 입력해주세요.");
-            else if (data.newPassword == null) throw new IllegalArgumentException("새로운 비밀번호를 입력해주세요.");
+            if (data.oldPassword == null) throw new BusinessException("이전 비밀번호를 입력해주세요.");
+            else if (data.newPassword == null) throw new BusinessException("새로운 비밀번호를 입력해주세요.");
             storeId = tokenInfo.getId();
         } else {
-            if (data.storeId == null) throw new IllegalArgumentException("파트너 아이디를 입력해주세요.");
-            if (data.newPassword == null) throw new IllegalArgumentException("새로운 비밀번호를 입력해주세요.");
+            if (data.storeId == null) throw new BusinessException("파트너 아이디를 입력해주세요.");
+            if (data.newPassword == null) throw new BusinessException("새로운 비밀번호를 입력해주세요.");
             storeId = data.storeId;
         }
-        if (storeId == null) throw new IllegalArgumentException("파트너 정보를 찾을 수 없습니다.");
+        if (storeId == null) throw new BusinessException("파트너 정보를 찾을 수 없습니다.");
         Store store = storeService.selectStore(storeId);
         if (tokenInfo.getType().equals(TokenAuthType.PARTNER)) {
             if (!BCrypt.checkpw(data.oldPassword, store.getPassword()))
-                throw new IllegalArgumentException("이전 비밀번호를 확인해주세요.");
+                throw new BusinessException("이전 비밀번호를 확인해주세요.");
         }
         store.setPassword(BCrypt.hashpw(data.newPassword, BCrypt.gensalt()));
         storeService.updateStore(store);
@@ -320,15 +319,15 @@ public class StoreController {
         Integer adminId = tokenInfo.getId();
         loginId = utils.validateString(loginId, 50L, "로그인 아이디");
         Boolean check = storeService.checkStoreLoginIdValid(loginId);
-        if (!check) throw new IllegalArgumentException("중복된 아이디입니다.");
+        if (!check) throw new BusinessException("중복된 아이디입니다.");
         if (!password.matches("^(?=.*[a-zA-Z])(?=.*\\d)(?=.*[!@#$%^&*()_\\-+=\\[\\]{}|\\\\:;\"'<>,.?/])(?=" +
-                ".*[^\\s]).{8,20}$")) throw new IllegalArgumentException("비밀번호 형식을 확인해주세요.");
+                ".*[^\\s]).{8,20}$")) throw new BusinessException("비밀번호 형식을 확인해주세요.");
         name = utils.validateString(name, 50L, "이름");
         location = utils.validateString(location, 50L, "위치");
         deliverCompany = utils.validateString(deliverCompany, 20L, "택배사");
-        if (data.settlementRate == null) throw new IllegalArgumentException("정산 비율을 입력해주세요.");
+        if (data.settlementRate == null) throw new BusinessException("정산 비율을 입력해주세요.");
         if (data.getSettlementRate() > 100 || data.getSettlementRate() < 0)
-            throw new IllegalArgumentException("정산 비율을 확인해주세요.");
+            throw new BusinessException("정산 비율을 확인해주세요.");
         String bankName = utils.validateString(data.bankName, 20L, "은행명");
         String bankHolder = utils.validateString(data.bankHolder, 50L, "예금주");
         String bankAccount = utils.validateString(data.bankAccount, 50L, "계좌번호");
@@ -463,7 +462,7 @@ public class StoreController {
         if (tokenInfo.getType().equals(TokenAuthType.PARTNER)) {
             id = tokenInfo.getId();
         } else {
-            if (id == null) throw new IllegalArgumentException("스토어 아이디를 입력해주세요.");
+            if (id == null) throw new BusinessException("스토어 아이디를 입력해주세요.");
         }
         boolean isAdmin = tokenInfo.getType().equals(TokenAuthType.ADMIN);
         StoreInfo storeInfo = storeService.selectStoreInfo(id);
@@ -505,9 +504,9 @@ public class StoreController {
         }
         if (data != null) {
             if (data.settlementRate != null) {
-                if (!isAdmin) throw new IllegalArgumentException("수정 불가능한 항목입니다.");
+                if (!isAdmin) throw new BusinessException("수정 불가능한 항목입니다.");
                 if (data.getSettlementRate() > 100 || data.getSettlementRate() < 0)
-                    throw new IllegalArgumentException("정산 비율을 확인해주세요.");
+                    throw new BusinessException("정산 비율을 확인해주세요.");
                 storeInfo.setSettlementRate(data.settlementRate);
             }
             if (data.bankName != null) {
@@ -675,7 +674,7 @@ public class StoreController {
 
 
         SiteInformation siteInformation = siteInfoQueryService.selectSiteInfo("INTERNAL_MAIN_STORE");
-        if (data.storeId == null) throw new IllegalArgumentException("파트너 아이디를 입력해주세요.");
+        if (data.storeId == null) throw new BusinessException("파트너 아이디를 입력해주세요.");
         Store store = storeService.selectStore(data.storeId);
         siteInformation.setContent(String.valueOf(data.storeId));
         siteInfoCommandService.updateSiteInfo(siteInformation);
@@ -699,8 +698,8 @@ public class StoreController {
 
         Integer adminId = tokenInfo.getId();
         if (data.getStoreIds() == null || data.getStoreIds().size() == 0)
-            throw new IllegalArgumentException("파트너 아이디를 입력해주세요.");
-        if (data.getIsReliable() == null) throw new IllegalArgumentException("체크 여부를 입력해주세요.");
+            throw new BusinessException("파트너 아이디를 입력해주세요.");
+        if (data.getIsReliable() == null) throw new BusinessException("체크 여부를 입력해주세요.");
         List<StoreInfo> storeInfos = data.getStoreIds().stream().map(v -> {
             StoreInfo storeInfo = storeService.selectStoreInfo(v);
             storeInfo.setIsReliable(data.getIsReliable());

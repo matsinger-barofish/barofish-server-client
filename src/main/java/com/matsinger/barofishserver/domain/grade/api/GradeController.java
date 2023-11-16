@@ -3,10 +3,9 @@ package com.matsinger.barofishserver.domain.grade.api;
 import com.matsinger.barofishserver.domain.grade.application.GradeCommandService;
 import com.matsinger.barofishserver.domain.grade.application.GradeQueryService;
 import com.matsinger.barofishserver.domain.grade.domain.Grade;
-import com.matsinger.barofishserver.global.error.ErrorCode;
+import com.matsinger.barofishserver.global.exception.BusinessException;
 import com.matsinger.barofishserver.jwt.JwtService;
 import com.matsinger.barofishserver.jwt.TokenAuthType;
-import com.matsinger.barofishserver.jwt.exception.JwtBusinessException;
 import com.matsinger.barofishserver.utils.Common;
 import com.matsinger.barofishserver.utils.CustomResponse;
 import lombok.Getter;
@@ -61,10 +60,10 @@ public class GradeController {
                                                           @RequestPart(value = "data") AddGradeReq data) {
         CustomResponse<Grade> res = new CustomResponse<>();
 
-        if (data.name == null) throw new IllegalArgumentException("이름을 입력해주세요.");
-        if (data.pointRate == null) throw new IllegalArgumentException("포인트 적립율을 입력해주세요.");
-        if (data.minOrderPrice == null) throw new IllegalArgumentException("최소 주문 금액을 입력해주세요.");
-        if (data.minOrderCount == null) throw new IllegalArgumentException("최소 주문 수량을 입력해주세요.");
+        if (data.name == null) throw new BusinessException("이름을 입력해주세요.");
+        if (data.pointRate == null) throw new BusinessException("포인트 적립율을 입력해주세요.");
+        if (data.minOrderPrice == null) throw new BusinessException("최소 주문 금액을 입력해주세요.");
+        if (data.minOrderCount == null) throw new BusinessException("최소 주문 수량을 입력해주세요.");
         String name = utils.validateString(data.name, 20L, "이름");
         Grade
                 grade =
