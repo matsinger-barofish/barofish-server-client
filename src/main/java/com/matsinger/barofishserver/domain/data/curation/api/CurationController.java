@@ -6,15 +6,12 @@ import com.matsinger.barofishserver.domain.data.curation.domain.*;
 import com.matsinger.barofishserver.domain.data.curation.dto.CurationDeleteProductReq;
 import com.matsinger.barofishserver.domain.data.curation.dto.CurationDto;
 import com.matsinger.barofishserver.domain.data.curation.dto.SortCurationReq;
-import com.matsinger.barofishserver.global.error.ErrorCode;
+import com.matsinger.barofishserver.domain.product.application.ProductService;
+import com.matsinger.barofishserver.domain.product.domain.Product;
+import com.matsinger.barofishserver.domain.product.dto.ProductListDto;
+import com.matsinger.barofishserver.global.exception.BusinessException;
 import com.matsinger.barofishserver.jwt.JwtService;
 import com.matsinger.barofishserver.jwt.TokenAuthType;
-
-import com.matsinger.barofishserver.domain.product.domain.Product;
-import com.matsinger.barofishserver.domain.product.application.ProductService;
-import com.matsinger.barofishserver.domain.product.dto.ProductListDto;
-
-import com.matsinger.barofishserver.jwt.exception.JwtBusinessException;
 import com.matsinger.barofishserver.utils.Common;
 import com.matsinger.barofishserver.utils.CustomResponse;
 import com.matsinger.barofishserver.utils.S3.S3Uploader;
@@ -28,7 +25,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 
 @RestController
 @RequiredArgsConstructor
@@ -127,17 +127,17 @@ public class CurationController {
 
         Curation curation = new Curation();
         if (shortName == null && title == null)
-            throw new IllegalArgumentException("큐레이션 명과 타이틀 둘 중 하나는 필수입니다.");
+            throw new BusinessException("큐레이션 명과 타이틀 둘 중 하나는 필수입니다.");
         if (shortName != null) {
-            if (file == null) throw new IllegalArgumentException("이미지를 입력해주세요.");
+            if (file == null) throw new BusinessException("이미지를 입력해주세요.");
             shortName = util.validateString(shortName, 20L, "약어");
             curation.setShortName(shortName);
             String image = s3.upload(file, new ArrayList<>(List.of("curation")));
             curation.setImage(image);
         }
         if (title != null) {
-            if (type == null) throw new IllegalArgumentException("타입을 입력해주세요.");
-            if (description == null) throw new IllegalArgumentException("설명을 입력해주세요.");
+            if (type == null) throw new BusinessException("타입을 입력해주세요.");
+            if (description == null) throw new BusinessException("설명을 입력해주세요.");
             title = util.validateString(title, 100L, "제목");
             curation.setTitle(title);
             description = util.validateString(description, 200L, "설명");
@@ -172,7 +172,7 @@ public class CurationController {
 
         Curation curation = curationQueryService.selectCuration(id);
         if (file != null) {
-            if (!s3.validateImageType(file)) throw new IllegalArgumentException("허용되지 않는 확장자입니다.");
+            if (!s3.validateImageType(file)) throw new BusinessException("허용되지 않는 확장자입니다.");
             String imageUrl = s3.upload(file, new ArrayList<>(List.of("curation")));
             curation.setImage(imageUrl);
         }
@@ -226,7 +226,7 @@ public class CurationController {
 
                 jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
 
-        if (id == 0) throw new IllegalArgumentException("삭제 불가능한 큐레이션입니다.");
+        if (id == 0) throw new BusinessException("삭제 불가능한 큐레이션입니다.");
         Curation curation = curationQueryService.selectCuration(id);
         if (curation == null) throw new Error("큐레이션 데이터를 찾을 수 없습니다.");
         curationCommandService.delete(id);
@@ -246,7 +246,7 @@ public class CurationController {
 
                 jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
 
-        if (data.getCurationId() == null) throw new IllegalArgumentException("큐레이션 아이디를 입력해주세요.");
+        if (data.getCurationId() == null) throw new BusinessException("큐레이션 아이디를 입력해주세요.");
         Curation curation = curationQueryService.selectCuration(data.getCurationId());
         curationCommandService.deleteProducts(data.getCurationId(), data.getProductIds());
         res.setData(Optional.of(true));

@@ -6,6 +6,7 @@ import com.matsinger.barofishserver.domain.coupon.domain.CouponUserMap;
 import com.matsinger.barofishserver.domain.coupon.domain.CouponUserMapId;
 import com.matsinger.barofishserver.domain.coupon.repository.CouponRepository;
 import com.matsinger.barofishserver.domain.coupon.repository.CouponUserMapRepository;
+import com.matsinger.barofishserver.global.exception.BusinessException;
 import com.matsinger.barofishserver.utils.Common;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -89,7 +90,7 @@ public class CouponQueryService {
 
     public Coupon findById(Integer couponId) {
         return couponRepository.findById(couponId)
-                               .orElseThrow(() -> new IllegalArgumentException("쿠폰 정보를 찾을 수 없습니다."));
+                               .orElseThrow(() -> new BusinessException("쿠폰 정보를 찾을 수 없습니다."));
     }
 
     public List<Coupon> selectUserCouponList(Integer userId) {

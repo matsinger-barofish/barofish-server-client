@@ -2,24 +2,23 @@ package com.matsinger.barofishserver.domain.category.api;
 
 import com.matsinger.barofishserver.domain.category.application.CategoryCommandService;
 import com.matsinger.barofishserver.domain.category.application.CategoryQueryService;
+import com.matsinger.barofishserver.domain.category.domain.Category;
 import com.matsinger.barofishserver.domain.category.dto.AddCategoryCompareFilterReq;
+import com.matsinger.barofishserver.domain.category.dto.CategoryDto;
 import com.matsinger.barofishserver.domain.category.filter.application.CategoryFilterCommandService;
 import com.matsinger.barofishserver.domain.category.filter.application.CategoryFilterQueryService;
-import com.matsinger.barofishserver.domain.category.domain.Category;
 import com.matsinger.barofishserver.domain.category.filter.domain.CategoryFilterId;
 import com.matsinger.barofishserver.domain.category.filter.domain.CategoryFilterMap;
-import com.matsinger.barofishserver.domain.category.dto.CategoryDto;
 import com.matsinger.barofishserver.domain.compare.filter.application.CompareFilterQueryService;
 import com.matsinger.barofishserver.domain.compare.filter.domain.CompareFilter;
 import com.matsinger.barofishserver.domain.compare.filter.dto.CompareFilterDto;
-import com.matsinger.barofishserver.global.error.ErrorCode;
-import com.matsinger.barofishserver.jwt.JwtService;
-import com.matsinger.barofishserver.jwt.TokenAuthType;
-import com.matsinger.barofishserver.jwt.TokenInfo;
 import com.matsinger.barofishserver.domain.product.application.ProductService;
 import com.matsinger.barofishserver.domain.product.domain.Product;
 import com.matsinger.barofishserver.domain.product.domain.ProductState;
-import com.matsinger.barofishserver.jwt.exception.JwtBusinessException;
+import com.matsinger.barofishserver.global.exception.BusinessException;
+import com.matsinger.barofishserver.jwt.JwtService;
+import com.matsinger.barofishserver.jwt.TokenAuthType;
+import com.matsinger.barofishserver.jwt.TokenInfo;
 import com.matsinger.barofishserver.utils.Common;
 import com.matsinger.barofishserver.utils.CustomResponse;
 import com.matsinger.barofishserver.utils.S3.S3Uploader;
@@ -28,7 +27,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 
 @RestController
 @RequiredArgsConstructor
@@ -70,7 +72,7 @@ public class CategoryController {
         category.setName(name);
         String imageUrl = null;
         if (categoryId == null) {
-            if (file == null) throw new IllegalArgumentException("상위 카테고리의 경우 이미지는 필수입니다.");
+            if (file == null) throw new BusinessException("상위 카테고리의 경우 이미지는 필수입니다.");
             imageUrl = s3.upload(file, new ArrayList<>(List.of("category")));
             category.setImage(imageUrl);
         } else {
@@ -123,7 +125,7 @@ public class CategoryController {
         }
         List<Product> products = productService.selectProductWithCategoryId(category.getId());
         if (products.stream().anyMatch(v -> v.getState().equals(ProductState.ACTIVE)))
-            throw new IllegalArgumentException("활성화 중인 상품이 있습니다.");
+            throw new BusinessException("활성화 중인 상품이 있습니다.");
         productService.saveAllProduct(products.stream().peek(v -> v.setCategory(null)).toList());
         categoryCommandService.delete(id);
         return ResponseEntity.ok(res);
@@ -175,11 +177,11 @@ public class CategoryController {
         
         TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
 
-        if (data.getCategoryId() == null) throw new IllegalArgumentException("카테고리 아이디를 입력해주세요.");
+        if (data.getCategoryId() == null) throw new BusinessException("카테고리 아이디를 입력해주세요.");
         if (data.getCompareFilterId() == null)
-            throw new IllegalArgumentException("비교하기 필터 아이디를 입력해주세요.");
+            throw new BusinessException("비교하기 필터 아이디를 입력해주세요.");
         Category category = categoryQueryService.findById(data.getCategoryId());
-        if (category.getCategoryId() != null) throw new IllegalArgumentException("1차 카테고리만 선택해주세요.");
+        if (category.getCategoryId() != null) throw new BusinessException("1차 카테고리만 선택해주세요.");
         CompareFilter compareFilter = compareFilterQueryService.selectCompareFilter(data.getCompareFilterId());
         CategoryFilterMap
                 categoryFilterMap =
@@ -197,9 +199,9 @@ public class CategoryController {
         TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
 
 
-        if (data.getCategoryId() == null) throw new IllegalArgumentException("카테고리 아이디를 입력해주세요.");
+        if (data.getCategoryId() == null) throw new BusinessException("카테고리 아이디를 입력해주세요.");
         if (data.getCompareFilterId() == null)
-            throw new IllegalArgumentException("비교하기 필터 아이디를 입력해주세요.");
+            throw new BusinessException("비교하기 필터 아이디를 입력해주세요.");
         Category category = categoryQueryService.findById(data.getCategoryId());
         CompareFilter compareFilter = compareFilterQueryService.selectCompareFilter(data.getCompareFilterId());
         CategoryFilterId categoryFilterId = new CategoryFilterId();

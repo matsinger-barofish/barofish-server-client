@@ -2,6 +2,7 @@ package com.matsinger.barofishserver.domain.store.application;
 
 import com.matsinger.barofishserver.domain.store.domain.Store;
 import com.matsinger.barofishserver.domain.store.repository.StoreRepository;
+import com.matsinger.barofishserver.global.exception.BusinessException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -13,6 +14,6 @@ public class StoreQueryService {
 
     public Store findById(int id) {
         return storeRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("파트너를 찾울 수 없습니다."));
+                .orElseThrow(() -> new BusinessException("파트너를 찾울 수 없습니다."));
     }
 }

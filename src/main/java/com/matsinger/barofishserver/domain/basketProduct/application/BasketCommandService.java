@@ -4,13 +4,14 @@ import com.matsinger.barofishserver.domain.basketProduct.domain.BasketProductInf
 import com.matsinger.barofishserver.domain.basketProduct.domain.BasketProductOption;
 import com.matsinger.barofishserver.domain.basketProduct.repository.BasketProductInfoRepository;
 import com.matsinger.barofishserver.domain.basketProduct.repository.BasketProductOptionRepository;
-import com.matsinger.barofishserver.domain.product.optionitem.domain.OptionItem;
-import com.matsinger.barofishserver.domain.product.optionitem.repository.OptionItemRepository;
 import com.matsinger.barofishserver.domain.order.domain.Orders;
 import com.matsinger.barofishserver.domain.order.orderprductinfo.domain.OrderProductInfo;
 import com.matsinger.barofishserver.domain.product.application.ProductService;
 import com.matsinger.barofishserver.domain.product.domain.Product;
 import com.matsinger.barofishserver.domain.product.domain.ProductDeliverFeeType;
+import com.matsinger.barofishserver.domain.product.optionitem.domain.OptionItem;
+import com.matsinger.barofishserver.domain.product.optionitem.repository.OptionItemRepository;
+import com.matsinger.barofishserver.global.exception.BusinessException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -82,7 +83,7 @@ public class BasketCommandService {
                             productService.selectOptionItem(optionId);
                     if (optionItem.getMaxAvailableAmount() != null &&
                             (info.getAmount() + amount > optionItem.getMaxAvailableAmount()))
-                        throw new IllegalArgumentException("최대 주문 수량을 초과하였습니다.");
+                        throw new BusinessException("최대 주문 수량을 초과하였습니다.");
 
                     info.setAmount(info.getAmount() + amount);
                     infoRepository.save(info);
@@ -92,7 +93,7 @@ public class BasketCommandService {
         if (!isExist) {
             OptionItem
                     optionItem =
-                    optionItemRepository.findById(optionId).orElseThrow(() -> new IllegalArgumentException(
+                    optionItemRepository.findById(optionId).orElseThrow(() -> new BusinessException(
                             "옵션 아이템 정보를 찾을 수 없습니다."));
             Product product = productService.selectProduct(productId);
             int deliveryFee = 0;

@@ -5,17 +5,16 @@ import com.matsinger.barofishserver.domain.notice.application.NoticeQueryService
 import com.matsinger.barofishserver.domain.notice.domain.Notice;
 import com.matsinger.barofishserver.domain.notice.domain.NoticeOrderBy;
 import com.matsinger.barofishserver.domain.notice.domain.NoticeType;
-import com.matsinger.barofishserver.global.error.ErrorCode;
+import com.matsinger.barofishserver.domain.notice.dto.NoticeAddReq;
+import com.matsinger.barofishserver.global.exception.BusinessException;
 import com.matsinger.barofishserver.jwt.JwtService;
 import com.matsinger.barofishserver.jwt.TokenAuthType;
 import com.matsinger.barofishserver.jwt.TokenInfo;
-import com.matsinger.barofishserver.domain.notice.dto.NoticeAddReq;
-import com.matsinger.barofishserver.jwt.exception.JwtBusinessException;
 import com.matsinger.barofishserver.utils.Common;
 import com.matsinger.barofishserver.utils.CustomResponse;
 import com.matsinger.barofishserver.utils.S3.S3Uploader;
 import jakarta.persistence.criteria.Predicate;
-import lombok.*;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -93,8 +92,8 @@ public class NoticeController {
 
                 jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
 
-        if (data.getType() == null) throw new IllegalArgumentException("타입을 입력해주세요.");
-        if (data.getContent() == null) throw new IllegalArgumentException("내용을 입력해주세요.");
+        if (data.getType() == null) throw new BusinessException("타입을 입력해주세요.");
+        if (data.getContent() == null) throw new BusinessException("내용을 입력해주세요.");
         String title = utils.validateString(data.getTitle(), 200L, "제목");
         String content = "";
         Notice

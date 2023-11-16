@@ -90,7 +90,7 @@
 //
 //                // then
 //                assertThatThrownBy(() -> userAuthCommandService.createUserAuth(request, savedUser))
-//                                .isInstanceOf(IllegalArgumentException.class)
+//                                .isInstanceOf(BusinessException.class)
 //                                .hasMessageContaining("정지된 유저입니다.");
 //        }
 //

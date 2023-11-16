@@ -4,18 +4,17 @@ import com.matsinger.barofishserver.domain.admin.log.application.AdminLogCommand
 import com.matsinger.barofishserver.domain.admin.log.application.AdminLogQueryService;
 import com.matsinger.barofishserver.domain.admin.log.domain.AdminLog;
 import com.matsinger.barofishserver.domain.admin.log.domain.AdminLogType;
+import com.matsinger.barofishserver.domain.report.application.ReportCommandService;
+import com.matsinger.barofishserver.domain.report.application.ReportQueryService;
+import com.matsinger.barofishserver.domain.report.domain.Report;
+import com.matsinger.barofishserver.domain.report.domain.ReportOrderBy;
 import com.matsinger.barofishserver.domain.report.dto.ReportDto;
 import com.matsinger.barofishserver.domain.review.application.ReviewQueryService;
 import com.matsinger.barofishserver.domain.review.domain.Review;
-import com.matsinger.barofishserver.global.error.ErrorCode;
+import com.matsinger.barofishserver.global.exception.BusinessException;
 import com.matsinger.barofishserver.jwt.JwtService;
 import com.matsinger.barofishserver.jwt.TokenAuthType;
 import com.matsinger.barofishserver.jwt.TokenInfo;
-import com.matsinger.barofishserver.domain.report.application.ReportCommandService;
-import com.matsinger.barofishserver.domain.report.application.ReportQueryService;
-import com.matsinger.barofishserver.domain.report.domain.ReportOrderBy;
-import com.matsinger.barofishserver.domain.report.domain.Report;
-import com.matsinger.barofishserver.jwt.exception.JwtBusinessException;
 import com.matsinger.barofishserver.utils.Common;
 import com.matsinger.barofishserver.utils.CustomResponse;
 import jakarta.persistence.criteria.Predicate;
@@ -110,9 +109,9 @@ public class ReportController {
                 TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth);
 
         Integer userId = tokenInfo.getId();
-        if (data.reviewId == null) throw new IllegalArgumentException("리뷰 아이디를 입력해주세요.");
+        if (data.reviewId == null) throw new BusinessException("리뷰 아이디를 입력해주세요.");
         if (reportQueryService.checkHasReported(userId, data.reviewId))
-            throw new IllegalArgumentException("이미 신고한 리뷰입니다.");
+            throw new BusinessException("이미 신고한 리뷰입니다.");
         Review review = reviewQueryService.selectReview(data.reviewId);
         String content = utils.validateString(data.content, 300L, "내용");
         Report

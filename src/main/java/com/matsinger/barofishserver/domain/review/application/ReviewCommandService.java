@@ -13,6 +13,7 @@ import com.matsinger.barofishserver.domain.store.application.StoreService;
 import com.matsinger.barofishserver.domain.store.dto.SimpleStore;
 import com.matsinger.barofishserver.domain.userinfo.domain.UserInfo;
 import com.matsinger.barofishserver.domain.userinfo.repository.UserInfoRepository;
+import com.matsinger.barofishserver.global.exception.BusinessException;
 import com.matsinger.barofishserver.utils.S3.S3Uploader;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -144,7 +145,7 @@ public class ReviewCommandService {
 
         Review findReview = reviewQueryService.findById(reviewId);
         if (findReview.getUserId() != userId) {
-            throw new IllegalArgumentException("타인의 리뷰입니다.");
+            throw new BusinessException("타인의 리뷰입니다.");
         }
 
         deleteAndSetEvaluations(reviewId, data);

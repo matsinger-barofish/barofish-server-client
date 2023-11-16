@@ -1,6 +1,7 @@
 package com.matsinger.barofishserver.jwt;
 
 import com.matsinger.barofishserver.global.error.ErrorCode;
+import com.matsinger.barofishserver.global.exception.BusinessException;
 import com.matsinger.barofishserver.jwt.exception.JwtBusinessException;
 import io.jsonwebtoken.*;
 import org.slf4j.Logger;
@@ -168,7 +169,7 @@ public class JwtProvider {
         } catch (UnsupportedJwtException e) {
             log.warn("JWT token is unsupported: {}", e.getMessage());
             throw new JwtException("지원하지 않는 토큰 정보입니다.");
-        } catch (IllegalArgumentException e) {
+        } catch (BusinessException e) {
             log.warn("JWT claims string is empty: {}", e.getMessage());
             throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
         }

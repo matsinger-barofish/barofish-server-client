@@ -10,13 +10,13 @@ import com.matsinger.barofishserver.domain.user.repository.UserRepository;
 import com.matsinger.barofishserver.domain.userauth.domain.LoginType;
 import com.matsinger.barofishserver.domain.userinfo.domain.UserInfo;
 import com.matsinger.barofishserver.domain.userinfo.repository.UserInfoRepository;
+import com.matsinger.barofishserver.global.exception.BusinessException;
 import com.matsinger.barofishserver.utils.Common;
 import com.matsinger.barofishserver.utils.CustomResponse;
 import com.matsinger.barofishserver.utils.RegexConstructor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.net.MalformedURLException;
 import java.util.regex.Pattern;
 
 @Service
@@ -33,10 +33,10 @@ public class UserInfoCommandService {
     public UserInfo updateUserInfo(Integer userId, UserUpdateReq request, String imageUrl) throws Exception {
 
         User findUser = userRepository.findById(userId).orElseThrow(() -> {
-            throw new IllegalStateException("유저 정보를 찾을 수 없습니다.");
+            throw new BusinessException("유저 정보를 찾을 수 없습니다.");
         });
         UserInfo findUserInfo = userInfoRepository.findByUserId(findUser.getId()).orElseThrow(() -> {
-            throw new IllegalArgumentException("유저 정보를 찾을 수 없습니다.");
+            throw new BusinessException("유저 정보를 찾을 수 없습니다.");
         });
 
         if (imageUrl != null) {
@@ -94,7 +94,7 @@ public class UserInfoCommandService {
 
         String nickname = util.validateString(request.getNickname(), 50L, "닉네임");
         if (userInfoRepository.findByNickname(nickname).isPresent()) {
-            throw new IllegalArgumentException("중복된 닉네임입니다.");
+            throw new BusinessException("중복된 닉네임입니다.");
         }
 
         UserInfo
@@ -117,20 +117,20 @@ public class UserInfoCommandService {
     public void setImageUrl(int userId, String imageUrl) {
         UserInfo
                 findUserInfo =
-                userInfoRepository.findByUserId(userId).orElseThrow(() -> new IllegalArgumentException(
+                userInfoRepository.findByUserId(userId).orElseThrow(() -> new BusinessException(
                         "유저 정보를 찾을 수 없습니다"));
         findUserInfo.setProfileImage(imageUrl);
     }
 
     private void verifyPhoneNumberIsExists(String fixedPhoneNumber) {
         if (userInfoRepository.findByPhone(fixedPhoneNumber).isPresent()) {
-            throw new IllegalArgumentException("회원가입된 이력이 있습니다.");
+            throw new BusinessException("회원가입된 이력이 있습니다.");
         }
     }
 
     private void verifyPhoneNumberFormat(String phoneNumber) {
         if (!Pattern.matches(re.phone, phoneNumber)) {
-            throw new IllegalArgumentException("휴대폰 번호 형식을 확인해주세요.");
+            throw new BusinessException("휴대폰 번호 형식을 확인해주세요.");
         }
     }
 }
