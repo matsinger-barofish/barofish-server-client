@@ -63,7 +63,7 @@ public class JwtProvider {
         try {
             return Jwts.parser().setSigningKey(secret.getBytes()).parseClaimsJws(token).getBody();
         } catch (RuntimeException e) {
-            throw new JwtBusinessException(e, ErrorCode.TOKEN_INVALID);
+            throw new JwtBusinessException(e, ErrorCode.TOKEN_EXPIRED);
         }
     }
 
@@ -73,7 +73,7 @@ public class JwtProvider {
             final Date expiration = getExpirationDateFromToken(token);
             return expiration.before(new Date());
         } catch (RuntimeException e) {
-            throw new JwtBusinessException(e, ErrorCode.TOKEN_INVALID);
+            throw new JwtBusinessException(e, ErrorCode.TOKEN_EXPIRED);
         }
     }
 
