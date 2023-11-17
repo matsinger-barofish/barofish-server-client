@@ -4,6 +4,7 @@ import com.matsinger.barofishserver.global.error.ErrorCode;
 import com.matsinger.barofishserver.global.exception.BusinessException;
 import com.matsinger.barofishserver.jwt.exception.JwtBusinessException;
 import io.jsonwebtoken.*;
+import io.jsonwebtoken.security.SignatureException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -63,8 +64,12 @@ public class JwtProvider {
     private Claims getAllClaimsFromToken(String token) {
         try {
             return Jwts.parser().setSigningKey(secret.getBytes()).parseClaimsJws(token).getBody();
+        } catch (SignatureException e) {
+            Claims retriedClaims = Jwts.parser().setSigningKey(secret).parseClaimsJws(token).getBody();
+            log.warn("[ERROR] jwt parsing error token : {}, userId: {}", token, retriedClaims.getId());
+            return retriedClaims;
         } catch (RuntimeException e) {
-            throw new JwtBusinessException(e, ErrorCode.TOKEN_EXPIRED);
+            throw new JwtBusinessException(e, ErrorCode.TOKEN_INVALID);
         }
     }
 
