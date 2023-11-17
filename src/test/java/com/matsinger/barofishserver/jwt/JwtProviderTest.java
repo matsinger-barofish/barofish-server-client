@@ -1,12 +1,9 @@
 package com.matsinger.barofishserver.jwt;
 
-import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest
 @ActiveProfiles("local")
@@ -25,8 +22,14 @@ class JwtProviderTest {
     }
 
     @Test
-    void isTokenExpired() {
-//        jwtProvider.isTokenExpired("Bearer eyJhbGciOiJIUzUxMiJ9.eyJpc3MiOiJVU0VSIiwianRpIjoiMTk5IiwiaWF0IjoxNjk5MjU0MTAzLCJleHAiOjE2OTk4NTg5MDN9.cqZBu1MzWkkync1piQRe6Lo--DEyAKS7-xqIQma1dBBTImM-urDlwfzqYL-mUn0JSl4J10EIbHv2a1mlndw_9A");
-        jwtProvider.isTokenExpired("eyJhbGciOiJIUzUxMiJ9.eyJpc3MiOiJVU0VSIiwianRpIjoiMSIsImlhdCI6MTY5OTk1MTcyOSwiZXhwIjoxNjk5OTUxNzM2fQ.2BZMj-RU15wnYjBPiwtuRIGP4uQr0nxDYZxv_Kd_BLGLCF7Uw_ISd64iDLLhRN9SJbEvS-s7xPFHaQAGPcVBHQ");
+    void tokenErrorCase() {
+        // normal
+        jwtProvider.getTypeFromToken("eyJhbGciOiJIUzUxMiJ9.eyJpc3MiOiJVU0VSIiwianRpIjoiNDA3IiwiaWF0IjoxNzAwMTQwMzYxLCJleHAiOjE3MDA3NDUxNjF9.awfw5se4jxgJHOEar4lzN8wo-W_pA5aM68gh88Ki-LfK3HJgh86cnCg9Cz3Sa-lNeQw3godhc08urDU3NGyp7A");
+
+        // not normal to noraml - made by jwt website
+        jwtProvider.getIdFromToken("eyJhbGciOiJIUzUxMiJ9.eyJpc3MiOiJVU0VSIiwianRpIjoiNDA3IiwiaWF0IjoxNjk5ODY2MzE1LCJleHAiOjE3MDA0NzExMTV9.VW53x7-xiSKTUjhA8_Lz5pvGHXa4-LE3b8OUEtuEKaBVE8CBVFrBwWL6WT1agOiYS40FPBaOwDn0Ny4NEO_Kfg");
+
+        // NOT NORMAL - error from andriod
+        jwtProvider.getIdFromToken("eyJhbGciOiJIUzUxMiJ9.eyJpc3MiOiJVU0VSIiwianRpIjoiNDA3IiwiaWF0IjoxNjk5ODY2MzE1LCJleHAiOjE3MDA0NzExMTV9.FB0GkZ0V8wnC-iGwFEi73upHBac3zGtw81nTMhv44lF0kWN84_4fv7vntabiKfLK4M_0r591l3kiOUUSe4xF6w");
     }
 }
