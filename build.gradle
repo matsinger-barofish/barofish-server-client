@@ -37,6 +37,7 @@ dependencies {
 
     /**jwt */
     implementation group: 'io.jsonwebtoken', name: 'jjwt-api', version: '0.11.5'
+    implementation 'org.projectlombok:lombok:1.18.28'
     runtimeOnly group: 'io.jsonwebtoken', name: 'jjwt-impl', version: '0.11.5'
     runtimeOnly group: 'io.jsonwebtoken', name: 'jjwt-jackson', version: '0.11.5'
 
@@ -52,13 +53,20 @@ dependencies {
     implementation 'org.apache.poi:poi:5.2.2'
     implementation 'org.apache.poi:poi-ooxml:5.2.2'
 
-    // 모니터닝을 위한 디펜던시
-    runtimeOnly 'io.micrometer:micrometer-registry-prometheus' // 마이크로미터 프로메테우스 구현체
-    implementation 'io.micrometer:micrometer-core'             // 마이크로미터
-    implementation 'io.micrometer:micrometer-tracing-bridge-brave'
-    implementation 'io.zipkin.reporter2:zipkin-reporter-brave'
-    implementation group: 'com.github.loki4j', name: 'loki-logback-appender', version: '1.4.2'
-    implementation 'org.springframework.boot:spring-boot-starter-actuator' // 엑츄에이터
+    // 모니터닝을 위한 디펜던시 시작
+//    implementation 'org.springframework.boot:spring-boot-starter-actuator' // 엑츄에이터
+//
+//    implementation 'io.micrometer:micrometer-registry-otlp'
+//    implementation 'io.micrometer:micrometer-tracing-bridge-otel:1.1.6'
+//    implementation 'io.opentelemetry:opentelemetry-api:1.31.0'
+//    implementation 'io.opentelemetry:opentelemetry-sdk:1.31.0'
+//    implementation 'io.opentelemetry:opentelemetry-exporter-otlp:1.31.0'
+//    implementation 'io.opentelemetry:opentelemetry-exporter-common:1.31.0'
+//    implementation 'io.opentelemetry:opentelemetry-exporter-otlp-common:1.31.0'
+//    implementation 'io.opentelemetry.instrumentation:opentelemetry-logback-appender-1.0:1.31.0-alpha'
+//    implementation 'io.opentelemetry.instrumentation:opentelemetry-instrumentation-api-semconv:1.31.0-alpha'
+    // 모니터닝을 위한 디펜던시 끝
+
 
     // ⭐ Spring boot 3.x이상에서 QueryDsl 패키지를 정의하는 방법
     // 참고: https://velog.io/@juhyeon1114/Spring-QueryDsl-gradle-%EC%84%A4%EC%A0%95-Spring-boot-3.0-%EC%9D%B4%EC%83%81
