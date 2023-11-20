@@ -27,9 +27,9 @@ public class BasketTastingNoteController {
     private final BasketTastingNoteQueryService basketTastingNoteQueryService;
 
     @PatchMapping("/add")
-    public ResponseEntity<CustomResponse<Object>> addTastingNoteToBasket(@RequestHeader(value = "Authorization", required = false) Optional<String> auth,
+    public ResponseEntity<CustomResponse<Boolean>> addTastingNoteToBasket(@RequestHeader(value = "Authorization", required = false) Optional<String> auth,
                                                                          @RequestBody Integer productId) {
-        CustomResponse<Object> response = new CustomResponse<>();
+        CustomResponse<Boolean> response = new CustomResponse<>();
 
         TokenInfo tokenInfo = jwtService.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth);
         if (tokenInfo.getType() != TokenAuthType.USER && !userQueryService.existsById(tokenInfo.getId())) {
@@ -58,9 +58,9 @@ public class BasketTastingNoteController {
     }
 
     @PatchMapping("/delete")
-    public ResponseEntity<CustomResponse<Object>> deleteTastingNoteToBasket(@RequestHeader(value = "Authorization", required = false) Optional<String> auth,
+    public ResponseEntity<CustomResponse<Boolean>> deleteTastingNoteToBasket(@RequestHeader(value = "Authorization", required = false) Optional<String> auth,
                                                                             @RequestBody Integer productId) {
-        CustomResponse<Object> response = new CustomResponse<>();
+        CustomResponse<Boolean> response = new CustomResponse<>();
 
         TokenInfo tokenInfo = jwtService.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth);
         if (tokenInfo.getType() != TokenAuthType.USER && !userQueryService.existsById(tokenInfo.getId())) {

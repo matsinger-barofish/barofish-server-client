@@ -40,9 +40,9 @@ public class TastingNoteController {
     }
 
     @PostMapping("/")
-    public ResponseEntity<CustomResponse<Object>> createTastingNote(@RequestHeader(value = "Authorization", required = false) Optional<String> auth,
+    public ResponseEntity<CustomResponse<Boolean>> createTastingNote(@RequestHeader(value = "Authorization", required = false) Optional<String> auth,
                                                                     @RequestBody TastingNoteCreateRequest request) {
-        CustomResponse<Object> response = new CustomResponse<>();
+        CustomResponse<Boolean> response = new CustomResponse<>();
 
         TokenInfo tokenInfo = jwtService.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth);
         if (tokenInfo.getType() != TokenAuthType.USER && !userQueryService.existsById(tokenInfo.getId())) {
@@ -54,20 +54,6 @@ public class TastingNoteController {
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping("/{productId}")
-    public ResponseEntity<CustomResponse<Object>> getProductTastingNote(@RequestHeader(value = "Authorization", required = false) Optional<String> auth,
-                                                                        @PathVariable(value = "productId") Integer productId) {
-        CustomResponse<Object> response = new CustomResponse<>();
-
-        jwtService.validateAndGetTokenInfo(Set.of(TokenAuthType.USER, TokenAuthType.ALLOW), auth);
-
-        ProductTastingNoteResponse productTastingNoteResponse = tastingNoteQueryService.getTastingNote(productId);
-
-        response.setIsSuccess(true);
-        response.setData(Optional.of(productTastingNoteResponse));
-        return ResponseEntity.ok(response);
-    }
-
     @GetMapping("/my")
     public ResponseEntity<CustomResponse<Object>> getMyProductTastingNotes(@RequestHeader(value = "Authorization", required = false) Optional<String> auth) {
 
@@ -75,9 +61,9 @@ public class TastingNoteController {
     }
 
     @GetMapping("/compare")
-    public ResponseEntity<CustomResponse<Object>> getMyProductTastingNotes(@RequestHeader(value = "Authorization", required = false) Optional<String> auth,
-                                                                           @RequestParam(value = "productIds") List<Integer> productIds) {
-        CustomResponse<Object> response = new CustomResponse<>();
+    public ResponseEntity<CustomResponse<List<ProductTastingNoteResponse>>> getMyProductTastingNotes(@RequestHeader(value = "Authorization", required = false) Optional<String> auth,
+                                                                                                       @RequestParam(value = "productIds") List<Integer> productIds) {
+        CustomResponse<List<ProductTastingNoteResponse>> response = new CustomResponse<>();
 
         jwtService.validateAndGetTokenInfo(Set.of(TokenAuthType.USER, TokenAuthType.ALLOW), auth);
 

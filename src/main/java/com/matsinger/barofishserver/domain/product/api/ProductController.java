@@ -20,26 +20,24 @@ import com.matsinger.barofishserver.domain.product.difficultDeliverAddress.appli
 import com.matsinger.barofishserver.domain.product.difficultDeliverAddress.domain.DifficultDeliverAddress;
 import com.matsinger.barofishserver.domain.product.domain.*;
 import com.matsinger.barofishserver.domain.product.dto.*;
+import com.matsinger.barofishserver.domain.product.option.domain.Option;
+import com.matsinger.barofishserver.domain.product.option.dto.OptionDto;
 import com.matsinger.barofishserver.domain.product.optionitem.domain.OptionItem;
 import com.matsinger.barofishserver.domain.product.productfilter.application.ProductFilterService;
 import com.matsinger.barofishserver.domain.product.productfilter.domain.ProductFilterValue;
-import com.matsinger.barofishserver.domain.review.dto.ReviewDto;
 import com.matsinger.barofishserver.domain.search.application.SearchKeywordQueryService;
+import com.matsinger.barofishserver.domain.searchFilter.application.SearchFilterQueryService;
+import com.matsinger.barofishserver.domain.searchFilter.domain.ProductSearchFilterMap;
 import com.matsinger.barofishserver.domain.store.application.StoreService;
 import com.matsinger.barofishserver.domain.store.domain.Store;
-import com.matsinger.barofishserver.global.error.ErrorCode;
+import com.matsinger.barofishserver.domain.tastingNote.application.TastingNoteQueryService;
+import com.matsinger.barofishserver.domain.tastingNote.dto.ProductTastingNoteResponse;
 import com.matsinger.barofishserver.jwt.JwtService;
 import com.matsinger.barofishserver.jwt.TokenAuthType;
 import com.matsinger.barofishserver.jwt.TokenInfo;
-import com.matsinger.barofishserver.domain.product.option.domain.Option;
-import com.matsinger.barofishserver.domain.product.option.dto.OptionDto;
-import com.matsinger.barofishserver.domain.searchFilter.application.SearchFilterQueryService;
-import com.matsinger.barofishserver.domain.searchFilter.domain.ProductSearchFilterMap;
-import com.matsinger.barofishserver.jwt.exception.JwtBusinessException;
 import com.matsinger.barofishserver.utils.Common;
 import com.matsinger.barofishserver.utils.CustomResponse;
 import com.matsinger.barofishserver.utils.S3.S3Uploader;
-import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -51,7 +49,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
 import java.sql.Timestamp;
 import java.util.*;
 
@@ -74,6 +71,7 @@ public class ProductController {
     private final AdminLogQueryService adminLogQueryService;
     private final AdminLogCommandService adminLogCommandService;
     private final AdminQueryService adminQueryService;
+    private final TastingNoteQueryService tastingNoteQueryService;
     private final JwtService jwt;
 
     private final Common utils;
@@ -267,7 +265,6 @@ public class ProductController {
 
         CustomResponse<SimpleProductDto> res = new CustomResponse<>();
 
-        
         TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(
                 Set.of(TokenAuthType.ALLOW, TokenAuthType.USER, TokenAuthType.ADMIN, TokenAuthType.PARTNER),
                 auth
@@ -277,6 +274,10 @@ public class ProductController {
         SimpleProductDto productDto = productService.convert2SimpleDto(
                 product,
                 tokenInfo.getType().equals(TokenAuthType.USER) ? tokenInfo.getId() : null);
+
+
+        ProductTastingNoteResponse tastingNoteResponse = tastingNoteQueryService.getTastingNoteInfo(productDto.getId());
+        productDto.setTastingNoteInfo(tastingNoteResponse);
 
         res.setData(Optional.ofNullable(productDto));
         return ResponseEntity.ok(res);

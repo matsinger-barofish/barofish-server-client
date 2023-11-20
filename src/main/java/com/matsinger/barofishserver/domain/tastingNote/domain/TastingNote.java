@@ -9,11 +9,9 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Builder
-@NoArgsConstructor
-@AllArgsConstructor
-@Table(name = "tasting_note")
 @Getter
+@Builder @NoArgsConstructor @AllArgsConstructor
+@Table(name = "tasting_note")
 public class TastingNote {
 
     @Id

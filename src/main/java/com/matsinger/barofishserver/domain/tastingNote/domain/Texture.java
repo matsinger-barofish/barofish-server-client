@@ -1,21 +1,26 @@
 package com.matsinger.barofishserver.domain.tastingNote.domain;
 
-import java.util.Arrays;
-import java.util.List;
-
 public enum Texture {
 
-    TENDERNESS_SOFTNESS("탱글함_부드러움", Arrays.asList(1, 2, 3, 4, 5)),
-    Texture_Texture2("식감2", Arrays.asList(1, 2, 3, 4, 5)),
-    Texture_Texture3("식감3", Arrays.asList(1, 2, 3, 4, 5)),
-    Texture_Texture4("식감4", Arrays.asList(1, 2, 3, 4, 5)),
-    Texture_Texture5("식감5", Arrays.asList(1, 2, 3, 4, 5));
+    TENDERNESS_SOFTNESS("탱글함_부드러움"),
+    texture2("식감2"),
+    texture3("식감3"),
+    texture4("식감4"),
+    texture5("식감5");
 
     private String texture;
-    private List<Integer> score;
 
-    Texture(String texture, List<Integer> score) {
+    Texture(String texture) {
         this.texture = texture;
-        this.score = score;
+    }
+
+    public String findBy(String taste) {
+        for (Texture texture : Texture.values()) {
+            String stringTexture = texture.toString().toLowerCase();
+            if (stringTexture.equals(taste)) {
+                return stringTexture;
+            }
+        }
+        throw new IllegalArgumentException("상품의 식감 정보를 찾을 수 없습니다.");
     }
 }

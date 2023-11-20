@@ -1,21 +1,26 @@
 package com.matsinger.barofishserver.domain.tastingNote.domain;
 
-import java.util.Arrays;
-import java.util.List;
-
 public enum TastingType {
 
-    OILY("기름기", Arrays.asList(1, 2, 3, 4, 5)),
-    TASTE2("맛2", Arrays.asList(1, 2, 3, 4, 5)),
-    TASTE3("맛3", Arrays.asList(1, 2, 3, 4, 5)),
-    TASTE4("맛4", Arrays.asList(1, 2, 3, 4, 5)),
-    TASTE5("맛5", Arrays.asList(1, 2, 3, 4, 5));
+    OILY("기름기"),
+    TASTE2("맛2"),
+    TASTE3("맛3"),
+    TASTE4("맛4"),
+    TASTE5("맛5");
 
     private String taste;
-    private List<Integer> score;
 
-    TastingType(String taste, List<Integer> score) {
+    TastingType(String taste) {
         this.taste = taste;
-        this.score = score;
+    }
+
+    public String findBy(String taste) {
+        for (TastingType type : TastingType.values()) {
+            String stringType = type.toString().toLowerCase();
+            if (stringType.equals(taste)) {
+                return stringType;
+            }
+        }
+        throw new IllegalArgumentException("상품의 맛 정보를 찾을 수 없습니다.");
     }
 }
