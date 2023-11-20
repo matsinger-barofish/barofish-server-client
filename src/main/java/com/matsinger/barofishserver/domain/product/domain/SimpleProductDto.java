@@ -10,6 +10,7 @@ import com.matsinger.barofishserver.domain.store.dto.SimpleStore;
 import com.matsinger.barofishserver.domain.product.productfilter.dto.ProductFilterValueDto;
 import com.matsinger.barofishserver.domain.product.dto.ProductListDto;
 import com.matsinger.barofishserver.domain.searchFilter.dto.SearchFilterFieldDto;
+import com.matsinger.barofishserver.domain.tastingNote.dto.ProductTastingNoteResponse;
 import lombok.*;
 
 import java.sql.Timestamp;
@@ -65,4 +66,9 @@ public class SimpleProductDto {
     @Builder.Default
     List<InquiryDto> inquiries = new ArrayList<>();
 
+    ProductTastingNoteResponse tastingNoteInfo;
+
+    public void setTastingNote(ProductTastingNoteResponse tastingNoteInfo) {
+        this.tastingNoteInfo = tastingNoteInfo;
+    }
 }

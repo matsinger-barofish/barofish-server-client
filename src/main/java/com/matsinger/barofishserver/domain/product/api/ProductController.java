@@ -70,6 +70,7 @@ public class ProductController {
     private final AdminLogQueryService adminLogQueryService;
     private final AdminLogCommandService adminLogCommandService;
     private final AdminQueryService adminQueryService;
+    private final TastingNoteQueryService tastingNoteQueryService;
     private final JwtService jwt;
 
     private final Common utils;
@@ -263,7 +264,6 @@ public class ProductController {
 
         CustomResponse<SimpleProductDto> res = new CustomResponse<>();
 
-        
         TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(
                 Set.of(TokenAuthType.ALLOW, TokenAuthType.USER, TokenAuthType.ADMIN, TokenAuthType.PARTNER),
                 auth
@@ -273,6 +273,10 @@ public class ProductController {
         SimpleProductDto productDto = productService.convert2SimpleDto(
                 product,
                 tokenInfo.getType().equals(TokenAuthType.USER) ? tokenInfo.getId() : null);
+
+
+        ProductTastingNoteResponse tastingNoteResponse = tastingNoteQueryService.getTastingNoteInfo(productDto.getId());
+        productDto.setTastingNoteInfo(tastingNoteResponse);
 
         res.setData(Optional.ofNullable(productDto));
         return ResponseEntity.ok(res);

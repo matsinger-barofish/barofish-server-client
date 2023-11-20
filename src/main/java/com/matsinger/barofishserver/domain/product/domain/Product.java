@@ -122,6 +122,15 @@ public class Product {
     @Column(name = "item_code")
     private String itemCode;
 
+    @Column(name = "difficulty_level_of_trimming", length =10)
+    private String difficultyLevelOfTrimming;
+
+    @Column(name = "the_scent_of_the_sea", length = 10)
+    private String theScentOfTheSea;
+
+    @Column(name = "recommended_cooking_way", length = 10)
+    private String recommendedCookingWay;
+
     public void setPointRate(Float pointRate) {
         this.pointRate = pointRate / 100;
     }
