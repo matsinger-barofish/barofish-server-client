@@ -43,9 +43,7 @@ public class BasketTastingNoteQueryService {
                 resultBuilder.append(c);
             }
         }
-
         String bracketRemovedString = resultBuilder.toString();
-
         return bracketRemovedString.split(", ")[0];
     }
 

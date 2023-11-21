@@ -3,7 +3,6 @@ package com.matsinger.barofishserver.domain.tastingNote.application;
 import com.matsinger.barofishserver.domain.product.application.ProductQueryService;
 import com.matsinger.barofishserver.domain.product.domain.Product;
 import com.matsinger.barofishserver.domain.product.domain.ProductState;
-import com.matsinger.barofishserver.domain.product.repository.ProductRepository;
 import com.matsinger.barofishserver.domain.tastingNote.domain.TastingNote;
 import com.matsinger.barofishserver.domain.tastingNote.domain.TastingNoteTastes;
 import com.matsinger.barofishserver.domain.tastingNote.domain.TastingNoteTextures;
@@ -17,6 +16,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 @Service
@@ -27,7 +27,6 @@ public class TastingNoteQueryService {
     private final TastingNoteRepository tastingNoteRepository;
     private final TastingNoteQueryRepository tastingNoteQueryRepository;
     private final ProductQueryService productQueryService;
-    private final ProductRepository productRepository;
 
     public TastingNote findByOrderProductInfoId(Integer orderProductInfoId) {
         return tastingNoteRepository.findByOrderProductInfoId(orderProductInfoId)
@@ -58,7 +57,7 @@ public class TastingNoteQueryService {
     }
 
     @NotNull
-    private static ProductTastingNoteResponse convertToResponse(ProductTastingNoteInquiryDto productTastingNoteInquiryDto) {
+    private ProductTastingNoteResponse convertToResponse(ProductTastingNoteInquiryDto productTastingNoteInquiryDto) {
         TastingNoteTastes tastes = productTastingNoteInquiryDto.getTastes();
         tastes.sortByScore();
         TastingNoteTextures textures = productTastingNoteInquiryDto.getTextures();
@@ -67,8 +66,23 @@ public class TastingNoteQueryService {
         ProductTastingNoteResponse tastingNoteResponse = new ProductTastingNoteResponse(tastes, textures);
         tastingNoteResponse.setDifficultyLevelOfTrimming(productTastingNoteInquiryDto.getDifficultyLevelOfTrimming());
         tastingNoteResponse.setTheScentOfTheSea(productTastingNoteInquiryDto.getTheScentOfTheSea());
-        tastingNoteResponse.setRecommendedCookingWay(productTastingNoteInquiryDto.getRecommendedCookingWay());
+
+        List<String> recommendedCookingWays = convertToArray(
+                productTastingNoteInquiryDto.getRecommendedCookingWay()
+        );
+        tastingNoteResponse.setRecommendedCookingWay(recommendedCookingWays);
         return tastingNoteResponse;
+    }
+
+    private List<String> convertToArray(String arrayFormatString) {
+        StringBuilder resultBuilder = new StringBuilder(arrayFormatString.length());
+        for (char c : arrayFormatString.toCharArray()) {
+            if (c != '[' && c != ']') {
+                resultBuilder.append(c);
+            }
+        }
+        String bracketRemovedString = resultBuilder.toString();
+        return Arrays.stream(bracketRemovedString.split(", ")).toList();
     }
 
     public List<ProductTastingNoteResponse> compareTastingNotes(List<Integer> productIds) {
