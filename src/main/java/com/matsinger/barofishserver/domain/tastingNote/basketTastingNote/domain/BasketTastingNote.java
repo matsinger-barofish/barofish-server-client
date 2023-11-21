@@ -1,5 +1,6 @@
 package com.matsinger.barofishserver.domain.tastingNote.basketTastingNote.domain;
 
+import com.matsinger.barofishserver.domain.product.domain.Product;
 import com.matsinger.barofishserver.domain.user.domain.User;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -20,10 +21,11 @@ public class BasketTastingNote {
     @Column(name = "id", nullable = false)
     private int id;
 
-    @Column(name = "product_id", nullable = false)
-    private Integer productId;
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "product_id", nullable = false)
+    private Product product;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 }

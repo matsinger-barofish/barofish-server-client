@@ -2,8 +2,6 @@ package com.matsinger.barofishserver.domain.order.application;
 
 import com.matsinger.barofishserver.domain.order.domain.Orders;
 import com.matsinger.barofishserver.domain.order.repository.OrderRepository;
-import com.matsinger.barofishserver.global.exception.BusinessException;
-import com.matsinger.barofishserver.domain.user.repository.UserRepository;
 import com.matsinger.barofishserver.domain.user.repository.UserRepository;
 import com.matsinger.barofishserver.global.exception.BusinessException;
 import lombok.RequiredArgsConstructor;

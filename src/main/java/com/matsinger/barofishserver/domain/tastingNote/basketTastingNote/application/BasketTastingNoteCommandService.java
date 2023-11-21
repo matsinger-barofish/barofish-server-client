@@ -6,6 +6,7 @@ import com.matsinger.barofishserver.domain.tastingNote.basketTastingNote.domain.
 import com.matsinger.barofishserver.domain.tastingNote.basketTastingNote.repository.BasketTastingNoteRepository;
 import com.matsinger.barofishserver.domain.user.application.UserQueryService;
 import com.matsinger.barofishserver.domain.user.domain.User;
+import com.matsinger.barofishserver.global.exception.BusinessException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,9 +24,14 @@ public class BasketTastingNoteCommandService {
         Product findedProduct = productQueryService.findById(productId);
         User findedUser = userQueryService.findById(userId);
 
+        boolean isProductExists = basketTastingNoteRepository.existsByUserIdAndProductId(userId, productId);
+        if (isProductExists) {
+            throw new BusinessException("저장함에 같은 상품이 있습니다.");
+        }
+
         basketTastingNoteRepository.save(
                 BasketTastingNote.builder()
-                        .productId(findedProduct.getId())
+                        .product(findedProduct)
                         .user(findedUser)
                         .build()
         );
@@ -33,13 +39,16 @@ public class BasketTastingNoteCommandService {
 
     @Transactional
     public void deleteTastingNote(Integer userId, Integer productId) {
-        Product findedProduct = productQueryService.findById(productId);
-        User findedUser = userQueryService.findById(userId);
+
+        boolean isProductExists = basketTastingNoteRepository.existsByUserIdAndProductId(userId, productId);
+        if (!isProductExists) {
+            throw new BusinessException("상품이 존재하지 않습니다.");
+        }
 
         try {
             basketTastingNoteRepository.deleteByUserIdAndProductId(userId, productId);
         } catch (RuntimeException e) {
-            throw new IllegalArgumentException("상품 정보를 찾을 수 없습니다.");
+            throw new BusinessException("상품 정보를 찾을 수 없습니다.");
         }
     }
 }

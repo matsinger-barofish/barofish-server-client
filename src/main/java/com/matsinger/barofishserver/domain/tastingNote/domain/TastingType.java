@@ -1,5 +1,7 @@
 package com.matsinger.barofishserver.domain.tastingNote.domain;
 
+import com.matsinger.barofishserver.global.exception.BusinessException;
+
 public enum TastingType {
 
     OILY("기름기"),
@@ -21,6 +23,6 @@ public enum TastingType {
                 return stringType;
             }
         }
-        throw new IllegalArgumentException("상품의 맛 정보를 찾을 수 없습니다.");
+        throw new BusinessException("상품의 맛 정보를 찾을 수 없습니다.");
     }
 }

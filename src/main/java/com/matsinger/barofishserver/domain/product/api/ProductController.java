@@ -30,7 +30,9 @@ import com.matsinger.barofishserver.domain.searchFilter.application.SearchFilter
 import com.matsinger.barofishserver.domain.searchFilter.domain.ProductSearchFilterMap;
 import com.matsinger.barofishserver.domain.store.application.StoreService;
 import com.matsinger.barofishserver.domain.store.domain.Store;
+import com.matsinger.barofishserver.global.exception.BusinessException;
 import com.matsinger.barofishserver.domain.tastingNote.application.TastingNoteQueryService;
+import com.matsinger.barofishserver.domain.tastingNote.basketTastingNote.application.BasketTastingNoteQueryService;
 import com.matsinger.barofishserver.domain.tastingNote.dto.ProductTastingNoteResponse;
 import com.matsinger.barofishserver.global.exception.BusinessException;
 import com.matsinger.barofishserver.jwt.JwtService;
@@ -78,6 +80,7 @@ public class ProductController {
     private final Common utils;
 
     private final S3Uploader s3;
+    private final BasketTastingNoteQueryService basketTastingNoteQueryService;
 
     @GetMapping("/recent-view")
     public ResponseEntity<CustomResponse<List<ProductListDto>>> selectRecentViewList(@RequestParam(value = "ids") String ids) {
@@ -276,7 +279,12 @@ public class ProductController {
                 product,
                 tokenInfo.getType().equals(TokenAuthType.USER) ? tokenInfo.getId() : null);
 
+        boolean isSaved = false;
+        if (tokenInfo.getType().equals(TokenAuthType.USER)) {
+            isSaved = basketTastingNoteQueryService.isSaved(tokenInfo.getId(), id);
+        }
 
+        productDto.setIsLike(isSaved);
         ProductTastingNoteResponse tastingNoteResponse = tastingNoteQueryService.getTastingNoteInfo(productDto.getId());
         productDto.setTastingNoteInfo(tastingNoteResponse);
 

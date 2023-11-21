@@ -28,7 +28,7 @@ class BasketTastingNoteCommandServiceTest {
         basketTastingNoteCommandService.addTastingNote(10000, 10000);
         // then
         assertThat(basketTastingNoteRepository.findAllByUserId(10000).get(0).getUser().getId()).isEqualTo(10000);
-        assertThat(basketTastingNoteRepository.findAllByUserId(10000).get(0).getProductId()).isEqualTo(10000);
+        assertThat(basketTastingNoteRepository.findAllByUserId(10000).get(0).getProduct().getId()).isEqualTo(10000);
     }
 
     @DisplayName("테이스팅노트 바구니에서 테이스팅노트를 삭제할 수 있다.")

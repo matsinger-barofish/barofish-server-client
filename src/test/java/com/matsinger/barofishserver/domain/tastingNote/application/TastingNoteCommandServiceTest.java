@@ -118,6 +118,6 @@ class TastingNoteCommandServiceTest {
 
         // then
         assertThatThrownBy(() -> tastingNoteCommandService.createTastingNote(userId, request))
-                .isInstanceOf(IllegalArgumentException.class);
+                .isInstanceOf(BusinessException.class);
     }
 }

@@ -17,7 +17,7 @@ public class ProductTastingNoteResponse {
 
     private String difficultyLevelOfTrimming;
     private String theScentOfTheSea;
-    private String recommendedCookingWay;
+    private List<String> recommendedCookingWay;
 
     public ProductTastingNoteResponse(TastingNoteTastes tastes, TastingNoteTextures textures) {
         this.tastes = tastes.getTastes();
@@ -36,7 +36,7 @@ public class ProductTastingNoteResponse {
         this.theScentOfTheSea = theScentOfTheSea;
     }
 
-    public void setRecommendedCookingWay(String recommendedCookingWay) {
+    public void setRecommendedCookingWay(List<String> recommendedCookingWay) {
         this.recommendedCookingWay = recommendedCookingWay;
     }
 }
