@@ -12,6 +12,7 @@ import lombok.NoArgsConstructor;
 public class TastingNoteCompareBasketProductDto {
 
     private Integer id;
+    private Integer productId;
     private ProductState state;
     private String image;
     private String title;
@@ -26,8 +27,13 @@ public class TastingNoteCompareBasketProductDto {
     private String storeImage;
     private ProductDeliverFeeType deliverFeeType;
     private Integer parentCategoryId;
+    private boolean isTastingNoteExists;
 
     public void setImage(String image) {
         this.image = image;
+    }
+
+    public void isTastingNoteExists(boolean isTastingNoteExists) {
+        this.isTastingNoteExists = isTastingNoteExists;
     }
 }

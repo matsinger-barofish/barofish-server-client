@@ -3,6 +3,7 @@ package com.matsinger.barofishserver.domain.tastingNote.basketTastingNote.applic
 import com.matsinger.barofishserver.domain.tastingNote.basketTastingNote.dto.TastingNoteCompareBasketProductDto;
 import com.matsinger.barofishserver.domain.tastingNote.basketTastingNote.repository.BasketTastingNoteQueryRepository;
 import com.matsinger.barofishserver.domain.tastingNote.basketTastingNote.repository.BasketTastingNoteRepository;
+import com.matsinger.barofishserver.domain.tastingNote.repository.TastingNoteRepository;
 import com.matsinger.barofishserver.domain.user.application.UserQueryService;
 import com.matsinger.barofishserver.domain.user.domain.User;
 import lombok.RequiredArgsConstructor;
@@ -19,6 +20,7 @@ public class BasketTastingNoteQueryService {
     private final BasketTastingNoteRepository basketTastingNoteRepository;
     private final UserQueryService userQueryService;
     private final BasketTastingNoteQueryRepository basketTastingNoteQueryRepository;
+    private final TastingNoteRepository tastingNoteRepository;
 
     public List<TastingNoteCompareBasketProductDto> getAllBasketTastingNotes(Integer userId) {
         User findedUser = userQueryService.findById(userId);
@@ -27,6 +29,8 @@ public class BasketTastingNoteQueryService {
         for (TastingNoteCompareBasketProductDto basketProductDto : basketProductDtos) {
             String firstImage = getFirstElementFromArrayFormatString(basketProductDto.getImage());
             basketProductDto.setImage(firstImage);
+
+            basketProductDto.isTastingNoteExists(tastingNoteRepository.existsByProductId(basketProductDto.getProductId()));
         }
 
         return basketProductDtos;

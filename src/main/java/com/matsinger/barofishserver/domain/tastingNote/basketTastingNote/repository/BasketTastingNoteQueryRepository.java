@@ -26,6 +26,7 @@ public class BasketTastingNoteQueryRepository {
         return queryFactory.select(Projections.fields(
                         TastingNoteCompareBasketProductDto.class,
                         basketTastingNote.id.as("id"),
+                        product.id.as("productId"),
                         product.state.as("state"),
                         product.images.as("image"),
                         product.needTaxation.as("isNeedTaxation"),

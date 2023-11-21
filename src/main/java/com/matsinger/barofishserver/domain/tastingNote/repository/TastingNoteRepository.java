@@ -12,4 +12,6 @@ public interface TastingNoteRepository extends JpaRepository<TastingNote, Intege
     Optional<TastingNote> findByOrderProductInfoId(Integer orderProductInfoId);
 
     Boolean existsByOrderProductInfoId(Integer orderProductInfoId);
+
+    boolean existsByProductId(Integer productId);
 }

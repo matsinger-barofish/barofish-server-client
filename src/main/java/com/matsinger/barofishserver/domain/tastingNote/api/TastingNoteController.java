@@ -1,6 +1,5 @@
 package com.matsinger.barofishserver.domain.tastingNote.api;
 
-import com.matsinger.barofishserver.domain.compare.dto.CompareMain;
 import com.matsinger.barofishserver.domain.tastingNote.application.TastingNoteCommandService;
 import com.matsinger.barofishserver.domain.tastingNote.application.TastingNoteQueryService;
 import com.matsinger.barofishserver.domain.tastingNote.dto.ProductTastingNoteResponse;
@@ -29,15 +28,6 @@ public class TastingNoteController {
     private final TastingNoteCommandService tastingNoteCommandService;
     private final TastingNoteQueryService tastingNoteQueryService;
     private final UserQueryService userQueryService;
-
-    @GetMapping("/main")
-    public ResponseEntity<CustomResponse<CompareMain>> selectMain(
-            @RequestHeader(value = "Authorization") Optional<String> auth,
-            @RequestParam(value = "page", required = false, defaultValue = "0") Integer page,
-            @RequestParam(value = "take", required = false, defaultValue = "10") Integer take) {
-
-        return null;
-    }
 
     @PostMapping("/")
     public ResponseEntity<CustomResponse<Boolean>> createTastingNote(@RequestHeader(value = "Authorization", required = false) Optional<String> auth,
