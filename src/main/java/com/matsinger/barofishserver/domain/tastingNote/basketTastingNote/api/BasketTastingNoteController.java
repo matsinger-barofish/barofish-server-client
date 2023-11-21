@@ -33,7 +33,7 @@ public class BasketTastingNoteController {
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
-    @PostMapping("/add/{productId}")
+    @PostMapping("/add")
     public ResponseEntity<CustomResponse<Boolean>> addTastingNoteToBasket(@RequestHeader(value = "Authorization", required = false) Optional<String> auth,
                                                                          @RequestBody BasketTastingNoteAddDeleteReq request) {
         CustomResponse<Boolean> response = new CustomResponse<>();
@@ -66,7 +66,7 @@ public class BasketTastingNoteController {
         return ResponseEntity.ok(response);
     }
 
-    @PostMapping("/delete/{productId}")
+    @PostMapping("/delete")
     public ResponseEntity<CustomResponse<Boolean>> deleteTastingNoteToBasket(@RequestHeader(value = "Authorization", required = false) Optional<String> auth,
                                                                             @PathVariable BasketTastingNoteAddDeleteReq request) {
         CustomResponse<Boolean> response = new CustomResponse<>();

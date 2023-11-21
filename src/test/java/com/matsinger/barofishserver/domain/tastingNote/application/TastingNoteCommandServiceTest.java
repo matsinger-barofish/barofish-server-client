@@ -8,6 +8,7 @@ import com.matsinger.barofishserver.domain.tastingNote.dto.TastingNoteCreateRequ
 import com.matsinger.barofishserver.domain.tastingNote.repository.TastingNoteRepository;
 import com.matsinger.barofishserver.domain.user.application.UserQueryService;
 import com.matsinger.barofishserver.domain.user.domain.User;
+import com.matsinger.barofishserver.global.exception.BusinessException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
