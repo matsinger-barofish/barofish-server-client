@@ -39,6 +39,7 @@ public class BasketTastingNoteController {
             throw new JwtBusinessException(ErrorCode.NOT_ALLOWED);
         }
 
+
         basketTastingNoteCommandService.addTastingNote(tokenInfo.getId(), request.getProductId());
 
         response.setIsSuccess(true);
