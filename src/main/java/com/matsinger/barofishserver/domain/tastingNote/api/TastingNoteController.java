@@ -57,8 +57,8 @@ public class TastingNoteController {
 
         jwtService.validateAndGetTokenInfo(Set.of(TokenAuthType.USER, TokenAuthType.ALLOW), auth);
 
-        if (productIds.size() > 3) {
-            throw new IllegalArgumentException("최대 3개까지 비교할 수 있습니다.");
+        if (productIds.size() > 2) {
+            throw new IllegalArgumentException("최대 2개까지 비교할 수 있습니다.");
         }
 
         List<ProductTastingNoteResponse> tastingNotes = tastingNoteQueryService.compareTastingNotes(productIds);
