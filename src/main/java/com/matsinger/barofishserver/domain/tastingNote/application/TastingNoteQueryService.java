@@ -49,7 +49,7 @@ public class TastingNoteQueryService {
             productTastingNoteInquiryDto = tastingNoteQueryRepository.getTastingNotesScore(findedProduct.getId());
             productTastingNoteInquiryDto.roundScoresToSecondDecimalPlace();
         } catch (RuntimeException e) {
-            throw new BusinessException("상품의 테이스팅 노트가 없습니다.");
+            return null;
         }
 
         ProductTastingNoteResponse tastingNoteResponse = convertToResponse(productTastingNoteInquiryDto);

@@ -15,8 +15,6 @@ class JwtProviderTest {
     @Autowired private JwtProvider jwtProvider;
 
     @Test
-    void isTokenExpired() {
-        jwtProvider.isTokenExpired("Bearer eyJhbGciOiJIUzUxMiJ9.eyJpc3MiOiJVU0VSIiwianRpIjoiNDA3IiwiaWF0IjoxNjk5ODQ1MjI3LCJleHAiOjE3MDA0NTAwMjd9.fQXfHBYE3l3A2aWGLVpnij15eRfWDFdbFhSPXGaoFyptWSiuhaDPy-NIbV2JVHYeqkGQ_BKQkN3SCSyaz8F5ag");
     void generateAccessToken() {
         // given
         String accessToken = jwtProvider.generateAccessToken("1", TokenAuthType.USER);

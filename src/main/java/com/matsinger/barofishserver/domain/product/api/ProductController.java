@@ -34,6 +34,7 @@ import com.matsinger.barofishserver.global.exception.BusinessException;
 import com.matsinger.barofishserver.domain.tastingNote.application.TastingNoteQueryService;
 import com.matsinger.barofishserver.domain.tastingNote.basketTastingNote.application.BasketTastingNoteQueryService;
 import com.matsinger.barofishserver.domain.tastingNote.dto.ProductTastingNoteResponse;
+import com.matsinger.barofishserver.global.exception.BusinessException;
 import com.matsinger.barofishserver.jwt.JwtService;
 import com.matsinger.barofishserver.jwt.TokenAuthType;
 import com.matsinger.barofishserver.jwt.TokenInfo;
