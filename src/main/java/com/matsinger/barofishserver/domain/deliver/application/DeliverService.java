@@ -4,9 +4,9 @@ import com.matsinger.barofishserver.domain.admin.log.application.AdminLogCommand
 import com.matsinger.barofishserver.domain.admin.log.application.AdminLogQueryService;
 import com.matsinger.barofishserver.domain.admin.log.domain.AdminLog;
 import com.matsinger.barofishserver.domain.admin.log.domain.AdminLogType;
+import com.matsinger.barofishserver.domain.deliver.domain.Deliver;
 import com.matsinger.barofishserver.domain.deliver.domain.DeliveryCompany;
 import com.matsinger.barofishserver.domain.deliver.repository.DeliveryCompanyRepository;
-import com.matsinger.barofishserver.domain.deliver.domain.Deliver;
 import com.matsinger.barofishserver.domain.notification.application.NotificationCommandService;
 import com.matsinger.barofishserver.domain.notification.dto.NotificationMessage;
 import com.matsinger.barofishserver.domain.notification.dto.NotificationMessageType;
@@ -16,11 +16,12 @@ import com.matsinger.barofishserver.domain.order.orderprductinfo.domain.OrderPro
 import com.matsinger.barofishserver.domain.order.orderprductinfo.domain.OrderProductState;
 import com.matsinger.barofishserver.domain.product.application.ProductService;
 import com.matsinger.barofishserver.domain.product.domain.Product;
-import com.matsinger.barofishserver.domain.user.deliverplace.repository.DeliverPlaceRepository;
-import com.matsinger.barofishserver.domain.user.dto.UserJoinReq;
 import com.matsinger.barofishserver.domain.user.deliverplace.DeliverPlace;
+import com.matsinger.barofishserver.domain.user.deliverplace.repository.DeliverPlaceRepository;
 import com.matsinger.barofishserver.domain.user.domain.User;
+import com.matsinger.barofishserver.domain.user.dto.UserJoinReq;
 import com.matsinger.barofishserver.domain.userinfo.domain.UserInfo;
+import com.matsinger.barofishserver.global.exception.BusinessException;
 import com.matsinger.barofishserver.utils.Common;
 import lombok.RequiredArgsConstructor;
 import org.json.JSONArray;
@@ -155,7 +156,7 @@ public class DeliverService {
         String addressDetail = util.validateString(request.getAddressDetail(), 100L, "상세 주소");
 
         if (request.getPostalCode() == null) {
-            throw new IllegalArgumentException("우편 번호를 입력해주세요.");
+            throw new BusinessException("우편 번호를 입력해주세요.");
         }
 
         DeliverPlace

@@ -7,14 +7,13 @@ import com.matsinger.barofishserver.domain.data.tip.domain.*;
 import com.matsinger.barofishserver.domain.data.tip.dto.AddTipReq;
 import com.matsinger.barofishserver.domain.data.tip.dto.TipInfoUpdateReq;
 import com.matsinger.barofishserver.domain.data.tip.dto.UpdateTipStateReq;
-import com.matsinger.barofishserver.global.error.ErrorCode;
-import com.matsinger.barofishserver.jwt.JwtService;
-import com.matsinger.barofishserver.jwt.TokenAuthType;
-import com.matsinger.barofishserver.jwt.TokenInfo;
 import com.matsinger.barofishserver.domain.siteInfo.application.SiteInfoCommandService;
 import com.matsinger.barofishserver.domain.siteInfo.application.SiteInfoQueryService;
 import com.matsinger.barofishserver.domain.siteInfo.domain.SiteInformation;
-import com.matsinger.barofishserver.jwt.exception.JwtBusinessException;
+import com.matsinger.barofishserver.global.exception.BusinessException;
+import com.matsinger.barofishserver.jwt.JwtService;
+import com.matsinger.barofishserver.jwt.TokenAuthType;
+import com.matsinger.barofishserver.jwt.TokenInfo;
 import com.matsinger.barofishserver.utils.Common;
 import com.matsinger.barofishserver.utils.CustomResponse;
 import com.matsinger.barofishserver.utils.S3.S3Uploader;
@@ -123,7 +122,7 @@ public class TipController {
         String description = utils.validateString(data.getDescription(), 200L, "설명");
         String imageUrl = s3.upload(image, new ArrayList<>(List.of("tip")));
         String imageDetailUrl = s3.upload(imageDetail, new ArrayList<>(List.of("tip")));
-        if (data.getContent() == null) throw new IllegalArgumentException("내용을 입력해주세요.");
+        if (data.getContent() == null) throw new BusinessException("내용을 입력해주세요.");
         String contentUrl = s3.uploadEditorStringToS3(data.getContent(), new ArrayList<>(List.of("tip")));
         Tip
                 tip =
@@ -218,8 +217,8 @@ public class TipController {
 
                 TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
 
-        if (data.getTipIds() == null) throw new IllegalArgumentException("아이디를 입력해주세요.");
-        if (data.getState() == null) throw new IllegalArgumentException("변경할 상태를 입력해주세요.");
+        if (data.getTipIds() == null) throw new BusinessException("아이디를 입력해주세요.");
+        if (data.getState() == null) throw new BusinessException("변경할 상태를 입력해주세요.");
         List<Tip> tips = tipQueryService.selectTipListWithIds(data.getTipIds());
         tips.forEach(v -> v.setState(data.getState()));
         tipCommandService.updateTipList(tips);

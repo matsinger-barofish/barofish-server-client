@@ -1,13 +1,12 @@
 package com.matsinger.barofishserver.domain.productinfonotice.api;
 
-import com.matsinger.barofishserver.global.error.ErrorCode;
-import com.matsinger.barofishserver.jwt.JwtService;
-import com.matsinger.barofishserver.jwt.TokenAuthType;
-import com.matsinger.barofishserver.jwt.TokenInfo;
 import com.matsinger.barofishserver.domain.productinfonotice.application.ProductInfoNotificationCommandService;
 import com.matsinger.barofishserver.domain.productinfonotice.application.ProductInfoNotificationQueryService;
 import com.matsinger.barofishserver.domain.productinfonotice.domain.ProductInformation;
-import com.matsinger.barofishserver.jwt.exception.JwtBusinessException;
+import com.matsinger.barofishserver.global.exception.BusinessException;
+import com.matsinger.barofishserver.jwt.JwtService;
+import com.matsinger.barofishserver.jwt.TokenAuthType;
+import com.matsinger.barofishserver.jwt.TokenInfo;
 import com.matsinger.barofishserver.utils.CustomResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -34,7 +33,7 @@ public class ProductInfoNoticeController {
         TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN, TokenAuthType.PARTNER, TokenAuthType.ALLOW), auth);
 
         if (itemCode == null) {
-            throw new IllegalArgumentException("상품이 속한 품목의 코드를 입력해주세요.");
+            throw new BusinessException("상품이 속한 품목의 코드를 입력해주세요.");
         }
 
         ProductInformation
@@ -53,11 +52,11 @@ public class ProductInfoNoticeController {
         TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN, TokenAuthType.PARTNER), auth);
 
         if (request.getItemCode() == null) {
-            throw new IllegalArgumentException("상품정보제공고시 품목 코드를 입력해주세요.");
+            throw new BusinessException("상품정보제공고시 품목 코드를 입력해주세요.");
         }
 
         if (request.getProductId() == null) {
-            throw new IllegalArgumentException("상품의 아이디를 입력해주세요.");
+            throw new BusinessException("상품의 아이디를 입력해주세요.");
         }
         productInfoNotificationCommandService.addProductInfoNotification(request);
         return ResponseEntity.ok(res);
@@ -72,11 +71,11 @@ public class ProductInfoNoticeController {
         TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN, TokenAuthType.PARTNER), auth);
 
         if (request.getItemCode() == null) {
-            throw new IllegalArgumentException("상품정보제공고시 품목 코드를 입력해주세요.");
+            throw new BusinessException("상품정보제공고시 품목 코드를 입력해주세요.");
         }
 
         if (request.getProductId() == null) {
-            throw new IllegalArgumentException("상품의 아이디를 입력해주세요.");
+            throw new BusinessException("상품의 아이디를 입력해주세요.");
         }
         productInfoNotificationCommandService.updateProductInfoNotification(request);
 

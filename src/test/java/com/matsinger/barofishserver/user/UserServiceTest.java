@@ -1,13 +1,14 @@
 package com.matsinger.barofishserver.user;
 
 import com.matsinger.barofishserver.domain.user.application.UserCommandService;
+import com.matsinger.barofishserver.domain.user.domain.User;
 import com.matsinger.barofishserver.domain.user.domain.UserState;
 import com.matsinger.barofishserver.domain.user.dto.SnsJoinReq;
-import com.matsinger.barofishserver.domain.user.domain.User;
 import com.matsinger.barofishserver.domain.user.repository.UserRepository;
+import com.matsinger.barofishserver.domain.userauth.application.UserAuthCommandService;
 import com.matsinger.barofishserver.domain.userauth.domain.UserAuth;
 import com.matsinger.barofishserver.domain.userauth.repository.UserAuthRepository;
-import com.matsinger.barofishserver.domain.userauth.application.UserAuthCommandService;
+import com.matsinger.barofishserver.global.exception.BusinessException;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -17,8 +18,8 @@ import org.springframework.test.context.ActiveProfiles;
 
 import java.sql.Timestamp;
 
-import static com.matsinger.barofishserver.domain.userauth.domain.LoginType.*;
-import static org.assertj.core.api.Assertions.*;
+import static com.matsinger.barofishserver.domain.userauth.domain.LoginType.IDPW;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @ActiveProfiles("local")
 @SpringBootTest
@@ -60,7 +61,7 @@ class UserServiceTest {
 
         // when // then
         assertThatThrownBy(() -> userService.createSnsUserAndSave(request))
-                .isInstanceOf(IllegalArgumentException.class)
+                .isInstanceOf(BusinessException.class)
                 .hasMessageContaining("중복된 아이디가 존재합니다.");
     }
 

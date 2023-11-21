@@ -6,15 +6,14 @@ import com.matsinger.barofishserver.domain.review.domain.Review;
 import com.matsinger.barofishserver.domain.review.domain.ReviewOrderBy;
 import com.matsinger.barofishserver.domain.review.domain.ReviewOrderByType;
 import com.matsinger.barofishserver.domain.review.dto.UpdateReviewReq;
+import com.matsinger.barofishserver.domain.review.dto.v2.AdminReviewDto;
+import com.matsinger.barofishserver.domain.review.dto.v2.ProductReviewDto;
 import com.matsinger.barofishserver.domain.review.dto.v2.StoreReviewDto;
 import com.matsinger.barofishserver.domain.review.dto.v2.UserReviewDto;
-import com.matsinger.barofishserver.global.error.ErrorCode;
+import com.matsinger.barofishserver.global.exception.BusinessException;
 import com.matsinger.barofishserver.jwt.JwtService;
 import com.matsinger.barofishserver.jwt.TokenAuthType;
 import com.matsinger.barofishserver.jwt.TokenInfo;
-import com.matsinger.barofishserver.domain.review.dto.v2.AdminReviewDto;
-import com.matsinger.barofishserver.domain.review.dto.v2.ProductReviewDto;
-import com.matsinger.barofishserver.jwt.exception.JwtBusinessException;
 import com.matsinger.barofishserver.utils.CustomResponse;
 import com.matsinger.barofishserver.utils.S3.S3Uploader;
 import lombok.RequiredArgsConstructor;
@@ -86,9 +85,9 @@ public class ReviewControllerV2 {
 
         Review review = reviewQueryService.selectReview(reviewId);
         if (tokenInfo.getType().equals(TokenAuthType.USER) && review.getUserId() != tokenInfo.getId())
-            throw new IllegalArgumentException("타인의 리뷰는 삭제할 수 없습니다.");
+            throw new BusinessException("타인의 리뷰는 삭제할 수 없습니다.");
         else if (tokenInfo.getType().equals(TokenAuthType.PARTNER) && review.getStore().getId() != tokenInfo.getId())
-            throw new IllegalArgumentException("타 상점의 리뷰입니다.");
+            throw new BusinessException("타 상점의 리뷰입니다.");
 
         review.setIsDeleted(true);
         res.setData(Optional.ofNullable(true));
@@ -126,7 +125,7 @@ public class ReviewControllerV2 {
 
         CustomResponse<StoreReviewDto> res = new CustomResponse<>();
 
-        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ALLOW), auth);
+        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ALLOW, TokenAuthType.USER), auth);
 
         Integer userId = tokenInfo.getId();
         if (tokenInfo.getType().equals(TokenAuthType.USER)) {

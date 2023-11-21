@@ -1,12 +1,16 @@
 package com.matsinger.barofishserver.domain.review.domain;
 
-import com.matsinger.barofishserver.domain.product.domain.Product;
 import com.matsinger.barofishserver.domain.order.orderprductinfo.domain.OrderProductInfo;
+import com.matsinger.barofishserver.domain.product.domain.Product;
 import com.matsinger.barofishserver.domain.review.dto.ReviewDto;
 import com.matsinger.barofishserver.domain.store.domain.Store;
 import com.matsinger.barofishserver.domain.user.domain.User;
+import com.matsinger.barofishserver.global.exception.BusinessException;
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import java.sql.Timestamp;
 import java.util.ArrayList;
@@ -78,7 +82,7 @@ public class Review {
     }
     public void setContent(String content) {
         if (content == null) {
-            throw new IllegalArgumentException("리뷰 내용을 입력해주세요.");
+            throw new BusinessException("리뷰 내용을 입력해주세요.");
         }
         this.content = content;
     }

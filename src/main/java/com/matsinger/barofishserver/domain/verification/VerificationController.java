@@ -2,11 +2,15 @@ package com.matsinger.barofishserver.domain.verification;
 
 import com.matsinger.barofishserver.domain.payment.application.PaymentService;
 import com.matsinger.barofishserver.domain.payment.dto.IamPortCertificationRes;
+import com.matsinger.barofishserver.global.exception.BusinessException;
 import com.matsinger.barofishserver.utils.Common;
 import com.matsinger.barofishserver.utils.CustomResponse;
 import com.matsinger.barofishserver.utils.RegexConstructor;
 import com.matsinger.barofishserver.utils.sms.SmsService;
-import lombok.*;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.RequiredArgsConstructor;
+import lombok.ToString;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -63,11 +67,11 @@ public class VerificationController {
         String phone = data.target.replaceAll(re.getPhone(), "0$1$2$3");
         Verification verification = verificationService.selectVerification(phone, data.getVerificationNumber());
         if (verification == null)
-            throw new IllegalArgumentException("인증 정보가 없거나 만료되었습니다. 다시 시도해주세요.");
+            throw new BusinessException("인증 정보가 없거나 만료되었습니다. 다시 시도해주세요.");
         if (verification.getExpiredAt() != null &&
                 verification.getExpiredAt().before(new Timestamp(System.currentTimeMillis()))) {
             verificationService.deleteVerification(verification.getId());
-            throw new IllegalArgumentException("인증정보가 없거나 만료되었습니다. 다시 시도해주세요.");
+            throw new BusinessException("인증정보가 없거나 만료되었습니다. 다시 시도해주세요.");
         }
         verification.setExpiredAt(null);
         verificationService.updateVerification(verification);

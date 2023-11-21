@@ -30,6 +30,7 @@ import com.matsinger.barofishserver.domain.searchFilter.application.SearchFilter
 import com.matsinger.barofishserver.domain.searchFilter.domain.ProductSearchFilterMap;
 import com.matsinger.barofishserver.domain.store.application.StoreService;
 import com.matsinger.barofishserver.domain.store.domain.Store;
+import com.matsinger.barofishserver.global.exception.BusinessException;
 import com.matsinger.barofishserver.domain.tastingNote.application.TastingNoteQueryService;
 import com.matsinger.barofishserver.domain.tastingNote.basketTastingNote.application.BasketTastingNoteQueryService;
 import com.matsinger.barofishserver.domain.tastingNote.dto.ProductTastingNoteResponse;
@@ -311,59 +312,59 @@ public class ProductController {
         Integer adminId = null;
         if (tokenInfo.getType().equals(TokenAuthType.ADMIN)) adminId = tokenInfo.getId();
         if (tokenInfo.getType().equals(TokenAuthType.ADMIN) && data.getStoreId() == null)
-            throw new IllegalArgumentException("상점 아이디를 입력해주세요.");
+            throw new BusinessException("상점 아이디를 입력해주세요.");
         else if (tokenInfo.getType().equals(TokenAuthType.PARTNER)) data.setStoreId(tokenInfo.getId());
         Optional<Store> store = storeService.selectStoreOptional(data.getStoreId());
-        if (store.isEmpty()) throw new IllegalArgumentException("가게 정보를 찾을 수 없습니다.");
+        if (store.isEmpty()) throw new BusinessException("가게 정보를 찾을 수 없습니다.");
         Category category = categoryQueryService.findById(data.getCategoryId());
-        if (images.size() == 0) throw new IllegalArgumentException("이미지를 입력해주세요.");
+        if (images.size() == 0) throw new BusinessException("이미지를 입력해주세요.");
         for (MultipartFile image : images) {
-            if (!s3.validateImageType(image)) throw new IllegalArgumentException("허용되지 않는 확장자입니다.");
+            if (!s3.validateImageType(image)) throw new BusinessException("허용되지 않는 확장자입니다.");
         }
-        if (data.getDescriptionContent() == null) throw new IllegalArgumentException("상품 설명을 입력해주세요.");
+        if (data.getDescriptionContent() == null) throw new BusinessException("상품 설명을 입력해주세요.");
         String title = utils.validateString(data.getTitle(), 100L, "상품");
         data.getSearchFilterFieldIds().forEach(searchFilterQueryService::selectSearchFilterField);
         String
                 deliveryInfo =
                 data.getDeliveryInfo() != null ? utils.validateString(data.getDeliveryInfo(), 500L, "배송안내") : null;
         boolean existRepresent = false;
-        if (data.getDeliverFeeType() == null) throw new IllegalArgumentException("배송비 유형을 입력해주세요.");
+        if (data.getDeliverFeeType() == null) throw new BusinessException("배송비 유형을 입력해주세요.");
         if (data.getDeliverFeeType().equals(ProductDeliverFeeType.FREE)) {
             data.setDeliveryFee(0);
             data.setMinOrderPrice(null);
         } else if (data.getDeliverFeeType().equals(ProductDeliverFeeType.FREE_IF_OVER)) {
-            if (data.getDeliveryFee() == null) throw new IllegalArgumentException("배송비를 입력해주세요.");
+            if (data.getDeliveryFee() == null) throw new BusinessException("배송비를 입력해주세요.");
             if (data.getMinOrderPrice() == null)
-                throw new IllegalArgumentException("무료 배송 최소 금액을 입력해주세요.");
+                throw new BusinessException("무료 배송 최소 금액을 입력해주세요.");
             data.setMinOrderPrice(0);
         } else {
-            if (data.getDeliveryFee() == null) throw new IllegalArgumentException("배송비를 입력해주세요.");
+            if (data.getDeliveryFee() == null) throw new BusinessException("배송비를 입력해주세요.");
         }
         if (data.getOptions() == null || data.getOptions().size() == 0)
-            throw new IllegalArgumentException("옵션은 최소 1개 이상 필수입니다.");
+            throw new BusinessException("옵션은 최소 1개 이상 필수입니다.");
         if (data.getOptions().stream().noneMatch(OptionAddReq::getIsNeeded))
-            throw new IllegalArgumentException("필수 옵션은 최소 1개 이상입니다.");
+            throw new BusinessException("필수 옵션은 최소 1개 이상입니다.");
         for (OptionAddReq optionData : data.getOptions()) {
-            if (optionData.getIsNeeded() == null) throw new IllegalArgumentException("필수 여부를 체크해주세요.");
+            if (optionData.getIsNeeded() == null) throw new BusinessException("필수 여부를 체크해주세요.");
             if (optionData.getItems() == null || optionData.getItems().size() == 0)
-                throw new IllegalArgumentException("옵션 아이템을 입력해주세요.");
+                throw new BusinessException("옵션 아이템을 입력해주세요.");
             for (OptionItemAddReq itemData : optionData.getItems()) {
                 String name = utils.validateString(itemData.getName(), 100L, "옵션 이름");
                 itemData.setName(name);
                 if (itemData.getIsRepresent() != null && itemData.getIsRepresent()) existRepresent = true;
                 if (itemData.getDiscountPrice() == null) itemData.setDiscountPrice(0);
                 if (itemData.getOriginPrice() == null) itemData.setOriginPrice(0);
-                // throw new IllegalArgumentException()("할인(판매) 가격을 입력해주세요);
+                // throw new BusinessException()("할인(판매) 가격을 입력해주세요);
                 if (itemData.getAmount() == null) itemData.setAmount(null);
-                // throw new IllegalArgumentException()("개수를 입력해주세요);
+                // throw new BusinessException()("개수를 입력해주세요);
                 if (itemData.getPurchasePrice() == null) itemData.setPurchasePrice(0);
-                // throw new IllegalArgumentException()("매입가를 입력해주세요);
+                // throw new BusinessException()("매입가를 입력해주세요);
                 if (!optionData.getIsNeeded() && itemData.getOriginPrice() == null) itemData.setOriginPrice(0);
                 if (itemData.getDeliveryFee() == null) itemData.setDeliveryFee(0);
-                // throw new IllegalArgumentException()("배송비를 입력해주세요);
+                // throw new BusinessException()("배송비를 입력해주세요);
             }
         }
-        if (!existRepresent) throw new IllegalArgumentException("대표 옵션 아이템을 선택해주세요.");
+        if (!existRepresent) throw new BusinessException("대표 옵션 아이템을 선택해주세요.");
         List<ProductFilterValue>
                 filterValues =
                 data.getFilterValues() != null ? data.getFilterValues().stream().map(v -> {
@@ -475,12 +476,12 @@ public class ProductController {
         Integer adminId = null;
         if (tokenInfo.getType().equals(TokenAuthType.ADMIN)) adminId = tokenInfo.getId();
         if (tokenInfo.getType().equals(TokenAuthType.ADMIN) && data.getStoreId() == null)
-            throw new IllegalArgumentException("상점 아이디를 입력해주세요.");
+            throw new BusinessException("상점 아이디를 입력해주세요.");
         else if (tokenInfo.getType().equals(TokenAuthType.PARTNER)) data.setStoreId(tokenInfo.getId());
         Product product = productService.findById(id);
         if (tokenInfo.getType().equals(TokenAuthType.PARTNER) &&
                 product.getStoreId() != tokenInfo.getId())
-            throw new IllegalArgumentException("타지점의 상품입니다.");
+            throw new BusinessException("타지점의 상품입니다.");
         if (data.getCategoryId() != null) {
             Category category = categoryQueryService.findById(data.getCategoryId());
             product.setCategory(category);
@@ -488,7 +489,7 @@ public class ProductController {
         if (newImages != null) {
             for (MultipartFile image : newImages) {
                 if (image != null && !s3.validateImageType(image))
-                    throw new IllegalArgumentException("허용되지 않는 확장자입니다.");
+                    throw new BusinessException("허용되지 않는 확장자입니다.");
             }
         }
         if (data.getTitle() != null) {
@@ -520,25 +521,25 @@ public class ProductController {
             product.setMinOrderPrice(0);
         } else if (data.getDeliverFeeType().equals(ProductDeliverFeeType.FIX)) {
             if (product.getDeliverFee() == null && data.getDeliveryFee() == null)
-                throw new IllegalArgumentException("배송비를 입력해주세요.");
+                throw new BusinessException("배송비를 입력해주세요.");
             product.setDeliverFeeType(ProductDeliverFeeType.FIX);
             product.setDeliverFee(data.getDeliveryFee());
             product.setMinOrderPrice(null);
         } else if (data.getDeliverFeeType().equals(ProductDeliverFeeType.FREE_IF_OVER)) {
             if (data.getMinOrderPrice() == null && product.getMinOrderPrice() == null)
-                throw new IllegalArgumentException("무료 배송 최소 금액을 입력해주세요.");
+                throw new BusinessException("무료 배송 최소 금액을 입력해주세요.");
             if (product.getDeliverFee() == null && data.getDeliveryFee() == null)
-                throw new IllegalArgumentException("배송비를 입력해주세요.");
+                throw new BusinessException("배송비를 입력해주세요.");
             product.setDeliverFeeType(ProductDeliverFeeType.FREE_IF_OVER);
             if (data.getDeliveryFee() != null) product.setDeliverFee(data.getDeliveryFee());
             if (data.getMinOrderPrice() != null) product.setMinOrderPrice(data.getMinOrderPrice());
         }
         if (data.getDeliveryFee() != null) {
-            if (data.getDeliveryFee() < 0) throw new IllegalArgumentException("배달료를 확인해주세요.");
+            if (data.getDeliveryFee() < 0) throw new BusinessException("배달료를 확인해주세요.");
 //                product.setDeliveryFee(data.getDeliveryFee());
         }
         if (data.getExpectedDeliverDay() != null) {
-            if (data.getExpectedDeliverDay() < 0) throw new IllegalArgumentException("예상 도착일을 입력해주세요.");
+            if (data.getExpectedDeliverDay() < 0) throw new BusinessException("예상 도착일을 입력해주세요.");
             product.setExpectedDeliverDay(data.getExpectedDeliverDay());
         }
         product.setForwardingTime(data.getForwardingTime());
@@ -581,24 +582,24 @@ public class ProductController {
             for (Common.CudInput<OptionUpdateReq, Integer> optionData : data.getOptions()) {
                 if (optionData.getType().equals(Common.CudType.CREATE)) {
                     if (optionData.getData() == null)
-                        throw new IllegalArgumentException("CREATE의 경우 DATA는 필수 입니다.");
+                        throw new BusinessException("CREATE의 경우 DATA는 필수 입니다.");
                     if (optionData.getData().getIsNeeded() == null)
-                        throw new IllegalArgumentException("필수 여부를 입력해주세요.");
+                        throw new BusinessException("필수 여부를 입력해주세요.");
                     for (OptionItemUpdateReq itemData : optionData.getData().getItems().stream().map(Common.CudInput::getData).toList()) {
                         String name = utils.validateString(itemData.getName(), 100L, "옵션 이름");
                         itemData.setName(name);
                         if (itemData.getDiscountPrice() == null) itemData.setDiscountPrice(0);
-                        // throw new IllegalArgumentException()("할인(판매) 가격을 입력해주세요);
+                        // throw new BusinessException()("할인(판매) 가격을 입력해주세요);
                         if (itemData.getAmount() == null)
-                            throw new IllegalArgumentException("개수를 입력해주세요.");
+                            throw new BusinessException("개수를 입력해주세요.");
                         if (itemData.getPurchasePrice() == null) itemData.setPurchasePrice(0);
-                        // throw new IllegalArgumentException()("매입가를 입력해주세요);
+                        // throw new BusinessException()("매입가를 입력해주세요);
                         if (itemData.getOriginPrice() == null) itemData.setOriginPrice(0);
                         if (itemData.getDeliveryFee() == null) itemData.setDeliveryFee(0);
                     }
                 } else if (optionData.getType().equals(Common.CudType.UPDATE)) {
                     if (optionData.getId() == null || optionData.getData() == null)
-                        throw new IllegalArgumentException("UPDATE인 경우 ID, DATA는 필수 입니다.");
+                        throw new BusinessException("UPDATE인 경우 ID, DATA는 필수 입니다.");
                     Option option = productService.selectOption(optionData.getId());
                     for (Common.CudInput<OptionItemUpdateReq, Integer> itemData : optionData.getData().getItems()) {
                         if (itemData.getType().equals(Common.CudType.CREATE)) {
@@ -606,22 +607,22 @@ public class ProductController {
                             itemData.getData().setName(name);
                             if (itemData.getData().getDiscountPrice() == null)
                                 itemData.getData().setDiscountPrice(0);
-//                                    throw new IllegalArgumentException()("할인(판매) 가격을 입력해주세요);
+//                                    throw new BusinessException()("할인(판매) 가격을 입력해주세요);
                             if (itemData.getData().getAmount() == null)
-                                throw new IllegalArgumentException("개수를 입력해주세요.");
+                                throw new BusinessException("개수를 입력해주세요.");
                             if (itemData.getData().getPurchasePrice() == null)
-                                throw new IllegalArgumentException("매입가를 입력해주세요.");
+                                throw new BusinessException("매입가를 입력해주세요.");
                             if (itemData.getData().getOriginPrice() == null) itemData.getData().setOriginPrice(0);
                             if (itemData.getData().getDeliveryFee() == null) itemData.getData().setDeliveryFee(0);
                         } else if (itemData.getType().equals(Common.CudType.UPDATE)) {
                             if (itemData.getId() == null)
-                                throw new IllegalArgumentException("옵션 아이템 UPDATE 시 ID를 필수로 입력해주세요.");
+                                throw new BusinessException("옵션 아이템 UPDATE 시 ID를 필수로 입력해주세요.");
                             OptionItem optionItem = productService.selectOptionItem(itemData.getId());
                         }
                     }
                 } else {
                     if (optionData.getId() == null)
-                        throw new IllegalArgumentException("DELETE인 경우 ID는 필수 입니다.");
+                        throw new BusinessException("DELETE인 경우 ID는 필수 입니다.");
                     Option option = productService.selectOption(optionData.getId());
                 }
             }
@@ -758,8 +759,8 @@ public class ProductController {
 
         Integer adminId = tokenInfo.getId();
         if (data.getProductIds() == null || data.getProductIds().size() == 0)
-            throw new IllegalArgumentException("상품 아이디를 입력해주세요");
-        if (data.getIsActive() == null) throw new IllegalArgumentException("노출 여부를 입력해주세요.");
+            throw new BusinessException("상품 아이디를 입력해주세요");
+        if (data.getIsActive() == null) throw new BusinessException("노출 여부를 입력해주세요.");
         List<Product> products = productService.selectProductListWithIds(data.getProductIds());
         Admin admin = adminQueryService.selectAdmin(adminId);
         products.forEach(v -> {
@@ -815,7 +816,7 @@ public class ProductController {
         Product product = productService.findById(id);
         if (tokenInfo.getType().equals(TokenAuthType.PARTNER) &&
                 product.getStoreId() != tokenInfo.getId())
-            throw new IllegalArgumentException("삭제 권한이 없습니다.");
+            throw new BusinessException("삭제 권한이 없습니다.");
         curationCommandService.deleteWithProductId(product.getId());
         product.setState(ProductState.DELETED);
         product = productService.update(product.getId(), product);

@@ -1,9 +1,7 @@
 package com.matsinger.barofishserver.utils;
 
+import com.matsinger.barofishserver.global.exception.BusinessException;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.Cipher;
@@ -24,7 +22,7 @@ public class AES256 {
             byte[] encryptedBytes = cipher.doFinal(plaintext.getBytes());
             return Base64.getEncoder().encodeToString(encryptedBytes);
         } catch (Exception e) {
-            throw new IllegalArgumentException("카드 정보를 인코딩하는데 실패했습니다.");
+            throw new BusinessException("카드 정보를 인코딩하는데 실패했습니다.");
         }
     }
 
@@ -37,7 +35,7 @@ public class AES256 {
             byte[] decryptedBytes = cipher.doFinal(ciphertextBytes);
             return new String(decryptedBytes);
         } catch (Exception e) {
-            throw new IllegalArgumentException("카드 정보를 디코딩하는데 실패했습니다.");
+            throw new BusinessException("카드 정보를 디코딩하는데 실패했습니다.");
         }
     }
 }

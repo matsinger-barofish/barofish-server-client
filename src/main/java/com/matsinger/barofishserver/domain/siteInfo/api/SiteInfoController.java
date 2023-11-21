@@ -1,24 +1,26 @@
 package com.matsinger.barofishserver.domain.siteInfo.api;
 
+import com.matsinger.barofishserver.domain.siteInfo.application.SiteInfoCommandService;
 import com.matsinger.barofishserver.domain.siteInfo.application.SiteInfoQueryService;
-import com.matsinger.barofishserver.global.error.ErrorCode;
+import com.matsinger.barofishserver.domain.siteInfo.domain.SiteInformation;
+import com.matsinger.barofishserver.domain.siteInfo.dto.SiteInfoDto;
+import com.matsinger.barofishserver.domain.siteInfo.dto.SiteInfoReq;
+import com.matsinger.barofishserver.global.exception.BusinessException;
 import com.matsinger.barofishserver.jwt.JwtService;
 import com.matsinger.barofishserver.jwt.TokenAuthType;
 import com.matsinger.barofishserver.jwt.TokenInfo;
-import com.matsinger.barofishserver.domain.siteInfo.application.SiteInfoCommandService;
-import com.matsinger.barofishserver.domain.siteInfo.dto.SiteInfoDto;
-import com.matsinger.barofishserver.domain.siteInfo.domain.SiteInformation;
-import com.matsinger.barofishserver.domain.siteInfo.dto.SiteInfoReq;
-import com.matsinger.barofishserver.jwt.exception.JwtBusinessException;
 import com.matsinger.barofishserver.utils.CustomResponse;
 import com.matsinger.barofishserver.utils.RegexConstructor;
 import com.matsinger.barofishserver.utils.S3.S3Uploader;
-import lombok.*;
+import lombok.RequiredArgsConstructor;
 import org.json.JSONArray;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 import java.util.regex.Pattern;
 
 @RestController
@@ -68,20 +70,20 @@ public class SiteInfoController {
             SiteInformation result = siteInfoCommandService.updateSiteInfo(siteInformation);
             res.setData(Optional.of(result.convert2Dto()));
         } else if (id.startsWith("INT_")) {
-            if (!data.getContent().matches("[0-9]+")) throw new IllegalArgumentException("숫자만 입력가능합니다.");
+            if (!data.getContent().matches("[0-9]+")) throw new BusinessException("숫자만 입력가능합니다.");
             siteInformation.setContent(data.getContent());
             SiteInformation result = siteInfoCommandService.updateSiteInfo(siteInformation);
             res.setData(Optional.of(result.convert2Dto()));
         } else if (id.startsWith("INTERNAL")) {
-            throw new IllegalArgumentException("수정 불가능한 데이터입니다.");
+            throw new BusinessException("수정 불가능한 데이터입니다.");
         } else if (id.startsWith("URL")) {
             if (!Pattern.matches(reg.httpUrl, data.getContent()))
-                throw new IllegalArgumentException("URL 형식을 확인해주세요.");
+                throw new BusinessException("URL 형식을 확인해주세요.");
             siteInformation.setContent(data.getContent());
             SiteInformation result = siteInfoCommandService.updateSiteInfo(siteInformation);
             res.setData(Optional.ofNullable(result.convert2Dto()));
         } else if (id.startsWith("TC")) {
-            if (data.getTcContent() == null) throw new IllegalArgumentException("내용을 입력해주세요.");
+            if (data.getTcContent() == null) throw new BusinessException("내용을 입력해주세요.");
             JSONArray json = new JSONArray(data.getTcContent());
             String jsonString = json.toString();
             siteInformation.setContent(jsonString);

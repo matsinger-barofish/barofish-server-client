@@ -1,5 +1,6 @@
 package com.matsinger.barofishserver.excel.application;
 
+import com.matsinger.barofishserver.global.exception.BusinessException;
 import lombok.RequiredArgsConstructor;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
@@ -19,7 +20,7 @@ public class ExcelService {
         int i = 0;
         while (cellIterator.hasNext()) {
             Cell cell = cellIterator.next();
-            if (!cell.getStringCellValue().equals(columnName.get(i))) throw new IllegalArgumentException("엑셀 파일 형식을 확인해주세요.");
+            if (!cell.getStringCellValue().equals(columnName.get(i))) throw new BusinessException("엑셀 파일 형식을 확인해주세요.");
             i++;
         }
     }
@@ -29,7 +30,7 @@ public class ExcelService {
         try {
             workbook = new XSSFWorkbook(file.getInputStream());
         } catch (IOException e) {
-            throw new IllegalArgumentException("엑셀 파일을 읽는데 실패했습니다.");
+            throw new BusinessException("엑셀 파일을 읽는데 실패했습니다.");
         }
         XSSFSheet sheet = workbook.getSheetAt(0);
         return sheet;

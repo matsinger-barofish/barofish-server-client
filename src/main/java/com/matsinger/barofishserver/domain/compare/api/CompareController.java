@@ -15,6 +15,10 @@ import com.matsinger.barofishserver.domain.compare.repository.CompareSetReposito
 import com.matsinger.barofishserver.domain.product.application.ProductService;
 import com.matsinger.barofishserver.domain.product.domain.Product;
 import com.matsinger.barofishserver.domain.product.dto.ProductListDto;
+import com.matsinger.barofishserver.global.exception.BusinessException;
+import com.matsinger.barofishserver.jwt.JwtService;
+import com.matsinger.barofishserver.jwt.TokenAuthType;
+import com.matsinger.barofishserver.jwt.TokenInfo;
 import com.matsinger.barofishserver.jwt.JwtService;
 import com.matsinger.barofishserver.jwt.TokenAuthType;
 import com.matsinger.barofishserver.jwt.TokenInfo;
@@ -129,13 +133,13 @@ public class CompareController {
 
         List<Integer> productIds = utils.str2IntList(productIdStr);
         if (productIds.size() != 3 && productIds.size() != 2)
-            throw new IllegalArgumentException("비교하기는 2~3개의 상품만 가능합니다.");
+            throw new BusinessException("비교하기는 2~3개의 상품만 가능합니다.");
         List<Product> products = productService.selectProductListWithIds(productIds);
         if (products.stream().map(Product::getCategoryId).map(v -> {
             Category category = categoryQueryService.findById(v);
             return category.getCategoryId();
         }).collect(Collectors.toSet()).size() != 1)
-            throw new IllegalArgumentException("같은 카테고리의 상품끼리 비교 가능합니다.");
+            throw new BusinessException("같은 카테고리의 상품끼리 비교 가능합니다.");
         Optional<CompareSet> compareSet = compareSetRepository.selectHavingSet(userId, productIds);
         List<CompareProductDto> productDtos = products.stream()
                 .map(compareItemCommandService::convertProduct2Dto).toList();
@@ -152,15 +156,15 @@ public class CompareController {
         TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth);
 
         if (productIds.size() != 3 && productIds.size() != 2)
-            throw new IllegalArgumentException("비교하기는 2~3개의 상품만 가능합니다.");
+            throw new BusinessException("비교하기는 2~3개의 상품만 가능합니다.");
         List<Product> products = productService.selectProductListWithIds(productIds);
         if (products.stream().map(Product::getCategoryId).map(v -> {
             Category category = categoryQueryService.findById(v);
             return category.getCategoryId();
         }).collect(Collectors.toSet()).size() != 1)
-            throw new IllegalArgumentException("같은 카테고리의 상품끼리 비교 가능합니다.");
+            throw new BusinessException("같은 카테고리의 상품끼리 비교 가능합니다.");
         if (compareItemQueryService.checkExistProductSet(tokenInfo.getId(), productIds))
-            throw new IllegalArgumentException("이미 저장된 조합입니다.");
+            throw new BusinessException("이미 저장된 조합입니다.");
         CompareSet compareSet = compareItemCommandService.addCompareSet(tokenInfo.getId(), productIds);
         res.setData(Optional.ofNullable(compareSet));
         return ResponseEntity.ok(res);
@@ -189,7 +193,7 @@ public class CompareController {
         for (Integer setId : data.getCompareSetIds()) {
             CompareSet compareSet = compareItemQueryService.selectCompareSet(setId);
             if (tokenInfo.getId() != compareSet.getUserId())
-                throw new IllegalArgumentException("삭제 권한이 없습니다.");
+                throw new BusinessException("삭제 권한이 없습니다.");
         }
         for (Integer setId : data.getCompareSetIds()) {
             compareItemCommandService.deleteCompareSet(setId);
@@ -254,16 +258,16 @@ public class CompareController {
                 jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
 
         if (data.getType() == null)
-            throw new IllegalArgumentException("타입을 입력해주세요.");
+            throw new BusinessException("타입을 입력해주세요.");
         if (data.getProductIds() == null)
-            throw new IllegalArgumentException("상품 아이디를 입력해주세요.");
+            throw new BusinessException("상품 아이디를 입력해주세요.");
         if (new HashSet<>(data.getProductIds()).size() != 3)
-            throw new IllegalArgumentException("3개의 상품을 입력해주세요.");
+            throw new BusinessException("3개의 상품을 입력해주세요.");
         List<Product> products = data.getProductIds().stream().map(productService::selectProduct).toList();
 
         if (products.stream().map(v -> v.getCategory() != null ? v.getCategory().getCategoryId() : null)
                 .collect(Collectors.toSet()).size() != 1)
-            throw new IllegalArgumentException("같은 카테고리 내에서 선정 가능합니다.");
+            throw new BusinessException("같은 카테고리 내에서 선정 가능합니다.");
 
         RecommendCompareSet recommendCompareSet = recommendCompareSetService
                 .addRecommendCompareSet(RecommendCompareSet.builder().type(data.getType()).product1Id(
@@ -286,18 +290,18 @@ public class CompareController {
 
         RecommendCompareSet set = recommendCompareSetService.selectRecommendCompareSet(id);
         if (data.getProductIds() == null)
-            throw new IllegalArgumentException("상품 아이디를 입력해주세요.");
+            throw new BusinessException("상품 아이디를 입력해주세요.");
         if (data.getType() != null) {
             set.setType(data.getType());
         }
         if (new HashSet<>(data.getProductIds()).size() != 3)
-            throw new IllegalArgumentException("3개의 상품을 입력해주세요.");
+            throw new BusinessException("3개의 상품을 입력해주세요.");
 
         List<Product> products = data.getProductIds().stream().map(productService::selectProduct).toList();
 
         if (products.stream().map(v -> v.getCategory() != null ? v.getCategory().getCategoryId() : null)
                 .collect(Collectors.toSet()).size() != 1)
-            throw new IllegalArgumentException("같은 카테고리 내에서 선정 가능합니다.");
+            throw new BusinessException("같은 카테고리 내에서 선정 가능합니다.");
         set.setProduct1Id(data.getProductIds().get(0));
         set.setProduct2Id(data.getProductIds().get(1));
         set.setProduct3Id(data.getProductIds().get(2));
