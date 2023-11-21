@@ -9,6 +9,7 @@ import com.matsinger.barofishserver.domain.tastingNote.dto.TastingNoteCreateRequ
 import com.matsinger.barofishserver.domain.tastingNote.repository.TastingNoteRepository;
 import com.matsinger.barofishserver.domain.user.application.UserQueryService;
 import com.matsinger.barofishserver.domain.user.domain.User;
+import com.matsinger.barofishserver.global.exception.BusinessException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -29,16 +30,16 @@ public class TastingNoteCommandService {
         Orders findedOrder = findedOrderProductInfo.getOrder();
 
         if (findedUser.getId() != findedOrder.getUserId()) {
-            throw new IllegalArgumentException("주문인이 일치하지 않습니다.");
+            throw new BusinessException("주문인이 일치하지 않습니다.");
         }
 
         if (findedOrderProductInfo.getState() != OrderProductState.FINAL_CONFIRM) {
-            throw new IllegalArgumentException("구매 확정 후 테이스팅 노트 작성이 가능합니다.");
+            throw new BusinessException("구매 확정 후 테이스팅 노트 작성이 가능합니다.");
         }
 
         boolean isTastingNoteExists = tastingNoteRepository.existsByOrderProductInfoId(findedOrderProductInfo.getId());
         if (isTastingNoteExists) {
-            throw new IllegalArgumentException("테이스팅 노트 정보가 이미 존재합니다.");
+            throw new BusinessException("테이스팅 노트 정보가 이미 존재합니다.");
         }
 
         convertTastingNoteRequestToEntity(request, findedOrderProductInfo, findedUser);

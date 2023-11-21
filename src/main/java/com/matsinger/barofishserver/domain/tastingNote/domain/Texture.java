@@ -1,5 +1,7 @@
 package com.matsinger.barofishserver.domain.tastingNote.domain;
 
+import com.matsinger.barofishserver.global.exception.BusinessException;
+
 public enum Texture {
 
     TENDERNESS_SOFTNESS("탱글함_부드러움"),
@@ -21,6 +23,6 @@ public enum Texture {
                 return stringTexture;
             }
         }
-        throw new IllegalArgumentException("상품의 식감 정보를 찾을 수 없습니다.");
+        throw new BusinessException("상품의 식감 정보를 찾을 수 없습니다.");
     }
 }

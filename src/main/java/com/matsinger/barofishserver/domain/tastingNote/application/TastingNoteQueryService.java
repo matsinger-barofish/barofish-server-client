@@ -10,6 +10,7 @@ import com.matsinger.barofishserver.domain.tastingNote.dto.ProductTastingNoteInq
 import com.matsinger.barofishserver.domain.tastingNote.dto.ProductTastingNoteResponse;
 import com.matsinger.barofishserver.domain.tastingNote.repository.TastingNoteQueryRepository;
 import com.matsinger.barofishserver.domain.tastingNote.repository.TastingNoteRepository;
+import com.matsinger.barofishserver.global.exception.BusinessException;
 import lombok.RequiredArgsConstructor;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Service;
@@ -30,7 +31,7 @@ public class TastingNoteQueryService {
 
     public TastingNote findByOrderProductInfoId(Integer orderProductInfoId) {
         return tastingNoteRepository.findByOrderProductInfoId(orderProductInfoId)
-                .orElseThrow(() -> new IllegalArgumentException("테이스팅 노트 정보를 찾을 수 없습니다."));
+                .orElseThrow(() -> new BusinessException("테이스팅 노트 정보를 찾을 수 없습니다."));
     }
 
     public boolean existsByOrderProductInfoId(Integer orderProductInfoId) {
@@ -40,7 +41,7 @@ public class TastingNoteQueryService {
     public ProductTastingNoteResponse getTastingNoteInfo(Integer productId) {
         Product findedProduct = productQueryService.findById(productId);
         if (findedProduct.getState() != ProductState.ACTIVE) {
-            throw new IllegalArgumentException("현재 판매하지 않는 상품입니다.");
+            throw new BusinessException("현재 판매하지 않는 상품입니다.");
         }
 
         ProductTastingNoteInquiryDto productTastingNoteInquiryDto;
@@ -48,7 +49,7 @@ public class TastingNoteQueryService {
             productTastingNoteInquiryDto = tastingNoteQueryRepository.getTastingNotesScore(findedProduct.getId());
             productTastingNoteInquiryDto.roundScoresToSecondDecimalPlace();
         } catch (RuntimeException e) {
-            throw new IllegalArgumentException("상품의 테이스팅 노트가 없습니다.");
+            throw new BusinessException("상품의 테이스팅 노트가 없습니다.");
         }
 
         ProductTastingNoteResponse tastingNoteResponse = convertToResponse(productTastingNoteInquiryDto);

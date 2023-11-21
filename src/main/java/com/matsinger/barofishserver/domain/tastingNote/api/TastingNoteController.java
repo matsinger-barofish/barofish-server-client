@@ -6,6 +6,7 @@ import com.matsinger.barofishserver.domain.tastingNote.dto.ProductTastingNoteRes
 import com.matsinger.barofishserver.domain.tastingNote.dto.TastingNoteCreateRequest;
 import com.matsinger.barofishserver.domain.user.application.UserQueryService;
 import com.matsinger.barofishserver.global.error.ErrorCode;
+import com.matsinger.barofishserver.global.exception.BusinessException;
 import com.matsinger.barofishserver.jwt.JwtService;
 import com.matsinger.barofishserver.jwt.TokenAuthType;
 import com.matsinger.barofishserver.jwt.TokenInfo;
@@ -58,7 +59,7 @@ public class TastingNoteController {
         jwtService.validateAndGetTokenInfo(Set.of(TokenAuthType.USER, TokenAuthType.ALLOW), auth);
 
         if (productIds.size() > 2) {
-            throw new IllegalArgumentException("최대 2개까지 비교할 수 있습니다.");
+            throw new BusinessException("최대 2개까지 비교할 수 있습니다.");
         }
 
         List<ProductTastingNoteResponse> tastingNotes = tastingNoteQueryService.compareTastingNotes(productIds);
