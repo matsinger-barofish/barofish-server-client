@@ -12,6 +12,8 @@ import com.matsinger.barofishserver.jwt.TokenInfo;
 import com.matsinger.barofishserver.jwt.exception.JwtBusinessException;
 import com.matsinger.barofishserver.utils.CustomResponse;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -29,9 +31,12 @@ public class BasketTastingNoteController {
     private final BasketTastingNoteCommandService basketTastingNoteCommandService;
     private final BasketTastingNoteQueryService basketTastingNoteQueryService;
 
+    private final Logger logger = LoggerFactory.getLogger(this.getClass());
+
     @PostMapping("/add/{productId}")
     public ResponseEntity<CustomResponse<Boolean>> addTastingNoteToBasket(@RequestHeader(value = "Authorization", required = false) Optional<String> auth,
                                                                          @RequestBody BasketTastingNoteAddDeleteReq request) {
+        logger.info("테스트");
         CustomResponse<Boolean> response = new CustomResponse<>();
 
         TokenInfo tokenInfo = jwtService.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth);
