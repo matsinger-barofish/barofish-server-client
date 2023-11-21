@@ -23,9 +23,14 @@ public class BasketTastingNoteCommandService {
         Product findedProduct = productQueryService.findById(productId);
         User findedUser = userQueryService.findById(userId);
 
+        boolean isProductExists = basketTastingNoteRepository.existsByUserIdAndProductId(userId, productId);
+        if (isProductExists) {
+            throw new IllegalArgumentException("저장함에 같은 상품이 있습니다.");
+        }
+
         basketTastingNoteRepository.save(
                 BasketTastingNote.builder()
-                        .productId(findedProduct.getId())
+                        .product(findedProduct)
                         .user(findedUser)
                         .build()
         );
@@ -33,8 +38,11 @@ public class BasketTastingNoteCommandService {
 
     @Transactional
     public void deleteTastingNote(Integer userId, Integer productId) {
-        Product findedProduct = productQueryService.findById(productId);
-        User findedUser = userQueryService.findById(userId);
+
+        boolean isProductExists = basketTastingNoteRepository.existsByUserIdAndProductId(userId, productId);
+        if (!isProductExists) {
+            throw new IllegalArgumentException("상품이 존재하지 않습니다.");
+        }
 
         try {
             basketTastingNoteRepository.deleteByUserIdAndProductId(userId, productId);

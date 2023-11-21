@@ -7,22 +7,20 @@ import com.matsinger.barofishserver.domain.compare.application.CompareItemQueryS
 import com.matsinger.barofishserver.domain.compare.domain.CompareSet;
 import com.matsinger.barofishserver.domain.compare.domain.SaveProduct;
 import com.matsinger.barofishserver.domain.compare.dto.*;
-import com.matsinger.barofishserver.domain.compare.recommend.domain.RecommendCompareSet;
-import com.matsinger.barofishserver.domain.compare.recommend.dto.RecommendCompareSetDto;
 import com.matsinger.barofishserver.domain.compare.recommend.application.RecommendCompareSetService;
+import com.matsinger.barofishserver.domain.compare.recommend.domain.RecommendCompareSet;
 import com.matsinger.barofishserver.domain.compare.recommend.domain.RecommendCompareSetType;
+import com.matsinger.barofishserver.domain.compare.recommend.dto.RecommendCompareSetDto;
 import com.matsinger.barofishserver.domain.compare.repository.CompareSetRepository;
-import com.matsinger.barofishserver.global.error.ErrorCode;
-import com.matsinger.barofishserver.jwt.JwtService;
-import com.matsinger.barofishserver.jwt.TokenAuthType;
-import com.matsinger.barofishserver.jwt.TokenInfo;
 import com.matsinger.barofishserver.domain.product.application.ProductService;
 import com.matsinger.barofishserver.domain.product.domain.Product;
 import com.matsinger.barofishserver.domain.product.dto.ProductListDto;
-import com.matsinger.barofishserver.jwt.exception.JwtBusinessException;
+import com.matsinger.barofishserver.jwt.JwtService;
+import com.matsinger.barofishserver.jwt.TokenAuthType;
+import com.matsinger.barofishserver.jwt.TokenInfo;
 import com.matsinger.barofishserver.utils.Common;
 import com.matsinger.barofishserver.utils.CustomResponse;
-import lombok.*;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -90,6 +88,19 @@ public class CompareController {
         return ResponseEntity.ok(res);
     }
 
+    @GetMapping("/save")
+    public ResponseEntity<CustomResponse<List<ProductListDto>>> selectSaveProductList(
+            @RequestHeader("Authorization") Optional<String> auth) {
+        CustomResponse<List<ProductListDto>> res = new CustomResponse<>();
+
+        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth);
+
+        List<ProductListDto> products = compareItemQueryService.selectSaveProducts(tokenInfo.getId()).stream()
+                .map(productService::convert2ListDto).toList();
+        res.setData(Optional.of(products));
+        return ResponseEntity.ok(res);
+    }
+
     @GetMapping("/set/{id}")
     public ResponseEntity<CustomResponse<List<CompareProductDto>>> selectCompareSet(
             @RequestHeader("Authorization") Optional<String> auth,
@@ -105,19 +116,6 @@ public class CompareController {
                 .toList();
         res.setData(Optional.of(products));
         return ResponseEntity.ok(res);
-    }
-
-    @GetMapping("/save")
-    public ResponseEntity<CustomResponse<List<ProductListDto>>> selectSaveProductList(
-            @RequestHeader("Authorization") Optional<String> auth) {
-        CustomResponse<List<ProductListDto>> res = new CustomResponse<>();
-
-        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth);
-
-            List<ProductListDto> products = compareItemQueryService.selectSaveProducts(tokenInfo.getId()).stream()
-                    .map(productService::convert2ListDto).toList();
-            res.setData(Optional.of(products));
-            return ResponseEntity.ok(res);
     }
 
     @GetMapping("/products")

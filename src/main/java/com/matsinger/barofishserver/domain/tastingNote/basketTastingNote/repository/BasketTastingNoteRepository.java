@@ -11,4 +11,6 @@ public interface BasketTastingNoteRepository extends JpaRepository<BasketTasting
     List<BasketTastingNote> findAllByUserId(int userId);
 
     void deleteByUserIdAndProductId(Integer userId, Integer productId);
+
+    boolean existsByUserIdAndProductId(int userId, int productId);
 }
