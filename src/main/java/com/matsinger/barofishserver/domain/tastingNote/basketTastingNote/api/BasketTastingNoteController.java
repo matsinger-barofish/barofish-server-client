@@ -2,6 +2,7 @@ package com.matsinger.barofishserver.domain.tastingNote.basketTastingNote.api;
 
 import com.matsinger.barofishserver.domain.tastingNote.basketTastingNote.application.BasketTastingNoteCommandService;
 import com.matsinger.barofishserver.domain.tastingNote.basketTastingNote.application.BasketTastingNoteQueryService;
+import com.matsinger.barofishserver.domain.tastingNote.basketTastingNote.dto.BasketTastingNoteAddDeleteReq;
 import com.matsinger.barofishserver.domain.tastingNote.basketTastingNote.dto.TastingNoteCompareBasketProductDto;
 import com.matsinger.barofishserver.domain.user.application.UserQueryService;
 import com.matsinger.barofishserver.global.error.ErrorCode;
@@ -28,9 +29,9 @@ public class BasketTastingNoteController {
     private final BasketTastingNoteCommandService basketTastingNoteCommandService;
     private final BasketTastingNoteQueryService basketTastingNoteQueryService;
 
-    @PatchMapping("/add/{productId}")
+    @PostMapping("/add/{productId}")
     public ResponseEntity<CustomResponse<Boolean>> addTastingNoteToBasket(@RequestHeader(value = "Authorization", required = false) Optional<String> auth,
-                                                                         @PathVariable Integer productId) {
+                                                                         @RequestBody BasketTastingNoteAddDeleteReq request) {
         CustomResponse<Boolean> response = new CustomResponse<>();
 
         TokenInfo tokenInfo = jwtService.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth);
@@ -38,7 +39,7 @@ public class BasketTastingNoteController {
             throw new JwtBusinessException(ErrorCode.NOT_ALLOWED);
         }
 
-        basketTastingNoteCommandService.addTastingNote(tokenInfo.getId(), productId);
+        basketTastingNoteCommandService.addTastingNote(tokenInfo.getId(), request.getProductId());
 
         response.setIsSuccess(true);
         return ResponseEntity.ok(response);
@@ -60,9 +61,9 @@ public class BasketTastingNoteController {
         return ResponseEntity.ok(response);
     }
 
-    @PatchMapping("/delete/{productId}")
+    @PostMapping("/delete/{productId}")
     public ResponseEntity<CustomResponse<Boolean>> deleteTastingNoteToBasket(@RequestHeader(value = "Authorization", required = false) Optional<String> auth,
-                                                                            @PathVariable Integer productId) {
+                                                                            @PathVariable BasketTastingNoteAddDeleteReq request) {
         CustomResponse<Boolean> response = new CustomResponse<>();
 
         TokenInfo tokenInfo = jwtService.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth);
@@ -70,7 +71,7 @@ public class BasketTastingNoteController {
             throw new JwtBusinessException(ErrorCode.NOT_ALLOWED);
         }
 
-        basketTastingNoteCommandService.deleteTastingNote(tokenInfo.getId(), productId);
+        basketTastingNoteCommandService.deleteTastingNote(tokenInfo.getId(), request.getProductId());
 
         response.setIsSuccess(true);
         return ResponseEntity.ok(response);
