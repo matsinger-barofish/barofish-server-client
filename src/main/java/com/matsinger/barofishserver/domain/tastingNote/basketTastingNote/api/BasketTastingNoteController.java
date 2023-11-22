@@ -35,7 +35,7 @@ public class BasketTastingNoteController {
 
     @PostMapping("/add")
     public ResponseEntity<CustomResponse<Boolean>> addTastingNoteToBasket(@RequestHeader(value = "Authorization", required = false) Optional<String> auth,
-                                                                         @RequestBody BasketTastingNoteAddDeleteReq data) {
+                                                                          @RequestPart(value = "data") BasketTastingNoteAddDeleteReq data) {
         CustomResponse<Boolean> response = new CustomResponse<>();
 
         TokenInfo tokenInfo = jwtService.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth);
