@@ -27,6 +27,7 @@ public class BasketTastingNoteQueryRepository {
                         TastingNoteCompareBasketProductDto.class,
                         basketTastingNote.id.as("id"),
                         product.id.as("productId"),
+                        product.title.as("title"),
                         product.state.as("state"),
                         product.images.as("image"),
                         product.needTaxation.as("isNeedTaxation"),
@@ -49,5 +50,12 @@ public class BasketTastingNoteQueryRepository {
                 .where(basketTastingNote.user.id.eq(userId))
                 .groupBy(product.id)
                 .fetch();
+    }
+
+    public void deleteAllByUserIdAndProductId(Integer userId, List<Integer> productIds) {
+        queryFactory.delete(basketTastingNote)
+                .where(basketTastingNote.user.id.eq(userId)
+                        .and(basketTastingNote.product.id.in(productIds))
+                ).execute();
     }
 }

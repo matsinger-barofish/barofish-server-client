@@ -3,6 +3,7 @@ package com.matsinger.barofishserver.domain.tastingNote.basketTastingNote.applic
 import com.matsinger.barofishserver.domain.product.application.ProductQueryService;
 import com.matsinger.barofishserver.domain.product.domain.Product;
 import com.matsinger.barofishserver.domain.tastingNote.basketTastingNote.domain.BasketTastingNote;
+import com.matsinger.barofishserver.domain.tastingNote.basketTastingNote.repository.BasketTastingNoteQueryRepository;
 import com.matsinger.barofishserver.domain.tastingNote.basketTastingNote.repository.BasketTastingNoteRepository;
 import com.matsinger.barofishserver.domain.user.application.UserQueryService;
 import com.matsinger.barofishserver.domain.user.domain.User;
@@ -11,6 +12,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 public class BasketTastingNoteCommandService {
@@ -18,6 +21,7 @@ public class BasketTastingNoteCommandService {
     private final ProductQueryService productQueryService;
     private final BasketTastingNoteRepository basketTastingNoteRepository;
     private final UserQueryService userQueryService;
+    private final BasketTastingNoteQueryRepository basketTastingNoteQueryRepository;
 
     @Transactional
     public void addTastingNote(Integer userId, Integer productId) {
@@ -38,15 +42,15 @@ public class BasketTastingNoteCommandService {
     }
 
     @Transactional
-    public void deleteTastingNote(Integer userId, Integer productId) {
+    public void deleteTastingNote(Integer userId, List<Integer> productIds) {
 
-        boolean isProductExists = basketTastingNoteRepository.existsByUserIdAndProductId(userId, productId);
-        if (!isProductExists) {
-            throw new BusinessException("상품이 존재하지 않습니다.");
-        }
+//        boolean isProductExists = basketTastingNoteRepository.existsByUserIdAndProductId(userId, productId);
+//        if (!isProductExists) {
+//            throw new BusinessException("상품이 존재하지 않습니다.");
+//        }
 
         try {
-            basketTastingNoteRepository.deleteByUserIdAndProductId(userId, productId);
+            basketTastingNoteQueryRepository.deleteAllByUserIdAndProductId(userId, productIds);
         } catch (RuntimeException e) {
             throw new BusinessException("상품 정보를 찾을 수 없습니다.");
         }

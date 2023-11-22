@@ -2,7 +2,8 @@ package com.matsinger.barofishserver.domain.tastingNote.basketTastingNote.api;
 
 import com.matsinger.barofishserver.domain.tastingNote.basketTastingNote.application.BasketTastingNoteCommandService;
 import com.matsinger.barofishserver.domain.tastingNote.basketTastingNote.application.BasketTastingNoteQueryService;
-import com.matsinger.barofishserver.domain.tastingNote.basketTastingNote.dto.BasketTastingNoteAddDeleteReq;
+import com.matsinger.barofishserver.domain.tastingNote.basketTastingNote.dto.BasketTastingNoteAddReq;
+import com.matsinger.barofishserver.domain.tastingNote.basketTastingNote.dto.BasketTastingNoteDeleteReq;
 import com.matsinger.barofishserver.domain.tastingNote.basketTastingNote.dto.TastingNoteCompareBasketProductDto;
 import com.matsinger.barofishserver.domain.user.application.UserQueryService;
 import com.matsinger.barofishserver.global.error.ErrorCode;
@@ -35,14 +36,13 @@ public class BasketTastingNoteController {
 
     @PostMapping("/add")
     public ResponseEntity<CustomResponse<Boolean>> addTastingNoteToBasket(@RequestHeader(value = "Authorization", required = false) Optional<String> auth,
-                                                                          @RequestPart(value = "data") BasketTastingNoteAddDeleteReq data) {
+                                                                          @RequestPart(value = "data") BasketTastingNoteAddReq data) {
         CustomResponse<Boolean> response = new CustomResponse<>();
 
         TokenInfo tokenInfo = jwtService.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth);
         if (tokenInfo.getType() != TokenAuthType.USER && !userQueryService.existsById(tokenInfo.getId())) {
             throw new JwtBusinessException(ErrorCode.NOT_ALLOWED);
         }
-
 
         basketTastingNoteCommandService.addTastingNote(tokenInfo.getId(), data.getProductId());
 
@@ -68,7 +68,7 @@ public class BasketTastingNoteController {
 
     @PostMapping("/delete")
     public ResponseEntity<CustomResponse<Boolean>> deleteTastingNoteToBasket(@RequestHeader(value = "Authorization", required = false) Optional<String> auth,
-                                                                             @RequestPart(value = "data") BasketTastingNoteAddDeleteReq request) {
+                                                                             @RequestPart(value = "data") BasketTastingNoteDeleteReq request) {
         CustomResponse<Boolean> response = new CustomResponse<>();
 
         TokenInfo tokenInfo = jwtService.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth);
@@ -76,7 +76,7 @@ public class BasketTastingNoteController {
             throw new JwtBusinessException(ErrorCode.NOT_ALLOWED);
         }
 
-        basketTastingNoteCommandService.deleteTastingNote(tokenInfo.getId(), request.getProductId());
+        basketTastingNoteCommandService.deleteTastingNote(tokenInfo.getId(), request.getProductIds());
 
         response.setIsSuccess(true);
         return ResponseEntity.ok(response);
