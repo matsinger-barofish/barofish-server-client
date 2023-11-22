@@ -7,5 +7,5 @@ import java.util.List;
 @Getter
 public class BasketTastingNoteDeleteReq {
 
-    private List<Integer> productIds;
+    private List<Integer> productId;
 }

@@ -76,7 +76,7 @@ public class BasketTastingNoteController {
             throw new JwtBusinessException(ErrorCode.NOT_ALLOWED);
         }
 
-        basketTastingNoteCommandService.deleteTastingNote(tokenInfo.getId(), request.getProductIds());
+        basketTastingNoteCommandService.deleteTastingNote(tokenInfo.getId(), request.getProductId());
 
         response.setIsSuccess(true);
         return ResponseEntity.ok(response);
