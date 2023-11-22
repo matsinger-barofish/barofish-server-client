@@ -19,9 +19,6 @@ import com.matsinger.barofishserver.global.exception.BusinessException;
 import com.matsinger.barofishserver.jwt.JwtService;
 import com.matsinger.barofishserver.jwt.TokenAuthType;
 import com.matsinger.barofishserver.jwt.TokenInfo;
-import com.matsinger.barofishserver.jwt.JwtService;
-import com.matsinger.barofishserver.jwt.TokenAuthType;
-import com.matsinger.barofishserver.jwt.TokenInfo;
 import com.matsinger.barofishserver.utils.Common;
 import com.matsinger.barofishserver.utils.CustomResponse;
 import lombok.RequiredArgsConstructor;
@@ -211,7 +208,8 @@ public class CompareController {
                 TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth);
 
         List<SaveProduct> saveProducts = new ArrayList<>();
-        for (Integer productId : data.getProductIds()) {
+//        for (Integer productId : data.getProductIds()) {
+        for (Integer productId : data.getProductId()) {
             saveProducts.add(compareItemQueryService.selectSaveProduct(tokenInfo.getId(), productId));
         }
         compareItemCommandService.deleteSaveProduct(saveProducts);
