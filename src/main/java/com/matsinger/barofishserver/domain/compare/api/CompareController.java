@@ -89,6 +89,19 @@ public class CompareController {
         return ResponseEntity.ok(res);
     }
 
+    @GetMapping("/save")
+    public ResponseEntity<CustomResponse<List<ProductListDto>>> selectSaveProductList(
+            @RequestHeader("Authorization") Optional<String> auth) {
+        CustomResponse<List<ProductListDto>> res = new CustomResponse<>();
+
+        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth);
+
+        List<ProductListDto> products = compareItemQueryService.selectSaveProducts(tokenInfo.getId()).stream()
+                .map(productService::convert2ListDto).toList();
+        res.setData(Optional.of(products));
+        return ResponseEntity.ok(res);
+    }
+
     @GetMapping("/set/{id}")
     public ResponseEntity<CustomResponse<List<CompareProductDto>>> selectCompareSet(
             @RequestHeader("Authorization") Optional<String> auth,
@@ -104,19 +117,6 @@ public class CompareController {
                 .toList();
         res.setData(Optional.of(products));
         return ResponseEntity.ok(res);
-    }
-
-    @GetMapping("/save")
-    public ResponseEntity<CustomResponse<List<ProductListDto>>> selectSaveProductList(
-            @RequestHeader("Authorization") Optional<String> auth) {
-        CustomResponse<List<ProductListDto>> res = new CustomResponse<>();
-
-        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth);
-
-            List<ProductListDto> products = compareItemQueryService.selectSaveProducts(tokenInfo.getId()).stream()
-                    .map(productService::convert2ListDto).toList();
-            res.setData(Optional.of(products));
-            return ResponseEntity.ok(res);
     }
 
     @GetMapping("/products")
@@ -208,7 +208,8 @@ public class CompareController {
                 TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth);
 
         List<SaveProduct> saveProducts = new ArrayList<>();
-        for (Integer productId : data.getProductIds()) {
+//        for (Integer productId : data.getProductIds()) {
+        for (Integer productId : data.getProductId()) {
             saveProducts.add(compareItemQueryService.selectSaveProduct(tokenInfo.getId(), productId));
         }
         compareItemCommandService.deleteSaveProduct(saveProducts);

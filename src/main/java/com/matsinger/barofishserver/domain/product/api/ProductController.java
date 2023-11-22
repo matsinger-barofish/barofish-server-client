@@ -31,6 +31,10 @@ import com.matsinger.barofishserver.domain.searchFilter.domain.ProductSearchFilt
 import com.matsinger.barofishserver.domain.store.application.StoreService;
 import com.matsinger.barofishserver.domain.store.domain.Store;
 import com.matsinger.barofishserver.global.exception.BusinessException;
+import com.matsinger.barofishserver.domain.tastingNote.application.TastingNoteQueryService;
+import com.matsinger.barofishserver.domain.tastingNote.basketTastingNote.application.BasketTastingNoteQueryService;
+import com.matsinger.barofishserver.domain.tastingNote.dto.ProductTastingNoteResponse;
+import com.matsinger.barofishserver.global.exception.BusinessException;
 import com.matsinger.barofishserver.jwt.JwtService;
 import com.matsinger.barofishserver.jwt.TokenAuthType;
 import com.matsinger.barofishserver.jwt.TokenInfo;
@@ -70,11 +74,13 @@ public class ProductController {
     private final AdminLogQueryService adminLogQueryService;
     private final AdminLogCommandService adminLogCommandService;
     private final AdminQueryService adminQueryService;
+    private final TastingNoteQueryService tastingNoteQueryService;
     private final JwtService jwt;
 
     private final Common utils;
 
     private final S3Uploader s3;
+    private final BasketTastingNoteQueryService basketTastingNoteQueryService;
 
     @GetMapping("/recent-view")
     public ResponseEntity<CustomResponse<List<ProductListDto>>> selectRecentViewList(@RequestParam(value = "ids") String ids) {
@@ -263,7 +269,6 @@ public class ProductController {
 
         CustomResponse<SimpleProductDto> res = new CustomResponse<>();
 
-        
         TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(
                 Set.of(TokenAuthType.ALLOW, TokenAuthType.USER, TokenAuthType.ADMIN, TokenAuthType.PARTNER),
                 auth
@@ -273,6 +278,15 @@ public class ProductController {
         SimpleProductDto productDto = productService.convert2SimpleDto(
                 product,
                 tokenInfo.getType().equals(TokenAuthType.USER) ? tokenInfo.getId() : null);
+
+        boolean isSaved = false;
+        if (tokenInfo.getType().equals(TokenAuthType.USER)) {
+            isSaved = basketTastingNoteQueryService.isSaved(tokenInfo.getId(), id);
+        }
+
+        productDto.setIsLike(isSaved);
+        ProductTastingNoteResponse tastingNoteResponse = tastingNoteQueryService.getTastingNoteInfo(productDto.getId());
+        productDto.setTastingNoteInfo(tastingNoteResponse);
 
         res.setData(Optional.ofNullable(productDto));
         return ResponseEntity.ok(res);

@@ -10,6 +10,7 @@ import com.matsinger.barofishserver.domain.store.dto.SimpleStore;
 import com.matsinger.barofishserver.domain.product.productfilter.dto.ProductFilterValueDto;
 import com.matsinger.barofishserver.domain.product.dto.ProductListDto;
 import com.matsinger.barofishserver.domain.searchFilter.dto.SearchFilterFieldDto;
+import com.matsinger.barofishserver.domain.tastingNote.dto.ProductTastingNoteResponse;
 import lombok.*;
 
 import java.sql.Timestamp;
@@ -46,7 +47,6 @@ public class SimpleProductDto {
 
     // 위는 product 자체의 정보, 아래는 주입받아야 하는 정보
     SimpleStore store;
-    Boolean isLike;
     Integer discountPrice;
     Integer reviewCount;
     ReviewTotalStatistic reviewStatistics;
@@ -65,4 +65,10 @@ public class SimpleProductDto {
     @Builder.Default
     List<InquiryDto> inquiries = new ArrayList<>();
 
+    Boolean isLike;
+    ProductTastingNoteResponse tastingNoteInfo;
+
+    public void setTastingNote(ProductTastingNoteResponse tastingNoteInfo) {
+        this.tastingNoteInfo = tastingNoteInfo;
+    }
 }

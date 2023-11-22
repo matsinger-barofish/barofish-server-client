@@ -104,4 +104,8 @@ public class UserQueryService {
         return userRepository.findById(userId)
                              .orElseThrow(() -> new BusinessException("유저 정보를 찾을 수 없습니다."));
     }
+
+    public boolean existsById(int userId) {
+        return userRepository.existsById(userId);
+    }
 }

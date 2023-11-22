@@ -46,10 +46,10 @@ public class JwtService {
         TokenInfo tokenInfo = extractIdAndAuthType(token);
 
         // 토큰 기한이 만료 됐더라도 접근 권한이 모두에게 허용이면 통과
-        if (authTypesToAllow.contains(TokenAuthType.ALLOW)) {
-            tokenInfo.setId(null);
-            tokenInfo.setType(TokenAuthType.ALLOW);
-        }
+//        if (authTypesToAllow.contains(TokenAuthType.ALLOW)) {
+//            tokenInfo.setId(null);
+//            tokenInfo.setType(TokenAuthType.ALLOW);
+//        }
 
         if (tokenInfo.getId() == null && tokenInfo.getType() != TokenAuthType.ALLOW) {
             throw new JwtBusinessException(ErrorCode.TOKEN_INVALID);
