@@ -6,4 +6,11 @@ import lombok.Getter;
 public class BasketTastingNoteAddDeleteReq {
 
     private Integer productId;
+
+    @Override
+    public String toString() {
+        return "BasketTastingNoteAddDeleteReq{" +
+                "productId=" + productId +
+                '}';
+    }
 }
