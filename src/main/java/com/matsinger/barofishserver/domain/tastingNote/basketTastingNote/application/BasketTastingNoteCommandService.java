@@ -48,11 +48,6 @@ public class BasketTastingNoteCommandService {
 //        if (!isProductExists) {
 //            throw new BusinessException("상품이 존재하지 않습니다.");
 //        }
-
-        try {
-            basketTastingNoteQueryRepository.deleteAllByUserIdAndProductId(userId, productIds);
-        } catch (RuntimeException e) {
-            throw new BusinessException("상품 정보를 찾을 수 없습니다.");
-        }
+        basketTastingNoteQueryRepository.deleteAllByUserIdAndProductId(userId, productIds);
     }
 }
