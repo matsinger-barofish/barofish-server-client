@@ -11,6 +11,7 @@ import com.matsinger.barofishserver.jwt.JwtService;
 import com.matsinger.barofishserver.jwt.TokenAuthType;
 import com.matsinger.barofishserver.jwt.TokenInfo;
 import com.matsinger.barofishserver.jwt.exception.JwtBusinessException;
+import com.matsinger.barofishserver.utils.Common;
 import com.matsinger.barofishserver.utils.CustomResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -29,6 +30,7 @@ public class TastingNoteController {
     private final TastingNoteCommandService tastingNoteCommandService;
     private final TastingNoteQueryService tastingNoteQueryService;
     private final UserQueryService userQueryService;
+    private Common utils;
 
     @PostMapping("/")
     public ResponseEntity<CustomResponse<Boolean>> createTastingNote(@RequestHeader(value = "Authorization", required = false) Optional<String> auth,
@@ -53,16 +55,18 @@ public class TastingNoteController {
 
     @GetMapping("/compare")
     public ResponseEntity<CustomResponse<List<ProductTastingNoteResponse>>> getMyProductTastingNotes(@RequestHeader(value = "Authorization", required = false) Optional<String> auth,
-                                                                                                       @RequestParam(value = "productIds") List<Integer> productIds) {
+                                                                                                       @RequestParam(value = "productIds") String productIds) {
         CustomResponse<List<ProductTastingNoteResponse>> response = new CustomResponse<>();
 
         jwtService.validateAndGetTokenInfo(Set.of(TokenAuthType.USER, TokenAuthType.ALLOW), auth);
 
-        if (productIds.size() > 2) {
+        List<Integer> convertedProductIds = utils.str2IntList(productIds);
+
+        if (convertedProductIds.size() > 2) {
             throw new BusinessException("최대 2개까지 비교할 수 있습니다.");
         }
 
-        List<ProductTastingNoteResponse> tastingNotes = tastingNoteQueryService.compareTastingNotes(productIds);
+        List<ProductTastingNoteResponse> tastingNotes = tastingNoteQueryService.compareTastingNotes(convertedProductIds);
 
         response.setIsSuccess(true);
         response.setData(Optional.of(tastingNotes));
