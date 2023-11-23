@@ -30,7 +30,7 @@ public class TastingNoteController {
     private final TastingNoteCommandService tastingNoteCommandService;
     private final TastingNoteQueryService tastingNoteQueryService;
     private final UserQueryService userQueryService;
-    private Common utils;
+    private final Common utils;
 
     @PostMapping("/")
     public ResponseEntity<CustomResponse<Boolean>> createTastingNote(@RequestHeader(value = "Authorization", required = false) Optional<String> auth,
