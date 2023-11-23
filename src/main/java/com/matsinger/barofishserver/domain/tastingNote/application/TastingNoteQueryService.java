@@ -59,20 +59,37 @@ public class TastingNoteQueryService {
 
     @NotNull
     private ProductTastingNoteResponse convertToResponse(ProductTastingNoteInquiryDto productTastingNoteInquiryDto) {
+        // taste, texture 정보 설정
         TastingNoteTastes tastes = productTastingNoteInquiryDto.getTastes();
         tastes.sortByScore();
         TastingNoteTextures textures = productTastingNoteInquiryDto.getTextures();
         textures.sortByScore();
-
         ProductTastingNoteResponse tastingNoteResponse = new ProductTastingNoteResponse(tastes, textures);
+
+        // 상품에 붙어있는 tastingNote 정보 설정
         tastingNoteResponse.setDifficultyLevelOfTrimming(productTastingNoteInquiryDto.getDifficultyLevelOfTrimming());
         tastingNoteResponse.setTheScentOfTheSea(productTastingNoteInquiryDto.getTheScentOfTheSea());
-
         List<String> recommendedCookingWays = convertToArray(
                 productTastingNoteInquiryDto.getRecommendedCookingWay()
         );
         tastingNoteResponse.setRecommendedCookingWay(recommendedCookingWays);
+
+        // 상품 정보 설정
+        tastingNoteResponse.setProductInfo(productTastingNoteInquiryDto);
+        String firstProductImage = extractFirstImage(productTastingNoteInquiryDto.getImages());
+        tastingNoteResponse.setImage(firstProductImage);
         return tastingNoteResponse;
+    }
+
+    public String extractFirstImage(String images) {
+        StringBuilder resultBuilder = new StringBuilder(images.length());
+        for (char c : images.toCharArray()) {
+            if (c != '[' && c != ']') {
+                resultBuilder.append(c);
+            }
+        }
+        String bracketRemovedString = resultBuilder.toString();
+        return bracketRemovedString.split(", ")[0];
     }
 
     private List<String> convertToArray(String arrayFormatString) {

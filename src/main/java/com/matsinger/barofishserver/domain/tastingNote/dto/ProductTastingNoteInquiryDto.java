@@ -1,5 +1,6 @@
 package com.matsinger.barofishserver.domain.tastingNote.dto;
 
+import com.matsinger.barofishserver.domain.product.domain.ProductDeliverFeeType;
 import com.matsinger.barofishserver.domain.tastingNote.domain.TastingNoteTaste;
 import com.matsinger.barofishserver.domain.tastingNote.domain.TastingNoteTastes;
 import com.matsinger.barofishserver.domain.tastingNote.domain.TastingNoteTexture;
@@ -14,6 +15,13 @@ import lombok.NoArgsConstructor;
 public class ProductTastingNoteInquiryDto {
 
     private Integer productId;
+    private String images;
+    private String storeName;
+    private Integer originPrice;
+    private Integer discountPrice;
+    private Integer deliveryFee;
+    private ProductDeliverFeeType deliverFeeType;
+    private Integer minOrderPrice;
 
     private String taste1;
     private Double taste1Score;
