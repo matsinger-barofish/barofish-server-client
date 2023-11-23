@@ -14,6 +14,7 @@ import java.util.List;
 public class ProductTastingNoteResponse {
 
     private Integer id;
+    private Integer productId;
     private String image;
     private String storeName;
     private Integer originPrice;
@@ -51,7 +52,8 @@ public class ProductTastingNoteResponse {
     }
 
     public void setProductInfo(ProductTastingNoteInquiryDto dto) {
-        this.id = dto.getProductId();
+        this.id = dto.getId();
+        this.productId = dto.getProductId();
         this.storeName = dto.getStoreName();
         this.originPrice = dto.getOriginPrice();
         this.discountPrice = dto.getDiscountPrice();
