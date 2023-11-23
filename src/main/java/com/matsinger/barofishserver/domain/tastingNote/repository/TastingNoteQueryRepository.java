@@ -26,6 +26,7 @@ public class TastingNoteQueryRepository {
                 product.id.as("productId"),
                 product.images.as("images"),
                 storeInfo.name.as("storeName"),
+                product.title.as("productTitle"),
                 optionItem.originPrice.as("originPrice"),
                 optionItem.discountPrice.as("discountPrice"),
                 product.deliverFee.as("deliveryFee"),

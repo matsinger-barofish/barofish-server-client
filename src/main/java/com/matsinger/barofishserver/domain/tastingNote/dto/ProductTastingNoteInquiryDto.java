@@ -18,6 +18,7 @@ public class ProductTastingNoteInquiryDto {
     private Integer productId;
     private String images;
     private String storeName;
+    private String productTitle;
     private Integer originPrice;
     private Integer discountPrice;
     private Integer deliveryFee;

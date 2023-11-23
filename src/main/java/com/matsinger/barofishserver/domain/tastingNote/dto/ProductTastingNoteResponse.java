@@ -16,6 +16,7 @@ public class ProductTastingNoteResponse {
     private Integer id;
     private Integer productId;
     private String image;
+    private String productTitle;
     private String storeName;
     private Integer originPrice;
     private Integer discountPrice;
@@ -55,6 +56,7 @@ public class ProductTastingNoteResponse {
         this.id = dto.getId();
         this.productId = dto.getProductId();
         this.storeName = dto.getStoreName();
+        this.productTitle = dto.getProductTitle();
         this.originPrice = dto.getOriginPrice();
         this.discountPrice = dto.getDiscountPrice();
         this.deliveryFee = dto.getDeliveryFee();
