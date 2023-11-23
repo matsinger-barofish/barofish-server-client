@@ -29,4 +29,6 @@ public class ProductListDto {
     ProductDeliverFeeType deliverFeeType;
     Integer parentCategoryId;
     List<ProductFilterValueDto> filterValues;
+
+    Boolean isTastingNoteExists;
 }
