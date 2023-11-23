@@ -8,6 +8,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
 import static com.matsinger.barofishserver.domain.product.domain.QProduct.product;
+import static com.matsinger.barofishserver.domain.product.option.domain.QOption.option;
+import static com.matsinger.barofishserver.domain.product.optionitem.domain.QOptionItem.optionItem;
+import static com.matsinger.barofishserver.domain.store.domain.QStoreInfo.storeInfo;
 import static com.matsinger.barofishserver.domain.tastingNote.domain.QTastingNote.tastingNote;
 
 @Repository
@@ -20,6 +23,14 @@ public class TastingNoteQueryRepository {
         return queryFactory.select(Projections.fields(
                 ProductTastingNoteInquiryDto.class,
                 product.id.as("productId"),
+                product.images.as("images"),
+                storeInfo.name.as("storeName"),
+                optionItem.originPrice.as("originPrice"),
+                optionItem.discountPrice.as("discountPrice"),
+                product.deliverFee.as("deliveryFee"),
+                product.deliverFeeType.as("deliverFeeType"),
+                product.minOrderPrice.as("minOrderPrice"),
+
                 Expressions.asString("oily").as("taste1"),
                 tastingNote.oily.avg().as("taste1Score"),
                 Expressions.asString("taste2").as("taste2"),
@@ -46,6 +57,9 @@ public class TastingNoteQueryRepository {
                 ))
                 .from(product)
                 .leftJoin(tastingNote).on(product.id.eq(tastingNote.productId))
+                .leftJoin(storeInfo).on(product.storeId.eq(storeInfo.storeId))
+                .leftJoin(option).on(product.id.eq(option.productId))
+                .leftJoin(optionItem).on(optionItem.optionId.eq(option.id))
                 .where(product.id.eq(productId))
                 .fetchOne();
     }
