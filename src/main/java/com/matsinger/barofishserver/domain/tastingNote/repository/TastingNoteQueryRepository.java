@@ -22,6 +22,7 @@ public class TastingNoteQueryRepository {
     public ProductTastingNoteInquiryDto getTastingNotesScore(Integer productId) {
         return queryFactory.select(Projections.fields(
                 ProductTastingNoteInquiryDto.class,
+                tastingNote.id.as("id"),
                 product.id.as("productId"),
                 product.images.as("images"),
                 storeInfo.name.as("storeName"),

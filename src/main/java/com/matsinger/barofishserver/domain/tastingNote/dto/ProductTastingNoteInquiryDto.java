@@ -14,6 +14,7 @@ import lombok.NoArgsConstructor;
 @Builder @NoArgsConstructor @AllArgsConstructor
 public class ProductTastingNoteInquiryDto {
 
+    private Integer id;
     private Integer productId;
     private String images;
     private String storeName;
