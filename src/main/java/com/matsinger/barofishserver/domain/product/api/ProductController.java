@@ -287,7 +287,9 @@ public class ProductController {
 
         List<ProductTastingNoteResponse> tastingNoteResponses = new ArrayList<>();
         ProductTastingNoteResponse tastingNoteResponse = tastingNoteQueryService.getTastingNoteInfo(productDto.getId());
-        tastingNoteResponses.add(tastingNoteResponse);
+        if (tastingNoteResponse != null) {
+            tastingNoteResponses.add(tastingNoteResponse);
+        }
         productDto.setTastingNoteInfo(tastingNoteResponses);
 
         res.setData(Optional.ofNullable(productDto));

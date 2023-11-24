@@ -63,14 +63,14 @@ public class ProductTastingNoteInquiryDto {
         this.lightTasteScore = Math.round(lightTasteScore * 10) / 10.0;
         this.umamiScore = Math.round(umamiScore * 10) / 10.0;
         this.saltyScore = Math.round(saltyScore * 10) / 10.0;
-        this.texture1Score = Math.round(texture1Score * 10) / 10.0;
-        this.texture2Score = Math.round(texture2Score * 10) / 10.0;
-        this.texture3Score = Math.round(texture3Score * 10) / 10.0;
-        this.texture4Score = Math.round(texture4Score * 10) / 10.0;
-        this.texture5Score = Math.round(texture5Score * 10) / 10.0;
-        this.texture6Score = Math.round(texture6Score * 10) / 10.0;
-        this.texture7Score = Math.round(texture7Score * 10) / 10.0;
-        this.texture8Score = Math.round(texture8Score * 10) / 10.0;
+        this.texture1Score = texture1Score != null ? Math.round(texture1Score * 10) / 10.0 : 0;
+        this.texture2Score = texture2Score != null ? Math.round(texture2Score * 10) / 10.0 : 0;
+        this.texture3Score = texture3Score != null ? Math.round(texture3Score * 10) / 10.0 : 0;
+        this.texture4Score = texture4Score != null ? Math.round(texture4Score * 10) / 10.0 : 0;
+        this.texture5Score = texture5Score != null ? Math.round(texture5Score * 10) / 10.0 : 0;
+        this.texture6Score = texture6Score != null ? Math.round(texture6Score * 10) / 10.0 : 0;
+        this.texture7Score = texture7Score != null ? Math.round(texture7Score * 10) / 10.0 : 0;
+        this.texture8Score = texture8Score != null ? Math.round(texture8Score * 10) / 10.0 : 0;
     }
 
     public TastingNoteTastes getTastes() {

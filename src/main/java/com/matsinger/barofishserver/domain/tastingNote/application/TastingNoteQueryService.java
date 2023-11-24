@@ -106,7 +106,10 @@ public class TastingNoteQueryService {
     public List<ProductTastingNoteResponse> compareTastingNotes(List<Integer> productIds) {
         List<ProductTastingNoteResponse> tastingNotes = new ArrayList<>();
         for (Integer productId : productIds) {
-            tastingNotes.add(getTastingNoteInfo(productId));
+            ProductTastingNoteResponse tastingNoteResponse = getTastingNoteInfo(productId);
+            if (tastingNoteResponse != null) {
+                tastingNotes.add(getTastingNoteInfo(productId));
+            }
         }
         return tastingNotes;
     }
