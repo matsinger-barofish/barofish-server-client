@@ -30,7 +30,6 @@ import com.matsinger.barofishserver.domain.searchFilter.application.SearchFilter
 import com.matsinger.barofishserver.domain.searchFilter.domain.ProductSearchFilterMap;
 import com.matsinger.barofishserver.domain.store.application.StoreService;
 import com.matsinger.barofishserver.domain.store.domain.Store;
-import com.matsinger.barofishserver.global.exception.BusinessException;
 import com.matsinger.barofishserver.domain.tastingNote.application.TastingNoteQueryService;
 import com.matsinger.barofishserver.domain.tastingNote.basketTastingNote.application.BasketTastingNoteQueryService;
 import com.matsinger.barofishserver.domain.tastingNote.dto.ProductTastingNoteResponse;
@@ -285,8 +284,11 @@ public class ProductController {
         }
 
         productDto.setIsLike(isSaved);
+
+        List<ProductTastingNoteResponse> tastingNoteResponses = new ArrayList<>();
         ProductTastingNoteResponse tastingNoteResponse = tastingNoteQueryService.getTastingNoteInfo(productDto.getId());
-        productDto.setTastingNoteInfo(tastingNoteResponse);
+        tastingNoteResponses.add(tastingNoteResponse);
+        productDto.setTastingNoteInfo(tastingNoteResponses);
 
         res.setData(Optional.ofNullable(productDto));
         return ResponseEntity.ok(res);

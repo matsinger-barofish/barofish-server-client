@@ -66,9 +66,9 @@ public class SimpleProductDto {
     List<InquiryDto> inquiries = new ArrayList<>();
 
     Boolean isLike;
-    ProductTastingNoteResponse tastingNoteInfo;
+    List<ProductTastingNoteResponse> tastingNoteInfo;
 
-    public void setTastingNote(ProductTastingNoteResponse tastingNoteInfo) {
+    public void setTastingNote(List<ProductTastingNoteResponse> tastingNoteInfo) {
         this.tastingNoteInfo = tastingNoteInfo;
     }
 }
