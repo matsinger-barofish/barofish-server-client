@@ -14,6 +14,7 @@ import java.util.List;
 @NoArgsConstructor
 public class ProductListDto {
     Integer id;
+    Integer productId;
     ProductState state;
     String image;
     String title;
