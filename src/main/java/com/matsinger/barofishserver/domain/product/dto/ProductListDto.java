@@ -30,5 +30,5 @@ public class ProductListDto {
     Integer parentCategoryId;
     List<ProductFilterValueDto> filterValues;
 
-    Boolean isTastingNoteExists;
+    Boolean tastingNoteExists;
 }

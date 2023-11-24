@@ -27,13 +27,13 @@ public class TastingNoteCompareBasketProductDto {
     private String storeImage;
     private ProductDeliverFeeType deliverFeeType;
     private Integer parentCategoryId;
-    private boolean isTastingNoteExists;
+    private boolean tastingNoteExists;
 
     public void setImage(String image) {
         this.image = image;
     }
 
     public void isTastingNoteExists(boolean isTastingNoteExists) {
-        this.isTastingNoteExists = isTastingNoteExists;
+        this.tastingNoteExists = isTastingNoteExists;
     }
 }
