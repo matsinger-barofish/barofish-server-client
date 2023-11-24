@@ -27,7 +27,8 @@ public class JwtService {
         if (authTypesToAllow.contains(TokenAuthType.ALLOW) && authorizationString.isEmpty()) {
             return new TokenInfo(null, TokenAuthType.ALLOW);
         }
-        if (authorizationString.isEmpty()) {
+
+        if (!authTypesToAllow.contains(TokenAuthType.ALLOW) && authorizationString.isEmpty()) {
             throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
         }
 
