@@ -54,7 +54,7 @@ public class TastingNoteCommandService {
                 .orderProductInfoId(findedOrderProductInfo.getId())
                 .productId(findedOrderProductInfo.getProductId())
                 .userId(findedUser.getId())
-                .oily(request.getTaste1())
+                .taste1(request.getTaste1())
                 .taste2(request.getTaste2())
                 .taste3(request.getTaste3())
                 .taste4(request.getTaste4())

@@ -29,8 +29,8 @@ public class TastingNote {
     private Integer userId;
 
     @Min(1) @Max(5)
-    @Column(name = "oily", nullable = false)
-    private Integer oily;
+    @Column(name = "taste_1", nullable = false)
+    private Integer taste1;
 
     @Min(1) @Max(5)
     @Column(name = "taste_2", nullable = false)
@@ -49,7 +49,7 @@ public class TastingNote {
     private Integer taste5;
 
     @Min(1) @Max(5)
-    @Column(name = "tendernessSoftness", nullable = false)
+    @Column(name = "texture_1", nullable = false)
     private Integer tendernessSoftness;
 
     @Min(1) @Max(5)
@@ -67,4 +67,16 @@ public class TastingNote {
     @Min(1) @Max(5)
     @Column(name = "texture_5", nullable = false)
     private Integer texture5;
+
+    @Min(1) @Max(5)
+    @Column(name = "texture_6", nullable = false)
+    private Integer texture6;
+
+    @Min(1) @Max(5)
+    @Column(name = "texture_7", nullable = false)
+    private Integer texture7;
+
+    @Min(1) @Max(5)
+    @Column(name = "texture_8", nullable = false)
+    private Integer texture8;
 }

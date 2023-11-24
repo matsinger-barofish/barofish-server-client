@@ -23,11 +23,14 @@ public class TastingNoteCreateRequest {
     private Integer texture3;
     private Integer texture4;
     private Integer texture5;
+    private Integer texture6;
+    private Integer texture7;
+    private Integer texture8;
 
     public TastingNote toEntity() {
         return TastingNote.builder()
                 .orderProductInfoId(this.orderProductInfoId)
-                .oily(this.taste1)
+                .taste1(this.taste1)
                 .taste2(this.taste2)
                 .taste3(this.taste3)
                 .taste4(this.taste4)
@@ -37,6 +40,9 @@ public class TastingNoteCreateRequest {
                 .texture3(this.texture3)
                 .texture4(this.texture4)
                 .texture5(this.texture5)
+                .texture5(this.texture6)
+                .texture5(this.texture7)
+                .texture5(this.texture8)
                 .build();
     }
 }
