@@ -59,7 +59,7 @@ public class TastingNoteCommandService {
                 .taste3(request.getTaste3())
                 .taste4(request.getTaste4())
                 .taste5(request.getTaste5())
-                .tendernessSoftness(request.getTexture1())
+                .texture1(request.getTexture1())
                 .texture2(request.getTexture2())
                 .texture3(request.getTexture3())
                 .texture4(request.getTexture4())

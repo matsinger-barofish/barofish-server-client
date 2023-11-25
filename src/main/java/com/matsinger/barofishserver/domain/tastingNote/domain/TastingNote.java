@@ -28,55 +28,55 @@ public class TastingNote {
     @Column(name = "user_id", nullable = false)
     private Integer userId;
 
-    @Min(1) @Max(5)
+    @Min(0) @Max(10)
     @Column(name = "taste_1", nullable = false)
-    private Integer taste1;
+    private Double taste1;
 
-    @Min(1) @Max(5)
+    @Min(0) @Max(10)
     @Column(name = "taste_2", nullable = false)
-    private Integer taste2;
+    private Double taste2;
 
-    @Min(1) @Max(5)
+    @Min(0) @Max(10)
     @Column(name = "taste_3", nullable = false)
-    private Integer taste3;
+    private Double taste3;
 
-    @Min(1) @Max(5)
+    @Min(0) @Max(10)
     @Column(name = "taste_4", nullable = false)
-    private Integer taste4;
+    private Double taste4;
 
-    @Min(1) @Max(5)
+    @Min(0) @Max(10)
     @Column(name = "taste_5", nullable = false)
-    private Integer taste5;
+    private Double taste5;
 
-    @Min(1) @Max(5)
+    @Min(0) @Max(10)
     @Column(name = "texture_1", nullable = false)
-    private Integer tendernessSoftness;
+    private Double texture1;
 
-    @Min(1) @Max(5)
+    @Min(0) @Max(10)
     @Column(name = "texture_2", nullable = false)
-    private Integer texture2;
+    private Double texture2;
 
-    @Min(1) @Max(5)
+    @Min(0) @Max(10)
     @Column(name = "texture_3", nullable = false)
-    private Integer texture3;
+    private Double texture3;
 
-    @Min(1) @Max(5)
+    @Min(0) @Max(10)
     @Column(name = "texture_4", nullable = false)
-    private Integer texture4;
+    private Double texture4;
 
-    @Min(1) @Max(5)
+    @Min(0) @Max(10)
     @Column(name = "texture_5", nullable = false)
-    private Integer texture5;
+    private Double texture5;
 
-    @Min(1) @Max(5)
+    @Min(0) @Max(10)
     @Column(name = "texture_6", nullable = false)
-    private Integer texture6;
+    private Double texture6;
 
-    @Min(1) @Max(5)
+    @Min(0) @Max(10)
     @Column(name = "texture_7", nullable = false)
-    private Integer texture7;
+    private Double texture7;
 
-    @Min(1) @Max(5)
+    @Min(0) @Max(10)
     @Column(name = "texture_8", nullable = false)
-    private Integer texture8;
+    private Double texture8;
 }
