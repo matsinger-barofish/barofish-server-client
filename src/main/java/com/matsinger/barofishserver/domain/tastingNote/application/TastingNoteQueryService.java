@@ -63,7 +63,7 @@ public class TastingNoteQueryService {
         TastingNoteTastes tastes = productTastingNoteInquiryDto.getTastes();
 //        tastes.sortByScore();
         TastingNoteTextures textures = productTastingNoteInquiryDto.getTextures();
-//        textures.sortByScore();
+        textures.sortByScore();
         ProductTastingNoteResponse tastingNoteResponse = new ProductTastingNoteResponse(tastes, textures);
 
         // 상품에 붙어있는 tastingNote 정보 설정
