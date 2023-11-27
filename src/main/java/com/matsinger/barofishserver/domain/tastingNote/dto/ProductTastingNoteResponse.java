@@ -27,8 +27,8 @@ public class ProductTastingNoteResponse {
     private List<TastingNoteTaste> tastes;
     private List<TastingNoteTexture> textures;
 
-    private String difficultyLevelOfTrimming;
-    private String theScentOfTheSea;
+    private Double difficultyLevelOfTrimming;
+    private Double theScentOfTheSea;
     private List<String> recommendedCookingWay;
 
     public ProductTastingNoteResponse(TastingNoteTastes tastes, TastingNoteTextures textures) {
@@ -40,11 +40,11 @@ public class ProductTastingNoteResponse {
         );
     }
 
-    public void setDifficultyLevelOfTrimming(String difficultyLevelOfTrimming) {
+    public void setDifficultyLevelOfTrimming(Double difficultyLevelOfTrimming) {
         this.difficultyLevelOfTrimming = difficultyLevelOfTrimming;
     }
 
-    public void setTheScentOfTheSea(String theScentOfTheSea) {
+    public void setTheScentOfTheSea(Double theScentOfTheSea) {
         this.theScentOfTheSea = theScentOfTheSea;
     }
 

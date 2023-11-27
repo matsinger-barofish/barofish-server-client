@@ -53,8 +53,8 @@ public class ProductTastingNoteInquiryDto {
     private String texture8;
     private Double texture8Score;
 
-    private String difficultyLevelOfTrimming;
-    private String theScentOfTheSea;
+    private Double difficultyLevelOfTrimming;
+    private Double theScentOfTheSea;
     private String recommendedCookingWay;
 
     public void roundScoresToSecondDecimalPlace() {
@@ -75,10 +75,10 @@ public class ProductTastingNoteInquiryDto {
 
     public TastingNoteTastes getTastes() {
         TastingNoteTastes tastingNoteTastes = new TastingNoteTastes();
-        tastingNoteTastes.add(TastingNoteTaste.builder().taste(this.oily).score(this.oilyScore).build());
-        tastingNoteTastes.add(TastingNoteTaste.builder().taste(this.sweet).score(this.sweetScore).build());
         tastingNoteTastes.add(TastingNoteTaste.builder().taste(this.lightTaste).score(this.lightTasteScore).build());
         tastingNoteTastes.add(TastingNoteTaste.builder().taste(this.umami).score(this.umamiScore).build());
+        tastingNoteTastes.add(TastingNoteTaste.builder().taste(this.oily).score(this.oilyScore).build());
+        tastingNoteTastes.add(TastingNoteTaste.builder().taste(this.sweet).score(this.sweetScore).build());
         tastingNoteTastes.add(TastingNoteTaste.builder().taste(this.salty).score(this.saltyScore).build());
         return tastingNoteTastes;
     }
