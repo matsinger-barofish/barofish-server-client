@@ -75,8 +75,8 @@ public class ProductTastingNoteInquiryDto {
 
     public TastingNoteTastes getTastes() {
         TastingNoteTastes tastingNoteTastes = new TastingNoteTastes();
-        tastingNoteTastes.add(TastingNoteTaste.builder().taste(this.sweet).score(this.sweetScore).build());
         tastingNoteTastes.add(TastingNoteTaste.builder().taste(this.umami).score(this.umamiScore).build());
+        tastingNoteTastes.add(TastingNoteTaste.builder().taste(this.sweet).score(this.sweetScore).build());
         tastingNoteTastes.add(TastingNoteTaste.builder().taste(this.oily).score(this.oilyScore).build());
         tastingNoteTastes.add(TastingNoteTaste.builder().taste(this.lightTaste).score(this.lightTasteScore).build());
         tastingNoteTastes.add(TastingNoteTaste.builder().taste(this.salty).score(this.saltyScore).build());
