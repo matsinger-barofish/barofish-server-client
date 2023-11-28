@@ -56,15 +56,15 @@ dependencies {
     // 모니터닝을 위한 디펜던시 시작
     implementation 'org.springframework.boot:spring-boot-starter-actuator' // 엑츄에이터
 
-    implementation 'io.micrometer:micrometer-registry-otlp'
+    implementation 'io.micrometer:micrometer-registry-otlp' // runtime scope?
     implementation 'io.micrometer:micrometer-tracing-bridge-otel:1.1.6'
-    implementation 'io.opentelemetry:opentelemetry-api:1.31.0'
-    implementation 'io.opentelemetry:opentelemetry-sdk:1.31.0'
-    implementation 'io.opentelemetry:opentelemetry-exporter-otlp:1.31.0'
-    implementation 'io.opentelemetry:opentelemetry-exporter-common:1.31.0'
-    implementation 'io.opentelemetry:opentelemetry-exporter-otlp-common:1.31.0'
-    implementation 'io.opentelemetry.instrumentation:opentelemetry-logback-appender-1.0:1.31.0-alpha'
-    implementation 'io.opentelemetry.instrumentation:opentelemetry-instrumentation-api-semconv:1.31.0-alpha'
+    implementation 'io.opentelemetry:opentelemetry-api:1.31.0' //
+    implementation 'io.opentelemetry:opentelemetry-sdk:1.31.0' //
+    implementation 'io.opentelemetry:opentelemetry-exporter-otlp:1.31.0' //
+    implementation 'io.opentelemetry:opentelemetry-exporter-common:1.31.0' //
+    implementation 'io.opentelemetry:opentelemetry-exporter-otlp-common:1.31.0' //
+    implementation 'io.opentelemetry.instrumentation:opentelemetry-logback-appender-1.0:1.31.0-alpha' //
+    implementation 'io.opentelemetry.instrumentation:opentelemetry-instrumentation-api-semconv:1.31.0-alpha' //
     // 모니터닝을 위한 디펜던시 끝
 
 
