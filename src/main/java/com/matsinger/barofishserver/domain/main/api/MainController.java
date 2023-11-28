@@ -67,7 +67,7 @@ public class MainController {
         CustomResponse<List<CurationDto>> res = new CustomResponse<>();
 
         Integer userId = null;
-        jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ALLOW), auth);
+        jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ALLOW, TokenAuthType.USER), auth);
 
         List<Curation> curations = curationQueryService.selectCurationState(CurationState.ACTIVE);
         List<CurationDto> curationDtos = new ArrayList<>();
@@ -89,7 +89,7 @@ public class MainController {
     public ResponseEntity<CustomResponse<List<SimpleStore>>> selectMainStoreList(@RequestHeader(value = "Authorization") Optional<String> auth) {
         CustomResponse<List<SimpleStore>> res = new CustomResponse<>();
 
-        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ALLOW), auth);
+        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ALLOW, TokenAuthType.USER), auth);
         Integer userId = tokenInfo.getId();
 
         List<SimpleStore> storeDtos = storeService.selectReliableStoreRandomOrder().stream().map(v -> {

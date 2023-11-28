@@ -122,6 +122,15 @@ public class Product {
     @Column(name = "item_code")
     private String itemCode;
 
+    @Column(name = "difficulty_level_of_trimming", length =10)
+    private Double difficultyLevelOfTrimming;
+
+    @Column(name = "the_scent_of_the_sea", length = 10)
+    private Double theScentOfTheSea;
+
+    @Column(name = "recommended_cooking_way", length = 10)
+    private String recommendedCookingWay;
+
     public void setPointRate(Float pointRate) {
         this.pointRate = pointRate / 100;
     }
@@ -231,8 +240,8 @@ public class Product {
                 .originPrice(originPrice)
                 .deliveryInfo(deliveryInfo)
                 .forwardingTime(this.forwardingTime)
-                .description(descriptionImages)
-                .descriptionImages(descriptionImages.substring(1, descriptionImages.length() - 1).split(", "))
+                .description(this.descriptionImages)
+                .descriptionImages(this.descriptionImages.substring(1, descriptionImages.length() - 1).split(", "))
                 .representOptionItemId(this.representOptionItemId)
                 .deliverBoxPerAmount(this.getDeliverBoxPerAmount())
                 .createdAt(this.getCreatedAt())
