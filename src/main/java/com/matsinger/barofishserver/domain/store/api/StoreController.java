@@ -615,7 +615,7 @@ public class StoreController {
                                                                    @RequestParam(value = "type") LikePostType type) {
         CustomResponse<Boolean> res = new CustomResponse<>();
 
-                TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
+                TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth);
 
 
         Boolean check = storeService.checkLikeStore(storeId, tokenInfo.getId());

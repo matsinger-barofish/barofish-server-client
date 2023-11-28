@@ -3,6 +3,8 @@ package com.matsinger.barofishserver.domain.compare.dto;
 import com.matsinger.barofishserver.domain.compare.filter.dto.CompareFilterDto;
 import com.matsinger.barofishserver.domain.product.domain.ProductDeliverFeeType;
 import com.matsinger.barofishserver.domain.product.productfilter.dto.ProductFilterValueDto;
+import com.matsinger.barofishserver.domain.tastingNote.domain.TastingNoteTaste;
+import com.matsinger.barofishserver.domain.tastingNote.domain.TastingNoteTexture;
 import lombok.*;
 
 import java.util.List;
@@ -29,4 +31,10 @@ public class CompareProductDto {
     String process;
     String usage;
     String storage;
+
+    List<TastingNoteTaste> tastes;
+    List<TastingNoteTexture> textures;
+    String difficultyLevelOfTrimming;
+    String theScentOfTheSea;
+    List<String> recommendedCookingWay;
 }

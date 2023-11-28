@@ -1,7 +1,6 @@
 package com.matsinger.barofishserver.domain.order.orderprductinfo.repository;
 
 import com.matsinger.barofishserver.domain.order.orderprductinfo.domain.OrderProductState;
-import com.matsinger.barofishserver.domain.settlement.dto.TempDto;
 import com.matsinger.barofishserver.domain.settlement.dto.SettlementOrderRawDto;
 import com.matsinger.barofishserver.domain.settlement.dto.SettlementProductOptionItemDto;
 import com.querydsl.core.types.ExpressionUtils;
@@ -21,8 +20,6 @@ import static com.matsinger.barofishserver.domain.order.domain.QOrders.orders;
 import static com.matsinger.barofishserver.domain.order.orderprductinfo.domain.QOrderProductInfo.orderProductInfo;
 import static com.matsinger.barofishserver.domain.product.domain.QProduct.product;
 import static com.matsinger.barofishserver.domain.product.optionitem.domain.QOptionItem.optionItem;
-import static com.matsinger.barofishserver.domain.review.domain.QReview.review;
-import static com.matsinger.barofishserver.domain.review.domain.QReviewLike.reviewLike;
 import static com.matsinger.barofishserver.domain.store.domain.QStore.store;
 import static com.matsinger.barofishserver.domain.store.domain.QStoreInfo.storeInfo;
 import static com.matsinger.barofishserver.domain.user.domain.QUser.user;
@@ -32,25 +29,10 @@ import static com.querydsl.core.group.GroupBy.list;
 
 @Repository
 @RequiredArgsConstructor
-public class OrderProductInfoRepositoryImpl implements OrderProductInfoRepositoryCustom {
+public class OrderProductInfoRepositoryImpl {
 
     private final JPAQueryFactory queryFactory;
 
-    @Override
-    public List<TempDto> queryTest(int orderProductInfoId) {
-        return queryFactory
-                .select(
-                        Projections.fields(TempDto.class,
-                                reviewLike.reviewId.count().as("reviewLike"),
-                                review.id.as("reviewId"))
-                )
-                .from(review)
-                .leftJoin(reviewLike).on(review.id.eq(reviewLike.reviewId))
-                .groupBy(review.id)
-                .fetch();
-    }
-
-    @Override
     public List<SettlementOrderRawDto> getExcelRawDataWithNotSettled(Integer storeId) {
 
         return queryFactory
