@@ -286,11 +286,14 @@ public class ProductController {
         productDto.setIsLike(isSaved);
 
         List<ProductTastingNoteResponse> tastingNoteResponses = new ArrayList<>();
-        ProductTastingNoteResponse tastingNoteResponse = tastingNoteQueryService.getTastingNoteInfo(productDto.getId());
-        if (tastingNoteResponse != null) {
-            tastingNoteResponses.add(tastingNoteResponse);
+        // 주석 해제시 관리자 페이지에서 상품 비활성화 했을 경우 비활성화된 상품입니다 오류메시지 던지면서 데이터가 안보임
+        if (tokenInfo.getType() == TokenAuthType.USER) {
+            ProductTastingNoteResponse tastingNoteResponse = tastingNoteQueryService.getTastingNoteInfo(productDto.getId());
+            if (tastingNoteResponse != null) {
+                tastingNoteResponses.add(tastingNoteResponse);
+            }
+            productDto.setTastingNoteInfo(tastingNoteResponses);
         }
-        productDto.setTastingNoteInfo(tastingNoteResponses);
 
         res.setData(Optional.ofNullable(productDto));
         return ResponseEntity.ok(res);
