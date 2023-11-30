@@ -52,6 +52,10 @@ public class ProductTastingNoteInquiryDto {
     private Double texture7Score;
     private String texture8;
     private Double texture8Score;
+    private String texture9;
+    private Double texture9Score;
+    private String texture10;
+    private Double texture10Score;
 
     private Double difficultyLevelOfTrimming;
     private Double theScentOfTheSea;
@@ -71,6 +75,8 @@ public class ProductTastingNoteInquiryDto {
         this.texture6Score = texture6Score != null ? Math.round(texture6Score * 10) / 10.0 : 0;
         this.texture7Score = texture7Score != null ? Math.round(texture7Score * 10) / 10.0 : 0;
         this.texture8Score = texture8Score != null ? Math.round(texture8Score * 10) / 10.0 : 0;
+        this.texture9Score = texture9Score != null ? Math.round(texture9Score * 10) / 10.0 : 0;
+        this.texture10Score = texture10Score != null ? Math.round(texture10Score * 10) / 10.0 : 0;
     }
 
     public TastingNoteTastes getTastes() {
@@ -93,6 +99,8 @@ public class ProductTastingNoteInquiryDto {
         tastingNoteTextures.add(TastingNoteTexture.builder().texture(this.texture6).score(this.texture6Score).build());
         tastingNoteTextures.add(TastingNoteTexture.builder().texture(this.texture7).score(this.texture7Score).build());
         tastingNoteTextures.add(TastingNoteTexture.builder().texture(this.texture8).score(this.texture8Score).build());
+        tastingNoteTextures.add(TastingNoteTexture.builder().texture(this.texture9).score(this.texture9Score).build());
+        tastingNoteTextures.add(TastingNoteTexture.builder().texture(this.texture10).score(this.texture10Score).build());
         return tastingNoteTextures;
     }
 }
