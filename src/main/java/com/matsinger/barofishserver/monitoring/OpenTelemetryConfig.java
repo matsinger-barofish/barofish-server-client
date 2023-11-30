@@ -23,6 +23,7 @@ public class OpenTelemetryConfig {
 
     @Bean
     OpenTelemetry openTelemetry(SdkLoggerProvider sdkLoggerProvider, SdkTracerProvider sdkTracerProvider, ContextPropagators contextPropagators) {
+        // 정상적으로 로깅, 트레이싱이 될 때랑 동작이 다르게 되는것 같음 (디버깅해서 스택 보면)
         OpenTelemetrySdk openTelemetrySdk = OpenTelemetrySdk.builder()
                 .setLoggerProvider(sdkLoggerProvider)
                 .setTracerProvider(sdkTracerProvider)
