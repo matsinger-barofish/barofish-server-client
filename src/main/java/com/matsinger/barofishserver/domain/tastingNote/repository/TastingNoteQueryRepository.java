@@ -59,6 +59,10 @@ public class TastingNoteQueryRepository {
                 tastingNote.texture7.avg().as("texture7Score"),
                 Expressions.asString("texture8").as("texture8"),
                 tastingNote.texture8.avg().as("texture8Score"),
+                Expressions.asString("texture9").as("texture9"),
+                tastingNote.texture9.avg().as("texture9Score"),
+                Expressions.asString("texture10").as("texture10"),
+                tastingNote.texture10.avg().as("texture10Score"),
                 product.difficultyLevelOfTrimming.as("difficultyLevelOfTrimming"),
                 product.theScentOfTheSea.as("theScentOfTheSea"),
                 product.recommendedCookingWay.as("recommendedCookingWay")
