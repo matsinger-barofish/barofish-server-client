@@ -79,4 +79,12 @@ public class TastingNote {
     @Min(0) @Max(10)
     @Column(name = "texture_8", nullable = false)
     private Double texture8;
+
+    @Min(0) @Max(10)
+    @Column(name = "texture_9", nullable = false)
+    private Double texture9;
+
+    @Min(0) @Max(10)
+    @Column(name = "texture_10", nullable = false)
+    private Double texture10;
 }
