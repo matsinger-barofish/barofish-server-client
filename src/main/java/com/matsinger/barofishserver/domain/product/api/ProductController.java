@@ -30,7 +30,6 @@ import com.matsinger.barofishserver.domain.searchFilter.application.SearchFilter
 import com.matsinger.barofishserver.domain.searchFilter.domain.ProductSearchFilterMap;
 import com.matsinger.barofishserver.domain.store.application.StoreService;
 import com.matsinger.barofishserver.domain.store.domain.Store;
-import com.matsinger.barofishserver.global.exception.BusinessException;
 import com.matsinger.barofishserver.domain.tastingNote.application.TastingNoteQueryService;
 import com.matsinger.barofishserver.domain.tastingNote.basketTastingNote.application.BasketTastingNoteQueryService;
 import com.matsinger.barofishserver.domain.tastingNote.dto.ProductTastingNoteResponse;
@@ -223,7 +222,7 @@ public class ProductController {
 
         Integer userId = null;
         
-        jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ALLOW, TokenAuthType.USER), auth);
+        jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ALLOW), auth);
 
         Page<ProductListDto>
                 result =
