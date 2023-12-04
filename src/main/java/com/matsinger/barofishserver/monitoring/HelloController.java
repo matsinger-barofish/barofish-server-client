@@ -10,6 +10,9 @@ import org.springframework.web.client.RestTemplate;
 @RestController
 class HelloController {
 
+//    @Autowired
+//    private TracerProvider tracerProvider;
+
     private static final Logger LOGGER = LoggerFactory.getLogger(HelloController.class);
     private final RestTemplate restTemplate;
 
@@ -21,6 +24,7 @@ class HelloController {
     public String hello() {
         LOGGER.info("---------Hello method started---------");
         ResponseEntity<String> responseEntity = this.restTemplate.postForEntity("https://httpbin.org/post", "Hello, Cloud!", String.class);
+//        tracerProvider.toString();
         return responseEntity.getBody();
     }
 }

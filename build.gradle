@@ -1,6 +1,6 @@
 plugins {
     id 'java'
-    id 'org.springframework.boot' version '3.0.6'
+    id 'org.springframework.boot' version '3.1.5'
     id 'io.spring.dependency-management' version '1.1.0'
 }
 
@@ -56,10 +56,16 @@ dependencies {
     // 모니터닝을 위한 디펜던시 시작
     implementation 'org.springframework.boot:spring-boot-starter-actuator' // 엑츄에이터
 
+//    implementation 'io.opentelemetry:opentelemetry-bom:1.31.0'
     implementation 'io.micrometer:micrometer-registry-otlp' // runtime scope?
     implementation 'io.micrometer:micrometer-tracing-bridge-otel:1.1.6'
+    implementation 'io.opentelemetry:opentelemetry-api:1.31.0'
     implementation 'io.opentelemetry:opentelemetry-api:1.31.0' //
     implementation 'io.opentelemetry:opentelemetry-sdk:1.31.0' //
+    implementation 'io.opentelemetry:opentelemetry-sdk-common:1.31.0' //
+    implementation 'io.opentelemetry:opentelemetry-sdk-metrics:1.31.0' //
+    implementation 'io.opentelemetry:opentelemetry-sdk-trace:1.31.0'
+    implementation 'io.opentelemetry:opentelemetry-sdk-extension-autoconfigure-spi:1.31.0'
     implementation 'io.opentelemetry:opentelemetry-exporter-otlp:1.31.0' //
     implementation 'io.opentelemetry:opentelemetry-exporter-common:1.31.0' //
     implementation 'io.opentelemetry:opentelemetry-exporter-otlp-common:1.31.0' //
