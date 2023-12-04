@@ -222,7 +222,7 @@ public class ProductController {
 
         Integer userId = null;
         
-        jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ALLOW, TokenAuthType.USER), auth);
+        jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ALLOW), auth);
 
         Page<ProductListDto>
                 result =
