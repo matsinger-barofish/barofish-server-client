@@ -43,6 +43,9 @@ public class JwtService {
         if (!authTypesToAllow.contains(TokenAuthType.ALLOW) && isExpired(token)) {
             throw new JwtBusinessException(ErrorCode.TOKEN_EXPIRED);
         }
+        if (authTypesToAllow.contains(TokenAuthType.ALLOW) && isExpired(token)) {
+            return null;
+        }
 
         TokenInfo tokenInfo = extractIdAndAuthType(token);
 
