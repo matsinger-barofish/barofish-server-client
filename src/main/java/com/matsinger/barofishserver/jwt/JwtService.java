@@ -59,7 +59,7 @@ public class JwtService {
             throw new JwtBusinessException(ErrorCode.TOKEN_INVALID);
         }
 
-        if (!authTypesToAllow.contains(tokenInfo.getType())) {
+        if (!authTypesToAllow.contains(tokenInfo.getType()) && !authTypesToAllow.contains(TokenAuthType.ALLOW)) {
             throw new JwtBusinessException(ErrorCode.NOT_ALLOWED);
         }
 
