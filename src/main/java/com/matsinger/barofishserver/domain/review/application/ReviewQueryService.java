@@ -42,6 +42,10 @@ public class ReviewQueryService {
         return reviewRepository.countAllByProductId(productId);
     }
 
+    public Integer countReviewWithoutDeleted(Integer productId, boolean isDeleted) {
+        return reviewRepository.countAllByProductIdAndIsDeleted(productId, isDeleted);
+    }
+
     public Integer countAllReviewByUserId(Integer userId) {
         return reviewRepository.countAllByUserId(userId);
     }
