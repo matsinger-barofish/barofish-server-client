@@ -44,16 +44,16 @@ class TastingNoteCommandServiceTest {
 
         TastingNoteCreateRequest request = TastingNoteCreateRequest.builder()
                 .orderProductInfoId(1)
-                .taste1(1)
-                .taste2(1)
-                .taste3(1)
-                .taste4(1)
-                .taste5(1)
-                .texture1(1)
-                .texture2(1)
-                .texture3(1)
-                .texture4(1)
-                .texture5(1)
+                .taste1(1.0)
+                .taste2(1.0)
+                .taste3(1.0)
+                .taste4(1.0)
+                .taste5(1.0)
+                .texture1(1.0)
+                .texture2(1.0)
+                .texture3(1.0)
+                .texture4(1.0)
+                .texture5(1.0)
                 .build();
 
         // given
@@ -86,16 +86,16 @@ class TastingNoteCommandServiceTest {
 
         TastingNoteCreateRequest request = TastingNoteCreateRequest.builder()
                 .orderProductInfoId(1)
-                .taste1(1)
-                .taste2(1)
-                .taste3(1)
-                .taste4(1)
-                .taste5(1)
-                .texture1(1)
-                .texture2(1)
-                .texture3(1)
-                .texture4(1)
-                .texture5(1)
+                .taste1(1.0)
+                .taste2(1.0)
+                .taste3(1.0)
+                .taste4(1.0)
+                .taste5(1.0)
+                .texture1(1.0)
+                .texture2(1.0)
+                .texture3(1.0)
+                .texture4(1.0)
+                .texture5(1.0)
                 .build();
 
         // given
