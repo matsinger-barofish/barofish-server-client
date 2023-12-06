@@ -1,12 +1,11 @@
 package com.matsinger.barofishserver.domain.review.repository;
 
 import com.matsinger.barofishserver.domain.product.domain.ProductState;
-import com.matsinger.barofishserver.domain.product.domain.QProduct;
 import com.matsinger.barofishserver.domain.review.domain.ReviewOrderBy;
 import com.matsinger.barofishserver.domain.review.domain.ReviewOrderByType;
-import com.matsinger.barofishserver.domain.review.dto.v2.ReviewEvaluationSummaryDto;
 import com.matsinger.barofishserver.domain.review.dto.v2.AdminReviewDto;
 import com.matsinger.barofishserver.domain.review.dto.v2.ReviewDtoV2;
+import com.matsinger.barofishserver.domain.review.dto.v2.ReviewEvaluationSummaryDto;
 import com.querydsl.core.types.Order;
 import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.core.types.Projections;
@@ -237,7 +236,7 @@ public class ReviewRepositoryImpl implements ReviewRepositoryCustom {
                 .leftJoin(optionItem).on(orderProductInfo.optionItemId.eq(optionItem.id))
                 .leftJoin(grade).on(userInfo.grade.eq(grade))
                 .where(review.userId.eq(userId)
-                        .and(product.state.eq(ProductState.ACTIVE))
+//                        .and(product.state.eq(ProductState.ACTIVE))
                         .and(review.isDeleted.eq(false)))
                 .groupBy(review.id, reviewLike.reviewId)
                 .orderBy(reviewOrderSpecifier)
