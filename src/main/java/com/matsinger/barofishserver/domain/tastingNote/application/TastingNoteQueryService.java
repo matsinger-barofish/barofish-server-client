@@ -2,7 +2,6 @@ package com.matsinger.barofishserver.domain.tastingNote.application;
 
 import com.matsinger.barofishserver.domain.product.application.ProductQueryService;
 import com.matsinger.barofishserver.domain.product.domain.Product;
-import com.matsinger.barofishserver.domain.product.domain.ProductState;
 import com.matsinger.barofishserver.domain.tastingNote.domain.TastingNote;
 import com.matsinger.barofishserver.domain.tastingNote.domain.TastingNoteTastes;
 import com.matsinger.barofishserver.domain.tastingNote.domain.TastingNoteTextures;
@@ -40,9 +39,9 @@ public class TastingNoteQueryService {
 
     public ProductTastingNoteResponse getTastingNoteInfo(Integer productId) {
         Product findedProduct = productQueryService.findById(productId);
-        if (findedProduct.getState() != ProductState.ACTIVE) {
-            throw new BusinessException("현재 판매하지 않는 상품입니다.");
-        }
+//        if (findedProduct.getState() != ProductState.ACTIVE) {
+//            throw new BusinessException("현재 판매하지 않는 상품입니다.");
+//        }
 
         ProductTastingNoteInquiryDto productTastingNoteInquiryDto;
         try {
