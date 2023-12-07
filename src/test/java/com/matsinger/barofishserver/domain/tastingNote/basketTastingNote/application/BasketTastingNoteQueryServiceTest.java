@@ -7,8 +7,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 
-import static org.junit.jupiter.api.Assertions.*;
-
 @SpringBootTest
 @ActiveProfiles("local")
 class BasketTastingNoteQueryServiceTest {
@@ -18,6 +16,6 @@ class BasketTastingNoteQueryServiceTest {
     @DisplayName("test")
     @Test
     void test() {
-        basketTastingNoteRepository.existsByUserIdAndProductId(10000, 10000);
+        basketTastingNoteRepository.existsByUserIdAndProduct_Id(10000, 10000);
     }
 }
