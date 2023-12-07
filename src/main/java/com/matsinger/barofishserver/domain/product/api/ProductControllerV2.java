@@ -12,16 +12,14 @@ import com.matsinger.barofishserver.domain.product.application.ProductService;
 import com.matsinger.barofishserver.domain.product.difficultDeliverAddress.application.DifficultDeliverAddressCommandService;
 import com.matsinger.barofishserver.domain.product.domain.ProductSortBy;
 import com.matsinger.barofishserver.domain.product.dto.ExpectedArrivalDateResponse;
-import com.matsinger.barofishserver.domain.product.dto.ProductListDtoV2;
+import com.matsinger.barofishserver.domain.product.dto.ProductListDto;
 import com.matsinger.barofishserver.domain.product.productfilter.application.ProductFilterService;
 import com.matsinger.barofishserver.domain.search.application.SearchKeywordQueryService;
+import com.matsinger.barofishserver.domain.searchFilter.application.SearchFilterQueryService;
 import com.matsinger.barofishserver.domain.store.application.StoreService;
-import com.matsinger.barofishserver.global.error.ErrorCode;
 import com.matsinger.barofishserver.jwt.JwtService;
 import com.matsinger.barofishserver.jwt.TokenAuthType;
 import com.matsinger.barofishserver.jwt.TokenInfo;
-import com.matsinger.barofishserver.domain.searchFilter.application.SearchFilterQueryService;
-import com.matsinger.barofishserver.jwt.exception.JwtBusinessException;
 import com.matsinger.barofishserver.utils.Common;
 import com.matsinger.barofishserver.utils.CustomResponse;
 import com.matsinger.barofishserver.utils.S3.S3Uploader;
@@ -67,11 +65,6 @@ public class ProductControllerV2 {
                                                                                           @RequestParam(value = "sortby", defaultValue = "RECOMMEND", required = false) ProductSortBy sortBy,
                                                                                           @RequestParam(value = "categoryIds", required = false) String categoryIds,
                                                                                           @RequestParam(value = "filterFieldIds", required = false) String filterFieldIds,
-                                                                                          @RequestParam(value = "typeIds", required = false) String typeIds,
-                                                                                          @RequestParam(value = "locationIds", required = false) String locationIds,
-                                                                                          @RequestParam(value = "processIds", required = false) String processIds,
-                                                                                          @RequestParam(value = "usageIds", required = false) String usageIds,
-                                                                                          @RequestParam(value = "storageIds", required = false) String storageIds,
                                                                                           @RequestParam(value = "curationId", required = false) Integer curationId,
                                                                                           @RequestParam(value = "keyword", required = false, defaultValue = "") String keyword,
                                                                                           @RequestParam(value = "storeId", required = false) Integer storeId) {
@@ -84,10 +77,41 @@ public class ProductControllerV2 {
         Integer userId = tokenInfo.getId();
 
         PageRequest pageRequest = PageRequest.of(page - 1, take);
-        Page<ProductListDtoV2> result = productQueryService.getPagedProducts(pageRequest, sortBy, keyword);
+        Page<ProductListDto> result = productQueryService.getPagedProducts(
+                pageRequest,
+                sortBy,
+                utils.str2IntList(categoryIds),
+                utils.str2IntList(filterFieldIds),
+                curationId,
+                keyword,
+                storeId,
+                userId);
 
         res.setData(Optional.ofNullable(result));
         return ResponseEntity.ok(res);
+    }
+
+    @GetMapping("/list/count")
+    public ResponseEntity<CustomResponse<Integer>> selectProductListByUser(@RequestHeader(value = "Authorization", required = false) Optional<String> auth,
+                                                                                        @RequestParam(value = "categoryIds", required = false) String categoryIds,
+                                                                                        @RequestParam(value = "filterFieldIds", required = false) String filterFieldIds,
+                                                                                        @RequestParam(value = "curationId", required = false) Integer curationId,
+                                                                                        @RequestParam(value = "keyword", required = false, defaultValue = "") String keyword,
+                                                                                        @RequestParam(value = "storeId", required = false) Integer storeId) {
+        CustomResponse<Integer> response = new CustomResponse<>();
+        jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ALLOW), auth);
+
+        int count = productQueryService.countProducts(
+                utils.str2IntList(categoryIds),
+                utils.str2IntList(filterFieldIds),
+                curationId,
+                keyword,
+                storeId
+        );
+        response.setIsSuccess(true);
+        response.setData(Optional.of(count));
+
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/arrival-date/{id}")

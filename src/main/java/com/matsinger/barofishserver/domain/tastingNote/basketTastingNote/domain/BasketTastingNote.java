@@ -28,4 +28,8 @@ public class BasketTastingNote {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
+
+    public Integer getProductId() {
+        return this.product.getId();
+    }
 }
