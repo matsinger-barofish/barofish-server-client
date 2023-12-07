@@ -1,0 +1,400 @@
+package com.matsinger.barofishserver.domain.product.application;
+
+import com.matsinger.barofishserver.domain.order.orderprductinfo.domain.OrderProductState;
+import com.matsinger.barofishserver.domain.product.domain.ProductState;
+import com.matsinger.barofishserver.domain.product.dto.ProductListDto;
+import com.querydsl.core.BooleanBuilder;
+import com.querydsl.core.types.Order;
+import com.querydsl.core.types.OrderSpecifier;
+import com.querydsl.core.types.Projections;
+import com.querydsl.core.types.dsl.BooleanExpression;
+import com.querydsl.jpa.impl.JPAQueryFactory;
+import lombok.RequiredArgsConstructor;
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.stereotype.Repository;
+
+import java.sql.Timestamp;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+
+import static com.matsinger.barofishserver.domain.category.domain.QCategory.category;
+import static com.matsinger.barofishserver.domain.data.curation.domain.QCurationProductMap.curationProductMap;
+import static com.matsinger.barofishserver.domain.order.domain.QOrders.orders;
+import static com.matsinger.barofishserver.domain.order.orderprductinfo.domain.QOrderProductInfo.orderProductInfo;
+import static com.matsinger.barofishserver.domain.product.domain.QProduct.product;
+import static com.matsinger.barofishserver.domain.product.optionitem.domain.QOptionItem.optionItem;
+import static com.matsinger.barofishserver.domain.review.domain.QReview.review;
+import static com.matsinger.barofishserver.domain.searchFilter.domain.QProductSearchFilterMap.productSearchFilterMap;
+import static com.matsinger.barofishserver.domain.searchFilter.domain.QSearchFilter.searchFilter;
+import static com.matsinger.barofishserver.domain.searchFilter.domain.QSearchFilterField.searchFilterField;
+import static com.matsinger.barofishserver.domain.store.domain.QStoreInfo.storeInfo;
+import static com.matsinger.barofishserver.domain.userinfo.domain.QUserInfo.userInfo;
+
+@Repository
+@RequiredArgsConstructor
+public class ProductQueryRepository {
+
+    private final JPAQueryFactory queryFactory;
+
+    public PageImpl<ProductListDto> selectNewerProducts(PageRequest pageRequest, List<Integer> categoryIds,
+                                                    List<Integer> filterFieldsIds, Integer curationId,
+                                                    String keyword, Integer storeId) {
+        OrderSpecifier[] orderSpecifiers = createNewerSpecifier();
+
+        Integer count = countNewerProducts(categoryIds, filterFieldsIds, curationId, keyword, storeId);
+
+        List<ProductListDto> inquiryData = queryFactory
+                .select(Projections.fields(
+                        ProductListDto.class,
+                        product.id.as("id"),
+                        product.state.as("state"),
+                        product.images.as("image"),
+                        product.title.as("title"),
+                        product.needTaxation.as("isNeedTaxation"),
+                        optionItem.discountPrice.as("discountPrice"),
+                        optionItem.originPrice.as("originPrice"),
+                        review.id.count().intValue().as("reviewCount"),
+                        storeInfo.storeId.as("storeId"),
+                        storeInfo.name.as("storeName"),
+                        product.minOrderPrice.as("minOrderPrice"),
+                        storeInfo.profileImage.as("storeImage"),
+                        product.deliverFeeType.as("delieverFeeType"),
+                        category.parentCategory.id.as("parentCategoryId")
+                ))
+                .from(product)
+                .leftJoin(storeInfo).on(product.storeId.eq(storeInfo.storeId))
+                .leftJoin(optionItem).on(product.representOptionItemId.eq(optionItem.id))
+                .leftJoin(orderProductInfo).on(product.id.eq(orderProductInfo.productId))
+                .leftJoin(orders).on(orders.id.eq(orderProductInfo.orderId))
+                .leftJoin(userInfo).on(userInfo.userId.eq(orders.userId))
+                .leftJoin(category).on(category.id.eq(product.category.id))
+                .leftJoin(productSearchFilterMap).on(product.id.eq(productSearchFilterMap.productId))
+                .leftJoin(searchFilterField).on(productSearchFilterMap.fieldId.eq(searchFilterField.id))
+                .leftJoin(searchFilter).on(searchFilterField.searchFilterId.eq(searchFilter.id))
+                .leftJoin(review).on(userInfo.userId.eq(review.userId))
+                .where(product.state.eq(ProductState.ACTIVE),
+                        eqCuration(curationId),
+                        isPromotionInProgress(),
+                        eqStore(storeId),
+                        isProductTitleLikeKeyword(keyword),
+                        isIncludedCategory(categoryIds),
+                        isIncludedSearchFilter(filterFieldsIds),
+                        excludeNotOrdered(),
+                        excludeReviewAndTastingNoteData(),
+                        excludeDeletedReviews()
+                )
+                .groupBy(product.id)
+                .orderBy(orderSpecifiers)
+                .offset(pageRequest.getOffset())
+                .limit(pageRequest.getPageSize())
+                .fetch();
+
+        return new PageImpl<>(inquiryData, pageRequest, count);
+    }
+
+    public Integer countNewerProducts(List<Integer> categoryIds, List<Integer> filterFieldsIds, Integer curationId, String keyword, Integer storeId) {
+        Integer count = (int) queryFactory.select(product.id)
+                .from(product)
+                .leftJoin(storeInfo).on(product.storeId.eq(storeInfo.storeId))
+                .leftJoin(optionItem).on(product.representOptionItemId.eq(optionItem.id))
+                .leftJoin(orderProductInfo).on(product.id.eq(orderProductInfo.productId))
+                .leftJoin(orders).on(orders.id.eq(orderProductInfo.orderId))
+                .leftJoin(userInfo).on(userInfo.userId.eq(orders.userId))
+                .leftJoin(category).on(category.id.eq(product.category.id))
+                .leftJoin(productSearchFilterMap).on(product.id.eq(productSearchFilterMap.productId))
+                .leftJoin(searchFilterField).on(productSearchFilterMap.fieldId.eq(searchFilterField.id))
+                .leftJoin(searchFilter).on(searchFilterField.searchFilterId.eq(searchFilter.id))
+                .leftJoin(review).on(product.id.eq(review.productId))
+                .where(product.state.eq(ProductState.ACTIVE),
+                        eqCuration(curationId),
+                        isPromotionInProgress(),
+                        eqStore(storeId),
+                        isProductTitleLikeKeyword(keyword),
+                        isIncludedCategory(categoryIds),
+                        isIncludedSearchFilter(filterFieldsIds),
+                        excludeNotOrdered(),
+                        excludeReviewAndTastingNoteData(),
+                        excludeDeletedReviews()
+                )
+                .groupBy(product.id)
+                .stream().count();
+        return count;
+    }
+
+    private OrderSpecifier[] createNewerSpecifier() {
+        List<OrderSpecifier> orderSpecifiers = new ArrayList<>();
+
+        orderSpecifiers.add(new OrderSpecifier(
+                Order.DESC, product.createdAt
+        ));
+        return orderSpecifiers.toArray(new OrderSpecifier[orderSpecifiers.size()]);
+    }
+
+    public PageImpl<ProductListDto> selectPopularProducts(PageRequest pageRequest, List<Integer> categoryIds,
+                                               List<Integer> filterFieldsIds, Integer curationId,
+                                               String keyword, Integer storeId) {
+        int count = countPopularProducts(categoryIds, filterFieldsIds, curationId, keyword, storeId);
+
+        OrderSpecifier[] orderSpecifiers = createPopularOrderSpecifier();
+
+        List<ProductListDto> inquiryData = queryFactory
+                .select(Projections.fields(
+                        ProductListDto.class,
+                        product.id.as("id"),
+                        product.state.as("state"),
+                        product.images.as("image"),
+                        product.title.as("title"),
+                        product.needTaxation.as("isNeedTaxation"),
+                        optionItem.discountPrice.as("discountPrice"),
+                        optionItem.originPrice.as("originPrice"),
+                        review.id.count().intValue().as("reviewCount"),
+                        storeInfo.storeId.as("storeId"),
+                        storeInfo.name.as("storeName"),
+                        product.minOrderPrice.as("minOrderPrice"),
+                        storeInfo.profileImage.as("storeImage"),
+                        product.deliverFeeType.as("delieverFeeType"),
+                        category.parentCategory.id.as("parentCategoryId")
+                ))
+                .from(product)
+                .leftJoin(storeInfo).on(product.storeId.eq(storeInfo.storeId))
+                .leftJoin(optionItem).on(product.representOptionItemId.eq(optionItem.id))
+                .leftJoin(orderProductInfo).on(product.id.eq(orderProductInfo.productId))
+                .leftJoin(orders).on(orders.id.eq(orderProductInfo.orderId))
+                .leftJoin(userInfo).on(userInfo.userId.eq(orders.userId))
+                .leftJoin(category).on(category.id.eq(product.category.id))
+                .leftJoin(productSearchFilterMap).on(product.id.eq(productSearchFilterMap.productId))
+                .leftJoin(searchFilterField).on(productSearchFilterMap.fieldId.eq(searchFilterField.id))
+                .leftJoin(searchFilter).on(searchFilterField.searchFilterId.eq(searchFilter.id))
+                .leftJoin(review).on(userInfo.userId.eq(review.userId))
+                .where(product.state.eq(ProductState.ACTIVE),
+                        eqCuration(curationId),
+                        isPromotionInProgress(),
+                        eqStore(storeId),
+                        isProductTitleLikeKeyword(keyword),
+                        isIncludedCategory(categoryIds),
+                        isIncludedSearchFilter(filterFieldsIds),
+                        excludeNotOrdered(),
+                        excludeReviewAndTastingNoteData(),
+                        excludeDeletedReviews()
+                )
+                .groupBy(product.id)
+                .orderBy(orderSpecifiers)
+                .offset(pageRequest.getOffset())
+                .limit(pageRequest.getPageSize())
+                .fetch();
+
+        return new PageImpl<>(inquiryData, pageRequest, count);
+    }
+
+    public int countPopularProducts(List<Integer> categoryIds, List<Integer> filterFieldsIds, Integer curationId, String keyword, Integer storeId) {
+        int count = (int) queryFactory
+                .select(product.id)
+                .from(product)
+                .leftJoin(storeInfo).on(product.storeId.eq(storeInfo.storeId))
+                .leftJoin(optionItem).on(product.representOptionItemId.eq(optionItem.id))
+                .leftJoin(orderProductInfo).on(product.id.eq(orderProductInfo.productId))
+                .leftJoin(orders).on(orders.id.eq(orderProductInfo.orderId))
+                .leftJoin(userInfo).on(userInfo.userId.eq(orders.userId))
+                .leftJoin(category).on(category.id.eq(product.category.id))
+                .leftJoin(productSearchFilterMap).on(product.id.eq(productSearchFilterMap.productId))
+                .leftJoin(searchFilterField).on(productSearchFilterMap.fieldId.eq(searchFilterField.id))
+                .leftJoin(searchFilter).on(searchFilterField.searchFilterId.eq(searchFilter.id))
+                .leftJoin(review).on(userInfo.userId.eq(review.userId))
+                .where(product.state.eq(ProductState.ACTIVE),
+                        eqCuration(curationId),
+                        isPromotionInProgress(),
+                        eqStore(storeId),
+                        isProductTitleLikeKeyword(keyword),
+                        isIncludedCategory(categoryIds),
+                        isIncludedSearchFilter(filterFieldsIds),
+                        excludeNotOrdered(),
+                        excludeReviewAndTastingNoteData(),
+                        excludeDeletedReviews()
+                )
+                .groupBy(product.id)
+                .stream().count();
+        return count;
+    }
+
+    private OrderSpecifier[] createPopularOrderSpecifier() {
+        List<OrderSpecifier> orderSpecifiers = new ArrayList<>();
+
+        orderSpecifiers.add(new OrderSpecifier(
+                Order.DESC, orderProductInfo.productId.count()
+        ));
+        return orderSpecifiers.toArray(new OrderSpecifier[orderSpecifiers.size()]);
+    }
+
+    public PageImpl<ProductListDto> selectDiscountProducts(PageRequest pageRequest, List<Integer> categoryIds,
+                                                       List<Integer> filterFieldsIds, Integer curationId,
+                                                       String keyword, Integer storeId) {
+        int count = countDiscountProducts(categoryIds, filterFieldsIds, curationId, keyword, storeId);
+
+        OrderSpecifier[] orderSpecifiers = createDiscountOrderSpecifier();
+
+        List<ProductListDto> inquiryData = queryFactory
+                .select(Projections.fields(
+                        ProductListDto.class,
+                        product.id.as("id"),
+                        product.state.as("state"),
+                        product.images.as("image"),
+                        product.title.as("title"),
+                        product.needTaxation.as("isNeedTaxation"),
+                        optionItem.discountPrice.as("discountPrice"),
+                        optionItem.originPrice.as("originPrice"),
+                        review.id.count().intValue().as("reviewCount"),
+                        storeInfo.storeId.as("storeId"),
+                        storeInfo.name.as("storeName"),
+                        product.minOrderPrice.as("minOrderPrice"),
+                        storeInfo.profileImage.as("storeImage"),
+                        product.deliverFeeType.as("delieverFeeType"),
+                        category.parentCategory.id.as("parentCategoryId")
+                ))
+                .from(product)
+                .leftJoin(storeInfo).on(product.storeId.eq(storeInfo.storeId))
+                .leftJoin(optionItem).on(product.representOptionItemId.eq(optionItem.id))
+                .leftJoin(orderProductInfo).on(product.id.eq(orderProductInfo.productId))
+                .leftJoin(orders).on(orders.id.eq(orderProductInfo.orderId))
+                .leftJoin(userInfo).on(userInfo.userId.eq(orders.userId))
+                .leftJoin(category).on(category.id.eq(product.category.id))
+                .leftJoin(productSearchFilterMap).on(product.id.eq(productSearchFilterMap.productId))
+                .leftJoin(searchFilterField).on(productSearchFilterMap.fieldId.eq(searchFilterField.id))
+                .leftJoin(searchFilter).on(searchFilterField.searchFilterId.eq(searchFilter.id))
+                .leftJoin(review).on(userInfo.userId.eq(review.userId))
+                .where(product.state.eq(ProductState.ACTIVE),
+                        eqCuration(curationId),
+                        isPromotionInProgress(),
+                        eqStore(storeId),
+                        isProductTitleLikeKeyword(keyword),
+                        isIncludedCategory(categoryIds),
+                        isIncludedSearchFilter(filterFieldsIds),
+                        isDiscountApplied(),
+                        excludeNotOrdered(),
+                        excludeReviewAndTastingNoteData(),
+                        excludeDeletedReviews()
+                )
+                .groupBy(product.id)
+                .orderBy(orderSpecifiers)
+                .offset(pageRequest.getOffset())
+                .limit(pageRequest.getPageSize())
+                .fetch();
+
+        return new PageImpl<>(inquiryData, pageRequest, count);
+    }
+
+    public int countDiscountProducts(List<Integer> categoryIds, List<Integer> filterFieldsIds, Integer curationId, String keyword, Integer storeId) {
+        int count =(int) queryFactory
+                .select(product.id)
+                .from(product)
+                .leftJoin(storeInfo).on(product.storeId.eq(storeInfo.storeId))
+                .leftJoin(optionItem).on(product.representOptionItemId.eq(optionItem.id))
+                .leftJoin(orderProductInfo).on(product.id.eq(orderProductInfo.productId))
+                .leftJoin(orders).on(orders.id.eq(orderProductInfo.orderId))
+                .leftJoin(userInfo).on(userInfo.userId.eq(orders.userId))
+                .leftJoin(category).on(category.id.eq(product.category.id))
+                .leftJoin(productSearchFilterMap).on(product.id.eq(productSearchFilterMap.productId))
+                .leftJoin(searchFilterField).on(productSearchFilterMap.fieldId.eq(searchFilterField.id))
+                .leftJoin(searchFilter).on(searchFilterField.searchFilterId.eq(searchFilter.id))
+                .leftJoin(review).on(userInfo.userId.eq(review.userId))
+                .where(product.state.eq(ProductState.ACTIVE),
+                        eqCuration(curationId),
+                        isPromotionInProgress(),
+                        eqStore(storeId),
+                        isProductTitleLikeKeyword(keyword),
+                        isIncludedCategory(categoryIds),
+                        isIncludedSearchFilter(filterFieldsIds),
+                        isDiscountApplied(),
+                        excludeNotOrdered(),
+                        excludeReviewAndTastingNoteData(),
+                        excludeDeletedReviews()
+                )
+                .groupBy(product.id)
+                .stream().count();
+        return count;
+    }
+
+    private OrderSpecifier[] createDiscountOrderSpecifier() {
+        List<OrderSpecifier> orderSpecifiers = new ArrayList<>();
+
+        orderSpecifiers.add(new OrderSpecifier(
+                Order.DESC, optionItem.discountPrice.divide(optionItem.originPrice)
+                )
+        );
+        return orderSpecifiers.toArray(new OrderSpecifier[orderSpecifiers.size()]);
+    }
+
+    private BooleanExpression isDiscountApplied() {
+        return optionItem.originPrice.notIn(0);
+    }
+
+    private BooleanExpression excludeDeletedReviews() {
+        return review.isDeleted.eq(false);
+    }
+
+    private BooleanExpression excludeNotOrdered() {
+        return orderProductInfo.state.in(OrderProductState.PAYMENT_DONE, OrderProductState.FINAL_CONFIRM);
+    }
+
+    private BooleanBuilder excludeReviewAndTastingNoteData() {
+        BooleanBuilder builder = new BooleanBuilder();
+        builder.andNot(userInfo.email.contains("baroReviewId"));
+        builder.andNot(userInfo.email.contains("baroTastingNote"));
+        return builder;
+    }
+
+
+    private BooleanExpression isIncludedSearchFilter(List<Integer> filterFieldsIds) {
+        if (filterFieldsIds == null || filterFieldsIds.isEmpty()) {
+            return null;
+        }
+        return searchFilterField.id.in(filterFieldsIds);
+    }
+
+    private BooleanExpression isIncludedCategory(List<Integer> categoryIds) {
+        if (categoryIds == null || categoryIds.isEmpty()) {
+            return null;
+        }
+        return category.parentCategory.id.in(categoryIds)
+                .or(category.id.in(categoryIds));
+    }
+
+    private BooleanExpression isProductTitleLikeKeyword(String keyword) {
+        if (StringUtils.isEmpty(keyword)) {
+            return null;
+        }
+        return product.title.contains(keyword);
+    }
+
+    private BooleanExpression eqCuration(Integer curationId) {
+        if (curationId == null) {
+            return null;
+        }
+        return curationProductMap.curation.id.eq(curationId);
+    }
+
+    private BooleanExpression eqStore(Integer storeId) {
+        if (storeId == null) {
+            return null;
+        }
+        return storeInfo.storeId.eq(storeId);
+    }
+
+    private BooleanBuilder isPromotionInProgress() {
+        BooleanBuilder builder = new BooleanBuilder();
+        builder
+                // or 조건을 만들기 위해 사용
+                .andAnyOf(
+                        // product.promotionStartAt이 null이거나 현재 시간보다 작은 product를 선택
+                        product.promotionStartAt.isNull(),
+                        product.promotionStartAt.lt(Timestamp.valueOf(LocalDateTime.now()))
+                )
+                .andAnyOf(
+                        product.promotionEndAt.isNull(),
+                        product.promotionEndAt.gt(Timestamp.valueOf(LocalDateTime.now()))
+                );
+        return builder;
+    }
+}
