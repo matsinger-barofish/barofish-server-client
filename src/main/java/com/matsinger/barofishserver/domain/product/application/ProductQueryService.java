@@ -32,10 +32,12 @@ import com.matsinger.barofishserver.domain.searchFilter.repository.SearchFilterF
 import com.matsinger.barofishserver.domain.store.application.StoreService;
 import com.matsinger.barofishserver.domain.store.domain.StoreInfo;
 import com.matsinger.barofishserver.domain.store.repository.StoreInfoRepository;
+import com.matsinger.barofishserver.domain.user.application.UserQueryService;
 import com.matsinger.barofishserver.global.exception.BusinessException;
 import lombok.RequiredArgsConstructor;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -67,6 +69,8 @@ public class ProductQueryService {
     private final ProductRepositoryImpl productRepositoryImpl;
     private final WeeksDateQueryService weekDateQueryService;
     private final WeeksDateRepository weeksDateRepository;
+    private final ProductQueryRepository productQueryRepository;
+    private final UserQueryService userQueryService;
 
     public ProductListDto createProductListDtos(Integer id) {
         Product findProduct = productRepository.findById(id).orElseThrow(() -> {
@@ -253,4 +257,64 @@ public class ProductQueryService {
         }
         return expectedArrivalDate;
     }
+
+    public Page<ProductListDto> selectTopBarProductList(Integer topBarId,
+                                                        PageRequest pageRequest,
+                                                        List<Integer> filterFieldsIds,
+                                                        List<Integer> categoryIds) {
+        PageImpl<ProductListDto> productDtos = null;
+        if (topBarId == 1) {
+            productDtos = productQueryRepository.selectNewerProducts(
+                    pageRequest, categoryIds,
+                    filterFieldsIds, null,
+                    null, null
+            );
+        }
+        if (topBarId == 2) {
+            productDtos = productQueryRepository.selectPopularProducts(
+                    pageRequest, categoryIds,
+                    filterFieldsIds, null,
+                    null, null
+            );
+        }
+        if (topBarId == 3) {
+            productDtos = productQueryRepository.selectDiscountProducts(
+                    pageRequest, categoryIds,
+                    filterFieldsIds, null,
+                    null, null
+            );
+        }
+
+        for (ProductListDto productDto : productDtos) {
+            String firstImage = productDto.getImage().split(", ")[0];
+            productDto.setImage(firstImage);
+        }
+
+        return productDtos;
+    }
+
+    public Integer countTopBarProduct(Integer topBarId,
+                                      List<Integer> filterFieldsIds,
+                                      List<Integer> categoryIds) {
+        if (topBarId == 1) {
+            return productQueryRepository.countNewerProducts(
+                    categoryIds, filterFieldsIds, null,
+                    null, null
+            );
+        }
+        if (topBarId == 2) {
+            return productQueryRepository.countPopularProducts(
+                    categoryIds, filterFieldsIds, null,
+                    null, null
+            );
+        }
+        if (topBarId == 3) {
+            return productQueryRepository.countDiscountProducts(
+                    categoryIds, filterFieldsIds, null,
+                    null, null
+            );
+        }
+        throw new BusinessException("탑바를 찾을 수 없습니다.");
+    }
+
 }
