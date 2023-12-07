@@ -615,7 +615,7 @@ public class StoreController {
                                                                    @RequestParam(value = "type") LikePostType type) {
         CustomResponse<Boolean> res = new CustomResponse<>();
 
-                TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
+                TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth);
 
 
         Boolean check = storeService.checkLikeStore(storeId, tokenInfo.getId());
@@ -633,7 +633,7 @@ public class StoreController {
     public ResponseEntity<CustomResponse<List<SimpleStore>>> selectScrapedStore(@RequestHeader("Authorization") Optional<String> auth) {
         CustomResponse<List<SimpleStore>> res = new CustomResponse<>();
 
-                TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
+                TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth);
 
 
         List<StoreInfo> storeInfos = storeService.selectScrapedStore(tokenInfo.getId());

@@ -123,10 +123,10 @@ public class Product {
     private String itemCode;
 
     @Column(name = "difficulty_level_of_trimming", length =10)
-    private String difficultyLevelOfTrimming;
+    private Double difficultyLevelOfTrimming;
 
     @Column(name = "the_scent_of_the_sea", length = 10)
-    private String theScentOfTheSea;
+    private Double theScentOfTheSea;
 
     @Column(name = "recommended_cooking_way", length = 10)
     private String recommendedCookingWay;

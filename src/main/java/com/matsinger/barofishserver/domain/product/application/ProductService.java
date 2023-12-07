@@ -334,7 +334,7 @@ public class ProductService {
 
     public ProductListDto convert2ListDto(Product product, Integer userId) {
         StoreInfo storeInfo = storeService.selectStoreInfo(product.getStoreId());
-        Integer reviewCount = reviewQueryService.countReviewWithProductId(product.getId());
+        Integer reviewCount = reviewQueryService.countReviewWithoutDeleted(product.getId(), false);
         OptionItem optionItem = selectOptionItem(product.getRepresentOptionItemId());
         Boolean
                 isLike =
@@ -354,7 +354,7 @@ public class ProductService {
 
     public ProductListDto convert2ListDto(Product product) {
         StoreInfo storeInfo = storeService.selectStoreInfo(product.getStoreId());
-        Integer reviewCount = reviewQueryService.countReviewWithProductId(product.getId());
+        Integer reviewCount = reviewQueryService.countReviewWithoutDeleted(product.getId(), false);
         OptionItem optionItem = selectOptionItem(product.getRepresentOptionItemId());
         return ProductListDto.builder().id(product.getId()).state(product.getState()).image(product.getImages().substring(
                 1,

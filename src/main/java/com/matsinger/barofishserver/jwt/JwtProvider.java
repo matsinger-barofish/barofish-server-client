@@ -79,7 +79,8 @@ public class JwtProvider {
             final Date expiration = getExpirationDateFromToken(token);
             return expiration.before(new Date());
         } catch (RuntimeException e) {
-            throw new JwtBusinessException(e, ErrorCode.TOKEN_EXPIRED);
+//            throw new JwtBusinessException(e, ErrorCode.TOKEN_EXPIRED);
+            return true;
         }
     }
 
