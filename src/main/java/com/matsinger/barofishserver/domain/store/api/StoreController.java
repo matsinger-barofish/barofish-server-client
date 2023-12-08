@@ -60,7 +60,7 @@ public class StoreController {
                                                                           @RequestParam(value = "orderType", defaultValue = "DESC") Sort.Direction sort) {
         CustomResponse<List<StoreDto>> res = new CustomResponse<>();
 
-                TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
+        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
 
         Boolean isAdmin = tokenInfo.getType().equals(TokenAuthType.ADMIN);
 
@@ -92,7 +92,7 @@ public class StoreController {
                                                                                  @RequestParam(value = "joinAtE", required = false) Timestamp joinAtE) {
         CustomResponse<Page<StoreDto>> res = new CustomResponse<>();
 
-                TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
+        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
 
         Specification<Store> spec = (root, query, builder) -> {
             List<Predicate> predicates = new ArrayList<>();

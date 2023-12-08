@@ -9,6 +9,7 @@ import com.matsinger.barofishserver.domain.product.dto.ExpectedArrivalDateRespon
 import com.matsinger.barofishserver.domain.product.dto.ProductListDto;
 import com.matsinger.barofishserver.domain.product.optionitem.repository.OptionItemRepository;
 import com.matsinger.barofishserver.domain.product.productfilter.repository.ProductFilterRepository;
+import com.matsinger.barofishserver.domain.product.repository.ProductQueryRepository;
 import com.matsinger.barofishserver.domain.product.repository.ProductRepository;
 import com.matsinger.barofishserver.domain.product.weeksdate.application.WeeksDateQueryService;
 import com.matsinger.barofishserver.domain.product.weeksdate.domain.WeeksDate;
