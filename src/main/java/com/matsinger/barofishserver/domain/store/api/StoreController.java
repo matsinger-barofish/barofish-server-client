@@ -131,7 +131,6 @@ public class StoreController {
                                                                                       @RequestParam(value = "keyword", required = false, defaultValue = "") String keyword) {
         CustomResponse<List<SimpleStore>> res = new CustomResponse<>();
 
-
         Integer userId = null;
         TokenInfo tokenInfo = null;
         if (auth.isEmpty()) {
