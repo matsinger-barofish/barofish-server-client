@@ -1,4 +1,4 @@
-package com.matsinger.barofishserver.domain.product.application;
+package com.matsinger.barofishserver.domain.product.repository;
 
 import com.matsinger.barofishserver.domain.order.orderprductinfo.domain.OrderProductState;
 import com.matsinger.barofishserver.domain.product.domain.ProductSortBy;
