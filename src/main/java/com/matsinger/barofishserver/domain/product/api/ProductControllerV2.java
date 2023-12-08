@@ -92,7 +92,7 @@ public class ProductControllerV2 {
     }
 
     @GetMapping("/list/count")
-    public ResponseEntity<CustomResponse<Integer>> selectProductListByUser(@RequestHeader(value = "Authorization", required = false) Optional<String> auth,
+    public ResponseEntity<CustomResponse<Integer>> selectProductListByUserV2(@RequestHeader(value = "Authorization", required = false) Optional<String> auth,
                                                                                         @RequestParam(value = "categoryIds", required = false) String categoryIds,
                                                                                         @RequestParam(value = "filterFieldIds", required = false) String filterFieldIds,
                                                                                         @RequestParam(value = "curationId", required = false) Integer curationId,
