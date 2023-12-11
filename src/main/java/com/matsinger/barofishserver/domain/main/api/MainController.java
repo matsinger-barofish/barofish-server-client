@@ -67,7 +67,7 @@ public class MainController {
         CustomResponse<List<CurationDto>> res = new CustomResponse<>();
 
         Integer userId = null;
-        jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ALLOW, TokenAuthType.USER), auth);
+        jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ALLOW), auth);
 
         List<Curation> curations = curationQueryService.selectCurationState(CurationState.ACTIVE);
         List<CurationDto> curationDtos = new ArrayList<>();

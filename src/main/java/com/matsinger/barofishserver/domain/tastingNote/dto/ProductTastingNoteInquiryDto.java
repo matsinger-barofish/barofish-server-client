@@ -18,22 +18,23 @@ public class ProductTastingNoteInquiryDto {
     private Integer productId;
     private String images;
     private String storeName;
+    private String productTitle;
     private Integer originPrice;
     private Integer discountPrice;
     private Integer deliveryFee;
     private ProductDeliverFeeType deliverFeeType;
     private Integer minOrderPrice;
 
-    private String taste1;
-    private Double taste1Score;
-    private String taste2;
-    private Double taste2Score;
-    private String taste3;
-    private Double taste3Score;
-    private String taste4;
-    private Double taste4Score;
-    private String taste5;
-    private Double taste5Score;
+    private String oily;
+    private Double oilyScore;
+    private String sweet;
+    private Double sweetScore;
+    private String lightTaste;
+    private Double lightTasteScore;
+    private String umami;
+    private Double umamiScore;
+    private String salty;
+    private Double saltyScore;
 
     private String texture1;
     private Double texture1Score;
@@ -45,31 +46,46 @@ public class ProductTastingNoteInquiryDto {
     private Double texture4Score;
     private String texture5;
     private Double texture5Score;
+    private String texture6;
+    private Double texture6Score;
+    private String texture7;
+    private Double texture7Score;
+    private String texture8;
+    private Double texture8Score;
+    private String texture9;
+    private Double texture9Score;
+    private String texture10;
+    private Double texture10Score;
 
-    private String difficultyLevelOfTrimming;
-    private String theScentOfTheSea;
+    private Double difficultyLevelOfTrimming;
+    private Double theScentOfTheSea;
     private String recommendedCookingWay;
 
     public void roundScoresToSecondDecimalPlace() {
-        this.taste1Score = Math.round(taste1Score * 10) / 10.0;
-        this.taste2Score = Math.round(taste2Score * 10) / 10.0;
-        this.taste3Score = Math.round(taste3Score * 10) / 10.0;
-        this.taste4Score = Math.round(taste4Score * 10) / 10.0;
-        this.taste5Score = Math.round(taste5Score * 10) / 10.0;
-        this.texture1Score = Math.round(texture1Score * 10) / 10.0;
-        this.texture2Score = Math.round(texture2Score * 10) / 10.0;
-        this.texture3Score = Math.round(texture3Score * 10) / 10.0;
-        this.texture4Score = Math.round(texture4Score * 10) / 10.0;
-        this.texture5Score = Math.round(texture5Score * 10) / 10.0;
+        this.oilyScore = Math.round(oilyScore * 10) / 10.0;
+        this.sweetScore = Math.round(sweetScore * 10) / 10.0;
+        this.lightTasteScore = Math.round(lightTasteScore * 10) / 10.0;
+        this.umamiScore = Math.round(umamiScore * 10) / 10.0;
+        this.saltyScore = Math.round(saltyScore * 10) / 10.0;
+        this.texture1Score = texture1Score != null ? Math.round(texture1Score * 10) / 10.0 : 0;
+        this.texture2Score = texture2Score != null ? Math.round(texture2Score * 10) / 10.0 : 0;
+        this.texture3Score = texture3Score != null ? Math.round(texture3Score * 10) / 10.0 : 0;
+        this.texture4Score = texture4Score != null ? Math.round(texture4Score * 10) / 10.0 : 0;
+        this.texture5Score = texture5Score != null ? Math.round(texture5Score * 10) / 10.0 : 0;
+        this.texture6Score = texture6Score != null ? Math.round(texture6Score * 10) / 10.0 : 0;
+        this.texture7Score = texture7Score != null ? Math.round(texture7Score * 10) / 10.0 : 0;
+        this.texture8Score = texture8Score != null ? Math.round(texture8Score * 10) / 10.0 : 0;
+        this.texture9Score = texture9Score != null ? Math.round(texture9Score * 10) / 10.0 : 0;
+        this.texture10Score = texture10Score != null ? Math.round(texture10Score * 10) / 10.0 : 0;
     }
 
     public TastingNoteTastes getTastes() {
         TastingNoteTastes tastingNoteTastes = new TastingNoteTastes();
-        tastingNoteTastes.add(TastingNoteTaste.builder().taste(this.taste1).score(this.taste1Score).build());
-        tastingNoteTastes.add(TastingNoteTaste.builder().taste(this.taste2).score(this.taste2Score).build());
-        tastingNoteTastes.add(TastingNoteTaste.builder().taste(this.taste3).score(this.taste3Score).build());
-        tastingNoteTastes.add(TastingNoteTaste.builder().taste(this.taste4).score(this.taste4Score).build());
-        tastingNoteTastes.add(TastingNoteTaste.builder().taste(this.taste5).score(this.taste5Score).build());
+        tastingNoteTastes.add(TastingNoteTaste.builder().taste(this.umami).score(this.umamiScore).build());
+        tastingNoteTastes.add(TastingNoteTaste.builder().taste(this.sweet).score(this.sweetScore).build());
+        tastingNoteTastes.add(TastingNoteTaste.builder().taste(this.oily).score(this.oilyScore).build());
+        tastingNoteTastes.add(TastingNoteTaste.builder().taste(this.lightTaste).score(this.lightTasteScore).build());
+        tastingNoteTastes.add(TastingNoteTaste.builder().taste(this.salty).score(this.saltyScore).build());
         return tastingNoteTastes;
     }
 
@@ -80,6 +96,11 @@ public class ProductTastingNoteInquiryDto {
         tastingNoteTextures.add(TastingNoteTexture.builder().texture(this.texture3).score(this.texture3Score).build());
         tastingNoteTextures.add(TastingNoteTexture.builder().texture(this.texture4).score(this.texture4Score).build());
         tastingNoteTextures.add(TastingNoteTexture.builder().texture(this.texture5).score(this.texture5Score).build());
+        tastingNoteTextures.add(TastingNoteTexture.builder().texture(this.texture6).score(this.texture6Score).build());
+        tastingNoteTextures.add(TastingNoteTexture.builder().texture(this.texture7).score(this.texture7Score).build());
+        tastingNoteTextures.add(TastingNoteTexture.builder().texture(this.texture8).score(this.texture8Score).build());
+        tastingNoteTextures.add(TastingNoteTexture.builder().texture(this.texture9).score(this.texture9Score).build());
+        tastingNoteTextures.add(TastingNoteTexture.builder().texture(this.texture10).score(this.texture10Score).build());
         return tastingNoteTextures;
     }
 }

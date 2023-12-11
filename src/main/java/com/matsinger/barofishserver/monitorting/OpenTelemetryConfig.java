@@ -1,6 +1,6 @@
 //package com.matsinger.barofishserver.utils.monitorting;
 //
-//import io.opentelemetry.api모닡ㄹ.OpenTelemetry;
+//import io.opentelemetry.api.OpenTelemetry;
 //import io.opentelemetry.api.common.Attributes;
 //import io.opentelemetry.context.propagation.ContextPropagators;
 //import io.opentelemetry.exporter.otlp.logs.OtlpGrpcLogRecordExporter;
@@ -13,7 +13,7 @@
 //import io.opentelemetry.sdk.resources.Resource;
 //import io.opentelemetry.sdk.trace.SdkTracerProvider;
 //import io.opentelemetry.semconv.resource.attributes.ResourceAttributes;
-//import org.springframework.beans.factory.ObjectProvider;
+//import org.springframework.beans.factory.Obㅌ222jectProvider;
 //import org.springframework.context.annotation.Bean;
 //import org.springframework.context.annotation.Configuration;
 //import org.springframework.context.annotation.Profile;

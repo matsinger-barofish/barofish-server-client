@@ -2,7 +2,6 @@ package com.matsinger.barofishserver.domain.tastingNote.application;
 
 import com.matsinger.barofishserver.domain.product.application.ProductQueryService;
 import com.matsinger.barofishserver.domain.product.domain.Product;
-import com.matsinger.barofishserver.domain.product.domain.ProductState;
 import com.matsinger.barofishserver.domain.tastingNote.domain.TastingNote;
 import com.matsinger.barofishserver.domain.tastingNote.domain.TastingNoteTastes;
 import com.matsinger.barofishserver.domain.tastingNote.domain.TastingNoteTextures;
@@ -40,9 +39,9 @@ public class TastingNoteQueryService {
 
     public ProductTastingNoteResponse getTastingNoteInfo(Integer productId) {
         Product findedProduct = productQueryService.findById(productId);
-        if (findedProduct.getState() != ProductState.ACTIVE) {
-            throw new BusinessException("현재 판매하지 않는 상품입니다.");
-        }
+//        if (findedProduct.getState() != ProductState.ACTIVE) {
+//            throw new BusinessException("현재 판매하지 않는 상품입니다.");
+//        }
 
         ProductTastingNoteInquiryDto productTastingNoteInquiryDto;
         try {
@@ -61,7 +60,7 @@ public class TastingNoteQueryService {
     private ProductTastingNoteResponse convertToResponse(ProductTastingNoteInquiryDto productTastingNoteInquiryDto) {
         // taste, texture 정보 설정
         TastingNoteTastes tastes = productTastingNoteInquiryDto.getTastes();
-        tastes.sortByScore();
+//        tastes.sortByScore();
         TastingNoteTextures textures = productTastingNoteInquiryDto.getTextures();
         textures.sortByScore();
         ProductTastingNoteResponse tastingNoteResponse = new ProductTastingNoteResponse(tastes, textures);
@@ -106,7 +105,10 @@ public class TastingNoteQueryService {
     public List<ProductTastingNoteResponse> compareTastingNotes(List<Integer> productIds) {
         List<ProductTastingNoteResponse> tastingNotes = new ArrayList<>();
         for (Integer productId : productIds) {
-            tastingNotes.add(getTastingNoteInfo(productId));
+            ProductTastingNoteResponse tastingNoteResponse = getTastingNoteInfo(productId);
+            if (tastingNoteResponse != null) {
+                tastingNotes.add(getTastingNoteInfo(productId));
+            }
         }
         return tastingNotes;
     }

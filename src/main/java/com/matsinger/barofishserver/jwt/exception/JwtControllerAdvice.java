@@ -2,10 +2,6 @@ package com.matsinger.barofishserver.jwt.exception;
 
 import com.matsinger.barofishserver.global.error.ErrorCode;
 import com.matsinger.barofishserver.utils.CustomResponse;
-import io.jsonwebtoken.ExpiredJwtException;
-import io.jsonwebtoken.JwtException;
-import io.jsonwebtoken.MalformedJwtException;
-import io.jsonwebtoken.UnsupportedJwtException;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -17,7 +13,6 @@ import org.springframework.http.HttpInputMessage;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.servlet.mvc.method.annotation.RequestBodyAdvice;
 
@@ -43,6 +38,8 @@ public class JwtControllerAdvice implements RequestBodyAdvice {
         printExceptionInfo(request, e);
 
         ErrorCode code = e.getCode();
+        log.warn("ErrorCode = {}", code);
+
         CustomResponse customResponse = new CustomResponse();
         customResponse.setIsSuccess(false);
         customResponse.setCode(code);
