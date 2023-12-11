@@ -30,6 +30,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
@@ -126,5 +127,16 @@ public class ProductControllerV2 {
 
         res.setData(Optional.of(expectedArrivalDate));
         return ResponseEntity.ok(res);
+    }
+
+    @GetMapping("/{id}/review-pictures")
+    public ResponseEntity<CustomResponse<List<String>>> getProductReviewPhotos(@PathVariable(value = "id") Integer productId) {
+        CustomResponse<List<String>> response = new CustomResponse<>();
+
+        List<String> productReviewPictures = productQueryService.getProductPictures(productId);
+        response.setIsSuccess(true);
+        response.setData(Optional.of(productReviewPictures));
+
+        return ResponseEntity.ok(response);
     }
 }
