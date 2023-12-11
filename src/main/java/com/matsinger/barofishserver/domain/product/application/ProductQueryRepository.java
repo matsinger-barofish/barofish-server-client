@@ -201,6 +201,21 @@ public class ProductQueryRepository {
         return new PageImpl<>(inquiryData, pageRequest, count);
     }
 
+    private OrderSpecifier[] createPopularOrderSpecifier() {
+        List<OrderSpecifier> orderSpecifiers = new ArrayList<>();
+
+        // 주문 많은 순
+//        orderSpecifiers.add(new OrderSpecifier(
+//                Order.DESC, orderProductInfo.productId.count()
+//        ));
+
+        // 리뷰 많은 순
+        orderSpecifiers.add(new OrderSpecifier(
+                Order.DESC, review.id.count()
+        ));
+        return orderSpecifiers.toArray(new OrderSpecifier[orderSpecifiers.size()]);
+    }
+
     public int countPopularProducts(List<Integer> categoryIds, List<Integer> filterFieldsIds, Integer curationId, String keyword, Integer storeId) {
         int count = (int) queryFactory
                 .select(product.id)
@@ -233,15 +248,6 @@ public class ProductQueryRepository {
                 .groupBy(product.id)
                 .stream().count();
         return count;
-    }
-
-    private OrderSpecifier[] createPopularOrderSpecifier() {
-        List<OrderSpecifier> orderSpecifiers = new ArrayList<>();
-
-        orderSpecifiers.add(new OrderSpecifier(
-                Order.DESC, orderProductInfo.productId.count()
-        ));
-        return orderSpecifiers.toArray(new OrderSpecifier[orderSpecifiers.size()]);
     }
 
     public PageImpl<ProductListDto> selectDiscountProducts(PageRequest pageRequest, List<Integer> categoryIds,
