@@ -381,7 +381,7 @@ public class StoreController {
                 s3.upload(bankAccountCopy, new ArrayList<>(Arrays.asList("store", String.valueOf(store.getId()))));
         storeInfoData.setStoreId(store.getId());
         storeInfoData.setVisitNote(visitNoteUrl);
-        storeInfoData.setBackgroudImage(backgroundImageUrl);
+        storeInfoData.setbackgroundImage(backgroundImageUrl);
         storeInfoData.setProfileImage(profileImageUrl);
         storeInfoData.setMosRegistration(mosRegistrationUrl);
         storeInfoData.setBusinessRegistration(businessRegistrationUrl);
@@ -469,7 +469,7 @@ public class StoreController {
             String
                     imageUrl =
                     s3.upload(backgroundImage, new ArrayList<>(Arrays.asList("store", String.valueOf(id))));
-            storeInfo.setBackgroudImage(imageUrl);
+            storeInfo.setbackgroundImage(imageUrl);
         }
         if (profileImage != null) {
             String imageUrl = s3.upload(profileImage, new ArrayList<>(Arrays.asList("store", String.valueOf(id))));

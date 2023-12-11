@@ -4,6 +4,7 @@ import com.matsinger.barofishserver.domain.store.domain.Store;
 import com.matsinger.barofishserver.domain.store.domain.StoreRecommendType;
 import com.matsinger.barofishserver.domain.store.dto.SimpleStore;
 import com.matsinger.barofishserver.domain.store.dto.StoreExcelInquiryDto;
+import com.matsinger.barofishserver.domain.store.dto.StoreRecommendInquiryDto;
 import com.matsinger.barofishserver.domain.store.repository.StoreQueryRepository;
 import com.matsinger.barofishserver.domain.store.repository.StoreRepository;
 import com.matsinger.barofishserver.global.exception.BusinessException;
@@ -36,7 +37,7 @@ public class StoreQueryService {
     }
 
     public List<SimpleStore> selectRecommendStoreList(PageRequest pageRequest, StoreRecommendType type, String keyword, Integer userId) {
-        List<SimpleStore> stores = new ArrayList<>();
+        List<StoreRecommendInquiryDto> stores = new ArrayList<>();
         if (type == StoreRecommendType.RECENT) {
             stores = storeQueryRepository.selectRecommendStoreWithJoinAt(pageRequest, keyword, userId);
         }
@@ -50,10 +51,10 @@ public class StoreQueryService {
             stores = storeQueryRepository.selectRecommendStoreWithReview(pageRequest, keyword, userId);
         }
 
-        for (SimpleStore store : stores) {
-            store.getKeyword();
-        }
+        List<SimpleStore> response = stores.stream().map(
+                v -> v.toDto(v.getKeyword().split(","))
+        ).toList();
 
-        return null;
+        return response;
     }
 }

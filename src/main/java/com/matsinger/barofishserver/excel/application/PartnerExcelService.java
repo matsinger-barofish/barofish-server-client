@@ -130,7 +130,7 @@ public class PartnerExcelService {
                             BCrypt.gensalt())).joinAt(utils.now()).build();
             StoreInfo
                     storeInfo =
-                    StoreInfo.builder().backgroudImage(s3Url + "/default_backgroud.png").profileImage(s3Url +
+                    StoreInfo.builder().backgroundImage(s3Url + "/default_backgroud.png").profileImage(s3Url +
                             "/default_profile.png").name(partnerName).location(location).keyword(keyword).visitNote("").oneLineDescription(
                             "").settlementRate(settlementRate).bankName(bankName).bankHolder(bankHolder).bankAccount(
                             bankAccount).representativeName(representativeName).companyId(companyId).businessType(

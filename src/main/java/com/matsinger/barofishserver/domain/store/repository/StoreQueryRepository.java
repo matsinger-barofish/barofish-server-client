@@ -2,8 +2,8 @@ package com.matsinger.barofishserver.domain.store.repository;
 
 import com.matsinger.barofishserver.domain.order.orderprductinfo.domain.OrderProductState;
 import com.matsinger.barofishserver.domain.store.domain.StoreState;
-import com.matsinger.barofishserver.domain.store.dto.SimpleStore;
 import com.matsinger.barofishserver.domain.store.dto.StoreExcelInquiryDto;
+import com.matsinger.barofishserver.domain.store.dto.StoreRecommendInquiryDto;
 import com.querydsl.core.types.Projections;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.NumberExpression;
@@ -70,14 +70,14 @@ public class StoreQueryRepository {
         return store.id.in(storeIds);
     }
 
-    public List<SimpleStore> selectRecommendStoreWithJoinAt(PageRequest pageRequest,
-                                               String keyword,
-                                               Integer userId) {
+    public List<StoreRecommendInquiryDto> selectRecommendStoreWithJoinAt(PageRequest pageRequest,
+                                                                         String keyword,
+                                                                         Integer userId) {
         return queryFactory.select(Projections.fields(
-                        SimpleStore.class,
+                        StoreRecommendInquiryDto.class,
                         store.id.as("storeId"),
                         store.loginId.as("loginId"),
-                        storeInfo.backgroudImage.as("backgroundImage"),
+                        storeInfo.backgroundImage.as("backgroundImage"),
                         storeInfo.isReliable.as("isReliable"),
                         storeInfo.profileImage.as("profileImage"),
                         storeInfo.name.as("name"),
@@ -87,11 +87,13 @@ public class StoreQueryRepository {
                         storeInfo.refundDeliverFee.as("refundDeliveryFee"),
                         storeInfo.oneLineDescription.as("oneLineDescription"),
                         storeInfo.deliverCompany.as("deliverCompany"),
-                        storeScrap.userId.eq(userId).isTrue().as("isLike")
+                        storeScrap.userId.isNotNull().as("isLike")
                 ))
                 .from(storeInfo)
-                .join(store).on(store.id.eq(storeInfo.storeId))
-                .leftJoin(storeScrap).on(store.id.eq(storeScrap.storeId))
+                .leftJoin(store).on(store.id.eq(storeInfo.storeId))
+//                .leftJoin(storeScrap).on(store.id.eq(storeScrap.storeId).and(storeScrap.userId.eq(userId)))
+                .leftJoin(storeScrap).on(store.id.eq(storeScrap.storeId)
+                        .and(userId != null ? storeScrap.userId.eq(userId) : storeScrap.userId.isNull()))
                 .where(store.state.eq(StoreState.ACTIVE)
                         .and(storeInfo.name.contains(keyword))
                 )
@@ -101,14 +103,14 @@ public class StoreQueryRepository {
                 .fetch();
     }
 
-    public List<SimpleStore> selectRecommendStoreWithScrape(PageRequest pageRequest,
-                                               String keyword,
-                                               Integer userId) {
+    public List<StoreRecommendInquiryDto> selectRecommendStoreWithScrape(PageRequest pageRequest,
+                                                                         String keyword,
+                                                                         Integer userId) {
         return queryFactory.select(Projections.fields(
-                        SimpleStore.class,
+                        StoreRecommendInquiryDto.class,
                         store.id.as("storeId"),
                         store.loginId.as("loginId"),
-                        storeInfo.backgroudImage.as("backgroundImage"),
+                        storeInfo.backgroundImage.as("backgroundImage"),
                         storeInfo.isReliable.as("isReliable"),
                         storeInfo.profileImage.as("profileImage"),
                         storeInfo.name.as("name"),
@@ -118,29 +120,30 @@ public class StoreQueryRepository {
                         storeInfo.refundDeliverFee.as("refundDeliveryFee"),
                         storeInfo.oneLineDescription.as("oneLineDescription"),
                         storeInfo.deliverCompany.as("deliverCompany"),
-                        storeScrap.userId.eq(userId).isTrue().as("isLike")
+                        storeScrap.userId.isNotNull().as("isLike")
                 ))
                 .from(storeInfo)
-                .join(store).on(store.id.eq(storeInfo.storeId))
-                .leftJoin(storeScrap).on(store.id.eq(storeScrap.storeId))
+                .leftJoin(store).on(store.id.eq(storeInfo.storeId))
+                .leftJoin(storeScrap).on(store.id.eq(storeScrap.storeId)
+                        .and(userId != null ? storeScrap.userId.eq(userId) : storeScrap.userId.isNull()))
                 .where(store.state.eq(StoreState.ACTIVE)
                         .and(storeInfo.name.contains(keyword))
                 )
-                .orderBy(storeInfo.storeId.count().desc())
+                .orderBy(storeScrap.storeId.count().desc())
                 .groupBy(storeInfo.storeId)
                 .offset(pageRequest.getOffset())
                 .limit(pageRequest.getPageSize())
                 .fetch();
     }
 
-    public List<SimpleStore> selectRecommendStoreWithReview(PageRequest pageRequest,
-                                               String keyword,
-                                               Integer userId) {
+    public List<StoreRecommendInquiryDto> selectRecommendStoreWithReview(PageRequest pageRequest,
+                                                                         String keyword,
+                                                                         Integer userId) {
         return queryFactory.select(Projections.fields(
-                        SimpleStore.class,
+                        StoreRecommendInquiryDto.class,
                         store.id.as("storeId"),
                         store.loginId.as("loginId"),
-                        storeInfo.backgroudImage.as("backgroundImage"),
+                        storeInfo.backgroundImage.as("backgroundImage"),
                         storeInfo.isReliable.as("isReliable"),
                         storeInfo.profileImage.as("profileImage"),
                         storeInfo.name.as("name"),
@@ -150,11 +153,13 @@ public class StoreQueryRepository {
                         storeInfo.refundDeliverFee.as("refundDeliveryFee"),
                         storeInfo.oneLineDescription.as("oneLineDescription"),
                         storeInfo.deliverCompany.as("deliverCompany"),
-                        storeScrap.userId.eq(userId).isTrue().as("isLike")
+                        storeScrap.userId.isNotNull().as("isLike")
                 ))
                 .from(storeInfo)
+                .leftJoin(store).on(storeInfo.storeId.eq(store.id))
                 .leftJoin(review).on(storeInfo.storeId.eq(review.storeId).and(review.isDeleted.eq(false)))
-                .leftJoin(storeScrap).on(store.id.eq(storeScrap.storeId))
+                .leftJoin(storeScrap).on(store.id.eq(storeScrap.storeId)
+                        .and(userId != null ? storeScrap.userId.eq(userId) : storeScrap.userId.isNull()))
                 .where(store.state.eq(StoreState.ACTIVE)
                         .and(storeInfo.name.contains(keyword))
                 )
@@ -165,32 +170,35 @@ public class StoreQueryRepository {
                 .fetch();
     }
 
-    public List<SimpleStore> selectRecommendStoreWithOrder(PageRequest pageRequest,
-                                              String keyword,
-                                              Integer userId) {
+    public List<StoreRecommendInquiryDto> selectRecommendStoreWithOrder(PageRequest pageRequest,
+                                                                        String keyword,
+                                                                        Integer userId) {
         return queryFactory.select(Projections.fields(
-                        SimpleStore.class,
+                        StoreRecommendInquiryDto.class,
                         store.id.as("storeId"),
                         store.loginId.as("loginId"),
-                        storeInfo.backgroudImage.as("backgroundImage"),
+                        storeInfo.backgroundImage.as("backgroundImage"),
                         storeInfo.isReliable.as("isReliable"),
                         storeInfo.profileImage.as("profileImage"),
                         storeInfo.name.as("name"),
                         storeInfo.location.as("location"),
                         storeInfo.keyword.as("keyword"),
                         storeInfo.visitNote.as("visitNote"),
-                        storeInfo.refundDeliverFee.as("refundDeliveryFee"),
+                        storeInfo.refundDeliverFee.as("refundDeliverFee"),
                         storeInfo.oneLineDescription.as("oneLineDescription"),
                         storeInfo.deliverCompany.as("deliverCompany"),
-                        storeScrap.userId.eq(userId).isTrue().as("isLike")
+                        storeScrap.userId.isNotNull().as("isLike")
                 ))
                 .from(storeInfo)
-                .join(product).on(store.id.eq(product.storeId))
+                .leftJoin(product).on(storeInfo.storeId.eq(product.storeId))
+                .leftJoin(store).on(storeInfo.storeId.eq(store.id))
                 .leftJoin(orderProductInfo).on(orderProductInfo.productId.eq(product.id))
                 .leftJoin(orders).on(orders.id.eq(orderProductInfo.orderId))
-                .leftJoin(storeScrap).on(storeInfo.storeId.eq(storeScrap.storeId))
+                .leftJoin(storeScrap).on(store.id.eq(storeScrap.storeId)
+                        .and(userId != null ? storeScrap.userId.eq(userId) : storeScrap.userId.isNull()))
                 .where(store.state.eq(StoreState.ACTIVE)
-                        .and(storeInfo.name.contains(keyword))
+//                        .and(storeInfo.name.contains(keyword))
+                        .and(keyword != null ? storeInfo.name.contains(keyword) : null)
                 )
                 .groupBy(storeInfo.storeId)
                 .orderBy(
@@ -201,12 +209,12 @@ public class StoreQueryRepository {
                 .fetch();
     }
 
-    public List<SimpleStore> selectReliableStoreRandomOrder(Integer userId) {
+    public List<StoreRecommendInquiryDto> selectReliableStoreRandomOrder(Integer userId) {
         return queryFactory.select(Projections.fields(
-                        SimpleStore.class,
+                        StoreRecommendInquiryDto.class,
                         store.id.as("storeId"),
                         store.loginId.as("loginId"),
-                        storeInfo.backgroudImage.as("backgroundImage"),
+                        storeInfo.backgroundImage.as("backgroundImage"),
                         storeInfo.isReliable.as("isReliable"),
                         storeInfo.profileImage.as("profileImage"),
                         storeInfo.name.as("name"),
@@ -216,10 +224,11 @@ public class StoreQueryRepository {
                         storeInfo.refundDeliverFee.as("refundDeliveryFee"),
                         storeInfo.oneLineDescription.as("oneLineDescription"),
                         storeInfo.deliverCompany.as("deliverCompany"),
-                        storeScrap.userId.eq(userId).isTrue().as("isLike")
+                        storeScrap.userId.isNotNull().as("isLike")
                 ))
                 .from(storeInfo)
-                .leftJoin(storeScrap).on(storeInfo.storeId.eq(storeScrap.storeId))
+                .leftJoin(storeScrap).on(store.id.eq(storeScrap.storeId)
+                        .and(userId != null ? storeScrap.userId.eq(userId) : storeScrap.userId.isNull()))
                 .where(storeInfo.isReliable)
                 .orderBy(NumberExpression.random().asc())
                 .fetch();
