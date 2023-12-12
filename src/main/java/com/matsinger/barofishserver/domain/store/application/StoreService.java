@@ -53,7 +53,7 @@ public class StoreService {
                         storeInfo.getEmail()).faxNumber(storeInfo.getFaxNumber()).mosRegistration(storeInfo.getMosRegistration()).businessRegistration(
                         storeInfo.getBusinessRegistration()).bankAccountCopy(storeInfo.getBankAccountCopy()).build();
         return StoreDto.builder().id(store.getId()).state(store.getState()).loginId(store.getLoginId()).joinAt(store.getJoinAt()).backgroundImage(
-                storeInfo.getBackgroudImage()).profileImage(storeInfo.getProfileImage()).name(storeInfo.getName()).isReliable(
+                storeInfo.getbackgroundImage()).profileImage(storeInfo.getProfileImage()).name(storeInfo.getName()).isReliable(
                 storeInfo.getIsReliable()).location(storeInfo.getLocation()).visitNote(storeInfo.getVisitNote()).keyword(
                 storeInfo.getKeyword().split(",")).oneLineDescription(storeInfo.getOneLineDescription()).refundDeliverFee(
                 storeInfo.getRefundDeliverFee()).additionalData(additionalDto).deliverCompany(storeInfo.getDeliverCompany()).build();
@@ -90,7 +90,7 @@ public class StoreService {
         SimpleStore simpleStore = SimpleStore.builder()
                         .loginId(store.getLoginId())
                         .storeId(storeInfo.getStoreId())
-                        .backgroundImage(storeInfo.getBackgroudImage())
+                        .backgroundImage(storeInfo.getbackgroundImage())
                         .profileImage(storeInfo.getProfileImage())
                         .name(storeInfo.getName())
                         .location(storeInfo.getLocation())

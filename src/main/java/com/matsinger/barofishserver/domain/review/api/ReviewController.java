@@ -350,7 +350,7 @@ public class ReviewController {
                                                                       @PathVariable("id") Integer reviewId) {
         CustomResponse<Boolean> res = new CustomResponse<>();
 
-                TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
+                TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth);
         Integer userId = tokenInfo.getId();
         Review review = reviewQueryService.selectReview(reviewId);
         reviewCommandService.unlikeReview(userId, review.getId());

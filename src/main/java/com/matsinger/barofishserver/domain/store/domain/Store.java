@@ -118,7 +118,7 @@ public class Store {
     public StoreDto convert2Dto() {
 
         return StoreDto.builder().id(this.getId()).state(this.getState()).loginId(this.getLoginId()).joinAt(this.joinAt).backgroundImage(
-                this.getStoreInfo().getBackgroudImage()).profileImage(this.getStoreInfo().getProfileImage()).name(this.getStoreInfo().getName()).location(
+                this.getStoreInfo().getbackgroundImage()).profileImage(this.getStoreInfo().getProfileImage()).name(this.getStoreInfo().getName()).location(
                 this.getStoreInfo().getLocation()).keyword(this.getStoreInfo().getKeyword().split(",")).build();
     }
 }
