@@ -6,4 +6,5 @@ import lombok.Getter;
 public class ProductReviewPictureInquiryDto {
 
     private String reviewPictureUrls;
+    private Integer reviewId;
 }
