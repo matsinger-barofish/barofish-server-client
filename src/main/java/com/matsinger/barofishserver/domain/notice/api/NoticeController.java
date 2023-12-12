@@ -112,7 +112,7 @@ public class NoticeController {
                                                                @RequestPart(value = "data") NoticeAddReq data) throws Exception {
         CustomResponse<Notice> res = new CustomResponse<>();
 
-                jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth);
+                jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
 
         Notice notice = noticeQueryService.selectNotice(noticeId);
         if (data.getTitle() != null) {
