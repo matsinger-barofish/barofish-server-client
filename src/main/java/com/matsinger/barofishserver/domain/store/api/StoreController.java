@@ -60,7 +60,7 @@ public class StoreController {
                                                                           @RequestParam(value = "orderType", defaultValue = "DESC") Sort.Direction sort) {
         CustomResponse<List<StoreDto>> res = new CustomResponse<>();
 
-                TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
+        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
 
         Boolean isAdmin = tokenInfo.getType().equals(TokenAuthType.ADMIN);
 
@@ -92,7 +92,7 @@ public class StoreController {
                                                                                  @RequestParam(value = "joinAtE", required = false) Timestamp joinAtE) {
         CustomResponse<Page<StoreDto>> res = new CustomResponse<>();
 
-                TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
+        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
 
         Specification<Store> spec = (root, query, builder) -> {
             List<Predicate> predicates = new ArrayList<>();
@@ -130,7 +130,6 @@ public class StoreController {
                                                                                       @RequestParam(value = "take", defaultValue = "10", required = false) Integer take,
                                                                                       @RequestParam(value = "keyword", required = false, defaultValue = "") String keyword) {
         CustomResponse<List<SimpleStore>> res = new CustomResponse<>();
-
 
         Integer userId = null;
         TokenInfo tokenInfo = null;
@@ -382,7 +381,7 @@ public class StoreController {
                 s3.upload(bankAccountCopy, new ArrayList<>(Arrays.asList("store", String.valueOf(store.getId()))));
         storeInfoData.setStoreId(store.getId());
         storeInfoData.setVisitNote(visitNoteUrl);
-        storeInfoData.setBackgroudImage(backgroundImageUrl);
+        storeInfoData.setbackgroundImage(backgroundImageUrl);
         storeInfoData.setProfileImage(profileImageUrl);
         storeInfoData.setMosRegistration(mosRegistrationUrl);
         storeInfoData.setBusinessRegistration(businessRegistrationUrl);
@@ -470,7 +469,7 @@ public class StoreController {
             String
                     imageUrl =
                     s3.upload(backgroundImage, new ArrayList<>(Arrays.asList("store", String.valueOf(id))));
-            storeInfo.setBackgroudImage(imageUrl);
+            storeInfo.setbackgroundImage(imageUrl);
         }
         if (profileImage != null) {
             String imageUrl = s3.upload(profileImage, new ArrayList<>(Arrays.asList("store", String.valueOf(id))));

@@ -49,6 +49,6 @@ public class BasketTastingNoteQueryService {
 
     public boolean isSaved(int userId, int productId) {
         User findedUser = userQueryService.findById(userId);
-        return basketTastingNoteRepository.existsByUserIdAndProductId(findedUser.getId(), productId);
+        return basketTastingNoteRepository.existsByUserIdAndProduct_Id(findedUser.getId(), productId);
     }
 }
