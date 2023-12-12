@@ -7,6 +7,7 @@ import com.matsinger.barofishserver.domain.product.domain.Product;
 import com.matsinger.barofishserver.domain.product.domain.ProductSortBy;
 import com.matsinger.barofishserver.domain.product.dto.ExpectedArrivalDateResponse;
 import com.matsinger.barofishserver.domain.product.dto.ProductListDto;
+import com.matsinger.barofishserver.domain.product.dto.ProductPhotiReviewDto;
 import com.matsinger.barofishserver.domain.product.optionitem.repository.OptionItemRepository;
 import com.matsinger.barofishserver.domain.product.productfilter.repository.ProductFilterRepository;
 import com.matsinger.barofishserver.domain.product.repository.ProductQueryRepository;
@@ -38,6 +39,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 @Service
@@ -252,7 +254,7 @@ public class ProductQueryService {
         throw new BusinessException("탑바를 찾을 수 없습니다.");
     }
 
-    public List<String> getProductPictures(Integer productId) {
+    public List<ProductPhotiReviewDto> getProductPictures(Integer productId) {
         validateProductExists(productId);
 
         List<ProductReviewPictureInquiryDto> reviews = reviewQueryRepository.getReviewsWhichPictureExists(productId);
@@ -260,28 +262,21 @@ public class ProductQueryService {
             return null;
         }
 
-        List<String> images = new ArrayList<>();
+        List<ProductPhotiReviewDto> response = new ArrayList<>();
         for (ProductReviewPictureInquiryDto review : reviews) {
             String reviewPictureUrls = review.getReviewPictureUrls();
 
             String removedBrackets = removeBrackets(reviewPictureUrls);
-            addReviewImages(removedBrackets, images);
+            List<String> reviewImages = Arrays.stream(removedBrackets.split(", ")).toList();
 
-            if (images.size() == 5) {
-                break;
-            }
+            response.add(ProductPhotiReviewDto.builder()
+                    .reviewId(review.getReviewId())
+                    .imageUrls(reviewImages)
+                    .imageCount(reviewImages.size())
+                    .build()
+            );
         }
-        return images;
-    }
-
-    private static void addReviewImages(String removedBrackets, List<String> images) {
-        String[] reviewImageUrls = removedBrackets.split(", ");
-        for (String imageUrl : reviewImageUrls) {
-            images.add(imageUrl);
-            if (images.size() == 5) {
-                break;
-            }
-        }
+        return response;
     }
 
     private String removeBrackets(String reviewPictureUrls) {

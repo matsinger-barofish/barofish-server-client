@@ -20,7 +20,8 @@ public class ReviewQueryRepository {
     public List<ProductReviewPictureInquiryDto> getReviewsWhichPictureExists(Integer productId) {
         return queryFactory.select(Projections.fields(
                 ProductReviewPictureInquiryDto.class,
-                review.images.as("reviewPictureUrls")
+                review.images.as("reviewPictureUrls"),
+                review.id.as("reviewId")
         ))
                 .from(product)
                 .leftJoin(review).on(product.id.eq(review.productId)
