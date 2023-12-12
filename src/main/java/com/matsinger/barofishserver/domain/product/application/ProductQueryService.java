@@ -11,6 +11,8 @@ import com.matsinger.barofishserver.domain.product.optionitem.repository.OptionI
 import com.matsinger.barofishserver.domain.product.productfilter.repository.ProductFilterRepository;
 import com.matsinger.barofishserver.domain.product.repository.ProductQueryRepository;
 import com.matsinger.barofishserver.domain.product.repository.ProductRepository;
+import com.matsinger.barofishserver.domain.review.dto.ProductReviewPictureInquiryDto;
+import com.matsinger.barofishserver.domain.review.repository.ReviewQueryRepository;
 import com.matsinger.barofishserver.domain.product.weeksdate.application.WeeksDateQueryService;
 import com.matsinger.barofishserver.domain.product.weeksdate.domain.WeeksDate;
 import com.matsinger.barofishserver.domain.product.weeksdate.repository.WeeksDateRepository;
@@ -35,6 +37,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -59,6 +62,7 @@ public class ProductQueryService {
     private final ProductQueryRepository productQueryRepository;
     private final UserQueryService userQueryService;
     private final BasketTastingNoteRepository basketTastingNoteRepository;
+    private final ReviewQueryRepository reviewQueryRepository;
 
     public Product findById(int productId) {
         return productRepository.findById(productId)
@@ -248,4 +252,53 @@ public class ProductQueryService {
         throw new BusinessException("탑바를 찾을 수 없습니다.");
     }
 
+    public List<String> getProductPictures(Integer productId) {
+        validateProductExists(productId);
+
+        List<ProductReviewPictureInquiryDto> reviews = reviewQueryRepository.getReviewsWhichPictureExists(productId);
+        if (reviews.contains(null)) {
+            return null;
+        }
+
+        List<String> images = new ArrayList<>();
+        for (ProductReviewPictureInquiryDto review : reviews) {
+            String reviewPictureUrls = review.getReviewPictureUrls();
+
+            String removedBrackets = removeBrackets(reviewPictureUrls);
+            addReviewImages(removedBrackets, images);
+
+            if (images.size() == 5) {
+                break;
+            }
+        }
+        return images;
+    }
+
+    private static void addReviewImages(String removedBrackets, List<String> images) {
+        String[] reviewImageUrls = removedBrackets.split(", ");
+        for (String imageUrl : reviewImageUrls) {
+            images.add(imageUrl);
+            if (images.size() == 5) {
+                break;
+            }
+        }
+    }
+
+    private String removeBrackets(String reviewPictureUrls) {
+        StringBuilder sb = new StringBuilder();
+        for (char c : reviewPictureUrls.toCharArray()) {
+            if (c == '[' || c == ']') {
+                continue;
+            }
+            sb.append(c);
+        }
+        return sb.toString();
+    }
+
+    private void validateProductExists(Integer productId) {
+        boolean isProductExists = productRepository.existsById(productId);
+        if (!isProductExists) {
+            throw new BusinessException("상품이 존재하지 않습니다.");
+        }
+    }
 }
