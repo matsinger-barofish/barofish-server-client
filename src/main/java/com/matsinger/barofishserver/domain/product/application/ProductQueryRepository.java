@@ -56,7 +56,7 @@ public class ProductQueryRepository {
                         product.needTaxation.as("isNeedTaxation"),
                         optionItem.discountPrice.as("discountPrice"),
                         optionItem.originPrice.as("originPrice"),
-                        review.id.count().intValue().as("reviewCount"),
+                        review.id.countDistinct().intValue().as("reviewCount"),
                         storeInfo.storeId.as("storeId"),
                         storeInfo.name.as("storeName"),
                         product.minOrderPrice.as("minOrderPrice"),
@@ -74,14 +74,14 @@ public class ProductQueryRepository {
                 .leftJoin(userInfo).on(userInfo.userId.eq(orders.userId)
                         .and(
                                 userInfo.email.notLike("baroTastingNote")
-                                .or(userInfo.email.notLike("baroReviewId"))
+                                .and(userInfo.email.notLike("baroReviewId"))
                         )
                 )
                 .leftJoin(category).on(category.id.eq(product.category.id))
                 .leftJoin(productSearchFilterMap).on(product.id.eq(productSearchFilterMap.productId))
                 .leftJoin(searchFilterField).on(productSearchFilterMap.fieldId.eq(searchFilterField.id))
                 .leftJoin(searchFilter).on(searchFilterField.searchFilterId.eq(searchFilter.id))
-                .leftJoin(review).on(userInfo.userId.eq(review.userId).and(review.isDeleted.eq(false)))
+                .leftJoin(review).on(orderProductInfo.productId.eq(review.productId).and(review.isDeleted.eq(false)))
                 .where(product.state.eq(ProductState.ACTIVE),
                         eqCuration(curationId),
                         isPromotionInProgress(),
@@ -100,21 +100,8 @@ public class ProductQueryRepository {
     }
 
     public Integer countNewerProducts(List<Integer> categoryIds, List<Integer> filterFieldsIds, Integer curationId, String keyword, Integer storeId) {
-        Integer count = (int) queryFactory.select(product.id)
+        Integer count = (int) queryFactory.select(product.count())
                 .from(product)
-                .leftJoin(storeInfo).on(product.storeId.eq(storeInfo.storeId))
-                .leftJoin(optionItem).on(product.representOptionItemId.eq(optionItem.id))
-                .leftJoin(orderProductInfo).on(product.id.eq(orderProductInfo.productId)
-                        .and(orderProductInfo.state.in(
-                                OrderProductState.PAYMENT_DONE, OrderProductState.FINAL_CONFIRM)))
-                .leftJoin(orders).on(orders.id.eq(orderProductInfo.orderId))
-                .leftJoin(userInfo).on(userInfo.userId.eq(orders.userId)
-                        .and(
-                                userInfo.email.notLike("baroTastingNote")
-                                .or(userInfo.email.notLike("baroReviewId"))
-                        )
-                )
-                .leftJoin(category).on(category.id.eq(product.category.id))
                 .leftJoin(productSearchFilterMap).on(product.id.eq(productSearchFilterMap.productId))
                 .leftJoin(searchFilterField).on(productSearchFilterMap.fieldId.eq(searchFilterField.id))
                 .leftJoin(searchFilter).on(searchFilterField.searchFilterId.eq(searchFilter.id))
@@ -158,7 +145,7 @@ public class ProductQueryRepository {
                         product.needTaxation.as("isNeedTaxation"),
                         optionItem.discountPrice.as("discountPrice"),
                         optionItem.originPrice.as("originPrice"),
-                        review.id.count().intValue().as("reviewCount"),
+                        review.id.countDistinct().intValue().as("reviewCount"),
                         storeInfo.storeId.as("storeId"),
                         storeInfo.name.as("storeName"),
                         product.minOrderPrice.as("minOrderPrice"),
@@ -176,14 +163,14 @@ public class ProductQueryRepository {
                 .leftJoin(userInfo).on(userInfo.userId.eq(orders.userId)
                         .and(
                                 userInfo.email.notLike("baroTastingNote")
-                                        .or(userInfo.email.notLike("baroReviewId"))
+                                        .and(userInfo.email.notLike("baroReviewId"))
                         )
                 )
                 .leftJoin(category).on(category.id.eq(product.category.id))
                 .leftJoin(productSearchFilterMap).on(product.id.eq(productSearchFilterMap.productId))
                 .leftJoin(searchFilterField).on(productSearchFilterMap.fieldId.eq(searchFilterField.id))
                 .leftJoin(searchFilter).on(searchFilterField.searchFilterId.eq(searchFilter.id))
-                .leftJoin(review).on(userInfo.userId.eq(review.userId).and(review.isDeleted.eq(false)))
+                .leftJoin(review).on(orderProductInfo.productId.eq(review.productId).and(review.isDeleted.eq(false)))
                 .where(product.state.eq(ProductState.ACTIVE),
                         eqCuration(curationId),
                         isPromotionInProgress(),
@@ -218,25 +205,11 @@ public class ProductQueryRepository {
 
     public int countPopularProducts(List<Integer> categoryIds, List<Integer> filterFieldsIds, Integer curationId, String keyword, Integer storeId) {
         int count = (int) queryFactory
-                .select(product.id)
+                .select(product.count())
                 .from(product)
-                .leftJoin(storeInfo).on(product.storeId.eq(storeInfo.storeId))
-                .leftJoin(optionItem).on(product.representOptionItemId.eq(optionItem.id))
-                .leftJoin(orderProductInfo).on(product.id.eq(orderProductInfo.productId)
-                        .and(orderProductInfo.state.in(
-                                OrderProductState.PAYMENT_DONE, OrderProductState.FINAL_CONFIRM)))
-                .leftJoin(orders).on(orders.id.eq(orderProductInfo.orderId))
-                .leftJoin(userInfo).on(userInfo.userId.eq(orders.userId)
-                        .and(
-                                userInfo.email.notLike("baroTastingNote")
-                                .or(userInfo.email.notLike("baroReviewId"))
-                        )
-                )
-                .leftJoin(category).on(category.id.eq(product.category.id))
                 .leftJoin(productSearchFilterMap).on(product.id.eq(productSearchFilterMap.productId))
                 .leftJoin(searchFilterField).on(productSearchFilterMap.fieldId.eq(searchFilterField.id))
                 .leftJoin(searchFilter).on(searchFilterField.searchFilterId.eq(searchFilter.id))
-                .leftJoin(review).on(userInfo.userId.eq(review.userId).and(review.isDeleted.eq(false)))
                 .where(product.state.eq(ProductState.ACTIVE),
                         eqCuration(curationId),
                         isPromotionInProgress(),
@@ -267,7 +240,7 @@ public class ProductQueryRepository {
                         product.needTaxation.as("isNeedTaxation"),
                         optionItem.discountPrice.as("discountPrice"),
                         optionItem.originPrice.as("originPrice"),
-                        review.id.count().intValue().as("reviewCount"),
+                        review.id.countDistinct().intValue().as("reviewCount"),
                         storeInfo.storeId.as("storeId"),
                         storeInfo.name.as("storeName"),
                         product.minOrderPrice.as("minOrderPrice"),
@@ -285,14 +258,14 @@ public class ProductQueryRepository {
                 .leftJoin(userInfo).on(userInfo.userId.eq(orders.userId)
                         .and(
                                 userInfo.email.notLike("baroTastingNote")
-                                .or(userInfo.email.notLike("baroReviewId"))
+                                .and(userInfo.email.notLike("baroReviewId"))
                         )
                 )
                 .leftJoin(category).on(category.id.eq(product.category.id))
                 .leftJoin(productSearchFilterMap).on(product.id.eq(productSearchFilterMap.productId))
                 .leftJoin(searchFilterField).on(productSearchFilterMap.fieldId.eq(searchFilterField.id))
                 .leftJoin(searchFilter).on(searchFilterField.searchFilterId.eq(searchFilter.id))
-                .leftJoin(review).on(userInfo.userId.eq(review.userId).and(review.isDeleted.eq(false)))
+                .leftJoin(review).on(orderProductInfo.productId.eq(review.productId).and(review.isDeleted.eq(false)))
                 .where(product.state.eq(ProductState.ACTIVE),
                         eqCuration(curationId),
                         isPromotionInProgress(),
@@ -313,21 +286,8 @@ public class ProductQueryRepository {
 
     public int countDiscountProducts(List<Integer> categoryIds, List<Integer> filterFieldsIds, Integer curationId, String keyword, Integer storeId) {
         int count =(int) queryFactory
-                .select(product.id)
+                .select(product.count())
                 .from(product)
-                .leftJoin(storeInfo).on(product.storeId.eq(storeInfo.storeId))
-                .leftJoin(optionItem).on(product.representOptionItemId.eq(optionItem.id))
-                .leftJoin(orderProductInfo).on(product.id.eq(orderProductInfo.productId)
-                        .and(orderProductInfo.state.in(
-                                OrderProductState.PAYMENT_DONE, OrderProductState.FINAL_CONFIRM)))
-                .leftJoin(orders).on(orders.id.eq(orderProductInfo.orderId))
-                .leftJoin(userInfo).on(userInfo.userId.eq(orders.userId)
-                        .and(
-                                userInfo.email.notLike("baroTastingNote")
-                                .or(userInfo.email.notLike("baroReviewId"))
-                        )
-                )
-                .leftJoin(category).on(category.id.eq(product.category.id))
                 .leftJoin(productSearchFilterMap).on(product.id.eq(productSearchFilterMap.productId))
                 .leftJoin(searchFilterField).on(productSearchFilterMap.fieldId.eq(searchFilterField.id))
                 .leftJoin(searchFilter).on(searchFilterField.searchFilterId.eq(searchFilter.id))
@@ -354,6 +314,11 @@ public class ProductQueryRepository {
                 )
         );
         return orderSpecifiers.toArray(new OrderSpecifier[orderSpecifiers.size()]);
+    }
+
+    private BooleanExpression excludeIntendedReviews() {
+        return userInfo.email.notLike("baroTastingNote")
+                .and(userInfo.email.notLike("baroReviewId"));
     }
 
     private BooleanExpression isDiscountApplied() {
