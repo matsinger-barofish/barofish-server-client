@@ -45,7 +45,7 @@ public class TopBarControllerV2 {
     }
 
     @GetMapping("/{id}/count")
-    public ResponseEntity<CustomResponse<Long>> selectTopBarCountV2(@PathVariable("id") Integer id,
+    public ResponseEntity<CustomResponse<Long>> selectTopBarCount(@PathVariable("id") Integer id,
                                                                   @RequestParam(value = "page", defaultValue = "1", required = false) Integer page,
                                                                   @RequestParam(value = "take", defaultValue = "10", required = false) Integer take,
                                                                   @RequestParam(value = "categoryIds", required = false) String categoryIds,
@@ -68,7 +68,7 @@ public class TopBarControllerV2 {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<CustomResponse<Page<ProductListDto>>> selectTopBarV2(@PathVariable("id") Integer id,
+    public ResponseEntity<CustomResponse<Page<ProductListDto>>> selectTopBar(@PathVariable("id") Integer id,
                                                                              @RequestParam(value = "page", defaultValue = "1", required = false) Integer page,
                                                                              @RequestParam(value = "take", defaultValue = "10", required = false) Integer take,
                                                                              @RequestParam(value = "filterFieldIds", required = false) String filterFieldIds) {
@@ -85,7 +85,7 @@ public class TopBarControllerV2 {
     }
 
     @PostMapping("/add")
-    public ResponseEntity<CustomResponse<TopBar>> addTopBarV2(@RequestHeader(value = "Authorization") Optional<String> auth,
+    public ResponseEntity<CustomResponse<TopBar>> addTopBar(@RequestHeader(value = "Authorization") Optional<String> auth,
                                                             @RequestPart(value = "name") String name) {
         CustomResponse<TopBar> res = new CustomResponse<>();
 
@@ -100,7 +100,7 @@ public class TopBarControllerV2 {
     }
 
     @PostMapping("/update/{id}")
-    public ResponseEntity<CustomResponse<TopBar>> updateTopBarV2(@RequestHeader(value = "Authorization") Optional<String> auth,
+    public ResponseEntity<CustomResponse<TopBar>> updateTopBar(@RequestHeader(value = "Authorization") Optional<String> auth,
                                                                @PathVariable("id") Integer id,
                                                                @RequestPart(value = "name") String name) throws Exception {
         CustomResponse<TopBar> res = new CustomResponse<>();
@@ -116,7 +116,7 @@ public class TopBarControllerV2 {
     }
 
     @PostMapping("/add-product")
-    public ResponseEntity<CustomResponse<TopBarProductMap>> addProductToTopBarV2(@RequestHeader(value = "Authorization") Optional<String> auth,
+    public ResponseEntity<CustomResponse<TopBarProductMap>> addProductToTopBar(@RequestHeader(value = "Authorization") Optional<String> auth,
                                                                                @RequestPart(value = "topBarId") Integer topBarId,
                                                                                @RequestPart(value = "productId") Integer productId) {
         CustomResponse<TopBarProductMap> res = new CustomResponse<>();
@@ -134,7 +134,7 @@ public class TopBarControllerV2 {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<CustomResponse<Boolean>> deleteTopBarV2(@RequestHeader(value = "Authorization") Optional<String> auth,
+    public ResponseEntity<CustomResponse<Boolean>> deleteTopBar(@RequestHeader(value = "Authorization") Optional<String> auth,
                                                                 @PathVariable("id") Integer id) {
         CustomResponse<Boolean> res = new CustomResponse<>();
 
