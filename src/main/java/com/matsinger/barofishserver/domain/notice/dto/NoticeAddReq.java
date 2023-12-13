@@ -10,4 +10,5 @@ public class NoticeAddReq {
     NoticeType type;
     String title;
     String content;
+    Boolean isRepresentative;
 }
