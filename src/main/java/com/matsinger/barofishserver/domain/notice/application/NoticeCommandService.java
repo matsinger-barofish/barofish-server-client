@@ -37,8 +37,8 @@ public class NoticeCommandService {
         List<Notice> notices = noticeRepository.findAll();
         if (request.getIsRepresentative() == true) {
             findExistingRepresentativeNoticeAndSetFalse(notices);
+            notice.setRepresentative(true);
         }
-        notice.setRepresentative(true);
 
         if (request.getContent() != null) {
             String
