@@ -1,28 +1,16 @@
 package com.matsinger.barofishserver.domain.product.application;
 
-import com.matsinger.barofishserver.domain.compare.filter.repository.CompareFilterRepository;
-import com.matsinger.barofishserver.domain.compare.repository.SaveProductRepository;
-import com.matsinger.barofishserver.domain.inquiry.repository.InquiryRepository;
 import com.matsinger.barofishserver.domain.product.domain.Product;
 import com.matsinger.barofishserver.domain.product.domain.ProductSortBy;
 import com.matsinger.barofishserver.domain.product.dto.ExpectedArrivalDateResponse;
 import com.matsinger.barofishserver.domain.product.dto.ProductListDto;
 import com.matsinger.barofishserver.domain.product.dto.ProductPhotiReviewDto;
-import com.matsinger.barofishserver.domain.product.optionitem.repository.OptionItemRepository;
-import com.matsinger.barofishserver.domain.product.productfilter.repository.ProductFilterRepository;
 import com.matsinger.barofishserver.domain.product.repository.ProductQueryRepository;
 import com.matsinger.barofishserver.domain.product.repository.ProductRepository;
-import com.matsinger.barofishserver.domain.review.dto.ProductReviewPictureInquiryDto;
-import com.matsinger.barofishserver.domain.review.repository.ReviewQueryRepository;
-import com.matsinger.barofishserver.domain.product.weeksdate.application.WeeksDateQueryService;
 import com.matsinger.barofishserver.domain.product.weeksdate.domain.WeeksDate;
 import com.matsinger.barofishserver.domain.product.weeksdate.repository.WeeksDateRepository;
-import com.matsinger.barofishserver.domain.review.application.ReviewQueryService;
-import com.matsinger.barofishserver.domain.review.repository.ReviewRepository;
-import com.matsinger.barofishserver.domain.searchFilter.repository.ProductSearchFilterMapRepository;
-import com.matsinger.barofishserver.domain.searchFilter.repository.SearchFilterFieldRepository;
-import com.matsinger.barofishserver.domain.store.application.StoreService;
-import com.matsinger.barofishserver.domain.store.repository.StoreInfoRepository;
+import com.matsinger.barofishserver.domain.review.dto.ProductReviewPictureInquiryDto;
+import com.matsinger.barofishserver.domain.review.repository.ReviewQueryRepository;
 import com.matsinger.barofishserver.domain.tastingNote.basketTastingNote.repository.BasketTastingNoteRepository;
 import com.matsinger.barofishserver.domain.user.application.UserQueryService;
 import com.matsinger.barofishserver.domain.user.domain.User;
@@ -48,18 +36,6 @@ import java.util.List;
 public class ProductQueryService {
 
     private final ProductRepository productRepository;
-    private final ReviewRepository reviewRepository;
-    private final OptionItemRepository optionItemRepository;
-    private final ProductFilterRepository productFilterRepository;
-    private final CompareFilterRepository compareFilterRepository;
-    private final StoreInfoRepository storeInfoRepository;
-    private final ProductSearchFilterMapRepository productSearchFilterMapRepository;
-    private final SearchFilterFieldRepository searchFilterFieldRepository;
-    private final SaveProductRepository saveProductRepository;
-    private final InquiryRepository inquiryRepository;
-    private final StoreService storeService;
-    private final ReviewQueryService reviewQueryService;
-    private final WeeksDateQueryService weekDateQueryService;
     private final WeeksDateRepository weeksDateRepository;
     private final ProductQueryRepository productQueryRepository;
     private final UserQueryService userQueryService;
@@ -68,7 +44,7 @@ public class ProductQueryService {
 
     public Product findById(int productId) {
         return productRepository.findById(productId)
-                                .orElseThrow(() -> new BusinessException("상품 정보를 찾을 수 없습니다."));
+                .orElseThrow(() -> new BusinessException("상품 정보를 찾을 수 없습니다."));
     }
 
     public Page<ProductListDto> getPagedProducts(
@@ -119,7 +95,6 @@ public class ProductQueryService {
         );
     }
 
-
     public ExpectedArrivalDateResponse getExpectedArrivalDate(LocalDateTime now, Integer productId) {
         Product findProduct = findById(productId);
         List<WeeksDate> weeksDatesWithHoliday = weeksDateRepository.findByDateBetween(
@@ -145,7 +120,7 @@ public class ProductQueryService {
         boolean isNowBeforeForwardingTime = now.isBefore(forwardingTime);
 
         int expectedArrivalDate = productExpectedArrivalDate;
-        
+
         boolean isTodayHoliday = weeksDatesWithHoliday.get(0).isDeliveryCompanyHoliday();
 
         // 오늘이 휴일이 아니면

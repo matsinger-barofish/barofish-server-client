@@ -35,8 +35,6 @@ import static com.matsinger.barofishserver.domain.product.domain.QProduct.produc
 import static com.matsinger.barofishserver.domain.product.optionitem.domain.QOptionItem.optionItem;
 import static com.matsinger.barofishserver.domain.review.domain.QReview.review;
 import static com.matsinger.barofishserver.domain.searchFilter.domain.QProductSearchFilterMap.productSearchFilterMap;
-import static com.matsinger.barofishserver.domain.searchFilter.domain.QSearchFilter.searchFilter;
-import static com.matsinger.barofishserver.domain.searchFilter.domain.QSearchFilterField.searchFilterField;
 import static com.matsinger.barofishserver.domain.store.domain.QStoreInfo.storeInfo;
 import static com.matsinger.barofishserver.domain.userinfo.domain.QUserInfo.userInfo;
 
@@ -87,9 +85,6 @@ public class ProductQueryRepository {
                         )
                 )
                 .leftJoin(category).on(category.id.eq(product.category.id))
-                .leftJoin(productSearchFilterMap).on(product.id.eq(productSearchFilterMap.productId))
-                .leftJoin(searchFilterField).on(productSearchFilterMap.fieldId.eq(searchFilterField.id))
-                .leftJoin(searchFilter).on(searchFilterField.searchFilterId.eq(searchFilter.id))
                 .leftJoin(review).on(orderProductInfo.productId.eq(review.productId).and(review.isDeleted.eq(false)))
                 .where(product.state.eq(ProductState.ACTIVE),
                         eqCuration(curationId),
@@ -111,9 +106,6 @@ public class ProductQueryRepository {
     public Integer countNewerProducts(List<Integer> categoryIds, List<Integer> filterFieldsIds, Integer curationId, String keyword, Integer storeId) {
         Integer count = (int) queryFactory.select(product.count())
                 .from(product)
-                .leftJoin(productSearchFilterMap).on(product.id.eq(productSearchFilterMap.productId))
-                .leftJoin(searchFilterField).on(productSearchFilterMap.fieldId.eq(searchFilterField.id))
-                .leftJoin(searchFilter).on(searchFilterField.searchFilterId.eq(searchFilter.id))
                 .leftJoin(review).on(product.id.eq(review.productId))
                 .where(product.state.eq(ProductState.ACTIVE),
                         eqCuration(curationId),
@@ -265,9 +257,6 @@ public class ProductQueryRepository {
                         )
                 )
                 .leftJoin(category).on(category.id.eq(product.category.id))
-                .leftJoin(productSearchFilterMap).on(product.id.eq(productSearchFilterMap.productId))
-                .leftJoin(searchFilterField).on(productSearchFilterMap.fieldId.eq(searchFilterField.id))
-                .leftJoin(searchFilter).on(searchFilterField.searchFilterId.eq(searchFilter.id))
                 .leftJoin(review).on(orderProductInfo.productId.eq(review.productId).and(review.isDeleted.eq(false)))
                 .where(product.state.eq(ProductState.ACTIVE),
                         eqCuration(curationId),
@@ -291,9 +280,6 @@ public class ProductQueryRepository {
         int count =(int) queryFactory
                 .select(product.count())
                 .from(product)
-                .leftJoin(productSearchFilterMap).on(product.id.eq(productSearchFilterMap.productId))
-                .leftJoin(searchFilterField).on(productSearchFilterMap.fieldId.eq(searchFilterField.id))
-                .leftJoin(searchFilter).on(searchFilterField.searchFilterId.eq(searchFilter.id))
                 .leftJoin(review).on(userInfo.userId.eq(review.userId).and(review.isDeleted.eq(false)))
                 .where(product.state.eq(ProductState.ACTIVE),
                         eqCuration(curationId),
@@ -361,9 +347,6 @@ public class ProductQueryRepository {
                         )
                 )
                 .leftJoin(category).on(category.id.eq(product.category.id))
-                .leftJoin(productSearchFilterMap).on(product.id.eq(productSearchFilterMap.productId))
-                .leftJoin(searchFilterField).on(productSearchFilterMap.fieldId.eq(searchFilterField.id))
-                .leftJoin(searchFilter).on(searchFilterField.searchFilterId.eq(searchFilter.id))
                 .leftJoin(review).on(userInfo.userId.eq(review.userId).and(review.isDeleted.eq(false)))
                 .where(product.state.eq(ProductState.ACTIVE),
                         eqCuration(curationId),
@@ -406,9 +389,6 @@ public class ProductQueryRepository {
                         )
                 )
                 .leftJoin(category).on(category.id.eq(product.category.id))
-                .leftJoin(productSearchFilterMap).on(product.id.eq(productSearchFilterMap.productId))
-                .leftJoin(searchFilterField).on(productSearchFilterMap.fieldId.eq(searchFilterField.id))
-                .leftJoin(searchFilter).on(searchFilterField.searchFilterId.eq(searchFilter.id))
                 .leftJoin(review).on(userInfo.userId.eq(review.userId).and(review.isDeleted.eq(false)))
                 .where(product.state.eq(ProductState.ACTIVE),
                         eqCuration(curationId),
