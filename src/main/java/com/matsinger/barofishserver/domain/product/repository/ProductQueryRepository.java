@@ -276,11 +276,15 @@ public class ProductQueryRepository {
         return new PageImpl<>(inquiryData, pageRequest, count);
     }
 
-    public int countDiscountProducts(List<Integer> categoryIds, List<Integer> filterFieldsIds, Integer curationId, String keyword, Integer storeId) {
+    public int countDiscountProducts(List<Integer> categoryIds,
+                                     List<Integer> filterFieldsIds,
+                                     Integer curationId,
+                                     String keyword,
+                                     Integer storeId) {
         int count =(int) queryFactory
                 .select(product.count())
                 .from(product)
-                .leftJoin(review).on(userInfo.userId.eq(review.userId).and(review.isDeleted.eq(false)))
+                .leftJoin(optionItem).on(product.representOptionItemId.eq(optionItem.id))
                 .where(product.state.eq(ProductState.ACTIVE),
                         eqCuration(curationId),
                         isPromotionInProgress(),
