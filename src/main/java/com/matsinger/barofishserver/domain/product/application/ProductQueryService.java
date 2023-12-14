@@ -9,6 +9,7 @@ import com.matsinger.barofishserver.domain.product.repository.ProductQueryReposi
 import com.matsinger.barofishserver.domain.product.repository.ProductRepository;
 import com.matsinger.barofishserver.domain.product.weeksdate.domain.WeeksDate;
 import com.matsinger.barofishserver.domain.product.weeksdate.repository.WeeksDateRepository;
+import com.matsinger.barofishserver.domain.review.application.ReviewQueryService;
 import com.matsinger.barofishserver.domain.review.dto.ProductReviewPictureInquiryDto;
 import com.matsinger.barofishserver.domain.review.repository.ReviewQueryRepository;
 import com.matsinger.barofishserver.domain.tastingNote.basketTastingNote.repository.BasketTastingNoteRepository;
@@ -41,6 +42,7 @@ public class ProductQueryService {
     private final UserQueryService userQueryService;
     private final BasketTastingNoteRepository basketTastingNoteRepository;
     private final ReviewQueryRepository reviewQueryRepository;
+    private final ReviewQueryService reviewQueryService;
 
     public Product findById(int productId) {
         return productRepository.findById(productId)
@@ -66,15 +68,19 @@ public class ProductQueryService {
                 keyword,
                 storeId);
 
-        User findedUser = userQueryService.findById(userId);
-        List<Integer> userBasketProductIds = basketTastingNoteRepository.findAllByUserId(findedUser.getId())
-                .stream().map(v -> v.getProductId()).toList();
+        List<Integer> userBasketProductIds = new ArrayList<>();
+        if (userId != null) {
+            User findedUser = userQueryService.findById(userId);
+            userBasketProductIds = basketTastingNoteRepository.findAllByUserId(findedUser.getId())
+                    .stream().map(v -> v.getProductId()).toList();
+        }
 
         for (ProductListDto productDto : productDtos) {
             if (userBasketProductIds.contains(productDto.getProductId())) {
                 productDto.setIsLike(true);
             }
             productDto.convertImageUrlsToFirstUrl();
+            productDto.setReviewCount(reviewQueryService.countReviewWithoutDeleted(productDto.getId(), false));
         }
         return productDtos;
     }
@@ -199,7 +205,9 @@ public class ProductQueryService {
         }
 
         for (ProductListDto productDto : productDtos) {
+            // 여러개 이미지 중 하나로 세팅
             productDto.convertImageUrlsToFirstUrl();
+            productDto.setReviewCount(reviewQueryService.countReviewWithoutDeleted(productDto.getId(), false));
         }
 
         return productDtos;
@@ -226,6 +234,8 @@ public class ProductQueryService {
                     null, null
             );
         }
+
+
         throw new BusinessException("탑바를 찾을 수 없습니다.");
     }
 
