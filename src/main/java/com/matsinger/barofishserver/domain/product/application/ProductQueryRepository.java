@@ -3,11 +3,15 @@ package com.matsinger.barofishserver.domain.product.application;
 import com.matsinger.barofishserver.domain.order.orderprductinfo.domain.OrderProductState;
 import com.matsinger.barofishserver.domain.product.domain.ProductState;
 import com.matsinger.barofishserver.domain.product.dto.ProductListDto;
+import com.matsinger.barofishserver.domain.searchFilter.domain.SearchFilterField;
+import com.matsinger.barofishserver.domain.searchFilter.repository.SearchFilterFieldRepository;
+import com.matsinger.barofishserver.domain.searchFilter.repository.SearchFilterRepository;
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.types.Order;
 import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.core.types.Projections;
 import com.querydsl.core.types.dsl.BooleanExpression;
+import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
@@ -18,7 +22,9 @@ import org.springframework.stereotype.Repository;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static com.matsinger.barofishserver.domain.category.domain.QCategory.category;
 import static com.matsinger.barofishserver.domain.data.curation.domain.QCurationProductMap.curationProductMap;
@@ -38,6 +44,8 @@ import static com.matsinger.barofishserver.domain.userinfo.domain.QUserInfo.user
 public class ProductQueryRepository {
 
     private final JPAQueryFactory queryFactory;
+    private final SearchFilterFieldRepository searchFilterFieldRepository;
+    private final SearchFilterRepository searchFilterRepository;
 
     public PageImpl<ProductListDto> selectNewerProducts(PageRequest pageRequest, List<Integer> categoryIds,
                                                     List<Integer> filterFieldsIds, Integer curationId,
@@ -167,9 +175,6 @@ public class ProductQueryRepository {
                         )
                 )
                 .leftJoin(category).on(category.id.eq(product.category.id))
-                .leftJoin(productSearchFilterMap).on(product.id.eq(productSearchFilterMap.productId))
-                .leftJoin(searchFilterField).on(productSearchFilterMap.fieldId.eq(searchFilterField.id))
-                .leftJoin(searchFilter).on(searchFilterField.searchFilterId.eq(searchFilter.id))
                 .leftJoin(review).on(orderProductInfo.productId.eq(review.productId).and(review.isDeleted.eq(false)))
                 .where(product.state.eq(ProductState.ACTIVE),
                         eqCuration(curationId),
@@ -207,9 +212,6 @@ public class ProductQueryRepository {
         int count = (int) queryFactory
                 .select(product.count())
                 .from(product)
-                .leftJoin(productSearchFilterMap).on(product.id.eq(productSearchFilterMap.productId))
-                .leftJoin(searchFilterField).on(productSearchFilterMap.fieldId.eq(searchFilterField.id))
-                .leftJoin(searchFilter).on(searchFilterField.searchFilterId.eq(searchFilter.id))
                 .where(product.state.eq(ProductState.ACTIVE),
                         eqCuration(curationId),
                         isPromotionInProgress(),
@@ -329,7 +331,39 @@ public class ProductQueryRepository {
         if (filterFieldsIds == null || filterFieldsIds.isEmpty()) {
             return null;
         }
-        return productSearchFilterMap.fieldId.in(filterFieldsIds);
+
+        // searchFilterId - searchFilterFields로 매핑되는 해시맵을 만들어요
+        Map<Integer, List<Integer>> filterAndFieldMapper = new HashMap<>();
+        List<SearchFilterField> searchFilterFields = searchFilterFieldRepository.findAllById(filterFieldsIds);
+
+        for (SearchFilterField filterField : searchFilterFields) {
+            int searchFilterId = filterField.getSearchFilterId();
+            List<Integer> existingValue = filterAndFieldMapper.getOrDefault(searchFilterId, new ArrayList<>());
+            existingValue.add(filterField.getId());
+            filterAndFieldMapper.put(
+                    searchFilterId,
+                    existingValue
+            );
+        }
+
+        // 위에서 만들어진 해시맵으로 필터1(필드) && 필터2(필드) .. 조건을 만들어요
+        BooleanExpression booleanExpression = null;
+        for (Integer filterId : filterAndFieldMapper.keySet()) {
+
+            BooleanExpression filterCondition = product.id.in(
+                    JPAExpressions
+                            .select(productSearchFilterMap.productId)
+                            .from(productSearchFilterMap)
+                            .where(productSearchFilterMap.fieldId.in(filterAndFieldMapper.get(filterId)))
+            );
+
+            if (booleanExpression == null) {
+                booleanExpression = filterCondition;
+            } else {
+                booleanExpression = booleanExpression.and(filterCondition);
+            }
+        }
+        return booleanExpression;
     }
 
     private BooleanExpression isIncludedCategory(List<Integer> categoryIds) {
