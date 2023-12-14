@@ -36,7 +36,7 @@ public class TopBarControllerV2 {
     private final ProductQueryService productQueryService;
 
     @GetMapping("")
-    public ResponseEntity<CustomResponse<List<TopBar>>> selectTopBarList() {
+    public ResponseEntity<CustomResponse<List<TopBar>>> selectTopBarListV2() {
         CustomResponse<List<TopBar>> response = new CustomResponse<>();
 
         List<TopBar> topBarList = topBarQueryService.selectTopBarList();
