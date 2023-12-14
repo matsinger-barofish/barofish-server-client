@@ -39,6 +39,9 @@ public class NoticeCommandService {
             findExistingRepresentativeNoticeAndSetFalse(notices);
             notice.setRepresentative(true);
         }
+        if (request.getIsRepresentative() == false) {
+            notice.setRepresentative(false);
+        }
 
         if (request.getContent() != null) {
             String
