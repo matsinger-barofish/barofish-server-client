@@ -363,7 +363,8 @@ public class ProductQueryRepository {
                     Order.DESC,
                     queryFactory.select(review.id.count())
                             .from(review)
-                            .where(review.productId.eq(product.id))
+                            .where(review.productId.eq(product.id)
+                                    .and(review.isDeleted.notIn(false)))
             ));
         }
         if (sortBy.equals(ProductSortBy.LOW_PRICE)) {
