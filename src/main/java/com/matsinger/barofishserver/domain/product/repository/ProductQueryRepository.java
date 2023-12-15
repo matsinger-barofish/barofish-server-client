@@ -1,5 +1,6 @@
 package com.matsinger.barofishserver.domain.product.repository;
 
+import com.matsinger.barofishserver.domain.order.orderprductinfo.domain.OrderProductState;
 import com.matsinger.barofishserver.domain.product.domain.ProductSortBy;
 import com.matsinger.barofishserver.domain.product.domain.ProductState;
 import com.matsinger.barofishserver.domain.product.dto.ProductListDto;
@@ -61,7 +62,6 @@ public class ProductQueryRepository {
                         product.needTaxation.as("isNeedTaxation"),
                         optionItem.discountPrice.as("discountPrice"),
                         optionItem.originPrice.as("originPrice"),
-//                        review.id.countDistinct().intValue().as("reviewCount"),
                         storeInfo.storeId.as("storeId"),
                         storeInfo.name.as("storeName"),
                         product.minOrderPrice.as("minOrderPrice"),
@@ -72,18 +72,7 @@ public class ProductQueryRepository {
                 .from(product)
                 .leftJoin(storeInfo).on(product.storeId.eq(storeInfo.storeId))
                 .leftJoin(optionItem).on(product.representOptionItemId.eq(optionItem.id))
-//                .leftJoin(orderProductInfo).on(product.id.eq(orderProductInfo.productId))
-//                        .and(orderProductInfo.state.in(
-//                                OrderProductState.PAYMENT_DONE, OrderProductState.FINAL_CONFIRM)))
-//                .leftJoin(orders).on(orders.id.eq(orderProductInfo.orderId))
-//                .leftJoin(userInfo).on(userInfo.userId.eq(orders.userId)
-//                        .and(
-//                                userInfo.email.notLike("baroTastingNote")
-//                                .and(userInfo.email.notLike("baroReviewId"))
-//                        )
-//                )
                 .leftJoin(category).on(category.id.eq(product.category.id))
-//                .leftJoin(review).on(orderProductInfo.productId.eq(review.productId).and(review.isDeleted.eq(false)))
                 .where(product.state.eq(ProductState.ACTIVE),
                         eqCuration(curationId),
                         isPromotionInProgress(),
@@ -104,7 +93,6 @@ public class ProductQueryRepository {
     public Integer countNewerProducts(List<Integer> categoryIds, List<Integer> filterFieldsIds, Integer curationId, String keyword, Integer storeId) {
         Integer count = (int) queryFactory.select(product.count())
                 .from(product)
-//                .leftJoin(review).on(product.id.eq(review.productId))
                 .where(product.state.eq(ProductState.ACTIVE),
                         eqCuration(curationId),
                         isPromotionInProgress(),
@@ -144,7 +132,6 @@ public class ProductQueryRepository {
                         product.needTaxation.as("isNeedTaxation"),
                         optionItem.discountPrice.as("discountPrice"),
                         optionItem.originPrice.as("originPrice"),
-//                        review.id.countDistinct().intValue().as("reviewCount"),
                         storeInfo.storeId.as("storeId"),
                         storeInfo.name.as("storeName"),
                         product.minOrderPrice.as("minOrderPrice"),
@@ -155,16 +142,6 @@ public class ProductQueryRepository {
                 .from(product)
                 .leftJoin(storeInfo).on(product.storeId.eq(storeInfo.storeId))
                 .leftJoin(optionItem).on(product.representOptionItemId.eq(optionItem.id))
-//                .leftJoin(orderProductInfo).on(product.id.eq(orderProductInfo.productId)
-//                        .and(orderProductInfo.state.in(
-//                                OrderProductState.PAYMENT_DONE, OrderProductState.FINAL_CONFIRM)))
-//                .leftJoin(orders).on(orders.id.eq(orderProductInfo.orderId))
-//                .leftJoin(userInfo).on(userInfo.userId.eq(orders.userId)
-//                        .and(
-//                                userInfo.email.notLike("baroTastingNote")
-//                                        .and(userInfo.email.notLike("baroReviewId"))
-//                        )
-//                )
                 .leftJoin(category).on(category.id.eq(product.category.id))
                 .leftJoin(review).on(product.id.eq(review.productId))
                 .where(product.state.eq(ProductState.ACTIVE),
@@ -234,7 +211,6 @@ public class ProductQueryRepository {
                         product.needTaxation.as("isNeedTaxation"),
                         optionItem.discountPrice.as("discountPrice"),
                         optionItem.originPrice.as("originPrice"),
-//                        review.id.countDistinct().intValue().as("reviewCount"),
                         storeInfo.storeId.as("storeId"),
                         storeInfo.name.as("storeName"),
                         product.minOrderPrice.as("minOrderPrice"),
@@ -245,18 +221,7 @@ public class ProductQueryRepository {
                 .from(product)
                 .leftJoin(storeInfo).on(product.storeId.eq(storeInfo.storeId))
                 .leftJoin(optionItem).on(product.representOptionItemId.eq(optionItem.id))
-//                .leftJoin(orderProductInfo).on(product.id.eq(orderProductInfo.productId)
-//                        .and(orderProductInfo.state.in(
-//                                OrderProductState.PAYMENT_DONE, OrderProductState.FINAL_CONFIRM)))
-//                .leftJoin(orders).on(orders.id.eq(orderProductInfo.orderId))
-//                .leftJoin(userInfo).on(userInfo.userId.eq(orders.userId)
-//                        .and(
-//                                userInfo.email.notLike("baroTastingNote")
-//                                .and(userInfo.email.notLike("baroReviewId"))
-//                        )
-//                )
                 .leftJoin(category).on(category.id.eq(product.category.id))
-//                .leftJoin(review).on(orderProductInfo.productId.eq(review.productId).and(review.isDeleted.eq(false)))
                 .where(product.state.eq(ProductState.ACTIVE),
                         eqCuration(curationId),
                         isPromotionInProgress(),
@@ -280,7 +245,6 @@ public class ProductQueryRepository {
                 .select(product.count())
                 .from(product)
                 .leftJoin(optionItem).on(product.representOptionItemId.eq(optionItem.id))
-//                .leftJoin(review).on(userInfo.userId.eq(review.userId).and(review.isDeleted.eq(false)))
                 .where(product.state.eq(ProductState.ACTIVE),
                         eqCuration(curationId),
                         isPromotionInProgress(),
@@ -325,7 +289,6 @@ public class ProductQueryRepository {
                         product.needTaxation.as("isNeedTaxation"),
                         optionItem.discountPrice.as("discountPrice"),
                         optionItem.originPrice.as("originPrice"),
-//                        review.id.count().intValue().as("reviewCount"),
                         storeInfo.storeId.as("storeId"),
                         storeInfo.name.as("storeName"),
                         product.minOrderPrice.as("minOrderPrice"),
@@ -336,18 +299,7 @@ public class ProductQueryRepository {
                 .from(product)
                 .leftJoin(storeInfo).on(product.storeId.eq(storeInfo.storeId))
                 .leftJoin(optionItem).on(product.representOptionItemId.eq(optionItem.id))
-//                .leftJoin(orderProductInfo).on(product.id.eq(orderProductInfo.productId)
-//                        .and(orderProductInfo.state.in(
-//                                OrderProductState.PAYMENT_DONE, OrderProductState.FINAL_CONFIRM)))
-//                .leftJoin(orders).on(orders.id.eq(orderProductInfo.orderId))
-//                .leftJoin(userInfo).on(userInfo.userId.eq(orders.userId)
-//                        .and(
-//                                userInfo.email.notLike("baroTastingNote")
-//                                        .or(userInfo.email.notLike("baroReviewId"))
-//                        )
-//                )
                 .leftJoin(category).on(category.id.eq(product.category.id))
-//                .leftJoin(review).on(userInfo.userId.eq(review.userId).and(review.isDeleted.eq(false)))
                 .where(product.state.eq(ProductState.ACTIVE),
                         eqCuration(curationId),
                         isPromotionInProgress(),
@@ -375,20 +327,6 @@ public class ProductQueryRepository {
         int count = (int) queryFactory
                 .select(product.id)
                 .from(product)
-//                .leftJoin(storeInfo).on(product.storeId.eq(storeInfo.storeId))
-//                .leftJoin(optionItem).on(product.representOptionItemId.eq(optionItem.id))
-//                .leftJoin(orderProductInfo).on(product.id.eq(orderProductInfo.productId)
-//                        .and(orderProductInfo.state.in(
-//                                OrderProductState.PAYMENT_DONE, OrderProductState.FINAL_CONFIRM)))
-//                .leftJoin(orders).on(orders.id.eq(orderProductInfo.orderId))
-//                .leftJoin(userInfo).on(userInfo.userId.eq(orders.userId)
-//                        .and(
-//                                userInfo.email.notLike("baroTastingNote")
-//                                        .or(userInfo.email.notLike("baroReviewId"))
-//                        )
-//                )
-//                .leftJoin(category).on(category.id.eq(product.category.id))
-//                .leftJoin(review).on(userInfo.userId.eq(review.userId).and(review.isDeleted.eq(false)))
                 .where(product.state.eq(ProductState.ACTIVE),
                         eqCuration(curationId),
                         isPromotionInProgress(),
@@ -396,7 +334,6 @@ public class ProductQueryRepository {
                         isProductTitleLikeKeyword(keyword),
                         isIncludedCategory(categoryIds),
                         isIncludedSearchFilter(filterFieldIds)
-//                        isDiscountApplied()
                 )
                 .groupBy(product.id)
                 .stream().count();
@@ -411,10 +348,26 @@ public class ProductQueryRepository {
             orderSpecifiers.add(new OrderSpecifier(Order.DESC, product.createdAt));
         }
         if (sortBy.equals(ProductSortBy.SALES)) {
-            orderSpecifiers.add(new OrderSpecifier(Order.DESC, orderProductInfo.id.count()));
+            orderSpecifiers.add(new OrderSpecifier(
+                    Order.DESC,
+                    queryFactory.select(orderProductInfo.id.isNotNull().count())
+                            .from(orderProductInfo)
+                            .where(orderProductInfo.productId.eq(product.id)
+                                    .and(orderProductInfo.state.in(OrderProductState.PAYMENT_DONE, OrderProductState.FINAL_CONFIRM)
+                                            .and(orderProductInfo.orderId.notLike("2311281459324003"))
+                                            .and(orderProductInfo.price.notIn(0))))
+                            .groupBy(product.id)
+            ));
         }
         if (sortBy.equals(ProductSortBy.REVIEW)) {
-            orderSpecifiers.add(new OrderSpecifier(Order.DESC, review.id.count()));
+            orderSpecifiers.add(new OrderSpecifier(
+                    Order.DESC,
+                    queryFactory.select(review.id.count())
+                            .from(review)
+                            .where(review.productId.eq(product.id)
+                                    .and(review.isDeleted.isFalse()))
+                            .groupBy(product.id)
+            ));
         }
         if (sortBy.equals(ProductSortBy.LOW_PRICE)) {
             orderSpecifiers.add(new OrderSpecifier(Order.ASC, optionItem.discountPrice));
