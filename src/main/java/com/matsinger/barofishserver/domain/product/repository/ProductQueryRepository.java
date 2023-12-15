@@ -356,6 +356,7 @@ public class ProductQueryRepository {
                                     .and(orderProductInfo.state.in(OrderProductState.PAYMENT_DONE, OrderProductState.FINAL_CONFIRM)
                                             .and(orderProductInfo.orderId.notLike("2311281459324003"))
                                             .and(orderProductInfo.price.notIn(0))))
+                            .groupBy(product.id)
             ));
         }
         if (sortBy.equals(ProductSortBy.REVIEW)) {
@@ -364,7 +365,8 @@ public class ProductQueryRepository {
                     queryFactory.select(review.id.count())
                             .from(review)
                             .where(review.productId.eq(product.id)
-                                    .and(review.isDeleted.notIn(false)))
+                                    .and(review.isDeleted.isFalse()))
+                            .groupBy(product.id)
             ));
         }
         if (sortBy.equals(ProductSortBy.LOW_PRICE)) {
