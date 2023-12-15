@@ -276,9 +276,9 @@ public class ProductQueryRepository {
                                                 Integer curationId,
                                                 String keyword,
                                                 Integer storeId) {
+        Integer count = countProducts(categoryIds, filterFieldIds, curationId, keyword, storeId);
 
         OrderSpecifier[] orderSpecifiers = createProductSortSpecifier(sortBy);
-
         List<ProductListDto> inquiryData = queryFactory
                 .select(Projections.fields(
                         ProductListDto.class,
@@ -313,8 +313,6 @@ public class ProductQueryRepository {
                 .offset(pageRequest.getOffset())
                 .limit(pageRequest.getPageSize())
                 .fetch();
-
-        long count = inquiryData.size();
 
         return new PageImpl<>(inquiryData, pageRequest, count);
     }
