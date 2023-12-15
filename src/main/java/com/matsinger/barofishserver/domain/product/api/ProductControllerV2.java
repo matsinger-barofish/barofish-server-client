@@ -61,7 +61,7 @@ public class ProductControllerV2 {
     private final S3Uploader s3;
 
     @GetMapping("/list")
-    public ResponseEntity<CustomResponse<Object>> selectProductListByUserV2(@RequestHeader(value = "Authorization", required = false) Optional<String> auth,
+    public ResponseEntity<CustomResponse<Page<ProductListDto>>> selectProductListByUserV2(@RequestHeader(value = "Authorization", required = false) Optional<String> auth,
                                                                                           @RequestParam(value = "page", defaultValue = "1") Integer page,
                                                                                           @RequestParam(value = "take", defaultValue = "10") Integer take,
                                                                                           @RequestParam(value = "sortby", defaultValue = "RECOMMEND", required = false) ProductSortBy sortBy,
@@ -71,7 +71,7 @@ public class ProductControllerV2 {
                                                                                           @RequestParam(value = "keyword", required = false, defaultValue = "") String keyword,
                                                                                           @RequestParam(value = "storeId", required = false) Integer storeId) {
 
-        CustomResponse<Object> res = new CustomResponse<>();
+        CustomResponse<Page<ProductListDto>> res = new CustomResponse<>();
 
         
         TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ALLOW, TokenAuthType.USER), auth);
@@ -94,7 +94,7 @@ public class ProductControllerV2 {
     }
 
     @GetMapping("/list/count")
-    public ResponseEntity<CustomResponse<Integer>> selectProductListByUserV2(@RequestHeader(value = "Authorization", required = false) Optional<String> auth,
+    public ResponseEntity<CustomResponse<Integer>> selectProductCountByUserV2(@RequestHeader(value = "Authorization", required = false) Optional<String> auth,
                                                                                         @RequestParam(value = "categoryIds", required = false) String categoryIds,
                                                                                         @RequestParam(value = "filterFieldIds", required = false) String filterFieldIds,
                                                                                         @RequestParam(value = "curationId", required = false) Integer curationId,

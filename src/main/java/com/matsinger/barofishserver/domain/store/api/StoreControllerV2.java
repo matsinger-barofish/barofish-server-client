@@ -38,7 +38,7 @@ public class StoreControllerV2 {
     @GetMapping("/download")
     public void downloadStoresWithExcel(
             @RequestHeader(value = "Authorization", required = false) Optional<String> auth,
-            @RequestParam(value = "storeIds", required = false) String storeIds,
+            @RequestParam(value = "storeIds", required = false) List<Integer> storeIds,
             HttpServletRequest httpServletRequest,
             HttpServletResponse httpServletResponse) throws IOException {
         CustomResponse<List<StoreDto>> res = new CustomResponse<>();
@@ -52,7 +52,7 @@ public class StoreControllerV2 {
         httpServletResponse.setContentType("application/octet-stream");
 
         Workbook workbook = storeQueryService.downloadStoresWithExcel(
-                utils.str2IntList(storeIds)
+                storeIds
         );
 
         try {
