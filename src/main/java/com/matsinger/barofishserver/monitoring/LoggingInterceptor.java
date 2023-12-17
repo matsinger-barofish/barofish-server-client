@@ -1,4 +1,4 @@
-package com.matsinger.barofishserver.global.log;
+package com.matsinger.barofishserver.monitoring;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -12,20 +12,18 @@ public class LoggingInterceptor implements HandlerInterceptor {
     private final Logger logger = LoggerFactory.getLogger(this.getClass().getSimpleName());
 
     @Override
-    public boolean preHandle(
-            HttpServletRequest request,
-            HttpServletResponse response,
-            Object handler) throws Exception {
+    public boolean preHandle(HttpServletRequest request,
+                             HttpServletResponse response,
+                             Object handler) throws Exception {
         logger.info("request: {} {}", request.getMethod(), request.getRequestURI());
         return true;
     }
 
     @Override
-    public void postHandle(
-            HttpServletRequest request,
-            HttpServletResponse response,
-            Object handler,
-            ModelAndView modelAndView) throws Exception {
-        logger.info("response = {}", response.getStatus());
+    public void postHandle(HttpServletRequest request,
+                           HttpServletResponse response,
+                           Object handler,
+                           ModelAndView modelAndView) throws Exception{
+        logger.info("response: {}", response.getStatus());
     }
 }

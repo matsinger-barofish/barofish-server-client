@@ -69,7 +69,7 @@ dependencies {
     implementation 'io.opentelemetry:opentelemetry-exporter-otlp:1.31.0' //
     implementation 'io.opentelemetry:opentelemetry-exporter-common:1.31.0' //
     implementation 'io.opentelemetry:opentelemetry-exporter-otlp-common:1.31.0' //
-    implementation 'io.opentelemetry.instrumentation:opentelemetry-logback-appender-1.0:1.31.0-alpha' //
+    implementation 'io.opentelemetry.instrumentation:opentelemetry-logback-appender-1.0:1.31.0-alpha'
     implementation 'io.opentelemetry.instrumentation:opentelemetry-instrumentation-api-semconv:1.31.0-alpha' //
     // 모니터닝을 위한 디펜던시 끝
 

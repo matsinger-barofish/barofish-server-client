@@ -25,6 +25,10 @@ class HelloController {
         LOGGER.info("---------Hello method started---------");
         ResponseEntity<String> responseEntity = this.restTemplate.postForEntity("https://httpbin.org/post", "Hello, Cloud!", String.class);
 //        tracerProvider.toString();
+        if ( 3 == 3) {
+            throw new RuntimeException("hello warning !!!");
+        }
+
         return responseEntity.getBody();
     }
 }

@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--<configuration>-->
+<!--    <include resource="org/springframework/boot/logging/logback/defaults.xml"/>-->
+<!--    <include resource="org/springframework/boot/logging/logback/console-appender.xml" />-->
+<!--    <appender name="OPEN_TELEMETRY"-->
+<!--              class="io.opentelemetry.instrumentation.logback.appender.v1_0.OpenTelemetryAppender">-->
+<!--        <captureExperimentalAttributes>true</captureExperimentalAttributes>-->
+<!--        <captureKeyValuePairAttributes>true</captureKeyValuePairAttributes>-->
+<!--    </appender>-->
+<!--    <root level="INFO">-->
+<!--        <appender-ref ref="CONSOLE"/>-->
+<!--        <appender-ref ref="OPEN_TELEMETRY"/>-->
+<!--    </root>-->
+<!--</configuration>-->
+
+<configuration>
+    <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
+    <include resource="org/springframework/boot/logging/logback/console-appender.xml" />
+    <appender name="OPEN_TELEMETRY"
+              class="io.opentelemetry.instrumentation.logback.appender.v1_0.OpenTelemetryAppender">
+        <captureExperimentalAttributes>true</captureExperimentalAttributes>
+        <captureKeyValuePairAttributes>true</captureKeyValuePairAttributes>
+    </appender>
+
+    <!-- 로그 파일 -->
+    <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>./application.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>./LogFile/application.%d{yyyy-MM-dd}.log</fileNamePattern>
+            <maxHistory>30</maxHistory>
+            <totalSizeCap>100MB</totalSizeCap>
+        </rollingPolicy>
+
+        <encoder>
+            <!-- %msg를 통해 로그 메시지를 출력, %n을 통해 개행문자를 출력 -->
+            <pattern>%-4relative [%thread] %-5level %logger{35} - %msg%n</pattern>
+        </encoder>
+        <logger name="LoggingInterceptor" additivity="false">
+            <level value = "INFO" />
+            <appender-ref ref="FILE" />
+        </logger>
+    </appender>
+    <!-- 로그 파일 -->
+
+    <root level="INFO">
+        <appender-ref ref="CONSOLE"/>
+        <appender-ref ref="OPEN_TELEMETRY"/>
+        <appender-ref ref="FILE"/> <!-- 이 줄을 추가하여 FILE appender를 포함시킴 -->
+    </root>
+</configuration>

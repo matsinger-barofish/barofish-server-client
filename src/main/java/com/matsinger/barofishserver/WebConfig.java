@@ -1,6 +1,6 @@
 package com.matsinger.barofishserver;
 
-import com.matsinger.barofishserver.global.log.LoggingInterceptor;
+import com.matsinger.barofishserver.monitoring.LoggingInterceptor;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;

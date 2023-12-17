@@ -1,30 +1,24 @@
 package com.matsinger.barofishserver.global.exception;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.matsinger.barofishserver.utils.CustomResponse;
-import jakarta.servlet.ServletInputStream;
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.MethodParameter;
 import org.springframework.http.HttpInputMessage;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageConverter;
-import org.springframework.util.StreamUtils;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.servlet.mvc.method.annotation.RequestBodyAdvice;
 
 import java.io.IOException;
 import java.lang.reflect.Type;
-import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Enumeration;
-import java.util.Iterator;
 
 @Slf4j
 @RestControllerAdvice(basePackages = {"com.matsinger.barofishserver"})
@@ -45,7 +39,7 @@ public class GlobalControllerAdvice implements RequestBodyAdvice {
         CustomResponse customResponse = new CustomResponse();
         customResponse.setIsSuccess(false);
         customResponse.setErrorMsg("예기치 못한 오류가 발생했습니다. 불편을 드려 죄송합니다.");
-        return ResponseEntity.ok(customResponse);
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(customResponse);
     }
 
     private void printExceptionInfo(HttpServletRequest request, Exception e) {
