@@ -443,7 +443,13 @@ public class ProductQueryRepository {
         if (curationId == null) {
             return null;
         }
-        return curationProductMap.curation.id.eq(curationId);
+
+        return product.id.in(
+                JPAExpressions
+                        .select(curationProductMap.product.id)
+                        .from(curationProductMap)
+                        .where(curationProductMap.curation.id.eq(curationId))
+        );
     }
 
     private BooleanExpression eqStore(Integer storeId) {
