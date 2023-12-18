@@ -44,7 +44,7 @@ public class TastingNoteQueryRepository {
                 Expressions.asString("taste5").as("salty"),
                 tastingNote.taste5.avg().as("saltyScore"),
                 Expressions.asString("texture1").as("texture1"),
-                tastingNote.taste1.avg().as("texture1Score"),
+                tastingNote.texture1.avg().as("texture1Score"),
                 Expressions.asString("texture2").as("texture2"),
                 tastingNote.texture2.avg().as("texture2Score"),
                 Expressions.asString("texture3").as("texture3"),
