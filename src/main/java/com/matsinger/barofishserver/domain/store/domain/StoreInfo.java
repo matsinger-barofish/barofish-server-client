@@ -70,6 +70,8 @@ public class StoreInfo {
     @Basic
     @Column(name = "refund_deliver_fee", nullable = true)
     private Integer refundDeliverFee;
+    @Basic @Column(name = "min_order_price")
+    private Integer minOrderPrice;
     @Basic
     @Column(name = "settlement_rate", nullable = true)
     Float settlementRate;
