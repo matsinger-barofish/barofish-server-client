@@ -325,7 +325,6 @@ public class ProductQueryRepository {
         int count = (int) queryFactory
                 .select(product.id)
                 .from(product)
-                .leftJoin(storeInfo).on(storeInfo.storeId.eq(storeId))
                 .where(product.state.eq(ProductState.ACTIVE),
                         eqCuration(curationId),
                         isPromotionInProgress(),
@@ -457,7 +456,7 @@ public class ProductQueryRepository {
         if (storeId == null) {
             return null;
         }
-        return storeInfo.storeId.eq(storeId);
+        return product.storeId.eq(storeId);
     }
 
     private BooleanBuilder isPromotionInProgress() {
