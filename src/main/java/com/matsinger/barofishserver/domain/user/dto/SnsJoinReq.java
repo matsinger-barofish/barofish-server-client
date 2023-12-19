@@ -36,4 +36,17 @@ public class SnsJoinReq {
                 .loginType(this.loginType)
                 .build();
     }
+
+    @Override
+    public String toString() {
+        return "SnsJoinReq{" +
+                "loginType=" + loginType +
+                ", loginId='" + loginId + '\'' +
+                ", profileImage='" + profileImage + '\'' +
+                ", email='" + email + '\'' +
+                ", name='" + name + '\'' +
+                ", nickname='" + nickname + '\'' +
+                ", phone='" + phone + '\'' +
+                '}';
+    }
 }
