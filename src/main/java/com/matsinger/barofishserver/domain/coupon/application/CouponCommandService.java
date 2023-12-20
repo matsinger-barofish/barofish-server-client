@@ -20,6 +20,7 @@ import jakarta.persistence.Tuple;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -35,6 +36,8 @@ public class CouponCommandService {
     private final OrderProductInfoRepository infoRepository;
     private final Common utils;
     private final UserInfoRepository userInfoRepository;
+    private final CouponQueryService couponQueryService;
+    private final CouponUserMapCommandService couponUserMapCommandService;
 
     public void downloadCoupon(Integer userId, Integer couponId) {
         couponUserMapRepository.save(CouponUserMap.builder().couponId(couponId).userId(userId).isUsed(false).build());
@@ -69,7 +72,7 @@ public class CouponCommandService {
         }
     }
 
-    public void useCoupon(Integer couponId, Integer userId) {
+    public void useCouponV1(Integer couponId, Integer userId) {
         Optional<CouponUserMap> map = couponUserMapRepository.findById(new CouponUserMapId(userId, couponId));
         map.ifPresent(couponUserMap -> {
             couponUserMap.setIsUsed(true);
@@ -139,5 +142,15 @@ public class CouponCommandService {
 
     public void addCouponUserMapList(List<CouponUserMap> couponUserMaps) {
         couponUserMapRepository.saveAll(couponUserMaps);
+    }
+
+    @Transactional
+    public Coupon useCoupon(Integer userId, int couponId, int minOrderPrice) {
+        Coupon coupon = couponQueryService.findById(couponId);
+        coupon.checkAvailablePrice(minOrderPrice);
+        coupon.checkExpiration();
+
+        couponUserMapCommandService.useCoupon(userId, couponId);
+        return coupon;
     }
 }

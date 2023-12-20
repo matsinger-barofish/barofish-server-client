@@ -38,13 +38,13 @@ public class OrderProductInfo {
     private OrderProductState state;
     @Basic
     @Column(name = "settle_price")
-    private Integer settlePrice;
+    private Integer settlePrice;                            // 정산가격 = 공급가(매입가)
     @Basic
     @Column(name = "origin_price")
-    private Integer originPrice;
+    private Integer originPrice;                            // 상품가격
     @Basic
     @Column(name = "price", nullable = false)
-    private int price;
+    private int price;                                      // 상품가격 * 수량
     @Basic
     @Column(name = "amount", nullable = false)
     private int amount;
