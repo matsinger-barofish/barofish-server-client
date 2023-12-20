@@ -65,6 +65,10 @@ public class UserAuthCommandService {
         String password = request.getPassword();
 
         validate(email, password);
+        Optional<UserAuth> optionalUserAuth = userAuthRepository.findByLoginTypeAndLoginId(LoginType.IDPW, email);
+        if (optionalUserAuth.isPresent()) {
+            throw new BusinessException("이메일 주소가 존재합니다." + "\n" + "다른 이메일 주소를 입력해주세요.");
+        }
 
         UserAuth
                 createdUserAuth =
