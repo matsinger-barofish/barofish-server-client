@@ -37,7 +37,7 @@ public class StoreControllerV2 {
     @PostMapping("/download")
     public void downloadStoresWithExcel(
             @RequestHeader(value = "Authorization", required = false) Optional<String> auth,
-            @RequestBody(required = false) List<Integer> storeIds,
+            @RequestPart(value = "storeIds", required = false) List<Integer> storeIds,
             HttpServletResponse httpServletResponse) throws IOException {
         CustomResponse<List<StoreDto>> res = new CustomResponse<>();
         jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
