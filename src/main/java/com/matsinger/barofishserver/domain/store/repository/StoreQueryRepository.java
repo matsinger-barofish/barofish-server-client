@@ -14,6 +14,7 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
+import static com.matsinger.barofishserver.domain.deliver.domain.QDeliveryCompany.deliveryCompany;
 import static com.matsinger.barofishserver.domain.order.domain.QOrders.orders;
 import static com.matsinger.barofishserver.domain.order.orderprductinfo.domain.QOrderProductInfo.orderProductInfo;
 import static com.matsinger.barofishserver.domain.product.domain.QProduct.product;
@@ -36,7 +37,7 @@ public class StoreQueryRepository {
                 store.loginId.as("loginId"),
                 store.state.as("state"),
                 storeInfo.location.as("location"),
-                storeInfo.keyword.as("keyowrd"),
+                deliveryCompany.name.as("deliveryCompany"),
                 storeInfo.settlementRate.as("settlementRete"),
                 storeInfo.bankName.as("bankName"),
                 storeInfo.bankHolder.as("bankHolder"),
@@ -56,6 +57,7 @@ public class StoreQueryRepository {
                 ))
                 .from(store)
                 .leftJoin(storeInfo).on(store.id.eq(storeInfo.storeId))
+                .leftJoin(deliveryCompany).on(storeInfo.deliverCompany.eq(deliveryCompany.code))
                 .where(
                         containsStoreIds(storeIds)
                 )
