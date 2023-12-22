@@ -57,8 +57,7 @@ public class StoreQueryRepository {
                 .from(store)
                 .leftJoin(storeInfo).on(store.id.eq(storeInfo.storeId))
                 .where(
-                        containsStoreIds(storeIds),
-                        store.state.eq(StoreState.ACTIVE)
+                        containsStoreIds(storeIds)
                 )
                 .orderBy(store.id.asc())
                 .fetch();

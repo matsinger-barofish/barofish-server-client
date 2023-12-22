@@ -50,7 +50,8 @@ public class StoreControllerV2 {
         httpServletResponse.setHeader("Content-Disposition", "attachment; filename=" + URLEncoder.encode(fileName, StandardCharsets.UTF_8));
         httpServletResponse.setContentType("application/octet-stream");
 
-        Workbook workbook = storeQueryService.downloadStoresWithExcel(request.getStoreIds());
+        List<Integer> storeIds = request != null ? request.getStoreIds() : null;
+        Workbook workbook = storeQueryService.downloadStoresWithExcel(storeIds);
 
         try {
             workbook.write(httpServletResponse.getOutputStream());
