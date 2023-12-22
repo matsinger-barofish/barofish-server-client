@@ -4,6 +4,7 @@ import com.matsinger.barofishserver.domain.store.application.StoreQueryService;
 import com.matsinger.barofishserver.domain.store.domain.StoreRecommendType;
 import com.matsinger.barofishserver.domain.store.dto.SimpleStore;
 import com.matsinger.barofishserver.domain.store.dto.StoreDto;
+import com.matsinger.barofishserver.domain.store.dto.StoreExcelDownloadReq;
 import com.matsinger.barofishserver.jwt.JwtService;
 import com.matsinger.barofishserver.jwt.TokenAuthType;
 import com.matsinger.barofishserver.jwt.TokenInfo;
@@ -37,7 +38,7 @@ public class StoreControllerV2 {
     @PostMapping("/download")
     public void downloadStoresWithExcel(
             @RequestHeader(value = "Authorization", required = false) Optional<String> auth,
-            @RequestPart(value = "storeIds", required = false) List<Integer> storeIds,
+            @RequestPart(value = "storeIds", required = false) StoreExcelDownloadReq request,
             HttpServletResponse httpServletResponse) throws IOException {
         CustomResponse<List<StoreDto>> res = new CustomResponse<>();
         jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
@@ -49,7 +50,7 @@ public class StoreControllerV2 {
         httpServletResponse.setHeader("Content-Disposition", "attachment; filename=" + URLEncoder.encode(fileName, StandardCharsets.UTF_8));
         httpServletResponse.setContentType("application/octet-stream");
 
-        Workbook workbook = storeQueryService.downloadStoresWithExcel(storeIds);
+        Workbook workbook = storeQueryService.downloadStoresWithExcel(request.getStoreIds());
 
         try {
             workbook.write(httpServletResponse.getOutputStream());
