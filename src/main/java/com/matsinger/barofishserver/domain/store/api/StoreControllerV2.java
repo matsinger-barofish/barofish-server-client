@@ -35,10 +35,10 @@ public class StoreControllerV2 {
     private final Common utils;
     private final StoreQueryService storeQueryService;
 
-    @GetMapping("/download")
+    @PostMapping("/download")
     public void downloadStoresWithExcel(
             @RequestHeader(value = "Authorization", required = false) Optional<String> auth,
-            @RequestParam(value = "storeIds", required = false) List<Integer> storeIds,
+            @RequestBody(required = false) List<Integer> storeIds,
             HttpServletRequest httpServletRequest,
             HttpServletResponse httpServletResponse) throws IOException {
         CustomResponse<List<StoreDto>> res = new CustomResponse<>();
@@ -51,9 +51,7 @@ public class StoreControllerV2 {
         httpServletResponse.setHeader("Content-Disposition", "attachment; filename=" + URLEncoder.encode(fileName, StandardCharsets.UTF_8));
         httpServletResponse.setContentType("application/octet-stream");
 
-        Workbook workbook = storeQueryService.downloadStoresWithExcel(
-                storeIds
-        );
+        Workbook workbook = storeQueryService.downloadStoresWithExcel(storeIds);
 
         try {
             workbook.write(httpServletResponse.getOutputStream());
