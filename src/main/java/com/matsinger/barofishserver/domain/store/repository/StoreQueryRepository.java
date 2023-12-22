@@ -38,7 +38,7 @@ public class StoreQueryRepository {
                 store.state.as("state"),
                 storeInfo.location.as("location"),
                 deliveryCompany.name.as("deliveryCompany"),
-                storeInfo.settlementRate.as("settlementRete"),
+                storeInfo.settlementRate.as("settlementRate"),
                 storeInfo.bankName.as("bankName"),
                 storeInfo.bankHolder.as("bankHolder"),
                 storeInfo.bankAccount.as("bankAccount"),
