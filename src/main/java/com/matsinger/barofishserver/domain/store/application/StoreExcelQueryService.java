@@ -55,7 +55,7 @@ public class StoreExcelQueryService {
             if (excelDto.getState().equals(StoreState.DELETED)) {
                 state = "삭제";
             }
-            row.createCell(2).setCellValue(excelDto.getState() != null ? excelDto.getState().toString() : null);
+            row.createCell(2).setCellValue(excelDto.getState() != null ? state : null);
             row.createCell(3).setCellValue(excelDto.getLocation() != null ? excelDto.getLocation() : null);
             row.createCell(4).setCellValue(excelDto.getDeliveryCompany() != null ? excelDto.getDeliveryCompany() : null);
             row.createCell(5).setCellValue(excelDto.getSettlementRate() != null ? excelDto.getSettlementRate() : null);
