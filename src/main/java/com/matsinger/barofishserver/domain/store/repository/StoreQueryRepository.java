@@ -64,10 +64,10 @@ public class StoreQueryRepository {
     }
 
     private BooleanExpression containsStoreIds(List<Integer> storeIds) {
-        if (storeIds == null || storeIds.isEmpty()) {
-            return null;
+        if (storeIds != null && !storeIds.isEmpty()) {
+            return store.id.in(storeIds);
         }
-        return store.id.in(storeIds);
+        return store.id.isNotNull();
     }
 
     public List<StoreRecommendInquiryDto> selectRecommendStoreWithJoinAt(PageRequest pageRequest,

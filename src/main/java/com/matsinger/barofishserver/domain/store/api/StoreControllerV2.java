@@ -4,12 +4,12 @@ import com.matsinger.barofishserver.domain.store.application.StoreQueryService;
 import com.matsinger.barofishserver.domain.store.domain.StoreRecommendType;
 import com.matsinger.barofishserver.domain.store.dto.SimpleStore;
 import com.matsinger.barofishserver.domain.store.dto.StoreDto;
+import com.matsinger.barofishserver.domain.store.dto.StoreExcelDownloadReq;
 import com.matsinger.barofishserver.jwt.JwtService;
 import com.matsinger.barofishserver.jwt.TokenAuthType;
 import com.matsinger.barofishserver.jwt.TokenInfo;
 import com.matsinger.barofishserver.utils.Common;
 import com.matsinger.barofishserver.utils.CustomResponse;
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.apache.poi.ss.usermodel.Workbook;
@@ -35,11 +35,10 @@ public class StoreControllerV2 {
     private final Common utils;
     private final StoreQueryService storeQueryService;
 
-    @GetMapping("/download")
+    @PostMapping("/download")
     public void downloadStoresWithExcel(
             @RequestHeader(value = "Authorization", required = false) Optional<String> auth,
-            @RequestParam(value = "storeIds", required = false) List<Integer> storeIds,
-            HttpServletRequest httpServletRequest,
+            @RequestPart(value = "storeIds", required = false) StoreExcelDownloadReq request,
             HttpServletResponse httpServletResponse) throws IOException {
         CustomResponse<List<StoreDto>> res = new CustomResponse<>();
         jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
@@ -51,9 +50,8 @@ public class StoreControllerV2 {
         httpServletResponse.setHeader("Content-Disposition", "attachment; filename=" + URLEncoder.encode(fileName, StandardCharsets.UTF_8));
         httpServletResponse.setContentType("application/octet-stream");
 
-        Workbook workbook = storeQueryService.downloadStoresWithExcel(
-                storeIds
-        );
+        List<Integer> storeIds = request != null ? request.getStoreIds() : null;
+        Workbook workbook = storeQueryService.downloadStoresWithExcel(storeIds);
 
         try {
             workbook.write(httpServletResponse.getOutputStream());
