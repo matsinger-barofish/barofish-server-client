@@ -19,4 +19,6 @@ public class OptionItemDto {
     Integer deliverBoxPerAmount;
     Integer maxAvailableAmount;
     Float pointRate;
+
+    Integer minOrderPrice;
 }

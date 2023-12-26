@@ -28,16 +28,6 @@ public class PortOneCallbackService {
         this.iamportClient = new IamportClient(accessKey, secretKey);
     }
 
-    @Getter
-    @ToString
-    @Data
-    @NoArgsConstructor
-    public static class PortOneBodyData {
-        private String imp_uid;
-        private String merchant_uid;
-        private String status;
-    }
-
     public IamportClient getIamportClient() {
         return new IamportClient(accessKey, secretKey);
     }

@@ -2,6 +2,7 @@ package com.matsinger.barofishserver.domain.user.deliverplace.application;
 
 import com.matsinger.barofishserver.domain.user.deliverplace.repository.DeliverPlaceRepository;
 import com.matsinger.barofishserver.domain.user.deliverplace.DeliverPlace;
+import com.matsinger.barofishserver.global.exception.BusinessException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -26,8 +27,11 @@ public class DeliverPlaceService {
     }
 
     public DeliverPlace selectDeliverPlace(Integer deliverPlaceId) {
+        if (deliverPlaceId == null) {
+            throw new BusinessException("배송지를 입력해주세요.");
+        }
         return deliverPlaceRepository.findById(deliverPlaceId).orElseThrow(() -> {
-            throw new Error("배송지 정보를 찾을 수 없습니다.");
+            throw new BusinessException("배송지 정보를 찾을 수 없습니다.");
         });
     }
 
