@@ -157,10 +157,6 @@ public class OrderProductInfo {
     public void setDeliveryFee(int deliveryFee) {
         this.deliveryFee = deliveryFee;
     }
-
-    public boolean canCombinedShipping() {
-        return ProductDeliverFeeType.canCombinedShipping(deliveryFeeType);
-    }
     public boolean isCFix() {
         return deliveryFeeType.equals(ProductDeliverFeeType.FIX);
     }

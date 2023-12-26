@@ -1,5 +1,6 @@
 package com.matsinger.barofishserver.domain.product.optionitem.domain;
 
+import com.matsinger.barofishserver.domain.product.domain.Product;
 import com.matsinger.barofishserver.domain.product.optionitem.dto.OptionItemDto;
 import com.matsinger.barofishserver.domain.product.domain.OptionItemState;
 import com.matsinger.barofishserver.global.exception.BusinessException;
@@ -79,10 +80,20 @@ public class OptionItem {
         this.amount = reducedValue;
     }
 
-    public OptionItemDto convert2Dto() {
-        return OptionItemDto.builder().id(this.id).optionId(this.getOptionId()).name(this.name).discountPrice(this.discountPrice).amount(
-                this.amount).purchasePrice(this.purchasePrice).originPrice(this.originPrice).deliveryFee(this.deliverFee).deliverBoxPerAmount(
-                this.deliverBoxPerAmount).maxAvailableAmount(this.maxAvailableAmount).build();
+    public OptionItemDto convert2Dto(Product product) {
+        return OptionItemDto.builder()
+                .id(this.id)
+                .optionId(this.getOptionId())
+                .name(this.name)
+                .discountPrice(this.discountPrice)
+                .amount(this.amount)
+                .purchasePrice(this.purchasePrice)
+                .originPrice(this.originPrice)
+                .deliveryFee(this.deliverFee)
+                .deliverBoxPerAmount(this.deliverBoxPerAmount)
+                .maxAvailableAmount(this.maxAvailableAmount)
+                .minOrderPrice(product.getMinOrderPrice())
+                .build();
     }
 
     public int getId() {

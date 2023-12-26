@@ -71,7 +71,7 @@ public class BasketQueryService {
                         optionItem =
                         optionItemRepository.findById(option.getOptionId()).orElseThrow(() -> new BusinessException(
                                 "옵션 아이템 정보를 찾을 수 없습니다."));
-                optionDto = optionItem.convert2Dto();
+                optionDto = optionItem.convert2Dto(product);
                 optionDto.setDeliverBoxPerAmount(product.getDeliverBoxPerAmount());
                 optionDto.setPointRate(product.getPointRate());
             }
