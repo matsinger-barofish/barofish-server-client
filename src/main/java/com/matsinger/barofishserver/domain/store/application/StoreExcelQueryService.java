@@ -1,5 +1,6 @@
 package com.matsinger.barofishserver.domain.store.application;
 
+import com.matsinger.barofishserver.domain.store.domain.StoreState;
 import com.matsinger.barofishserver.domain.store.dto.StoreExcelInquiryDto;
 import lombok.RequiredArgsConstructor;
 import org.apache.poi.ss.usermodel.*;
@@ -26,7 +27,7 @@ public class StoreExcelQueryService {
         // Header
         List<String> headers = List.of(
                 "입점사명", "입점사ID", "판매상태",
-                "위치", "키워드", "정산비율",
+                "위치", "택배사", "정산비율",
                 "은행명", "예금주", "계좌번호",
                 "대표자이름", "사업자번호", "업태/종목", "통신판매신고번호",
                 "사업장주소", "우편번호", "지번", "도로명",
@@ -43,9 +44,20 @@ public class StoreExcelQueryService {
             row = sheet.createRow(rowNum++);
             row.createCell(0).setCellValue(excelDto.getStoreName() != null ? excelDto.getStoreName() : null);
             row.createCell(1).setCellValue(excelDto.getLoginId() != null ? excelDto.getLoginId() : null);
-            row.createCell(2).setCellValue(excelDto.getState() != null ? excelDto.getState().toString() : null);
+
+            String state = null;
+            if (excelDto.getState().equals(StoreState.ACTIVE)) {
+                state = "활동중";
+            }
+            if (excelDto.getState().equals(StoreState.BANNED)) {
+                state = "정지";
+            }
+            if (excelDto.getState().equals(StoreState.DELETED)) {
+                state = "삭제";
+            }
+            row.createCell(2).setCellValue(excelDto.getState() != null ? state : null);
             row.createCell(3).setCellValue(excelDto.getLocation() != null ? excelDto.getLocation() : null);
-            row.createCell(4).setCellValue(excelDto.getKeyword() != null ? excelDto.getKeyword() : null);
+            row.createCell(4).setCellValue(excelDto.getDeliveryCompany() != null ? excelDto.getDeliveryCompany() : null);
             row.createCell(5).setCellValue(excelDto.getSettlementRate() != null ? excelDto.getSettlementRate() : null);
             row.createCell(6).setCellValue(excelDto.getBankName() != null ? excelDto.getBankName() : null);
             row.createCell(7).setCellValue(excelDto.getBankHolder() != null ? excelDto.getBankHolder() : null);

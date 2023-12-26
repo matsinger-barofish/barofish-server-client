@@ -456,7 +456,7 @@ public class ProductQueryRepository {
         if (storeId == null) {
             return null;
         }
-        return storeInfo.storeId.eq(storeId);
+        return product.storeId.eq(storeId);
     }
 
     private BooleanBuilder isPromotionInProgress() {
