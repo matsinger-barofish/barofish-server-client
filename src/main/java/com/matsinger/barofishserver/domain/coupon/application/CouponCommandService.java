@@ -73,7 +73,7 @@ public class CouponCommandService {
     }
 
     public void useCouponV1(Integer couponId, Integer userId) {
-        Optional<CouponUserMap> map = couponUserMapRepository.findById(new CouponUserMapId(userId, couponId));
+        Optional<CouponUserMap> map = couponUserMapRepository.findByUserIdAndCouponId(userId, couponId);
         map.ifPresent(couponUserMap -> {
             couponUserMap.setIsUsed(true);
             couponUserMapRepository.save(couponUserMap);

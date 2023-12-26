@@ -102,7 +102,7 @@ public class OrderController {
                                                                     @RequestHeader(value = "Authorization") Optional<String> auth) {
         CustomResponse<Boolean> res = new CustomResponse<>();
 
-                TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER, TokenAuthType.ADMIN), auth);
+        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER, TokenAuthType.ADMIN), auth);
 
         Orders order = orderService.selectOrder(id);
         if (!tokenInfo.getType().equals(TokenAuthType.ADMIN) && tokenInfo.getId() != order.getUserId())
@@ -349,7 +349,7 @@ public class OrderController {
             if (optionItem.getMaxAvailableAmount() != null &&
                     optionItem.getMaxAvailableAmount() < productReq.getAmount())
                 throw new BusinessException("최대 주문 수량을 초과하였습니다.");
-            optionItem.reduceAmount(productReq.getAmount());
+            optionItem.validateQuantity(productReq.getAmount());
             int price = orderService.getProductPrice(productReq.getOptionId(), productReq.getAmount());
             productPrice += price;
             taxFreeAmount += productReq.getTaxFreeAmount() != null ? productReq.getTaxFreeAmount() : 0;
@@ -408,13 +408,24 @@ public class OrderController {
             throw new BusinessException("배송지에 배송 불가능한 상품이 포함돼 있습니다.");
         Orders
                 order =
-                Orders.builder().id(orderId).userId(tokenInfo.getId()).paymentWay(data.getPaymentWay()).state(
-                        OrderState.WAIT_DEPOSIT).couponId(data.getCouponId()).orderedAt(utils.now()).totalPrice(data.getTotalPrice()).usePoint(
-                        data.getPoint()).couponDiscount(data.getCouponDiscountPrice()).ordererName(name).ordererTel(
-                        tel).bankHolder(vBankRefundInfo != null ? vBankRefundInfo.getBankHolder() : null).bankCode(
-                        vBankRefundInfo != null ? vBankRefundInfo.getBankCode() : null).bankName(vBankRefundInfo !=
-                        null ? vBankRefundInfo.getBankName() : null).bankAccount(vBankRefundInfo !=
-                        null ? vBankRefundInfo.getBankAccount() : null).originTotalPrice(originTotalPrice).build();
+                Orders.builder()
+                        .id(orderId)
+                        .userId(tokenInfo.getId())
+                        .paymentWay(data.getPaymentWay())
+                        .state(OrderState.WAIT_DEPOSIT)
+                        .couponId(data.getCouponId())
+                        .orderedAt(utils.now())
+                        .totalPrice(data.getTotalPrice())
+                        .usePoint(data.getPoint())
+                        .couponDiscount(data.getCouponDiscountPrice())
+                        .ordererName(name)
+                        .ordererTel(tel)
+                        .bankHolder(vBankRefundInfo != null ? vBankRefundInfo.getBankHolder() : null)
+                        .bankCode(vBankRefundInfo != null ? vBankRefundInfo.getBankCode() : null)
+                        .bankName(vBankRefundInfo != null ? vBankRefundInfo.getBankName() : null)
+                        .bankAccount(vBankRefundInfo != null ? vBankRefundInfo.getBankAccount() : null)
+                        .originTotalPrice(originTotalPrice)
+                        .build();
 
         Orders result = orderService.orderProduct(order, infos, orderDeliverPlace);
 
@@ -425,8 +436,14 @@ public class OrderController {
             Product product = productService.selectProduct(data.getProducts().get(0).getProductId());
             KeyInPaymentReq
                     req =
-                    KeyInPaymentReq.builder().paymentMethod(paymentMethod).order_name(name).orderId(orderId).total_amount(
-                            data.getTotalPrice()).order_name(product.getTitle()).taxFree(taxFreeAmount).build();
+                    KeyInPaymentReq.builder()
+                            .paymentMethod(paymentMethod)
+                            .order_name(name)
+                            .orderId(orderId)
+                            .total_amount(data.getTotalPrice())
+                            .order_name(product.getTitle())
+                            .taxFree(taxFreeAmount)
+                            .build();
             Boolean keyInResult = paymentService.processKeyInPayment(req);
             if (!keyInResult) throw new BusinessException("결제에 실패하였습니다.");
         }

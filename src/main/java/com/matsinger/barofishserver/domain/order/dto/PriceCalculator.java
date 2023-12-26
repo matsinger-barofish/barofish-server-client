@@ -14,6 +14,7 @@ public class PriceCalculator {
 
     private int totalProductPrice = 0;
     private int totalDeliveryFee = 0;
+    private int totalTaxFreePrice = 0;
 
     // conditionalShippingProducts는 스토어의 조건부 배송 가격을 산정할 때 사용
     private List<OrderProductInfo> conditionalShippingProducts = new ArrayList<>();
@@ -21,6 +22,9 @@ public class PriceCalculator {
     int maxPriceProductIdx = 0; // (가격 * 수량)이 가장 높은 상품에 배송비를 적용
     int maxDeliveryFeeIdx = 0; // 가장 높은 배송비를 적용
 
+    public void addTotalTaxFeePrice(int taxFreePrice) {
+        totalTaxFreePrice += taxFreePrice;
+    }
     public void addConditionalProduct(OrderProductInfo productInfo) {
         conditionalShippingProducts.add(productInfo);
     }

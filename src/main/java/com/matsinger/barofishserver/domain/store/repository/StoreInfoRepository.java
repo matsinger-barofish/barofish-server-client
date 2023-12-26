@@ -62,5 +62,7 @@ public interface StoreInfoRepository extends JpaRepository<StoreInfo, Integer> {
             "WHERE si.is_reliable = TRUE\n" +
             "ORDER BY RAND( );", nativeQuery = true)
     List<StoreInfo> selectReliableStoreRandomOrder();
+
+    Optional<StoreInfo> findByStoreId(Integer storeId);
 }
 

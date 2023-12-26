@@ -371,24 +371,28 @@ public class OrderService {
     }
 
 
-    public GetCancelPriceDto getCancelPrice(Orders order, List<OrderProductInfo> infos) throws Exception {
+    public GetCancelPriceDto getCancelPrice(Orders order, List<OrderProductInfo> infos) {
         List<OrderProductInfo> orderProductInfos = selectOrderProductInfoListWithOrderId(order.getId());
-        if (orderProductInfos.size() == infos.size())
+        // 총 주문 상품이 단건이면
+        if (orderProductInfos.size() == infos.size()) {
             return GetCancelPriceDto.builder().cancelPrice(order.getTotalPrice()).returnPoint(order.getUsePoint()).build();
+        }
+
         List<StoreInfo>
                 stores =
                 orderProductInfos.stream().filter(v -> infos.stream().map(OrderProductInfo::getId).toList().contains(v.getId())).map(
                         v -> v.getProduct().getStoreId()).distinct().map(storeService::selectStoreInfo).toList();
         int deliveryFee = stores.stream().mapToInt(s -> {
-            List<OrderProductInfo>
-                    sameStoreInfos =
-                    orderProductInfos.stream().filter(opi -> opi.getProduct().getStoreId() == s.getStoreId()).toList();
+            List<OrderProductInfo> sameStoreInfos =
+                    orderProductInfos.stream()
+                            .filter(opi -> opi.getProduct().getStoreId() == s.getStoreId()).toList();
+
             if (sameStoreInfos.size() != 0) {
                 sameStoreInfos.forEach(ssi -> {
                     if (infos.stream().anyMatch(a -> a.getId() == ssi.getId() &&
                             (ssi.getState().equals(OrderProductState.WAIT_DEPOSIT) ||
-                                    ssi.getState().equals(OrderProductState.DELIVERY_READY) ||
-                                    ssi.getState().equals(OrderProductState.PAYMENT_DONE))))
+                             ssi.getState().equals(OrderProductState.DELIVERY_READY) ||
+                             ssi.getState().equals(OrderProductState.PAYMENT_DONE))))
                         ssi.setState(OrderProductState.CANCELED);
                 });
                 if (sameStoreInfos.stream().allMatch(a -> a.getState().equals(OrderProductState.CANCELED)))
@@ -396,10 +400,10 @@ public class OrderService {
             }
             return 0;
         }).sum();
-        int
-                orderedPrice =
-                orderProductInfos.stream().filter(v -> !v.getState().equals(OrderProductState.CANCELED)).mapToInt(
-                        OrderProductInfo::getPrice).sum();
+        int orderedPrice = orderProductInfos.stream()
+                .filter(v -> !v.getState().equals(OrderProductState.CANCELED))
+                .mapToInt(OrderProductInfo::getPrice).sum();
+
         AtomicInteger returnPoint = new AtomicInteger();
         AtomicInteger cancelPrice = new AtomicInteger();
         orderProductInfos.forEach(v -> {

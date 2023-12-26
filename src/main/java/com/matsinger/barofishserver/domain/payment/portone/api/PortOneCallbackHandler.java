@@ -5,27 +5,28 @@ import com.matsinger.barofishserver.domain.coupon.application.CouponCommandServi
 import com.matsinger.barofishserver.domain.notification.application.NotificationCommandService;
 import com.matsinger.barofishserver.domain.notification.dto.NotificationMessage;
 import com.matsinger.barofishserver.domain.notification.dto.NotificationMessageType;
-import com.matsinger.barofishserver.domain.order.dto.GetCancelPriceDto;
-import com.matsinger.barofishserver.domain.payment.application.PaymentService;
-import com.matsinger.barofishserver.domain.payment.domain.PaymentState;
-import com.matsinger.barofishserver.domain.payment.domain.Payments;
-import com.matsinger.barofishserver.domain.payment.dto.GetVBankAccountReq;
+import com.matsinger.barofishserver.domain.order.application.OrderService;
 import com.matsinger.barofishserver.domain.order.domain.OrderPaymentWay;
+import com.matsinger.barofishserver.domain.order.domain.OrderState;
+import com.matsinger.barofishserver.domain.order.domain.Orders;
+import com.matsinger.barofishserver.domain.order.dto.GetCancelPriceDto;
 import com.matsinger.barofishserver.domain.order.dto.VBankRefundInfo;
 import com.matsinger.barofishserver.domain.order.orderprductinfo.domain.OrderCancelReason;
 import com.matsinger.barofishserver.domain.order.orderprductinfo.domain.OrderProductInfo;
 import com.matsinger.barofishserver.domain.order.orderprductinfo.domain.OrderProductState;
-import com.matsinger.barofishserver.domain.order.domain.OrderState;
-import com.matsinger.barofishserver.domain.order.application.OrderService;
-import com.matsinger.barofishserver.domain.order.domain.Orders;
+import com.matsinger.barofishserver.domain.payment.application.PaymentService;
+import com.matsinger.barofishserver.domain.payment.domain.PaymentState;
+import com.matsinger.barofishserver.domain.payment.domain.Payments;
+import com.matsinger.barofishserver.domain.payment.dto.GetVBankAccountReq;
 import com.matsinger.barofishserver.domain.payment.portone.application.PortOneCallbackService;
+import com.matsinger.barofishserver.domain.payment.portone.dto.PortOneBodyData;
 import com.matsinger.barofishserver.domain.product.application.ProductService;
 import com.matsinger.barofishserver.domain.product.optionitem.domain.OptionItem;
 import com.matsinger.barofishserver.domain.user.application.UserCommandService;
 import com.matsinger.barofishserver.domain.userinfo.domain.UserInfo;
 import com.matsinger.barofishserver.utils.Common;
 import com.matsinger.barofishserver.utils.sms.SmsService;
-import lombok.*;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -52,7 +53,7 @@ public class PortOneCallbackHandler {
 
     @PostMapping("")
     public ResponseEntity<Object> portOneCallback(@RequestHeader(value = "x-real-ip", required = false) String XRealIp,
-                                                  @RequestBody(required = false) PortOneCallbackService.PortOneBodyData data) {
+                                                  @RequestBody(required = false) PortOneBodyData data) {
         System.out.println("Portone callback received");
         if (!XRealIp.equals("52.78.100.19") && !XRealIp.equals("52.78.48.223"))
             return ResponseEntity.status(403).body(null);
@@ -103,11 +104,15 @@ public class PortOneCallbackHandler {
                                         taxFreeAmount =
                                         info.getTaxFreeAmount() != 0 &&
                                                 info.getTaxFreeAmount() != null ? info.getPrice() : 0;
-                                VBankRefundInfo
-                                        vBankRefundInfo =
-                                        order.getPaymentWay().equals(OrderPaymentWay.VIRTUAL_ACCOUNT) ? VBankRefundInfo.builder().bankHolder(
-                                                order.getBankHolder()).bankCode(order.getBankCode()).bankName(order.getBankName()).bankAccount(
-                                                order.getBankAccount()).build() : null;
+                                VBankRefundInfo vBankRefundInfo =
+                                        order.getPaymentWay().equals(OrderPaymentWay.VIRTUAL_ACCOUNT)
+                                                ? VBankRefundInfo.builder()
+                                                    .bankHolder(order.getBankHolder())
+                                                    .bankCode(order.getBankCode())
+                                                    .bankName(order.getBankName())
+                                                    .bankAccount(order.getBankAccount())
+                                                    .build()
+                                                : null;
                                 paymentService.cancelPayment(data.getImp_uid(),
                                         cancelPrice,
                                         taxFreeAmount,

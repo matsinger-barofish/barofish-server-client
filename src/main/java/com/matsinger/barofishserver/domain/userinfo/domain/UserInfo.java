@@ -115,6 +115,12 @@ public class UserInfo {
         this.point -= pointToUse;
     }
 
+    public void validatePoint(Integer pointToUse) {
+        if (pointToUse != null && point < pointToUse) {
+            throw new BusinessException("보유한 적립금보다 많은 적립금입니다.");
+        }
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o)

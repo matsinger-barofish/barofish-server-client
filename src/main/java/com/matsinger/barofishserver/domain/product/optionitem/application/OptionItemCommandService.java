@@ -1,6 +1,7 @@
 package com.matsinger.barofishserver.domain.product.optionitem.application;
 
 import com.matsinger.barofishserver.domain.product.optionitem.domain.OptionItem;
+import com.matsinger.barofishserver.domain.product.optionitem.repository.OptionItemRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -9,11 +10,10 @@ import org.springframework.stereotype.Service;
 public class OptionItemCommandService {
 
     private final OptionItemQueryService optionItemQueryService;
+    private final OptionItemRepository optionItemRepository;
 
 
-    public OptionItem reduceQuantity(Integer optionId, Integer quantity) {
-        OptionItem findedOptionItem = optionItemQueryService.findById(optionId);
-        findedOptionItem.reduceAmount(quantity);
-        return findedOptionItem;
+    public void save(OptionItem optionItem) {
+        optionItemRepository.save(optionItem);
     }
 }

@@ -60,14 +60,23 @@ public class OptionItem {
     private Integer maxAvailableAmount;
 
 
-    public void reduceAmount(int amount) {
+    public void validateQuantity(int quantity) {
         if (this.amount != null) {
-            int reducedValue = this.amount - amount;
+            int reducedValue = this.amount - quantity;
             if (reducedValue < 0) {
                 String errorMessage = String.format("'%s' 상품의 재고가 부족합니다.", this.name);
                 throw new BusinessException(errorMessage);
             }
         }
+    }
+
+    public void reduceQuantity(int quantity) {
+        int reducedValue = this.amount - quantity;
+        if (reducedValue < 0) {
+            String errorMessage = String.format("'%s' 상품의 재고가 부족합니다.", this.name);
+            throw new BusinessException(errorMessage);
+        }
+        this.amount = reducedValue;
     }
 
     public OptionItemDto convert2Dto() {
@@ -105,9 +114,5 @@ public class OptionItem {
     @Override
     public int hashCode() {
         return Objects.hash(id, getOptionId(), name);
-    }
-
-    public void validateQuantity(int quantity) {
-
     }
 }

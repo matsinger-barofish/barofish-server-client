@@ -18,8 +18,6 @@ import org.springframework.web.servlet.mvc.method.annotation.RequestBodyAdvice;
 
 import java.io.IOException;
 import java.lang.reflect.Type;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 
 @Slf4j
 @Order(2)
@@ -61,23 +59,9 @@ public class GlobalControllerAdvice implements RequestBodyAdvice {
     }
 
     private void printExceptionInfo(HttpServletRequest request, Exception e) {
-        if (!afterBodyReadExecuted.get()) {
-            logger.warn("### Exception Start ###");
-            logger.warn(DateTimeFormatter.ofPattern("yyyy-MM-dd hh:mm:ss").format(LocalDateTime.now()));
-        }
 
-        logger.warn("url = {}", request.getRequestURI());
-        logger.warn("method = {}", request.getMethod());
-        logger.warn("queryString = {}", request.getQueryString());
-        request.getHeaderNames().asIterator().forEachRemaining(
-                header -> logger.warn("header = {}", request.getHeader(header))
-        );
-        request.getParameterNames().asIterator().forEachRemaining(
-                parameter -> logger.warn("parameter = {}", request.getParameter(parameter))
-        );
+        logger.warn(e.getMessage());
         e.printStackTrace();
-
-        logger.warn("### Exception End ###");
     }
 
     @Override
@@ -106,9 +90,6 @@ public class GlobalControllerAdvice implements RequestBodyAdvice {
             Class<? extends HttpMessageConverter<?>> converterType) {
 
         afterBodyReadExecuted.set(true);
-
-        logger.warn("### Exception Start ###");
-        logger.warn("Exception Date = {}", DateTimeFormatter.ofPattern("yyyy-MM-dd hh:mm:ss").format(LocalDateTime.now()));
 
         // @RequestBody 필드 정보 출력
         logger.warn("RequestBody = {}", body.toString());
