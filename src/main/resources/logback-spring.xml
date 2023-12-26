@@ -20,6 +20,10 @@
               class="io.opentelemetry.instrumentation.logback.appender.v1_0.OpenTelemetryAppender">
         <captureExperimentalAttributes>true</captureExperimentalAttributes>
         <captureKeyValuePairAttributes>true</captureKeyValuePairAttributes>
+
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss}:%-4relative [%thread] %-5level %logger{35} - %msg%n</pattern>
+        </encoder>
     </appender>
 
     <!-- 로그 파일 -->
@@ -33,7 +37,7 @@
 
         <encoder>
             <!-- %msg를 통해 로그 메시지를 출력, %n을 통해 개행문자를 출력 -->
-            <pattern>%-4relative [%thread] %-5level %logger{35} - %msg%n</pattern>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss}:%-4relative [%thread] %-5level %logger{35} - %msg%n</pattern>
         </encoder>
         <logger name="LoggingInterceptor" additivity="false">
             <level value = "INFO" />

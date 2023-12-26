@@ -39,7 +39,7 @@ public class LoggingUtils {
 
     private static String getExceptionInfo(String message, String url, String queryString, String requestBody, StackTraceElement[] stackTraceElement) {
         String exceptionInfo = "";
-        exceptionInfo += "\n" + "에러 발생" + "\n";
+        exceptionInfo += "\n" + "에러 로그 시작" + "\n";
 
         if (StringUtils.hasText(message)) {
             exceptionInfo += message + "\n";
@@ -62,6 +62,7 @@ public class LoggingUtils {
                 exceptionInfo += "\n" + traceElement;
             }
         }
+        exceptionInfo += "\n" + "에러 로그 끝" + "\n";
         return exceptionInfo;
     }
 }
