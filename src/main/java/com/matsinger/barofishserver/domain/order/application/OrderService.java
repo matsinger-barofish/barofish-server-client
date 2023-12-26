@@ -111,7 +111,7 @@ public class OrderService {
                             : Optional.empty();
 
             OptionItem optionItem = productService.selectOptionItem(opi.getOptionItemId());
-            OptionItemDto optionItemDto = optionItem.convert2Dto();
+            OptionItemDto optionItemDto = optionItem.convert2Dto(product);
             optionItemDto.setPointRate(product.getPointRate());
 
             Boolean isWritten = reviewQueryService.checkReviewWritten(order.getUserId(), product.getId(), opi.getId());
@@ -509,7 +509,7 @@ public class OrderService {
                         null ? deliveryCompanyRepository.findById(info.getDeliverCompanyCode()) : Optional.empty();
 
         return OrderProductInfoDto.builder().id(info.getId()).orderId(info.getOrderId()).productId(info.getProductId()).optionItemId(
-                info.getOptionItemId()).optionItem(optionItem.convert2Dto()).state(info.getState()).settlePrice(info.getSettlePrice()).price(
+                info.getOptionItemId()).optionItem(optionItem.convert2Dto(product)).state(info.getState()).settlePrice(info.getSettlePrice()).price(
                 info.getPrice()).amount(info.getAmount()).deliveryFee(info.getDeliveryFee()).cancelReasonContent(info.getCancelReasonContent()).cancelReason(
                 info.getCancelReason()).deliverCompanyCode(info.getDeliverCompanyCode()).invoiceCode(info.getInvoiceCode()).isSettled(
                 info.getIsSettled()).settledAt(info.getSettledAt()).product(productService.convert2ListDto(info.getProduct())).order(

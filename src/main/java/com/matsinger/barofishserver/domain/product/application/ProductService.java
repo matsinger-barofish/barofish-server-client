@@ -558,7 +558,7 @@ public class ProductService {
                 optionItems =
                 optionItemRepository.findAllByOptionIdAndState(option.getId(), OptionItemState.ACTIVE);
         List<OptionItemDto> itemDtos = optionItems.stream().map(v -> {
-            OptionItemDto optionItemDto = v.convert2Dto();
+            OptionItemDto optionItemDto = v.convert2Dto(product);
             optionItemDto.setDeliverBoxPerAmount(product.getDeliverBoxPerAmount());
             optionItemDto.setPointRate(product.getPointRate());
             return optionItemDto;
