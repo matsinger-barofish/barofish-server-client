@@ -20,18 +20,18 @@ public class BasketProductInfo {
     @Basic
     @Column(name = "user_id", nullable = false)
     private int userId;
-    @Basic
-    @Column(name = "store_id", nullable = false)
-    private int storeId;
+//    @Basic
+//    @Column(name = "store_id", nullable = false)
+//    private int storeId;
     @Basic
     @Column(name = "product_id", nullable = false)
     private int productId;
-    @Basic
-    @Column(name = "option_id", nullable = false)
-    private int optionId;
-    @Basic
-    @Column(name = "option_item_id", nullable = false)
-    private int optionItemId;
+//    @Basic
+//    @Column(name = "option_id", nullable = false)
+//    private int optionId;
+//    @Basic
+//    @Column(name = "option_item_id", nullable = false)
+//    private int optionItemId;
     @Basic
     @Column(name = "amount", nullable = false)
     private int amount;
