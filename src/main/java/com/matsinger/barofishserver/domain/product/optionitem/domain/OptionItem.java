@@ -1,7 +1,9 @@
 package com.matsinger.barofishserver.domain.product.optionitem.domain;
 
+import com.matsinger.barofishserver.domain.product.domain.Product;
 import com.matsinger.barofishserver.domain.product.optionitem.dto.OptionItemDto;
 import com.matsinger.barofishserver.domain.product.domain.OptionItemState;
+import com.matsinger.barofishserver.global.exception.BusinessException;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -59,21 +61,39 @@ public class OptionItem {
     private Integer maxAvailableAmount;
 
 
-    public void reduceAmount(int amount) {
+    public void validateQuantity(int quantity) {
         if (this.amount != null) {
-            int reducedValue = this.amount - amount;
+            int reducedValue = this.amount - quantity;
             if (reducedValue < 0) {
                 String errorMessage = String.format("'%s' 상품의 재고가 부족합니다.", this.name);
-                throw new Error(errorMessage);
+                throw new BusinessException(errorMessage);
             }
-//            this.amount = reducedValue;
         }
     }
 
-    public OptionItemDto convert2Dto() {
-        return OptionItemDto.builder().id(this.id).optionId(this.getOptionId()).name(this.name).discountPrice(this.discountPrice).amount(
-                this.amount).purchasePrice(this.purchasePrice).originPrice(this.originPrice).deliveryFee(this.deliverFee).deliverBoxPerAmount(
-                this.deliverBoxPerAmount).maxAvailableAmount(this.maxAvailableAmount).build();
+    public void reduceQuantity(int quantity) {
+        int reducedValue = this.amount - quantity;
+        if (reducedValue < 0) {
+            String errorMessage = String.format("'%s' 상품의 재고가 부족합니다.", this.name);
+            throw new BusinessException(errorMessage);
+        }
+        this.amount = reducedValue;
+    }
+
+    public OptionItemDto convert2Dto(Product product) {
+        return OptionItemDto.builder()
+                .id(this.id)
+                .optionId(this.getOptionId())
+                .name(this.name)
+                .discountPrice(this.discountPrice)
+                .amount(this.amount)
+                .purchasePrice(this.purchasePrice)
+                .originPrice(this.originPrice)
+                .deliveryFee(this.deliverFee)
+                .deliverBoxPerAmount(this.deliverBoxPerAmount)
+                .maxAvailableAmount(this.maxAvailableAmount)
+                .minOrderPrice(product.getMinOrderPrice())
+                .build();
     }
 
     public int getId() {
@@ -106,5 +126,4 @@ public class OptionItem {
     public int hashCode() {
         return Objects.hash(id, getOptionId(), name);
     }
-
 }

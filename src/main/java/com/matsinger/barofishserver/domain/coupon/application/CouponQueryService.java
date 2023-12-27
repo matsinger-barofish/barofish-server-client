@@ -96,4 +96,12 @@ public class CouponQueryService {
     public List<Coupon> selectUserCouponList(Integer userId) {
         return couponRepository.selectUserCouponList(userId);
     }
+
+    public Coupon validateCoupon(int couponId, int minOrderPrice) {
+        Coupon coupon = findById(couponId);
+        coupon.checkAvailablePrice(minOrderPrice);
+        coupon.checkExpiration();
+
+        return coupon;
+    }
 }
