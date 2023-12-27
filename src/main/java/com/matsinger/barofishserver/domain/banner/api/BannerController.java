@@ -21,6 +21,7 @@ import com.matsinger.barofishserver.utils.RegexConstructor;
 import com.matsinger.barofishserver.utils.S3.S3Uploader;
 import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.ResponseEntity;
@@ -70,25 +71,36 @@ public class BannerController {
     }
 
     @GetMapping("/management")
-    public ResponseEntity<CustomResponse<List<BannerDto>>> selectBannerListByAdmin(@RequestHeader(value =
-            "Authorization") Optional<String> auth,
+    public ResponseEntity<CustomResponse<List<BannerDto>>> selectBannerListByAdmin(@RequestHeader(value = "Authorization") Optional<String> auth,
                                                                                    @RequestParam(value = "page", required = false, defaultValue = "0") Integer page,
                                                                                    @RequestParam(value = "take", required = false, defaultValue = "10") Integer take,
                                                                                    @RequestParam(value = "types", required = false) String types,
                                                                                    @RequestParam(value = "orderby", defaultValue = "id") BannerOrderBy orderBy,
                                                                                    @RequestParam(value = "orderType", defaultValue = "DESC") Sort.Direction sort) {
         CustomResponse<List<BannerDto>> res = new CustomResponse<>();
-
-                jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
+        jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
 
         Specification<Banner> spec = (root, query, builder) -> {
             List<Predicate> predicates = new ArrayList<>();
             if (types != null)
-                predicates.add(builder.and(root.get("type").in(Arrays.stream(types.split(",")).map(BannerType::valueOf).toList())));
+                predicates.add(builder
+                        .and(root.get("type").in(
+                                Arrays.stream(types.split(",")).map(BannerType::valueOf).toList())
+                        )
+                );
             return builder.and(predicates.toArray(new Predicate[0]));
         };
-        List<BannerDto> banners =
-                bannerQueryService.selectBannerListByAdmin(spec).stream().map(Banner::convert2Dto).toList();
+
+        PageRequest.of(page, take);
+        List<BannerDto> banners = bannerQueryService.selectBannersByAdmin(
+                PageRequest.of(page, take),
+                types,
+                orderBy,
+                sort);
+
+//        List<BannerDto> banners =
+//                bannerQueryService.selectBannerListByAdmin(spec)
+//                        .stream().map(Banner::convert2Dto).toList();
         res.setData(Optional.of(banners));
         return ResponseEntity.ok(res);
     }

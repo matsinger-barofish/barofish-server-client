@@ -16,6 +16,7 @@ import java.util.List;
 @Service
 public class BannerCommandService {
     private final BannerRepository bannerRepository;
+    private final BannerQueryService bannerQueryService;
 
     public Banner addBanner(Banner banner) {
         return bannerRepository.save(banner);
@@ -45,15 +46,20 @@ public class BannerCommandService {
         for (Banner banner : banners) {
             banner.setSortNo(null);
         }
+        bannerRepository.saveAll(banners);
 
         List<BannerDto> bannerDtos = new ArrayList<>();
-        List<Banner> bannersToSort = bannerRepository.findAllByIdIn(bannerIds);
-        int sortIdx = 1;
-        for (Banner banner : bannersToSort) {
-            banner.setSortNo(sortIdx);
+        List<Banner> sortedBanner = new ArrayList<>();
+        int sortNum = 1;
+        for (Integer bannerId : bannerIds) {
+            Banner banner = bannerQueryService.findById(bannerId);
+            banner.setSortNo(sortNum);
             bannerDtos.add(banner.convert2Dto());
-            sortIdx++;
+            sortedBanner.add(banner);
+            sortNum++;
         }
+
+        bannerRepository.saveAll(sortedBanner);
         return bannerDtos;
     }
 }
