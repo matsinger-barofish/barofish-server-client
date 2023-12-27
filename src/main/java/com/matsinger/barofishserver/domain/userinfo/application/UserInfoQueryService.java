@@ -68,12 +68,11 @@ public class UserInfoQueryService {
             return userInfoOptional.get().getUserId();
         }
 
-//        for (UserAuth userAuth : userInfoOptional.get().getUser().getUserAuth()) {
-//            if (userAuth.getLoginType() == LoginType.APPLE) {
-//                return userAuth.getUserId();
-//            }
-//        }
-
         return null;
+    }
+
+    public UserInfo findById(int userId) {
+        return userInfoRepository.findById(userId)
+                .orElseThrow(() -> new BusinessException("유저 정보를 찾을 수 없습니다."));
     }
 }

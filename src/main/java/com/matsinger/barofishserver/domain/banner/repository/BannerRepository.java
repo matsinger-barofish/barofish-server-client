@@ -29,4 +29,8 @@ public interface BannerRepository extends JpaRepository<Banner, Integer>, JpaSpe
     List<Banner> findWithPagination(Pageable pageable);
 
     List<Banner> findAllByTypeInOrderBySortNoAsc(List<BannerType> type);
+
+    List<Banner> findAllByStateOrderBySortNoAsc(BannerState bannerState);
+
+    List<Banner> findAllByIdInOrderBySortNo(List<Integer> bannerIds);
 }
