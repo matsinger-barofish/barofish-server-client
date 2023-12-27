@@ -62,17 +62,9 @@ public class BannerController {
                                                                         @RequestPart(value = "data") SortBannerReq data) {
         CustomResponse<List<BannerDto>> res = new CustomResponse<>();
 
-                jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
+        jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
 
-        List<BannerDto> bannerDtos = new ArrayList<>();
-        List<Banner> banners = new ArrayList<>();
-        for (int i = 0; i < data.getBannerIds().size(); i++) {
-            Banner banner = bannerQueryService.selectBanner(data.getBannerIds().get(i));
-            banner.setSortNo(i + 1);
-            banners.add(banner);
-            bannerDtos.add(banner.convert2Dto());
-        }
-        bannerCommandService.updateAllBanners(banners);
+        List<BannerDto> bannerDtos = bannerCommandService.sortBanners(data.getBannerIds());
         res.setData(Optional.of(bannerDtos));
         return ResponseEntity.ok(res);
     }

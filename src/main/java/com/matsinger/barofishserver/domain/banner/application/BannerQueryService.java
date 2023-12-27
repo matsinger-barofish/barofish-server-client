@@ -27,6 +27,10 @@ public class BannerQueryService {
                 Arrays.asList(BannerType.NONE, BannerType.CATEGORY, BannerType.CURATION, BannerType.NOTICE));
     }
 
+    public List<Banner> selectBannersOrderBySortNum() {
+        return bannerRepository.findAllByStateOrderBySortNoAsc(BannerState.ACTIVE);
+    }
+
     public List<Banner> selectBannerListByAdmin(Specification<Banner> spec) {
         return bannerRepository.findAll(spec);
     }
