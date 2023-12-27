@@ -33,4 +33,6 @@ public interface BannerRepository extends JpaRepository<Banner, Integer>, JpaSpe
     List<Banner> findAllByStateOrderBySortNoAsc(BannerState bannerState);
 
     List<Banner> findAllByIdInOrderBySortNo(List<Integer> bannerIds);
+
+    List<Banner> findAllByStateAndTypeInOrderBySortNoAsc(BannerState bannerState, List<BannerType> types);
 }
