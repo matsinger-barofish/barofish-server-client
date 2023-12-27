@@ -1,7 +1,6 @@
 package com.matsinger.barofishserver.domain.banner.repository;
 
 import com.matsinger.barofishserver.domain.banner.domain.BannerOrderBy;
-import com.matsinger.barofishserver.domain.banner.domain.BannerState;
 import com.matsinger.barofishserver.domain.banner.domain.BannerType;
 import com.matsinger.barofishserver.domain.banner.dto.BannerDto;
 import com.querydsl.core.types.Order;
@@ -53,7 +52,7 @@ public class BannerQueryRepository {
                 .leftJoin(curation).on(banner.curationId.eq(curation.id))
                 .leftJoin(notice).on(banner.noticeId.eq(notice.id))
                 .leftJoin(category).on(banner.categoryId.eq(category.id))
-                .where(banner.state.eq(BannerState.ACTIVE),
+                .where(
                         includeBannerTypes(types)
                 )
                 .orderBy(
