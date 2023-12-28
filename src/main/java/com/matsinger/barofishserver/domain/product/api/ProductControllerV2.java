@@ -76,7 +76,7 @@ public class ProductControllerV2 {
         
         TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ALLOW, TokenAuthType.USER), auth);
 
-        Integer userId = tokenInfo.getId();
+        Integer userId = tokenInfo != null ? tokenInfo.getId() : null;
 
         PageRequest pageRequest = PageRequest.of(page - 1, take);
         Page<ProductListDto> result = productQueryService.getPagedProducts(
