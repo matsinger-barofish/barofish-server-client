@@ -21,8 +21,8 @@ public class OrderControllerV2 {
     private final JwtService jwt;
 
     @PostMapping("")
-    public ResponseEntity<CustomResponse<OrderDto>> orderProduct(@RequestHeader(value = "Authorization") Optional<String> auth,
-                                                                 @RequestBody OrderReq data) throws Exception {
+    public ResponseEntity<CustomResponse<OrderDto>> orderProductV2(@RequestHeader(value = "Authorization") Optional<String> auth,
+                                                                   @RequestBody OrderReq data) throws Exception {
         CustomResponse<OrderDto> res = new CustomResponse<>();
 
         TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth);
