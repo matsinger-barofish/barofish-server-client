@@ -3,8 +3,10 @@ package com.matsinger.barofishserver.domain.basketProduct.application;
 import com.matsinger.barofishserver.domain.basketProduct.domain.BasketProductInfo;
 import com.matsinger.barofishserver.domain.basketProduct.domain.BasketProductOption;
 import com.matsinger.barofishserver.domain.basketProduct.dto.BasketProductDto;
+import com.matsinger.barofishserver.domain.basketProduct.dto.BasketStoreInquiryDto;
 import com.matsinger.barofishserver.domain.basketProduct.repository.BasketProductInfoRepository;
 import com.matsinger.barofishserver.domain.basketProduct.repository.BasketProductOptionRepository;
+import com.matsinger.barofishserver.domain.basketProduct.repository.BasketQueryRepository;
 import com.matsinger.barofishserver.domain.product.application.ProductService;
 import com.matsinger.barofishserver.domain.product.domain.Product;
 import com.matsinger.barofishserver.domain.product.dto.ProductListDto;
@@ -28,28 +30,29 @@ import java.util.List;
 @Service
 @Slf4j
 public class BasketQueryService {
-    private final BasketProductInfoRepository infoRepository;
+    private final BasketProductInfoRepository basketProductInfoRepository;
     private final BasketProductOptionRepository optionRepository;
     private final OptionItemRepository optionItemRepository;
     private final ReviewRepository reviewRepository;
     private final StoreService storeService;
     private final ProductFilterService productFilterService;
     private final ProductService productService;
+    private BasketQueryRepository basketQueryRepository;
 
     public BasketProductInfo selectBasket(Integer id) {
-        return infoRepository.findById(id).orElseThrow(() -> {
+        return basketProductInfoRepository.findById(id).orElseThrow(() -> {
             throw new Error("장바구니 상품 정보를 찾을 수 없습니다.");
         });
 
     }
 
     public Integer countBasketList(Integer userId) {
-        List<BasketProductInfo> infos = infoRepository.findAllByUserId(userId);
+        List<BasketProductInfo> infos = basketProductInfoRepository.findAllByUserId(userId);
         return infos.size();
     }
 
     public List<BasketProductDto> selectBasketList(Integer userId) {
-        List<BasketProductInfo> infos = infoRepository.findAllByUserId(userId);
+        List<BasketProductInfo> infos = basketProductInfoRepository.findAllByUserId(userId);
         List<BasketProductDto> productDtos = new ArrayList<>();
         for (BasketProductInfo info : infos) {
 
@@ -68,7 +71,7 @@ public class BasketQueryService {
                         optionItem =
                         optionItemRepository.findById(option.getOptionId()).orElseThrow(() -> new BusinessException(
                                 "옵션 아이템 정보를 찾을 수 없습니다."));
-                optionDto = optionItem.convert2Dto();
+                optionDto = optionItem.convert2Dto(product);
                 optionDto.setDeliverBoxPerAmount(product.getDeliverBoxPerAmount());
                 optionDto.setPointRate(product.getPointRate());
             }
@@ -99,5 +102,15 @@ public class BasketQueryService {
                 storeInfo.getName()).parentCategoryId(product.getCategory() !=
                 null ? product.getCategory().getCategoryId() : null).filterValues(productFilterService.selectProductFilterValueListWithProductId(
                 product.getId())).build();
+    }
+
+    public void selectBasketListV2(Integer userId) {
+        List<BasketStoreInquiryDto> basketStoreInquiryDtos = basketQueryRepository.selectBasketProducts(userId);
+
+        for (BasketStoreInquiryDto storeDto : basketStoreInquiryDtos) {
+            storeDto.getProducts().forEach(v -> v.calculateDeliveryFee());
+
+
+        }
     }
 }
