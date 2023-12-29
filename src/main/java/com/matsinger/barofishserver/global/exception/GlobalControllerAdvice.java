@@ -15,7 +15,6 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import java.io.IOException;
 import java.util.Enumeration;
-import java.lang.reflect.Type;
 
 @Slf4j
 @RestControllerAdvice(basePackages = {"com.matsinger.barofishserver"})
@@ -25,7 +24,7 @@ public class GlobalControllerAdvice {
     private final JwtService jwtService;
     private final LoggingUtils loggingUtils;
 
-    @ExceptionHandler(value = {Exception.class})
+    @ExceptionHandler(value = {RuntimeException.class})
     public ResponseEntity<CustomResponse<Object>> handleRuntimeException(
             HttpServletRequest request,
             RuntimeException e) throws IOException {
