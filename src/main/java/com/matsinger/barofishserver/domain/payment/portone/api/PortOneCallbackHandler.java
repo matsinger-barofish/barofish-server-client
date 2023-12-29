@@ -146,7 +146,7 @@ public class PortOneCallbackHandler {
                         UserInfo userInfo = userService.selectUserInfo(order.getUserId());
                         userInfo.setPoint(userInfo.getPoint() - order.getUsePoint());
                         userService.updateUserInfo(userInfo);
-                        couponCommandService.useCoupon(order.getCouponId(), order.getUserId());
+                        couponCommandService.useCoupon(order.getUserId(), order.getCouponId());
                     } else {
                         order.setState(OrderState.PAYMENT_DONE);
                         order.setImpUid(data.getImp_uid());
