@@ -1,109 +1,77 @@
 package com.matsinger.barofishserver.global.exception;
 
-import com.matsinger.barofishserver.global.error.ErrorCode;
+import com.matsinger.barofishserver.global.filter.MultiAccessRequestWrapper;
+import com.matsinger.barofishserver.jwt.JwtService;
+import com.matsinger.barofishserver.jwt.TokenInfo;
 import com.matsinger.barofishserver.utils.CustomResponse;
+import com.matsinger.barofishserver.utils.LoggingUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.core.MethodParameter;
-import org.springframework.core.annotation.Order;
-import org.springframework.http.HttpInputMessage;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-import org.springframework.web.servlet.mvc.method.annotation.RequestBodyAdvice;
 
 import java.io.IOException;
-import java.lang.reflect.Type;
+import java.util.Enumeration;
 
 @Slf4j
-@Order(2)
 @RestControllerAdvice(basePackages = {"com.matsinger.barofishserver"})
 @RequiredArgsConstructor
-public class GlobalControllerAdvice implements RequestBodyAdvice {
+public class GlobalControllerAdvice {
 
-    private final Logger logger = LoggerFactory.getLogger(this.getClass().getSimpleName());
-
-    private ThreadLocal<Boolean> afterBodyReadExecuted = ThreadLocal.withInitial(() -> false);
+    private final JwtService jwtService;
+    private final LoggingUtils loggingUtils;
 
     @ExceptionHandler(value = {RuntimeException.class})
-    public ResponseEntity<CustomResponse<Object>> catchException(
+    public ResponseEntity<CustomResponse<Object>> handleRuntimeException(
             HttpServletRequest request,
-            Exception e) {
+            RuntimeException e) throws IOException {
 
-        printExceptionInfo(request, e);
+        MultiAccessRequestWrapper wrapRequest = (MultiAccessRequestWrapper) request;
+
+        String jwtToken = extractBearerToken(wrapRequest);
+        TokenInfo tokenInfo = jwtService.extractIdAndAuthType(jwtToken);
+        tokenInfo.getId();
+
+        loggingUtils.error(wrapRequest, e);
 
         CustomResponse customResponse = new CustomResponse();
         customResponse.setIsSuccess(false);
-        customResponse.setCode(ErrorCode.DEFAULT_ERROR);
-        return ResponseEntity.ok(customResponse);
+        customResponse.setErrorMsg("예기치 못한 오류가 발생했습니다." + "\n" + "불편을 드려 죄송합니다.");
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(customResponse);
+    }
+
+    private String extractBearerToken(HttpServletRequest request) {
+        Enumeration<String> headerNames = request.getHeaderNames();
+
+        String token = null;
+        while (headerNames.hasMoreElements()) {
+            String header = headerNames.nextElement();
+            String value = request.getHeader(header);
+
+            // 현재 헤더가 찾고자 하는 헤더인지 확인합니다.
+            if ("Authorization".equalsIgnoreCase(header) && value.startsWith("Bearer ")) {
+                // 토큰 부분을 추출합니다.
+                return value.substring("Bearer ".length());
+            }
+        }
+        return null;
     }
 
     @ExceptionHandler(value = {BusinessException.class})
-    public ResponseEntity<CustomResponse<Object>> catchBusinessException(
+    public ResponseEntity<CustomResponse<Object>> handleBusinessException(
             HttpServletRequest request,
-            Exception e) {
+            RuntimeException e) throws IOException {
 
-        printExceptionInfo(request, e);
+        MultiAccessRequestWrapper wrapRequest = (MultiAccessRequestWrapper) request;
+
+        loggingUtils.warn(wrapRequest, e);
 
         CustomResponse customResponse = new CustomResponse();
         customResponse.setIsSuccess(false);
-
         customResponse.setErrorMsg(e.getMessage());
-        customResponse.setCode("1000");
-
-        return ResponseEntity.ok(customResponse);
-    }
-
-    private void printExceptionInfo(HttpServletRequest request, Exception e) {
-
-        logger.warn(e.getMessage());
-        e.printStackTrace();
-    }
-
-    @Override
-    public boolean supports(
-            MethodParameter methodParameter,
-            Type targetType,
-            Class<? extends HttpMessageConverter<?>> converterType) {
-        return true;
-    }
-
-    @Override
-    public HttpInputMessage beforeBodyRead(
-            HttpInputMessage inputMessage,
-            MethodParameter parameter,
-            Type targetType,
-            Class<? extends HttpMessageConverter<?>> converterType) throws IOException {
-        return inputMessage;
-    }
-
-    @Override
-    public Object afterBodyRead(
-            Object body,
-            HttpInputMessage inputMessage,
-            MethodParameter parameter,
-            Type targetType,
-            Class<? extends HttpMessageConverter<?>> converterType) {
-
-        afterBodyReadExecuted.set(true);
-
-        // @RequestBody 필드 정보 출력
-        logger.warn("RequestBody = {}", body.toString());
-
-        return body;
-    }
-
-    @Override
-    public Object handleEmptyBody(
-            Object body,
-            HttpInputMessage inputMessage,
-            MethodParameter parameter,
-            Type targetType,
-            Class<? extends HttpMessageConverter<?>> converterType) {
-        return null;
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(customResponse);
     }
 }

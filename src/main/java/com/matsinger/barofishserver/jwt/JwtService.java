@@ -67,7 +67,7 @@ public class JwtService {
     }
 
     @NotNull
-    private TokenInfo extractIdAndAuthType(String token) {
+    public TokenInfo extractIdAndAuthType(String token) {
         TokenInfo tokenInfo = new TokenInfo();
         TokenAuthType tokenAuthType = jwtProvider.getTypeFromToken(token);
 
