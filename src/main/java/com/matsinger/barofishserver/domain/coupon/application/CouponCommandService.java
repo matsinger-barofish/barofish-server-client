@@ -145,7 +145,10 @@ public class CouponCommandService {
     }
 
     @Transactional
-    public Coupon useCoupon(Integer userId, int couponId) {
+    public Coupon useCoupon(Integer userId, Integer couponId) {
+        if (couponId == null) {
+            return null;
+        }
         Coupon coupon = couponQueryService.findById(couponId);
         coupon.checkAvailablePrice(coupon.getMinPrice());
         coupon.checkExpiration();
