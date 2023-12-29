@@ -4,11 +4,13 @@ import com.matsinger.barofishserver.domain.order.domain.OrderPaymentWay;
 import com.matsinger.barofishserver.domain.order.dto.request.VBankRefundInfoReq;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 
 import java.util.List;
 
 @Getter
 @NoArgsConstructor
+@ToString
 public class OrderReq {
     private String name;
     private String tel;
