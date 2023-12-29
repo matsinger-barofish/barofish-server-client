@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import java.io.IOException;
 import java.util.Enumeration;
+import java.lang.reflect.Type;
 
 @Slf4j
 @RestControllerAdvice(basePackages = {"com.matsinger.barofishserver"})
