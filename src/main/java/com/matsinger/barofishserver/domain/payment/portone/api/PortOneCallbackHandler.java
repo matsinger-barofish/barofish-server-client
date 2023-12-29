@@ -151,6 +151,7 @@ public class PortOneCallbackHandler {
                         order.setState(OrderState.PAYMENT_DONE);
                         order.setImpUid(data.getImp_uid());
                     }
+
                     basketCommandService.deleteBasketAfterOrder(order, infos);
                     orderService.updateOrderProductInfo(infos);
                     orderService.updateOrder(order);
