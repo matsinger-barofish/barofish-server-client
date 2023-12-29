@@ -166,6 +166,7 @@ public class PaymentService {
     }
 
     public void upsertPayments(Payments payments) {
+        log.info("payments 저장");
         paymentRepository.save(payments);
     }
 

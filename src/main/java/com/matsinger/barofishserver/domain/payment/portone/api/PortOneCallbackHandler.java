@@ -62,7 +62,6 @@ public class PortOneCallbackHandler {
             Orders order = orderService.selectOrder(data.getMerchant_uid());
             if (order != null) {
                 if (data.getStatus().equals("ready")) {
-                    log.info("포트원 콜백 수신 orderId = {}, imp_uid = {}", order.getId(), data.getImp_uid());
                     Payments paymentData = paymentService.getPaymentInfo(order.getId(), data.getImp_uid());
                     GetVBankAccountReq
                             vBankReq =
