@@ -150,9 +150,6 @@ public class CouponCommandService {
             return null;
         }
 
-        System.out.println("userId = " + userId);
-        System.out.println("couponId = " + couponId);
-
         Coupon coupon = couponQueryService.findById(couponId);
         coupon.checkAvailablePrice(coupon.getMinPrice());
         coupon.checkExpiration();
