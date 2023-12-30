@@ -2,7 +2,7 @@ package com.matsinger.barofishserver.global.exception;
 
 import com.matsinger.barofishserver.global.filter.MultiAccessRequestWrapper;
 import com.matsinger.barofishserver.utils.CustomResponse;
-import com.matsinger.barofishserver.utils.LoggingUtils;
+import com.matsinger.barofishserver.monitoring.LoggingUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

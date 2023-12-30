@@ -47,8 +47,9 @@ http/
 src/main/resources/sql/
 build/generated/
 /src/main/resources/log_xml/
-application.log
 /src/main/java/com/matsinger/barofishserver/monitorting/
 /src/main/java/com/matsinger/barofishserver/HelloController.class
 /src/main/java/com/matsinger/barofishserver/HelloController.java
 /docker
+logs/
+*.log

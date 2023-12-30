@@ -1,4 +1,4 @@
-package com.matsinger.barofishserver.global.filter;
+package com.matsinger.barofishserver.monitoring;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;

@@ -1,4 +1,4 @@
-package com.matsinger.barofishserver.global.filter;
+package com.matsinger.barofishserver.monitoring;
 
 import org.springframework.stereotype.Component;
 
