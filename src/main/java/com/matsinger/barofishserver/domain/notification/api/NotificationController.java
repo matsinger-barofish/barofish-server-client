@@ -2,11 +2,9 @@ package com.matsinger.barofishserver.domain.notification.api;
 
 import com.matsinger.barofishserver.domain.notification.application.NotificationQueryService;
 import com.matsinger.barofishserver.domain.notification.domain.Notification;
-import com.matsinger.barofishserver.global.error.ErrorCode;
 import com.matsinger.barofishserver.jwt.JwtService;
 import com.matsinger.barofishserver.jwt.TokenAuthType;
 import com.matsinger.barofishserver.jwt.TokenInfo;
-import com.matsinger.barofishserver.jwt.exception.JwtBusinessException;
 import com.matsinger.barofishserver.utils.Common;
 import com.matsinger.barofishserver.utils.CustomResponse;
 import lombok.RequiredArgsConstructor;
