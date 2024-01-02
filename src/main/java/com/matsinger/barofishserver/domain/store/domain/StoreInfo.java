@@ -29,7 +29,7 @@ public class StoreInfo {
 
     @Basic
     @Column(name = "background_image", nullable = false, length = -1)
-    private String backgroudImage;
+    private String backgroundImage;
     @Basic
     @Column(name = "profile_image", nullable = false, length = -1)
     private String profileImage;
@@ -70,6 +70,8 @@ public class StoreInfo {
     @Basic
     @Column(name = "refund_deliver_fee", nullable = true)
     private Integer refundDeliverFee;
+    @Basic @Column(name = "min_order_price", nullable = true)
+    private Integer minOrderPrice;
     @Basic
     @Column(name = "settlement_rate", nullable = true)
     Float settlementRate;
@@ -134,12 +136,12 @@ public class StoreInfo {
     String deliverCompany;
 
 
-    public String getBackgroudImage() {
-        return backgroudImage;
+    public String getbackgroundImage() {
+        return backgroundImage;
     }
 
-    public void setBackgroudImage(String backgroudImage) {
-        this.backgroudImage = backgroudImage;
+    public void setbackgroundImage(String backgroundImage) {
+        this.backgroundImage = backgroundImage;
     }
 
     public String getProfileImage() {
@@ -175,7 +177,7 @@ public class StoreInfo {
     }
 
     public SimpleStore convert2Dto() {
-        return SimpleStore.builder().storeId(this.store.getId()).backgroundImage(backgroudImage).profileImage(
+        return SimpleStore.builder().storeId(this.store.getId()).backgroundImage(backgroundImage).profileImage(
                 profileImage).name(name).location(location).keyword(keyword.split(",")).visitNote(this.getVisitNote()).refundDeliverFee(
                 this.refundDeliverFee).oneLineDescription(this.oneLineDescription).build();
     }
@@ -187,7 +189,7 @@ public class StoreInfo {
         StoreInfo that = (StoreInfo) o;
         return
 //                storeId == that.storeId &&
-                Objects.equals(backgroudImage, that.backgroudImage) &&
+                Objects.equals(backgroundImage, that.backgroundImage) &&
                         Objects.equals(profileImage, that.profileImage) &&
                         Objects.equals(name, that.name) &&
                         Objects.equals(location, that.location) &&
@@ -196,7 +198,7 @@ public class StoreInfo {
 
     @Override
     public int hashCode() {
-        return Objects.hash(backgroudImage, profileImage, name, location, keyword);
+        return Objects.hash(backgroundImage, profileImage, name, location, keyword);
     }
 }
 

@@ -8,7 +8,7 @@ import java.sql.Timestamp;
 @Entity
 @AllArgsConstructor
 @NoArgsConstructor
-@Getter
+@Getter @Setter
 @Builder
 @Table(name = "notice", schema = "barofish_dev", catalog = "")
 public class Notice {
@@ -34,6 +34,10 @@ public class Notice {
     @Basic
     @Column(name = "update_at", nullable = true)
     private Timestamp updateAt;
+
+    @Basic
+    @Column(name = "is_representative", nullable = false)
+    private boolean isRepresentative;
 
     public void setTitle(String title) {
         this.title = title;

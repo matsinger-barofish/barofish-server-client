@@ -10,7 +10,9 @@ import java.util.List;
 public interface BasketTastingNoteRepository extends JpaRepository<BasketTastingNote, Integer> {
     List<BasketTastingNote> findAllByUserId(int userId);
 
-    void deleteByUserIdAndProductId(Integer userId, Integer productId);
+    void deleteByUserIdAndProduct_Id(Integer userId, Integer productId);
 
-    boolean existsByUserIdAndProductId(int userId, int productId);
+    // BasketTastingNote와 User는 ManyToOne 관계이기 때문에 User 엔티티는 속성에 직접 접근 가능
+    // 하지만 Product는 OneToOne이기 때문에 productId 속성에 접근 불가능 -> product.id를 사용하도록 해야함
+    boolean existsByUserIdAndProduct_Id(int userId, int productId);
 }

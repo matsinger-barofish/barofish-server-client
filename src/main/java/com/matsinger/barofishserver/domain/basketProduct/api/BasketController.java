@@ -118,7 +118,7 @@ public class BasketController {
                         0 ? optionRepository.findAllByOrderProductId(info.getId()).get(0) : null;
         OptionItemDto
                 optionDto =
-                option != null ? productService.selectOptionItem(option.getOptionId()).convert2Dto() : null;
+                option != null ? productService.selectOptionItem(option.getOptionId()).convert2Dto(product) : null;
         BasketProductDto
                 dto =
                 BasketProductDto.builder().product(product.convert2ListDto()).amount(amount).deliveryFee(product.getDeliverFee()).deliverFeeType(

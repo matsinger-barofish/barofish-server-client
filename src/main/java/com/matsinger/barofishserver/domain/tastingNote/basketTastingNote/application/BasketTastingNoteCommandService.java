@@ -28,7 +28,7 @@ public class BasketTastingNoteCommandService {
         Product findedProduct = productQueryService.findById(productId);
         User findedUser = userQueryService.findById(userId);
 
-        boolean isProductExists = basketTastingNoteRepository.existsByUserIdAndProductId(userId, productId);
+        boolean isProductExists = basketTastingNoteRepository.existsByUserIdAndProduct_Id(userId, productId);
         if (isProductExists) {
             throw new BusinessException("저장함에 같은 상품이 있습니다.");
         }

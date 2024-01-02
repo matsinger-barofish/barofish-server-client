@@ -44,6 +44,7 @@ public class MainController {
     private final StoreInfoRepository storeInfoRepository;
     private final StoreService storeService;
     private final JwtService jwt;
+    private final BannerQueryService bannerQueryService;
 
     @GetMapping("")
     public ResponseEntity<CustomResponse<Main>> selectMainItems(@RequestHeader(value = "Authorization") Optional<String> auth) {
@@ -51,7 +52,7 @@ public class MainController {
 
         Main data = new Main();
         List<TopBar> topBars = topBarQueryService.selectTopBarList();
-        List<Banner> banners = bannerService.selectBannerList();
+        List<Banner> banners = bannerQueryService.selectBannersOrderBySortNum();
         List<Curation> curations = curationQueryService.selectCurations();
         List<Banner> subBanners = bannerService.selectMainBanner();
         data.setSubBanner(subBanners);

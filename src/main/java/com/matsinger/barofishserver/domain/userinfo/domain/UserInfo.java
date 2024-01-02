@@ -3,6 +3,7 @@ package com.matsinger.barofishserver.domain.userinfo.domain;
 import com.matsinger.barofishserver.domain.grade.domain.Grade;
 import com.matsinger.barofishserver.domain.user.domain.User;
 import com.matsinger.barofishserver.domain.userinfo.dto.UserInfoDto;
+import com.matsinger.barofishserver.global.exception.BusinessException;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -105,6 +106,19 @@ public class UserInfo {
                 .nickname(this.getNickname()).phone(this.getPhone()).isAgreeMarketing(this.getIsAgreeMarketing()).point(
                         this.getPoint())
                 .grade(this.getGrade()).build();
+    }
+
+    public void usePoint(Integer pointToUse) {
+        if (pointToUse != null && point < pointToUse) {
+            throw new BusinessException("보유한 적립금보다 많은 적립금입니다.");
+        }
+        this.point -= pointToUse;
+    }
+
+    public void validatePoint(Integer pointToUse) {
+        if (pointToUse != null && point < pointToUse) {
+            throw new BusinessException("보유한 적립금보다 많은 적립금입니다.");
+        }
     }
 
     @Override

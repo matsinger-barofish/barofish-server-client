@@ -1,23 +1,26 @@
 package com.matsinger.barofishserver.domain.tastingNote.basketTastingNote.application;
 
-import com.matsinger.barofishserver.domain.tastingNote.basketTastingNote.repository.BasketTastingNoteRepository;
+import com.matsinger.barofishserver.domain.basketProduct.application.BasketQueryService;
+import com.matsinger.barofishserver.domain.basketProduct.dto.BasketStoreInquiryDto;
+import com.matsinger.barofishserver.domain.basketProduct.repository.BasketQueryRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 
-import static org.junit.jupiter.api.Assertions.*;
+import java.util.List;
 
 @SpringBootTest
 @ActiveProfiles("local")
 class BasketTastingNoteQueryServiceTest {
 
-    @Autowired private BasketTastingNoteRepository basketTastingNoteRepository;
+    @Autowired private BasketQueryRepository basketQueryRepository;
+    @Autowired private BasketQueryService basketQueryService;
 
     @DisplayName("test")
     @Test
     void test() {
-        basketTastingNoteRepository.existsByUserIdAndProductId(10000, 10000);
+        List<BasketStoreInquiryDto> basketStoreInquiryDtos = basketQueryRepository.selectBasketProducts(10000);
     }
 }
