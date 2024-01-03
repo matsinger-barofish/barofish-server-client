@@ -25,7 +25,7 @@ public class JwtControllerAdvice {
             JwtBusinessException e) throws IOException {
 
         MultiAccessRequestWrapper wrapRequest = (MultiAccessRequestWrapper) request;
-        loggingUtils.info(wrapRequest, e);
+        loggingUtils.doLog(wrapRequest, e, "info");
 
         CustomResponse customResponse = new CustomResponse();
         customResponse.setIsSuccess(false);
