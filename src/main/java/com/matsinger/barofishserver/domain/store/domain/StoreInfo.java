@@ -55,23 +55,17 @@ public class StoreInfo {
     @Column(name = "one_line_description", nullable = false)
     private String oneLineDescription;
 
-    //    @Basic
-//    @Enumerated(EnumType.STRING)
-//    @ColumnDefault("FREE")
-//    @Column(name = "deliver_fee_type", nullable = false)
-//    private StoreDeliverFeeType deliverFeeType;
-//    @Basic
-//    @ColumnDefault("0")
-//    @Column(name = "deliver_fee", nullable = false)
-//    private Integer deliverFee;
-//    @Basic
-//    @Column(name = "min_order_price", nullable = true)
-//    private Integer minOrderPrice;
     @Basic
     @Column(name = "refund_deliver_fee", nullable = true)
     private Integer refundDeliverFee;
-    @Basic @Column(name = "min_order_price", nullable = true)
+
+    @Column(name = "is_conditional", nullable = false)
+    private Boolean isConditional;
+    @Basic
+    @Column(name = "min_order_price", nullable = true)
     private Integer minOrderPrice;
+    @Column(name = "delivery_fee")
+    private Integer deliveryFee;
     @Basic
     @Column(name = "settlement_rate", nullable = true)
     Float settlementRate;
