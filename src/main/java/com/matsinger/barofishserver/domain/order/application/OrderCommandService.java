@@ -3,11 +3,15 @@ package com.matsinger.barofishserver.domain.order.application;
 import com.matsinger.barofishserver.domain.basketProduct.application.BasketCommandService;
 import com.matsinger.barofishserver.domain.coupon.application.CouponQueryService;
 import com.matsinger.barofishserver.domain.coupon.domain.Coupon;
+import com.matsinger.barofishserver.domain.notification.application.NotificationCommandService;
 import com.matsinger.barofishserver.domain.order.domain.BankCode;
 import com.matsinger.barofishserver.domain.order.domain.OrderPaymentWay;
 import com.matsinger.barofishserver.domain.order.domain.OrderState;
 import com.matsinger.barofishserver.domain.order.domain.Orders;
-import com.matsinger.barofishserver.domain.order.dto.*;
+import com.matsinger.barofishserver.domain.order.dto.OrderProductReq;
+import com.matsinger.barofishserver.domain.order.dto.OrderReq;
+import com.matsinger.barofishserver.domain.order.dto.PriceCalculator;
+import com.matsinger.barofishserver.domain.order.dto.VBankRefundInfo;
 import com.matsinger.barofishserver.domain.order.orderprductinfo.application.OrderProductInfoCommandService;
 import com.matsinger.barofishserver.domain.order.orderprductinfo.domain.OrderProductInfo;
 import com.matsinger.barofishserver.domain.order.orderprductinfo.domain.OrderProductState;
@@ -65,10 +69,11 @@ public class OrderCommandService {
     private final ProductRepository productRepository;
     private final PaymentMethodCommandService paymentMethodCommandService;
     private final OptionItemQueryService optionItemQueryService;
+    private final NotificationCommandService notificationCommandService;
 
     @Transactional
     public void order(Integer userId, OrderReq request) throws IamportResponseException, IOException {
-        UserInfo findedUser = userInfoQueryService.findById(userId);
+        UserInfo findedUser = userInfoQueryService.findByUserId(userId);
         validateRequestInfo(request);
 
         Map<StoreInfo, List<OrderProductReq>> storeProductsMap = combineProductsWithStore(request);

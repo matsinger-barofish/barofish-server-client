@@ -72,6 +72,6 @@ public class GlobalControllerAdvice {
         CustomResponse customResponse = new CustomResponse();
         customResponse.setIsSuccess(false);
         customResponse.setErrorMsg(e.getMessage());
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(customResponse);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(customResponse);
     }
 }
