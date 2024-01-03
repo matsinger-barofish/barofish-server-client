@@ -36,7 +36,7 @@ import com.matsinger.barofishserver.domain.user.deliverplace.DeliverPlace;
 import com.matsinger.barofishserver.domain.user.paymentMethod.application.PaymentMethodService;
 import com.matsinger.barofishserver.domain.user.paymentMethod.domain.PaymentMethod;
 import com.matsinger.barofishserver.domain.userinfo.domain.UserInfo;
-import com.matsinger.barofishserver.global.error.ErrorCode;
+import com.matsinger.barofishserver.global.ErrorCode;
 import com.matsinger.barofishserver.global.exception.BusinessException;
 import com.matsinger.barofishserver.jwt.JwtService;
 import com.matsinger.barofishserver.jwt.TokenAuthType;

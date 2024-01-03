@@ -1,13 +1,11 @@
 package com.matsinger.barofishserver.domain.payment.api;
 
-import com.matsinger.barofishserver.global.error.ErrorCode;
 import com.matsinger.barofishserver.jwt.JwtService;
 import com.matsinger.barofishserver.jwt.TokenAuthType;
 import com.matsinger.barofishserver.jwt.TokenInfo;
 import com.matsinger.barofishserver.domain.order.application.OrderService;
 import com.matsinger.barofishserver.domain.order.domain.Orders;
 import com.matsinger.barofishserver.domain.payment.application.PaymentService;
-import com.matsinger.barofishserver.jwt.exception.JwtBusinessException;
 import com.matsinger.barofishserver.utils.CustomResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
