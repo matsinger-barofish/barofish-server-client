@@ -36,7 +36,9 @@ public class LoggingUtils {
         StackTraceElement[] stackTraceElement = exception != null ? exception.getStackTrace() : null;
 
         // multipart/form-data는 타입 캐스팅을 할 수 없고 바디를 추출할 수 없어 경우의 수를 나눠준다.
-        boolean isMultipart = request.getContentType().startsWith("multipart/form-data");
+//        boolean isMultipart = request.getContentType().startsWith("multipart/form-data");
+        boolean isMultipart = false;
+
         String requestBody = parseRequest(request, isMultipart);
 
         String exceptionInfo = getExceptionInfo(
