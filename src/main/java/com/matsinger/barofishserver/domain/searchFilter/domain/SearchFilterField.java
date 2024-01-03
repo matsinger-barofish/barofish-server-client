@@ -32,4 +32,6 @@ public class SearchFilterField {
                 .searchFilterId(this.searchFilterId)
                 .field(this.field).build();
     }
+
+
 }
