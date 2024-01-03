@@ -8,6 +8,7 @@ import com.matsinger.barofishserver.domain.payment.dto.IamPortCertificationRes;
 import com.matsinger.barofishserver.domain.payment.dto.KeyInPaymentReq;
 import com.matsinger.barofishserver.domain.payment.portone.application.PortOneCallbackService;
 import com.matsinger.barofishserver.domain.payment.repository.PaymentRepository;
+import com.matsinger.barofishserver.global.exception.BusinessException;
 import com.matsinger.barofishserver.utils.AES256;
 import com.matsinger.barofishserver.utils.RegexConstructor;
 import com.siot.IamportRestClient.IamportClient;
@@ -65,32 +66,45 @@ public class PaymentService {
         return PaymentState.FAILED;
     }
 
-    public Payments getPaymentInfo(String orderId, String impUid) throws IamportResponseException, IOException {
+    public Payments getPaymentInfo(String orderId, String impUid) {
         IamportClient iamportClient = callbackService.getIamportClient();
-        IamportResponse<Payment> paymentResponse = iamportClient.paymentByImpUid(impUid);
+
+        IamportResponse<Payment> paymentResponse = null;
+        try {
+            paymentResponse = iamportClient.paymentByImpUid(impUid);
+        } catch (Exception e) {
+            throw new BusinessException("결제 정보를 가져오는데 실패했습니다.");
+        }
+
         Payment payment = paymentResponse.getResponse();
-        return Payments.builder().orderId(orderId).impUid(impUid).merchantUid(payment.getMerchantUid()).payMethod(
-                payment.getPayMethod()).paidAmount(payment.getAmount().intValue()).status(str2PaymentState(payment.getStatus())).name(
-                payment.getName() != null ? payment.getName() : null).pgProvider(payment.getPgProvider() !=
-                null ? payment.getPgProvider() : null).embPgProvider(payment.getEmbPgProvider() !=
-                null ? payment.getEmbPgProvider() : null).pgTid(payment.getPgTid() !=
-                null ? payment.getPgTid() : null).buyerName(payment.getBuyerName() !=
-                null ? payment.getBuyerName() : null).buyerEmail(payment.getBuyerEmail() !=
-                null ? payment.getBuyerEmail() : null).buyerTel(payment.getBuyerTel() !=
-                null ? payment.getBuyerTel() : null).buyerAddress(payment.getBuyerAddr() !=
-                null ? payment.getBuyerAddr() : null).paidAt(payment.getPaidAt() !=
-                null ? Timestamp.from(payment.getPaidAt().toInstant()) : null).receiptUrl(payment.getReceiptUrl() !=
-                null ? payment.getReceiptUrl() : null).applyNum(payment.getApplyNum() !=
-                null ? payment.getApplyNum() : null).vbankNum(payment.getVbankNum() !=
-                null ? payment.getVbankNum() : null).vbankCode(payment.getVbankCode() !=
-                null ? payment.getVbankCode() : null).vbankName(payment.getVbankName() !=
-                null ? payment.getVbankName() : null).vbankHolder(payment.getVbankHolder() !=
-                null ? payment.getVbankHolder() : null).vbankDate(payment.getVbankDate() != null ? Timestamp.from(
-                payment.getVbankDate().toInstant()) : null).build();
+
+        return Payments.builder()
+                .orderId(orderId)
+                .impUid(impUid)
+                .merchantUid(payment.getMerchantUid())
+                .payMethod(payment.getPayMethod())
+                .paidAmount(payment.getAmount().intValue())
+                .status(str2PaymentState(payment.getStatus()))
+                .name(payment.getName() != null ? payment.getName() : null)
+                .pgProvider(payment.getPgProvider() != null ? payment.getPgProvider() : null)
+                .embPgProvider(payment.getEmbPgProvider() != null ? payment.getEmbPgProvider() : null)
+                .pgTid(payment.getPgTid() != null ? payment.getPgTid() : null)
+                .buyerName(payment.getBuyerName() != null ? payment.getBuyerName() : null)
+                .buyerEmail(payment.getBuyerEmail() != null ? payment.getBuyerEmail() : null)
+                .buyerTel(payment.getBuyerTel() != null ? payment.getBuyerTel() : null)
+                .buyerAddress(payment.getBuyerAddr() != null ? payment.getBuyerAddr() : null)
+                .paidAt(payment.getPaidAt() != null ? Timestamp.from(payment.getPaidAt().toInstant()) : null)
+                .receiptUrl(payment.getReceiptUrl() != null ? payment.getReceiptUrl() : null)
+                .applyNum(payment.getApplyNum() != null ? payment.getApplyNum() : null)
+                .vbankNum(payment.getVbankNum() != null ? payment.getVbankNum() : null)
+                .vbankCode(payment.getVbankCode() != null ? payment.getVbankCode() : null)
+                .vbankName(payment.getVbankName() != null ? payment.getVbankName() : null)
+                .vbankHolder(payment.getVbankHolder() != null ? payment.getVbankHolder() : null)
+                .vbankDate(payment.getVbankDate() != null ? Timestamp.from(payment.getVbankDate().toInstant()) : null)
+                .build();
     }
 
-    public void cancelPayment(String impUid, Integer amount, Integer taxFreeAmount, VBankRefundInfo vBankRefundInfo)
-            throws Exception {
+    public void cancelPayment(String impUid, Integer amount, Integer taxFreeAmount, VBankRefundInfo vBankRefundInfo) throws IamportResponseException, IOException {
         IamportClient iamportClient = callbackService.getIamportClient();
         CancelData
                 cancelData =
@@ -105,7 +119,7 @@ public class PaymentService {
         IamportResponse<Payment> cancelResult = iamportClient.cancelPaymentByImpUid(cancelData);
         if (cancelResult.getCode() != 0) {
             System.out.println(cancelResult.getMessage());
-            throw new Exception("환불에 실패하였습니다.");
+            throw new BusinessException("환불에 실패하였습니다.");
         }
     }
 
@@ -121,7 +135,7 @@ public class PaymentService {
                 certification.getPhone()).certified(certification.isCertified()).certifiedAt(certification.getCertifiedAt().toString()).build();
     }
 
-    public Boolean processKeyInPayment(KeyInPaymentReq data) throws Exception {
+    public Boolean processKeyInPayment(KeyInPaymentReq data) throws IamportResponseException, IOException {
         IamportClient iamportClient = callbackService.getIamportClient();
         String cardNo = aes256.decrypt(data.getPaymentMethod().getCardNo());
         cardNo = cardNo.replaceAll(re.cardNo, "$1-$2-$3-$4");
@@ -131,11 +145,6 @@ public class PaymentService {
         String expiry = expiryYear + "-" + expiryMonth;
         String password2Digit = aes256.decrypt(data.getPaymentMethod().getPasswordTwoDigit());
         CardInfo cardInfo = new CardInfo(cardNo, expiry, data.getPaymentMethod().getBirth(), password2Digit);
-//        OnetimePaymentData
-//                onetimePaymentData =
-//                new OnetimePaymentData(data.getOrderId(), BigDecimal.valueOf(data.getTotal_amount()), cardInfo);
-//        onetimePaymentData.setPg("settle");
-//        onetimePaymentData.setCustomer_uid(data.getPaymentMethod().getCustomerUid());
         AgainPaymentData
                 againPaymentData =
                 new AgainPaymentData(data.getPaymentMethod().getCustomerUid(),
@@ -144,10 +153,7 @@ public class PaymentService {
         againPaymentData.setTaxFree(BigDecimal.valueOf(data.getTaxFree()));
         againPaymentData.setName(data.getOrder_name());
         againPaymentData.setNoticeUrl(webhookUrl);
-//        againPaymentData.set
-//        againPaymentData.setTaxFree();
         IamportResponse<Payment> paymentRes = iamportClient.againPayment(againPaymentData);
-//        IamportResponse<Payment> paymentRes = iamportClient.onetimePayment(onetimePaymentData);
         if (paymentRes.getCode() != 0) {
             System.out.println(paymentRes.getMessage());
             return false;
@@ -160,6 +166,7 @@ public class PaymentService {
     }
 
     public void upsertPayments(Payments payments) {
+        log.info("payments 저장");
         paymentRepository.save(payments);
     }
 
@@ -181,4 +188,7 @@ public class PaymentService {
     }
 
 
+    public void save(Payments payments) {
+        paymentRepository.save(payments);
+    }
 }

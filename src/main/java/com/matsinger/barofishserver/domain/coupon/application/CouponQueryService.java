@@ -32,7 +32,7 @@ public class CouponQueryService {
 
     public Coupon selectCoupon(Integer couponId) {
         return couponRepository.findById(couponId).orElseThrow(() -> {
-            throw new Error("쿠폰 정보를 찾을 수 없습니다.");
+            throw new BusinessException("쿠폰 정보를 찾을 수 없습니다.");
         });
     }
 
@@ -45,16 +45,16 @@ public class CouponQueryService {
                 map =
                 mapRepository.findById(CouponUserMapId.builder().couponId(couponId).userId(userId).build()).orElseThrow(
                         () -> {
-                            throw new Error("발급 받지 않은 쿠폰입니다.");
+                            throw new BusinessException("발급 받지 않은 쿠폰입니다.");
                         });
-        if (map.getIsUsed()) throw new Error("이미 사용한 쿠폰입니다.");
+        if (map.getIsUsed()) throw new BusinessException("이미 사용한 쿠폰입니다.");
         Coupon coupon = couponRepository.findById(couponId).orElseThrow(() -> {
-            throw new Error("쿠폰 정보를 찾을 수 없습니다.");
+            throw new BusinessException("쿠폰 정보를 찾을 수 없습니다.");
         });
         Timestamp now = utils.now();
-        if (coupon.getStartAt().after(now)) throw new Error("사용 기한 전의 쿠폰입니다.");
+        if (coupon.getStartAt().after(now)) throw new BusinessException("사용 기한 전의 쿠폰입니다.");
         if (coupon.getEndAt() != null) {
-            if (coupon.getEndAt().before(now)) throw new Error("사용 기한이 만료되었습니다.");
+            if (coupon.getEndAt().before(now)) throw new BusinessException("사용 기한이 만료되었습니다.");
         }
     }
 
@@ -67,7 +67,7 @@ public class CouponQueryService {
                 data =
                 mapRepository.findById(CouponUserMapId.builder().couponId(couponId).userId(userId).build()).orElseThrow(
                         () -> {
-                            throw new Error("발급 받지 않은 쿠폰입니다.");
+                            throw new BusinessException("발급 받지 않은 쿠폰입니다.");
                         });
         return data.getIsUsed();
     }
@@ -95,5 +95,13 @@ public class CouponQueryService {
 
     public List<Coupon> selectUserCouponList(Integer userId) {
         return couponRepository.selectUserCouponList(userId);
+    }
+
+    public Coupon validateCoupon(int couponId, int minOrderPrice) {
+        Coupon coupon = findById(couponId);
+        coupon.checkAvailablePrice(minOrderPrice);
+        coupon.checkExpiration();
+
+        return coupon;
     }
 }

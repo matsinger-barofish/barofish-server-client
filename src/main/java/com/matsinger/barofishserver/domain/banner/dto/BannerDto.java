@@ -22,5 +22,4 @@ public class BannerDto {
     private String noticeTitle;
     private Integer categoryId;
     private String categoryName;
-
 }

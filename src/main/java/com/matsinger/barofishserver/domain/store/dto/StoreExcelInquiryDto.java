@@ -10,8 +10,8 @@ public class StoreExcelInquiryDto {
     private String loginId;
     private StoreState state;
     private String location;
-    private String keyword;
-    private String settlementRate;
+    private String deliveryCompany;
+    private Float settlementRate;
     private String bankName;
     private String bankHolder;
     private String bankAccount;

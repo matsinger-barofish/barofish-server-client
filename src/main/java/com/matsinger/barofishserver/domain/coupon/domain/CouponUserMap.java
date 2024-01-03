@@ -1,5 +1,6 @@
 package com.matsinger.barofishserver.domain.coupon.domain;
 
+import com.matsinger.barofishserver.global.exception.BusinessException;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -26,5 +27,11 @@ public class CouponUserMap {
 
     public void setIsUsed(Boolean isUsed) {
         this.isUsed = isUsed;
+    }
+
+    public void checkIsUsed() {
+        if (isUsed == true) {
+            throw new BusinessException("이미 사용한 쿠폰입니다.");
+        }
     }
 }
