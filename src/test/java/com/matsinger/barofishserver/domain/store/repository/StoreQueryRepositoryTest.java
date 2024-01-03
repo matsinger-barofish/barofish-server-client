@@ -21,9 +21,9 @@ class StoreQueryRepositoryTest {
     void test() {
         // given
         List<StoreRecommendInquiryDto> storeRecommendInquiryDtos = storeQueryRepository.selectRecommendStoreWithReview(
-                PageRequest.of(1, 10),
+                PageRequest.of(0, 10),
                 "",
-                84);
+                447);
         // when
 
         // then

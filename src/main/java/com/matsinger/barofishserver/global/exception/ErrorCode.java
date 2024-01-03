@@ -1,4 +1,4 @@
-package com.matsinger.barofishserver.global;
+package com.matsinger.barofishserver.global.exception;
 
 import lombok.Getter;
 
