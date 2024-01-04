@@ -1,6 +1,8 @@
 package com.matsinger.barofishserver.domain.store.domain;
 
 import com.matsinger.barofishserver.domain.store.dto.SimpleStore;
+import com.matsinger.barofishserver.domain.store.dto.StoreAdditionalDto;
+import com.matsinger.barofishserver.domain.store.dto.StoreDto;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -176,6 +178,34 @@ public class StoreInfo {
                 this.refundDeliverFee).oneLineDescription(this.oneLineDescription).build();
     }
 
+    public StoreAdditionalDto toAdditionalDto(Boolean isUser) {
+        if (isUser) {
+            return null;
+        }
+
+        return StoreAdditionalDto.builder()
+                .settlementRate(settlementRate)
+                .bankName(bankName)
+                .bankHolder(bankHolder)
+                .bankAccount(bankAccount)
+                .representativeName(representativeName)
+                .companyId(companyId)
+                .businessType(businessType)
+                .mosRegistrationNumber(mosRegistrationNumber)
+                .businessAddress(businessAddress)
+                .postalCode(postalCode)
+                .lotNumberAddress(lotNumberAddress)
+                .streetNameAddress(streetNameAddress)
+                .addressDetail(addressDetail)
+                .tel(tel)
+                .email(email)
+                .faxNumber(faxNumber)
+                .mosRegistration(mosRegistration)
+                .businessRegistration(businessRegistration)
+                .bankAccountCopy(bankAccountCopy)
+                .build();
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -193,6 +223,29 @@ public class StoreInfo {
     @Override
     public int hashCode() {
         return Objects.hash(backgroundImage, profileImage, name, location, keyword);
+    }
+
+    public StoreDto toStoreDto(Store store, Boolean isUser) {
+        return StoreDto.builder()
+                .id(store.getId())
+                .state(store.getState())
+                .loginId(store.getLoginId())
+                .joinAt(store.getJoinAt())
+                .backgroundImage(backgroundImage)
+                .profileImage(profileImage)
+                .name(name)
+                .isReliable(isReliable)
+                .location(location)
+                .visitNote(visitNote)
+                .keyword(keyword.split(","))
+                .oneLineDescription(oneLineDescription)
+                .refundDeliverFee(refundDeliverFee)
+                .additionalData(toAdditionalDto(isUser))
+                .deliverCompany(deliverCompany)
+                .isConditional(isConditional)
+                .minOrderPrice(minStorePrice)
+                .deliveryFee(deliveryFee)
+                .build();
     }
 }
 

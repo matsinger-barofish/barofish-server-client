@@ -26,4 +26,7 @@ public class StoreDto {
     String oneLineDescription;
     String deliverCompany;
     StoreAdditionalDto additionalData;
+    Boolean isConditional;
+    Integer minOrderPrice;
+    Integer deliveryFee;
 }
