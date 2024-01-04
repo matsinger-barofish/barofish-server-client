@@ -4,6 +4,7 @@ public enum ProductDeliverFeeType {
 
     FREE,
     FIX,
-    FREE_IF_OVER;
+    FREE_IF_OVER,
+    S_CONDITIONAL;
 }
 

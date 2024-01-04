@@ -105,7 +105,7 @@ public class StoreService {
                         .reviewCount(reviewCount)
                         .productCount(productCount)
                         .deliverCompany(storeInfo.getDeliverCompany())
-                        .minOrderPrice(storeInfo.getMinOrderPrice())
+                        .minOrderPrice(storeInfo.getMinStorePrice())
                         .build();
         return simpleStore;
     }

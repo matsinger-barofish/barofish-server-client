@@ -62,8 +62,8 @@ public class StoreInfo {
     @Column(name = "is_conditional", nullable = false)
     private Boolean isConditional;
     @Basic
-    @Column(name = "min_order_price", nullable = true)
-    private Integer minOrderPrice;
+    @Column(name = "min_store_price", nullable = true)
+    private Integer minStorePrice;
     @Column(name = "delivery_fee")
     private Integer deliveryFee;
     @Basic

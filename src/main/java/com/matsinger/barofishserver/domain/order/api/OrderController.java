@@ -296,8 +296,7 @@ public class OrderController {
                                                                  @RequestBody OrderReq data) throws Exception {
         CustomResponse<OrderDto> res = new CustomResponse<>();
 
-                TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth);
-
+        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth);
 
         Integer userId = tokenInfo.getId();
         String orderId = orderService.getOrderId();

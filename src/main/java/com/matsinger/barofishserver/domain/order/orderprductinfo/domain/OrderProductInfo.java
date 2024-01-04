@@ -157,15 +157,6 @@ public class OrderProductInfo {
     public void setDeliveryFee(int deliveryFee) {
         this.deliveryFee = deliveryFee;
     }
-    public boolean isCFix() {
-        return deliveryFeeType.equals(ProductDeliverFeeType.FIX);
-    }
-    public boolean isCIfOver() {
-        return deliveryFeeType.equals(ProductDeliverFeeType.C_FREE_IF_OVER);
-    }
-    public boolean isFIX() {
-        return deliveryFeeType.equals(ProductDeliverFeeType.FIX);
-    }
     public boolean isIfOver() {
         return deliveryFeeType.equals(ProductDeliverFeeType.FIX);
     }
