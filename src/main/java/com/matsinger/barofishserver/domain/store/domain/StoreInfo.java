@@ -203,6 +203,9 @@ public class StoreInfo {
                 .mosRegistration(mosRegistration)
                 .businessRegistration(businessRegistration)
                 .bankAccountCopy(bankAccountCopy)
+                .isConditional(isConditional)
+                .minOrderPrice(minStorePrice)
+                .deliveryFee(deliveryFee)
                 .build();
     }
 
@@ -246,6 +249,10 @@ public class StoreInfo {
                 .minOrderPrice(minStorePrice)
                 .deliveryFee(deliveryFee)
                 .build();
+    }
+
+    public boolean isConditional() {
+        return isConditional;
     }
 }
 
