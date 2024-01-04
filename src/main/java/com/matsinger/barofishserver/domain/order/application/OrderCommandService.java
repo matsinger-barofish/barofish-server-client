@@ -3,17 +3,18 @@ package com.matsinger.barofishserver.domain.order.application;
 import com.matsinger.barofishserver.domain.basketProduct.application.BasketCommandService;
 import com.matsinger.barofishserver.domain.coupon.application.CouponQueryService;
 import com.matsinger.barofishserver.domain.coupon.domain.Coupon;
+import com.matsinger.barofishserver.domain.notification.application.NotificationCommandService;
 import com.matsinger.barofishserver.domain.order.domain.BankCode;
 import com.matsinger.barofishserver.domain.order.domain.OrderPaymentWay;
-import com.matsinger.barofishserver.domain.order.domain.OrderState;
-import com.matsinger.barofishserver.domain.order.domain.Orders;
-import com.matsinger.barofishserver.domain.order.dto.*;
+import com.matsinger.barofishserver.domain.order.dto.OrderProductReq;
+import com.matsinger.barofishserver.domain.order.dto.OrderReq;
+import com.matsinger.barofishserver.domain.order.dto.OrderStoreMapper;
+import com.matsinger.barofishserver.domain.order.dto.VBankRefundInfo;
 import com.matsinger.barofishserver.domain.order.orderprductinfo.application.OrderProductInfoCommandService;
 import com.matsinger.barofishserver.domain.order.orderprductinfo.domain.OrderProductInfo;
 import com.matsinger.barofishserver.domain.order.orderprductinfo.domain.OrderProductState;
 import com.matsinger.barofishserver.domain.order.repository.OrderRepository;
 import com.matsinger.barofishserver.domain.payment.application.PaymentService;
-import com.matsinger.barofishserver.domain.payment.dto.KeyInPaymentReq;
 import com.matsinger.barofishserver.domain.product.application.ProductQueryService;
 import com.matsinger.barofishserver.domain.product.domain.Product;
 import com.matsinger.barofishserver.domain.product.optionitem.application.OptionItemCommandService;
@@ -24,21 +25,16 @@ import com.matsinger.barofishserver.domain.store.application.StoreInfoQueryServi
 import com.matsinger.barofishserver.domain.store.domain.StoreInfo;
 import com.matsinger.barofishserver.domain.user.paymentMethod.application.PaymentMethodCommandService;
 import com.matsinger.barofishserver.domain.user.paymentMethod.application.PaymentMethodService;
-import com.matsinger.barofishserver.domain.user.paymentMethod.domain.PaymentMethod;
 import com.matsinger.barofishserver.domain.userinfo.application.UserInfoQueryService;
 import com.matsinger.barofishserver.domain.userinfo.domain.UserInfo;
 import com.matsinger.barofishserver.global.exception.BusinessException;
 import com.matsinger.barofishserver.utils.Common;
-import com.siot.IamportRestClient.exception.IamportResponseException;
 import lombok.RequiredArgsConstructor;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.io.IOException;
-import java.sql.Timestamp;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -65,91 +61,12 @@ public class OrderCommandService {
     private final ProductRepository productRepository;
     private final PaymentMethodCommandService paymentMethodCommandService;
     private final OptionItemQueryService optionItemQueryService;
+    private final NotificationCommandService notificationCommandService;
+    private final OrderQueryService orderQueryService;
 
-    @Transactional
-    public void order(Integer userId, OrderReq request) throws IamportResponseException, IOException {
-        UserInfo findedUser = userInfoQueryService.findById(userId);
-        validateRequestInfo(request);
+    public void proceedVirtualAccountOrder(OrderReq request, Integer userId) {
+        VBankRefundInfo vBankRefundInfo = validateRequest(request);
 
-        Map<StoreInfo, List<OrderProductReq>> storeProductsMap = combineProductsWithStore(request);
-        String orderId = orderService.getOrderId();
-        PriceCalculator priceCalculator = new PriceCalculator();
-        for (StoreInfo storeInfo : storeProductsMap.keySet()) {
-
-            for (OrderProductReq productReq : storeProductsMap.get(storeInfo)) {
-                Product findedProduct = productQueryService.findById(productReq.getProductId());
-                validateProductStates(userId, findedProduct);
-
-                Integer productAmountToOrder = productReq.getAmount();
-                OptionItem optionItem = optionItemQueryService.findById(productReq.getOptionId());
-                optionItem.validateQuantity(productAmountToOrder);
-
-                OrderProductInfo orderProductInfo = createOrderProduct(productAmountToOrder, orderId, optionItem, findedProduct);
-                int deliveryFeeWhenDeliveryTypeFix = calculateDeliveryFeeWhenDeliveryTypeFix(productAmountToOrder, findedProduct, orderProductInfo);
-                priceCalculator.addDeliveryFee(deliveryFeeWhenDeliveryTypeFix);
-
-                if (findedProduct.isDeliveryTypeFreeIfOver()) {
-                    priceCalculator.addConditionalProduct(orderProductInfo);
-                }
-
-                priceCalculator.addToTotalProducts(orderProductInfo);
-                priceCalculator.addToTotalProductPrice(optionItem.getDiscountPrice() * productAmountToOrder);
-                if (findedProduct.getNeedTaxation() == false) {
-                    priceCalculator.addTotalTaxFeePrice(
-                            optionItem.getDiscountPrice() * orderProductInfo.getAmount());
-                }
-            }
-
-            priceCalculator.setConditionalShippingPrice(storeInfo.getMinOrderPrice());
-            priceCalculator.tearDownConditionalProductInfo();
-        }
-
-        int pointToUse = request.getPoint();
-        findedUser.validatePoint(pointToUse);
-        Coupon coupon = validateCoupon(request.getCouponId(), priceCalculator.getTotalProductPrice());
-        validateOrderPrice(pointToUse, coupon, priceCalculator.getTotalOrderPrice());
-
-        VBankRefundInfo vBankRefundInfo = validateVbankRefundInfo(request);
-
-        if (request.getPaymentWay().equals(OrderPaymentWay.KEY_IN)) {
-            PaymentMethod paymentMethod = paymentMethodService.selectPaymentMethod(request.getPaymentMethodId());
-            OrderProductInfo orderProductInfo = priceCalculator.getTotalProducts().get(0);
-            String titleOfFirstProductToOrder = orderProductInfo.getProduct().getTitle();
-            Boolean isSuccess = paymentService.processKeyInPayment(KeyInPaymentReq.builder()
-                    .orderId(orderId)
-                    .paymentMethod(paymentMethod)
-                    .order_name(titleOfFirstProductToOrder)
-                    .taxFree(priceCalculator.getTotalTaxFreePrice())
-                    .total_amount(priceCalculator.getTotalOrderPrice())
-                    .taxFree(priceCalculator.getTotalTaxFreePrice())
-                    .build());
-            if (!isSuccess) {
-                throw new BusinessException("결제에 실패하였습니다.");
-            }
-        }
-
-        Orders savedOrder = orderRepository.save(Orders.builder()
-                .id(orderId)
-                .userId(userId)
-                .paymentWay(request.getPaymentWay())
-                .state(OrderState.WAIT_DEPOSIT)
-                .couponId(coupon != null ? coupon.getId() : null)
-                .orderedAt(Timestamp.valueOf(LocalDateTime.now()))
-                .totalPrice(priceCalculator.getTotalOrderPrice())
-                .usePoint(pointToUse)
-                .couponDiscount(coupon != null ? coupon.getAmount() : null)
-                .ordererName(request.getName())
-                .ordererTel(request.getTel())
-                .bankHolder(vBankRefundInfo != null ? vBankRefundInfo.getBankHolder() : null)
-                .bankCode(vBankRefundInfo != null ? vBankRefundInfo.getBankCode() : null)
-                .bankName(vBankRefundInfo != null ? vBankRefundInfo.getBankName() : null)
-                .bankAccount(vBankRefundInfo != null ? vBankRefundInfo.getBankAccount() : null)
-                .originTotalPrice(priceCalculator.getTotalProductPrice()) // 총 상품 가격만 책정. 수정할 것
-                .build());
-        orderDeliverPlaceCommandService.save(priceCalculator.getTotalProducts(), request.getDeliverPlaceId());
-        orderProductInfoCommandService.saveAll(priceCalculator.getTotalProducts());
-
-        savedOrder.toDto();
     }
 
     private void validateRequestInfo(OrderReq request) {
@@ -208,7 +125,7 @@ public class OrderCommandService {
         return 0;
     }
 
-    private void validateProductStates(Integer userId, Product findedProduct) {
+    private void validateProductStatesAndDeleteBasket(Integer userId, Product findedProduct) {
         if (findedProduct.isPromotionEnd()) {
             basketCommandService.deleteBasket(findedProduct.getId(), userId);
             throw new BusinessException("프로모션 기간이 아닌 상품이 포함되어 있습니다.");
@@ -252,5 +169,77 @@ public class OrderCommandService {
                 )
                 .isTaxFree(!product.getNeedTaxation())
                 .build();
+    }
+
+    private VBankRefundInfo validateRequest(OrderReq request) {
+        if (request.getVbankRefundInfo() == null)
+            throw new BusinessException("가상계좌 환불 정보를 입력해주세요.");
+        if (request.getVbankRefundInfo().getBankCodeId() == null)
+            throw new BusinessException("은행 코드 아이디를 입력해주세요.");
+        BankCode bankCode = orderService.selectBankCode(request.getVbankRefundInfo().getBankCodeId());
+        String bankHolder = utils.validateString(request.getVbankRefundInfo().getBankHolder(), 20L, "환불 예금주명");
+        String bankAccount = request.getVbankRefundInfo().getBankAccount().replaceAll("-", "");
+        bankAccount = utils.validateString(bankAccount, 30L, "환불 계좌번호");
+        return VBankRefundInfo.builder()
+                .bankHolder(bankHolder)
+                .bankCode(bankCode.getCode())
+                .bankName(bankCode.getName())
+                .bankAccount(bankAccount)
+                .build();
+    }
+
+    @Transactional
+    public void proceedOrder(OrderReq request, Integer userId) {
+        UserInfo userInfo = userInfoQueryService.findByUserId(userId);
+
+        Map<StoreInfo, List<OrderProductInfo>> storeMap = createStoreMapAndReduceQuantity(request, userInfo);
+        List<OrderStoreMapper> orderStoreMapper = createOrderStoreMapper(storeMap);
+    }
+
+    private List<OrderStoreMapper> createOrderStoreMapper(Map<StoreInfo, List<OrderProductInfo>> storeMap) {
+        List<OrderStoreMapper> orderStoreMappers = new ArrayList<>();
+        for (StoreInfo storeInfo : storeMap.keySet()) {
+            orderStoreMappers.add(
+                    OrderStoreMapper.builder()
+                            .storeInfo(storeInfo)
+                            .orderProductInfos(storeMap.get(storeInfo))
+                            .build()
+            );
+        }
+        return orderStoreMappers;
+    }
+
+    private Map<StoreInfo, List<OrderProductInfo>> createStoreMapAndReduceQuantity(OrderReq request,
+                                                                                   UserInfo userInfo) {
+        String orderId = orderQueryService.getOrderId();
+
+        Map<StoreInfo, List<OrderProductInfo>> storeMap = new HashMap<>();
+        for (OrderProductReq orderProductReq : request.getProducts()) {
+            Product findedProduct = productQueryService.findById(orderProductReq.getProductId());
+            OptionItem optionItem = optionItemQueryService.findById(orderProductReq.getOptionId());
+
+            validateProductStatesAndDeleteBasket(userInfo.getUserId(), findedProduct);
+            optionItem.reduceQuantity(orderProductReq.getAmount());
+
+            // TODO: OrderProductState 어떻게 할지?
+            OrderProductInfo orderProductInfo = OrderProductInfo.builder()
+                    .orderId(orderId)
+                    .productId(findedProduct.getId())
+                    .optionItemId(orderProductReq.getOptionId())
+                    .settlePrice(optionItem.getPurchasePrice())
+                    .originPrice(optionItem.getDiscountPrice())
+                    .price(optionItem.getDiscountPrice() * orderProductReq.getAmount())
+                    .amount(orderProductReq.getAmount())
+                    .deliveryFeeType(findedProduct.getDeliverFeeType())
+                    .isSettled(false)
+                    .isTaxFree(findedProduct.getNeedTaxation())
+                    .build();
+
+            StoreInfo storeInfo = storeInfoQueryService.findByStoreId(findedProduct.getStoreId());
+            List<OrderProductInfo> orderProductReqs = storeMap.getOrDefault(storeInfo, new ArrayList<>());
+            orderProductReqs.add(orderProductInfo);
+            storeMap.put(storeInfo, orderProductReqs);
+        }
+        return storeMap;
     }
 }

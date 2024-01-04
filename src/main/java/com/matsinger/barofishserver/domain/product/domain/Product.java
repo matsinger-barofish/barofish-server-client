@@ -290,7 +290,7 @@ public class Product {
         return deliverFeeType.equals(ProductDeliverFeeType.FREE_IF_OVER);
     }
 
-    public boolean isDeliveryTypeFee() {
+    public boolean isDeliveryTypeFree() {
         return deliverFeeType.equals(ProductDeliverFeeType.FREE);
     }
 

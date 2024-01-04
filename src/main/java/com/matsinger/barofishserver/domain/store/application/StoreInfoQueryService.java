@@ -12,7 +12,7 @@ public class StoreInfoQueryService {
 
     private final StoreInfoRepository storeInfoRepository;
 
-    public StoreInfo findById(Integer storeId) {
+    public StoreInfo findByStoreId(Integer storeId) {
         return storeInfoRepository.findByStoreId(storeId)
                 .orElseThrow(() -> new BusinessException("스토어 정보를 찾을 수 없습니다."));
     }

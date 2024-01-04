@@ -71,8 +71,8 @@ public class UserInfoQueryService {
         return null;
     }
 
-    public UserInfo findById(int userId) {
-        return userInfoRepository.findById(userId)
+    public UserInfo findByUserId(int userId) {
+        return userInfoRepository.findByUserId(userId)
                 .orElseThrow(() -> new BusinessException("유저 정보를 찾을 수 없습니다."));
     }
 }
