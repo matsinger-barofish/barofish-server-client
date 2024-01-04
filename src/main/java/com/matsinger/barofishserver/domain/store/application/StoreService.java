@@ -90,7 +90,9 @@ public class StoreService {
                         .reviewCount(reviewCount)
                         .productCount(productCount)
                         .deliverCompany(storeInfo.getDeliverCompany())
-                        .minOrderPrice(storeInfo.getMinStorePrice())
+                        .minStorePrice(storeInfo.getMinStorePrice())
+                        .deliveryFee(storeInfo.getDeliveryFee())
+                        .isConditional(storeInfo.getIsConditional())
                         .build();
         return simpleStore;
     }

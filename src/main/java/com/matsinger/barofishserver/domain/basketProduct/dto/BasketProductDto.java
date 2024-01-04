@@ -16,8 +16,10 @@ public class BasketProductDto {
     SimpleStore store;
     ProductListDto product;
     Integer amount;
-    Integer deliveryFee;
     ProductDeliverFeeType deliverFeeType;
     Integer minOrderPrice;
     OptionItemDto option;
+    Integer deliveryFee;
+    Boolean isConditional;
+    Integer minStorePrice;
 }
