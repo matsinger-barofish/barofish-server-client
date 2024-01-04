@@ -27,4 +27,7 @@ public class StoreAdditionalDto {
     String mosRegistration;
     String businessRegistration;
     String bankAccountCopy;
+    Boolean isConditional;
+    Integer minOrderPrice;
+    Integer deliveryFee;
 }

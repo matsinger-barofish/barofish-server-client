@@ -28,8 +28,10 @@ import com.matsinger.barofishserver.domain.product.productfilter.domain.ProductF
 import com.matsinger.barofishserver.domain.search.application.SearchKeywordQueryService;
 import com.matsinger.barofishserver.domain.searchFilter.application.SearchFilterQueryService;
 import com.matsinger.barofishserver.domain.searchFilter.domain.ProductSearchFilterMap;
+import com.matsinger.barofishserver.domain.store.application.StoreInfoQueryService;
 import com.matsinger.barofishserver.domain.store.application.StoreService;
 import com.matsinger.barofishserver.domain.store.domain.Store;
+import com.matsinger.barofishserver.domain.store.domain.StoreInfo;
 import com.matsinger.barofishserver.domain.tastingNote.application.TastingNoteQueryService;
 import com.matsinger.barofishserver.domain.tastingNote.basketTastingNote.application.BasketTastingNoteQueryService;
 import com.matsinger.barofishserver.domain.tastingNote.dto.ProductTastingNoteResponse;
@@ -80,6 +82,7 @@ public class ProductController {
 
     private final S3Uploader s3;
     private final BasketTastingNoteQueryService basketTastingNoteQueryService;
+    private final StoreInfoQueryService storeInfoQueryService;
 
     @GetMapping("/recent-view")
     public ResponseEntity<CustomResponse<List<ProductListDto>>> selectRecentViewList(@RequestParam(value = "ids") String ids) {
@@ -337,17 +340,24 @@ public class ProductController {
                 data.getDeliveryInfo() != null ? utils.validateString(data.getDeliveryInfo(), 500L, "배송안내") : null;
         boolean existRepresent = false;
         if (data.getDeliverFeeType() == null) throw new BusinessException("배송비 유형을 입력해주세요.");
+
         if (data.getDeliverFeeType().equals(ProductDeliverFeeType.FREE)) {
             data.setDeliveryFee(0);
             data.setMinOrderPrice(null);
-        } else if (data.getDeliverFeeType().equals(ProductDeliverFeeType.FREE_IF_OVER)) {
+        }
+        if (data.getDeliverFeeType().equals(ProductDeliverFeeType.FREE_IF_OVER)) {
             if (data.getDeliveryFee() == null) throw new BusinessException("배송비를 입력해주세요.");
             if (data.getMinOrderPrice() == null)
                 throw new BusinessException("무료 배송 최소 금액을 입력해주세요.");
             data.setMinOrderPrice(0);
-        } else {
-            if (data.getDeliveryFee() == null) throw new BusinessException("배송비를 입력해주세요.");
         }
+        if (data.getDeliverFeeType().equals(ProductDeliverFeeType.S_CONDITIONAL)) {
+            StoreInfo storeInfo = store.get().getStoreInfo();
+            data.setDeliveryFee(storeInfo.getDeliveryFee());
+            data.setMinOrderPrice(storeInfo.getMinStorePrice());
+        }
+        if (data.getDeliveryFee() == null) throw new BusinessException("배송비를 입력해주세요.");
+
         if (data.getOptions() == null || data.getOptions().size() == 0)
             throw new BusinessException("옵션은 최소 1개 이상 필수입니다.");
         if (data.getOptions().stream().noneMatch(OptionAddReq::getIsNeeded))
@@ -477,9 +487,7 @@ public class ProductController {
                                                                           @RequestPart(value = "newImages", required = false) List<MultipartFile> newImages) {
         CustomResponse<SimpleProductDto> res = new CustomResponse<>();
 
-        
         TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN, TokenAuthType.PARTNER), auth);
-
 
         Integer adminId = null;
         if (tokenInfo.getType().equals(TokenAuthType.ADMIN)) adminId = tokenInfo.getId();
@@ -523,17 +531,26 @@ public class ProductController {
         if (data.getDeliverFeeType() == null) {
             if (data.getDeliveryFee() != null) product.setDeliverFee(data.getDeliveryFee());
             if (data.getMinOrderPrice() != null) product.setMinOrderPrice(data.getMinOrderPrice());
-        } else if (data.getDeliverFeeType().equals(ProductDeliverFeeType.FREE)) {
+        }
+        if (data.getDeliverFeeType().equals(ProductDeliverFeeType.FREE)) {
             product.setDeliverFeeType(ProductDeliverFeeType.FREE);
             product.setDeliverFee(0);
             product.setMinOrderPrice(0);
-        } else if (data.getDeliverFeeType().equals(ProductDeliverFeeType.FIX)) {
-            if (product.getDeliverFee() == null && data.getDeliveryFee() == null)
-                throw new BusinessException("배송비를 입력해주세요.");
-            product.setDeliverFeeType(ProductDeliverFeeType.FIX);
-            product.setDeliverFee(data.getDeliveryFee());
-            product.setMinOrderPrice(null);
-        } else if (data.getDeliverFeeType().equals(ProductDeliverFeeType.FREE_IF_OVER)) {
+        }
+//        if (data.getDeliverFeeType().equals(ProductDeliverFeeType.FIX)) {
+//            if (product.getDeliverFee() == null && data.getDeliveryFee() == null)
+//                throw new BusinessException("배송비를 입력해주세요.");
+//            product.setDeliverFeeType(ProductDeliverFeeType.FIX);
+//            product.setDeliverFee(data.getDeliveryFee());
+//            product.setMinOrderPrice(null);
+//        }
+        if (data.getDeliverFeeType().equals(ProductDeliverFeeType.S_CONDITIONAL)) {
+            StoreInfo storeInfo = storeInfoQueryService.findByStoreId(product.getStoreId());
+            product.setDeliverFeeType(ProductDeliverFeeType.S_CONDITIONAL);
+            product.setDeliverFee(storeInfo.getDeliveryFee());
+            product.setMinOrderPrice(storeInfo.getMinStorePrice());
+        }
+        if (data.getDeliverFeeType().equals(ProductDeliverFeeType.FREE_IF_OVER)) {
             if (data.getMinOrderPrice() == null && product.getMinOrderPrice() == null)
                 throw new BusinessException("무료 배송 최소 금액을 입력해주세요.");
             if (product.getDeliverFee() == null && data.getDeliveryFee() == null)

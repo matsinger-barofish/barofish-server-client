@@ -16,4 +16,13 @@ public class OrderStoreMapper {
 
     private StoreInfo storeInfo;
     private List<OrderProductInfo> orderProductInfos = new ArrayList<>();
+
+
+//    public void calculateDeliveryFee() {
+//        int totalProductPrice = 0;
+//        int maxExpensiveDeliveryFee = 0;
+//        for (OrderProductInfo orderProductInfo : orderProductInfos) {
+//            if (orderProductInfo.getDeliveryFee()
+//        }
+//    }
 }
