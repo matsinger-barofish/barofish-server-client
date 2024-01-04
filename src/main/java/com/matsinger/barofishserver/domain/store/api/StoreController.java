@@ -458,6 +458,9 @@ public class StoreController {
                                                                     @RequestPart(value = "visitNote", required = false) String visitNote,
                                                                     @RequestPart(value = "deliverCompany", required = false) String deliverCompany,
                                                                     @RequestPart(value = "refundDeliverFee", required = false) Integer refundDeliverFee,
+                                                                    @RequestPart(value = "isConditional", required = true) Boolean isConditional,
+                                                                    @RequestPart(value = "minStorePrice", required = true) Integer minStorePrice,
+                                                                    @RequestPart(value = "deliveryFee", required = true) Integer deliveryFee,
                                                                     @RequestPart(value = "oneLineDescription", required = false) String oneLineDescription,
                                                                     @RequestPart(value = "additionalData", required = false) AddStoreAdditionalReq data,
                                                                     @RequestPart(value = "mosRegistration", required = false) MultipartFile mosRegistration,
@@ -465,7 +468,7 @@ public class StoreController {
                                                                     @RequestPart(value = "bankAccountCopy", required = false) MultipartFile bankAccountCopy) {
         CustomResponse<StoreDto> res = new CustomResponse<>();
 
-                TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN, TokenAuthType.PARTNER), auth);
+        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN, TokenAuthType.PARTNER), auth);
 
         if (tokenInfo.getType().equals(TokenAuthType.PARTNER)) {
             id = tokenInfo.getId();
@@ -603,6 +606,11 @@ public class StoreController {
                     s3.upload(bankAccountCopy, new ArrayList<>(Arrays.asList("store", String.valueOf(id))));
             storeInfo.setBankAccountCopy(bankAccountCopyUrl);
         }
+
+        storeInfo.setIsConditional(isConditional);
+        storeInfo.setMinStorePrice(minStorePrice);
+        storeInfo.setDeliveryFee(deliveryFee);
+
         StoreInfo result = storeService.updateStoreInfo(storeInfo);
         Store store = storeService.selectStore(result.getStoreId());
         if (isAdmin) {
