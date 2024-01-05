@@ -84,7 +84,7 @@ public class OrderController {
     public ResponseEntity<CustomResponse<PointRuleRes>> selectPointRule(@RequestHeader(value = "Authorization") Optional<String> auth) {
         CustomResponse<PointRuleRes> res = new CustomResponse<>();
 
-                TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth);
+        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth);
         Integer userId = tokenInfo.getId();
 
         UserInfo userInfo = userService.selectUserInfo(userId);

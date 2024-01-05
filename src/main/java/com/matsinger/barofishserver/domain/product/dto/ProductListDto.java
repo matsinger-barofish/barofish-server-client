@@ -26,6 +26,7 @@ public class ProductListDto {
     Integer storeId;
     String storeName;
     Integer minOrderPrice;
+    Integer minStorePrice;
     String storeImage;
     ProductDeliverFeeType deliverFeeType;
     Integer parentCategoryId;

@@ -25,13 +25,14 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @RequiredArgsConstructor
 @Service
 @Slf4j
 public class BasketQueryService {
     private final BasketProductInfoRepository basketProductInfoRepository;
-    private final BasketProductOptionRepository optionRepository;
+    private final BasketProductOptionRepository basketProductOptionRepository;
     private final OptionItemRepository optionItemRepository;
     private final ReviewRepository reviewRepository;
     private final StoreService storeService;
@@ -60,7 +61,7 @@ public class BasketQueryService {
             StoreInfo storeInfo = storeService.selectStoreInfo(product.getStoreId());
             SimpleStore store = storeService.convert2SimpleDto(storeInfo, userId);
 
-            List<BasketProductOption> options = optionRepository.findAllByOrderProductId(info.getId());
+            List<BasketProductOption> options = basketProductOptionRepository.findAllByOrderProductId(info.getId());
             BasketProductOption option = options.size() == 0 ? null : options.get(0);
 
             OptionItemDto optionDto;
@@ -121,5 +122,13 @@ public class BasketQueryService {
 
 
         }
+    }
+
+    public Optional<BasketProductInfo> findByUserIdAndOptionItemId(Integer userId, Integer optionItemReqId) {
+        return basketProductInfoRepository.findByUserIdAndOptionItemId(userId, optionItemReqId);
+    }
+
+    public Optional<List<BasketProductInfo>> findAllByUserIdAndProductId(Integer userId, int productId) {
+        return basketProductInfoRepository.findAllByProductIdAndUserId(userId, productId);
     }
 }
