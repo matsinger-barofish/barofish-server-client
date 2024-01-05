@@ -70,9 +70,16 @@ public class Coupon {
         this.amount = amount;
     }
 
-    public void checkAvailablePrice(int price) {
+    public void isAvailable(int price) {
         if (price < minPrice) {
             throw new BusinessException("쿠폰 최소 금액에 맞지 않습니다.");
+        }
+
+        if (startAt.after(Timestamp.valueOf(LocalDateTime.now()))) {
+            throw new BusinessException("사용기한 전의 쿠폰입니다.");
+        }
+        if (startAt.before(Timestamp.valueOf(LocalDateTime.now()))) {
+            throw new BusinessException("사용 기한이 만료되었습니다.");
         }
     }
 

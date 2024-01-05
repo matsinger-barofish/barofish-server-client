@@ -164,18 +164,16 @@ public class OrderProductInfo {
         return deliveryFeeType.equals(ProductDeliverFeeType.FIX);
     }
 
-    public int compareWithDeliveryFee(int deliveryFee) {
-        if (this.deliveryFee > deliveryFee) {
-            return this.deliveryFee;
-        }
-        return deliveryFee;
+    public Integer getTotalProductPrice() {
+        return originPrice * amount;
     }
 
-    public int compareWithPrice(int price) {
-        if (this.price > price) {
-            return this.price;
-        }
-        return price;
+    public Integer getTotalPriceMinusDeliveryFee() {
+        return getTotalProductPrice() - deliveryFee;
+    }
+
+    public int getTotalPriceContainsDeliveryFee() {
+        return getTotalProductPrice() + deliveryFee;
     }
 
     @Override

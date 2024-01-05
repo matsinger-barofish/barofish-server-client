@@ -254,5 +254,9 @@ public class StoreInfo {
     public boolean isConditional() {
         return isConditional;
     }
+
+    public boolean meetConditions(int totalStoreProductPrice) {
+        return totalStoreProductPrice >= this.minStorePrice;
+    }
 }
 

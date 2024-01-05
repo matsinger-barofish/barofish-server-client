@@ -334,7 +334,6 @@ public class OrderController {
                 throw new BusinessException("프로모션 기간이 아닌 상품이 포함되어 있습니다.");
             }
 
-
             if (!product.getState().equals(ProductState.ACTIVE)) {
                 if (product.getState().equals(ProductState.SOLD_OUT))
                     throw new BusinessException("품절된 상품입니다.");
@@ -359,12 +358,24 @@ public class OrderController {
                             productReq.getAmount(),
                             data.getProducts());
             optionItems.add(productService.selectOptionItem(productReq.getOptionId()));
-            infos.add(OrderProductInfo.builder().optionItemId(optionItem.getId()).orderId(orderId).productId(
-                    productReq.getProductId()).state(OrderProductState.WAIT_DEPOSIT).settlePrice(storeInfo.getSettlementRate() !=
-                    null ? (int) ((storeInfo.getSettlementRate() / 100.) *
-                    optionItem.getPurchasePrice()) : optionItem.getPurchasePrice()).originPrice(optionItem.getDiscountPrice()).price(
-                    price).amount(productReq.getAmount()).isSettled(false).deliveryFee(deliveryFee).taxFreeAmount(
-                    productReq.getTaxFreeAmount()).isTaxFree(!product.getNeedTaxation()).build());
+            infos.add(
+                    OrderProductInfo.builder()
+                            .optionItemId(optionItem.getId())
+                            .orderId(orderId)
+                            .productId(productReq.getProductId())
+                            .state(OrderProductState.WAIT_DEPOSIT)
+                            .settlePrice(
+                                    storeInfo.getSettlementRate() != null
+                                            ? (int) ((storeInfo.getSettlementRate() / 100.) * optionItem.getPurchasePrice())
+                                            : optionItem.getPurchasePrice())
+                            .originPrice(optionItem.getDiscountPrice())
+                            .price(price)
+                            .amount(productReq.getAmount())
+                            .isSettled(false)
+                            .deliveryFee(deliveryFee)
+                            .taxFreeAmount(productReq.getTaxFreeAmount())
+                            .isTaxFree(!product.getNeedTaxation())
+                            .build());
         }
         infos.forEach(i -> {
             List<OrderProductInfo> sameStoreOrderInfos = infos.stream().filter(v -> {
@@ -399,10 +410,17 @@ public class OrderController {
         DeliverPlace deliverPlace = userService.selectDeliverPlace(data.getDeliverPlaceId());
         OrderDeliverPlace
                 orderDeliverPlace =
-                OrderDeliverPlace.builder().orderId(orderId).name(deliverPlace.getName()).receiverName(deliverPlace.getReceiverName()).tel(
-                        deliverPlace.getTel()).address(deliverPlace.getAddress()).addressDetail(deliverPlace.getAddressDetail()).deliverMessage(
-                        deliverPlace.getDeliverMessage()).postalCode(deliverPlace.getPostalCode()).bcode(
-                        deliverPlace.getBcode()).build();
+                OrderDeliverPlace.builder()
+                        .orderId(orderId)
+                        .name(deliverPlace.getName())
+                        .receiverName(deliverPlace.getReceiverName())
+                        .tel(deliverPlace.getTel())
+                        .address(deliverPlace.getAddress())
+                        .addressDetail(deliverPlace.getAddressDetail())
+                        .deliverMessage(deliverPlace.getDeliverMessage())
+                        .postalCode(deliverPlace.getPostalCode())
+                        .bcode(deliverPlace.getBcode())
+                        .build();
         if (infos.stream().anyMatch(v -> !orderService.checkProductCanDeliver(orderDeliverPlace, v)))
             throw new BusinessException("배송지에 배송 불가능한 상품이 포함돼 있습니다.");
         Orders

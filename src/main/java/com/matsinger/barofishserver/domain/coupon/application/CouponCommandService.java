@@ -151,7 +151,7 @@ public class CouponCommandService {
         }
 
         Coupon coupon = couponQueryService.findById(couponId);
-        coupon.checkAvailablePrice(coupon.getMinPrice());
+        coupon.isAvailable(coupon.getMinPrice());
         coupon.checkExpiration();
 
         couponUserMapCommandService.useCoupon(userId, couponId);

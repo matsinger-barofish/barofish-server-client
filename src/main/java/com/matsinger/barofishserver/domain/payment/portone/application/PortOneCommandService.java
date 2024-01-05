@@ -199,7 +199,7 @@ public class PortOneCommandService {
         sms.sendSms(payments.getBuyerTel(), smsContent, "가상 계좌 결제 요청");
     }
 
-    public void processWhenStatusCanceld(PortOneBodyData request) {
+    public void processWhenStatusCanceled(PortOneBodyData request) {
         Orders order = orderQueryService.findById(request.getMerchant_uid());
         Payments payment = paymentRepository.findFirstByImpUid(request.getImp_uid());
 

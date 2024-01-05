@@ -125,6 +125,14 @@ public class Orders {
         this.orderedAt = orderedAt;
     }
 
+    public void setVbankRefundInfo(String bankCode, String bankHolder,
+                                   String bankName, String bankAccount) {
+        this.bankCode = bankCode;
+        this.bankHolder = bankHolder;
+        this.bankName = bankName;
+        this.bankAccount = bankAccount;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
