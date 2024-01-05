@@ -116,7 +116,7 @@ public class OrderController {
                                                                 @RequestHeader(value = "Authorization") Optional<String> auth) {
         CustomResponse<OrderDto> res = new CustomResponse<>();
 
-                TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN, TokenAuthType.PARTNER, TokenAuthType.USER), auth);
+        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN, TokenAuthType.PARTNER, TokenAuthType.USER), auth);
 
         Orders order = orderService.selectOrder(id);
         if (!tokenInfo.getType().equals(TokenAuthType.ADMIN)) {

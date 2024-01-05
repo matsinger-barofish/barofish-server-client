@@ -116,15 +116,31 @@ public class OrderService {
 
             Boolean isWritten = reviewQueryService.checkReviewWritten(order.getUserId(), product.getId(), opi.getId());
 
-            return OrderProductDto.builder().id(opi.getId()).storeId(storeInfo.getStoreId()).optionItem(optionItemDto).product(
-                    productService.convert2ListDto(productService.selectProduct(opi.getProductId()))).optionName(
-                    optionItem.getName()).amount(opi.getAmount()).state(opi.getState()).price(opi.getPrice()).storeName(
-                    storeInfo.getName()).storeProfile(storeInfo.getProfileImage()).deliverFee(opi.getDeliveryFee()).deliverCompanyCode(
-                    opi.getDeliverCompanyCode()).deliverCompany(deliveryCompany.map(DeliveryCompany::getName).orElse(
-                    null)).invoiceCode(opi.getInvoiceCode()).cancelReason(opi.getCancelReason()).cancelReasonContent(opi.getCancelReasonContent()).isReviewWritten(
-                    isWritten).deliverFeeType(product.getDeliverFeeType()).minOrderPrice(product.getMinOrderPrice()).finalConfirmedAt(
-                    opi.getFinalConfirmedAt()).needTaxation(product.getNeedTaxation()).originPrice(opi.getOriginPrice()).build();
-        }).filter(Objects::nonNull).toList();
+            return OrderProductDto.builder()
+                    .id(opi.getId())
+                    .storeId(storeInfo.getStoreId())
+                    .optionItem(optionItemDto)
+                    .product(productService.convert2ListDto(productService.selectProduct(opi.getProductId())))
+                    .optionName(optionItem.getName())
+                    .amount(opi.getAmount())
+                    .state(opi.getState())
+                    .price(opi.getPrice())
+                    .storeName(storeInfo.getName())
+                    .storeProfile(storeInfo.getProfileImage())
+                    .deliverFee(opi.getDeliveryFee())
+                    .deliverCompanyCode(opi.getDeliverCompanyCode())
+                    .deliverCompany(deliveryCompany.map(DeliveryCompany::getName).orElse(null))
+                    .invoiceCode(opi.getInvoiceCode())
+                    .cancelReason(opi.getCancelReason())
+                    .cancelReasonContent(opi.getCancelReasonContent())
+                    .isReviewWritten(isWritten)
+                    .deliverFeeType(product.getDeliverFeeType())
+                    .minOrderPrice(product.getMinOrderPrice())
+                    .minStorePrice(storeInfo.getMinStorePrice())
+                    .finalConfirmedAt(opi.getFinalConfirmedAt())
+                    .needTaxation(product.getNeedTaxation())
+                    .originPrice(opi.getOriginPrice())
+                    .build();}).filter(Objects::nonNull).toList();
         String couponName = null;
         if (order.getCouponId() != null) {
             Coupon coupon = couponQueryService.selectCoupon(order.getCouponId());
