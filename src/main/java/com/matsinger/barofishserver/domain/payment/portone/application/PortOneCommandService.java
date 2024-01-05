@@ -71,7 +71,7 @@ public class PortOneCommandService {
     @Transactional
     public void processWhenStatusReady(PortOneBodyData request) {
         Orders order = orderQueryService.findById(request.getMerchant_uid());
-        Payments payments = paymentService.getPaymentInfo(order.getId(), request.getImp_uid());
+        Payments payments = paymentService.getPaymentInfoFromPortOne(order.getId(), request.getImp_uid());
 
         paymentService.save(payments);
         order.setImpUid(request.getImp_uid());
@@ -85,7 +85,7 @@ public class PortOneCommandService {
     @Transactional
     public void checkCanDeliverAndProcessOrder(PortOneBodyData request) {
         Orders order = orderQueryService.findById(request.getMerchant_uid());
-        Payments payments = paymentService.getPaymentInfo(order.getId(), request.getImp_uid());
+        Payments payments = paymentService.getPaymentInfoFromPortOne(order.getId(), request.getImp_uid());
         List<OrderProductInfo> orderProductInfos = orderProductInfoQueryService.findAllByOrderId(order.getId());
 
         for (OrderProductInfo orderProductInfo : orderProductInfos) {
