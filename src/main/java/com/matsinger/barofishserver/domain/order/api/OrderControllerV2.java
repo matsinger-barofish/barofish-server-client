@@ -1,7 +1,6 @@
 package com.matsinger.barofishserver.domain.order.api;
 
 import com.matsinger.barofishserver.domain.order.application.OrderCommandService;
-import com.matsinger.barofishserver.domain.order.domain.OrderPaymentWay;
 import com.matsinger.barofishserver.domain.order.dto.OrderDto;
 import com.matsinger.barofishserver.domain.order.dto.OrderReq;
 import com.matsinger.barofishserver.jwt.JwtService;
@@ -33,12 +32,10 @@ public class OrderControllerV2 {
         utils.validateString(request.getTel(), 11L, "주문자 연락처");
 
         TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth);
-        Integer userId = tokenInfo.getId();
 
-        if (request.getPaymentWay().equals(OrderPaymentWay.VIRTUAL_ACCOUNT)) {
-            orderCommandService.proceedVirtualAccountOrder(request, userId);
-        }
         orderCommandService.proceedOrder(request, tokenInfo.getId());
+
+        res.setIsSuccess(true);
         return ResponseEntity.ok(res);
     }
 }

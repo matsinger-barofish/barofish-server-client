@@ -34,4 +34,11 @@ public class CouponUserMap {
             throw new BusinessException("이미 사용한 쿠폰입니다.");
         }
     }
+
+    public void useCoupon() {
+        if (isUsed == true) {
+            throw new BusinessException("이미 사용한 쿠폰입니다.");
+        }
+        this.isUsed = true;
+    }
 }

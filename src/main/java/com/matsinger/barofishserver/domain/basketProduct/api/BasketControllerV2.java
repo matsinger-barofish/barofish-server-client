@@ -44,4 +44,16 @@ public class BasketControllerV2 {
         res.setData(Optional.of(true));
         return ResponseEntity.ok(res);
     }
+
+//    @GetMapping("/list")
+//    public ResponseEntity<CustomResponse<List<BasketProductDto>>> selectBasket(@RequestHeader(value = "Authorization") Optional<String> auth) {
+//        CustomResponse<List<BasketProductDto>> res = new CustomResponse<>();
+//
+//        Integer userId = null;
+//        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth);
+//
+//        List<BasketProductDto> dtos = basketQueryService.selectBasketList(tokenInfo.getId());
+//        res.setData(Optional.ofNullable(dtos));
+//        return ResponseEntity.ok(res);
+//    }
 }

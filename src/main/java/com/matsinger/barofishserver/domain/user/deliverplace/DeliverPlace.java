@@ -50,6 +50,20 @@ public class DeliverPlace {
     @Column(name = "is_default", nullable = false)
     private Boolean isDefault;
 
+    public OrderDeliverPlace toOrderDeliverPlace(String orderId) {
+        return OrderDeliverPlace.builder()
+                .orderId(orderId)
+                .name(name)
+                .receiverName(receiverName)
+                .tel(tel)
+                .address(address)
+                .addressDetail(addressDetail)
+                .deliverMessage(deliverMessage)
+                .postalCode(postalCode)
+                .bcode(bcode)
+                .build();
+    }
+
     public int getId() {
         return id;
     }
@@ -141,19 +155,5 @@ public class DeliverPlace {
     @Override
     public int hashCode() {
         return Objects.hash(id, userId, name, receiverName, tel, address, addressDetail, deliverMessage, isDefault);
-    }
-
-    public OrderDeliverPlace toOrderDeliverPlace(String orderId) {
-        return OrderDeliverPlace.builder()
-                .orderId(orderId)
-                .name(name)
-                .receiverName(receiverName)
-                .tel(tel)
-                .address(address)
-                .addressDetail(addressDetail)
-                .deliverMessage(deliverMessage)
-                .postalCode(postalCode)
-                .bcode(bcode)
-                .build();
     }
 }

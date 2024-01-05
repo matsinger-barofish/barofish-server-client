@@ -108,17 +108,16 @@ public class UserInfo {
                 .grade(this.getGrade()).build();
     }
 
+    public void validatePoint(Integer point) {
+        if (point != null && this.point < point) {
+            throw new BusinessException("보유한 적립금보다 많은 적립금입니다.");
+        }
+    }
     public void usePoint(Integer pointToUse) {
         if (pointToUse != null && point < pointToUse) {
             throw new BusinessException("보유한 적립금보다 많은 적립금입니다.");
         }
         this.point -= pointToUse;
-    }
-
-    public void validatePoint(Integer pointToUse) {
-        if (pointToUse != null && point < pointToUse) {
-            throw new BusinessException("보유한 적립금보다 많은 적립금입니다.");
-        }
     }
 
     @Override

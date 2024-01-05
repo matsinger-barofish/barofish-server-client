@@ -312,4 +312,8 @@ public class Product {
                 throw new BusinessException("주문 불가능한 상품입니다.");
         }
     }
+
+    public boolean meetConditions(int totalPrice) {
+        return totalPrice >= this.minOrderPrice;
+    }
 }

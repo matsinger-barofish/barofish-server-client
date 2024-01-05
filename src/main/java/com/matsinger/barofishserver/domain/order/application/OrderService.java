@@ -69,7 +69,7 @@ public class OrderService {
     private final ProductService productService;
     private final UserCommandService userService;
     private final StoreService storeService;
-    private final OrderDeliverPlaceRepository deliverPlaceRepository;
+    private final OrderDeliverPlaceRepository orderDeliverPlaceRepository;
     private final ReviewQueryService reviewQueryService;
     private final PaymentService paymentService;
     private final DeliveryCompanyRepository deliveryCompanyRepository;
@@ -116,15 +116,31 @@ public class OrderService {
 
             Boolean isWritten = reviewQueryService.checkReviewWritten(order.getUserId(), product.getId(), opi.getId());
 
-            return OrderProductDto.builder().id(opi.getId()).storeId(storeInfo.getStoreId()).optionItem(optionItemDto).product(
-                    productService.convert2ListDto(productService.selectProduct(opi.getProductId()))).optionName(
-                    optionItem.getName()).amount(opi.getAmount()).state(opi.getState()).price(opi.getPrice()).storeName(
-                    storeInfo.getName()).storeProfile(storeInfo.getProfileImage()).deliverFee(opi.getDeliveryFee()).deliverCompanyCode(
-                    opi.getDeliverCompanyCode()).deliverCompany(deliveryCompany.map(DeliveryCompany::getName).orElse(
-                    null)).invoiceCode(opi.getInvoiceCode()).cancelReason(opi.getCancelReason()).cancelReasonContent(opi.getCancelReasonContent()).isReviewWritten(
-                    isWritten).deliverFeeType(product.getDeliverFeeType()).minOrderPrice(product.getMinOrderPrice()).finalConfirmedAt(
-                    opi.getFinalConfirmedAt()).needTaxation(product.getNeedTaxation()).originPrice(opi.getOriginPrice()).build();
-        }).filter(Objects::nonNull).toList();
+            return OrderProductDto.builder()
+                    .id(opi.getId())
+                    .storeId(storeInfo.getStoreId())
+                    .optionItem(optionItemDto)
+                    .product(productService.convert2ListDto(productService.selectProduct(opi.getProductId())))
+                    .optionName(optionItem.getName())
+                    .amount(opi.getAmount())
+                    .state(opi.getState())
+                    .price(opi.getPrice())
+                    .storeName(storeInfo.getName())
+                    .storeProfile(storeInfo.getProfileImage())
+                    .deliverFee(opi.getDeliveryFee())
+                    .deliverCompanyCode(opi.getDeliverCompanyCode())
+                    .deliverCompany(deliveryCompany.map(DeliveryCompany::getName).orElse(null))
+                    .invoiceCode(opi.getInvoiceCode())
+                    .cancelReason(opi.getCancelReason())
+                    .cancelReasonContent(opi.getCancelReasonContent())
+                    .isReviewWritten(isWritten)
+                    .deliverFeeType(product.getDeliverFeeType())
+                    .minOrderPrice(product.getMinOrderPrice())
+                    .minStorePrice(storeInfo.getMinStorePrice())
+                    .finalConfirmedAt(opi.getFinalConfirmedAt())
+                    .needTaxation(product.getNeedTaxation())
+                    .originPrice(opi.getOriginPrice())
+                    .build();}).filter(Objects::nonNull).toList();
         String couponName = null;
         if (order.getCouponId() != null) {
             Coupon coupon = couponQueryService.selectCoupon(order.getCouponId());
@@ -154,14 +170,14 @@ public class OrderService {
     }
 
     public OrderDeliverPlace selectDeliverPlace(String orderId) {
-        return deliverPlaceRepository.findById(orderId).orElseThrow(() -> {
+        return orderDeliverPlaceRepository.findById(orderId).orElseThrow(() -> {
             throw new Error("주문 배송지 정보를 찾을 수 없습니다.");
         });
     }
 
     public Orders orderProduct(Orders orders, List<OrderProductInfo> infos, OrderDeliverPlace deliverPlace) {
         Orders order = orderRepository.save(orders);
-        deliverPlaceRepository.save(deliverPlace);
+        orderDeliverPlaceRepository.save(deliverPlace);
         infoRepository.saveAll(infos);
         return order;
     }
@@ -546,12 +562,16 @@ public class OrderService {
         List<OrderProductInfo> infos = selectOrderProductInfoListWithOrderId(order.getId());
         infos.forEach(info -> {
             OptionItem optionItem = productService.selectOptionItem(info.getOptionItemId());
-            if (optionItem.getAmount() != null) optionItem.setAmount(optionItem.getAmount() - info.getAmount());
+            if (optionItem.getAmount() != null) {
+                optionItem.setAmount(optionItem.getAmount() - info.getAmount());
+            }
             productService.addOptionItem(optionItem);
             info.setState(OrderProductState.PAYMENT_DONE);
             notificationCommandService.sendFcmToUser(order.getUserId(),
                     NotificationMessageType.PAYMENT_DONE,
-                    NotificationMessage.builder().productName(info.getProduct().getTitle()).build());
+                    NotificationMessage.builder()
+                            .productName(info.getProduct().getTitle())
+                            .build());
         });
         order.setState(OrderState.PAYMENT_DONE);
         updateOrderProductInfo(infos);

@@ -34,7 +34,7 @@ public class PortOneCallbackHandlerV2 {
             portOneCommandService.checkCanDeliverAndProcessOrder(request);
         }
         if (request.getStatus().equals("canceled")) {
-            portOneCommandService.processWhenStatusCanceld(request);
+            portOneCommandService.processWhenStatusCanceled(request);
         }
         return ResponseEntity.ok(null);
     }

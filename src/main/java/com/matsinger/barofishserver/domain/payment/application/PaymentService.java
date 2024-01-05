@@ -66,7 +66,7 @@ public class PaymentService {
         return PaymentState.FAILED;
     }
 
-    public Payments getPaymentInfo(String orderId, String impUid) {
+    public Payments getPaymentInfoFromPortOne(String orderId, String impUid) {
         IamportClient iamportClient = callbackService.getIamportClient();
 
         IamportResponse<Payment> paymentResponse = null;

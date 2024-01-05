@@ -62,7 +62,7 @@ public class PortOneCallbackHandler {
             Orders order = orderService.selectOrder(data.getMerchant_uid());
             if (order != null) {
                 if (data.getStatus().equals("ready")) {
-                    Payments paymentData = paymentService.getPaymentInfo(order.getId(), data.getImp_uid());
+                    Payments paymentData = paymentService.getPaymentInfoFromPortOne(order.getId(), data.getImp_uid());
                     GetVBankAccountReq
                             vBankReq =
                             GetVBankAccountReq.builder().orderId(order.getId()).price(order.getTotalPrice()).vBankCode(
@@ -85,7 +85,7 @@ public class PortOneCallbackHandler {
                         sms.sendSms(paymentData.getBuyerTel(), smsContent, "가상 계좌 결제 요청");
                     }
                 } else if (data.getStatus().equals("paid")) {
-                    Payments paymentData = paymentService.getPaymentInfo(order.getId(), data.getImp_uid());
+                    Payments paymentData = paymentService.getPaymentInfoFromPortOne(order.getId(), data.getImp_uid());
                     List<OrderProductInfo> infos = orderService.selectOrderProductInfoListWithOrderId(order.getId());
                     infos.forEach(info -> {
                         if (!orderService.checkProductCanDeliver(order.getDeliverPlace(), info)) {
