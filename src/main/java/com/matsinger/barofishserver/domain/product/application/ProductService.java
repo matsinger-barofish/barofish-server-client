@@ -370,6 +370,7 @@ public class ProductService {
                 .parentCategoryId(product.getCategory() != null ? product.getCategory().getCategoryId() : null)
                 .filterValues(productFilterService.selectProductFilterValueListWithProductId(product.getId()))
                 .minOrderPrice(product.getMinOrderPrice())
+                .minStorePrice(storeInfo.getMinStorePrice())
                 .deliverFeeType(product.getDeliverFeeType())
                 .storeImage(storeInfo.getProfileImage())
                 .build();
