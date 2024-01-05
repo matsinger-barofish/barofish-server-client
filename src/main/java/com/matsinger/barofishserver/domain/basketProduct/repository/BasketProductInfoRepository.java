@@ -4,6 +4,7 @@ import com.matsinger.barofishserver.domain.basketProduct.domain.BasketProductInf
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface BasketProductInfoRepository extends JpaRepository<BasketProductInfo, Integer> {
     List<BasketProductInfo> findAllByUserId(Integer userId);
@@ -14,4 +15,7 @@ public interface BasketProductInfoRepository extends JpaRepository<BasketProduct
 
     void deleteAllByIdIn(List<Integer> ids);
 
+    Optional<BasketProductInfo> findByUserIdAndOptionItemId(Integer userId, Integer optionItemReqId);
+
+    Optional<List<BasketProductInfo>> findAllByProductIdAndUserId(Integer userId, Integer productId);
 }
