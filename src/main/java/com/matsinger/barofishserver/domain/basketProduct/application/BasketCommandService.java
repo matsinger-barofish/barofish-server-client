@@ -215,4 +215,13 @@ public class BasketCommandService {
             throw new BusinessException("장바구니에 필수옵션이 존재하지 않습니다.");
         }
     }
+
+    public void addAmount(Integer userId, Integer orderProductInfoId, Integer amount) {
+        BasketProductInfo basketProductInfo = basketQueryService.selectBasket(orderProductInfoId);
+        if (userId != basketProductInfo.getUserId()) {
+            throw new BusinessException("타인의 장바구니 정보입니다.");
+        }
+        basketProductInfo.setAmount(amount);
+        basketProductInfoRepository.save(basketProductInfo);
+    }
 }

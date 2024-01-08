@@ -47,6 +47,20 @@ public class BasketControllerV2 {
         return ResponseEntity.ok(res);
     }
 
+    @PostMapping("/update/{id}")
+    public ResponseEntity<CustomResponse<Boolean>> updateBasketV2(@PathVariable("id") Integer id,
+                                                                         @RequestHeader(value = "Authorization") Optional<String> auth,
+                                                                         @RequestParam(value = "amount") Integer amount) {
+        CustomResponse<Boolean> res = new CustomResponse<>();
+        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth);
+
+        if (amount == null) throw new BusinessException("갯수를 입력해주세요.");
+        basketCommandService.addAmount(tokenInfo.getId(), id, amount);
+
+        res.setIsSuccess(true);
+        return ResponseEntity.ok(res);
+    }
+
     @GetMapping("/list")
     public ResponseEntity<CustomResponse<List<BasketProductDtoV2>>> selectBasketV2(@RequestHeader(value = "Authorization") Optional<String> auth) {
         CustomResponse<List<BasketProductDtoV2>> res = new CustomResponse<>();
@@ -58,4 +72,5 @@ public class BasketControllerV2 {
         res.setData(Optional.ofNullable(response));
         return ResponseEntity.ok(res);
     }
+
 }
