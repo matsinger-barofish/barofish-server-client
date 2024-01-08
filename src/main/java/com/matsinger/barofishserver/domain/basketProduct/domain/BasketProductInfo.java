@@ -45,8 +45,13 @@ public class BasketProductInfo {
         this.amount = amount;
     }
 
+    public boolean containsSameOptionItem(Integer optionItemId) {
+        return this.optionItemId == optionItemId;
+    }
 
-    public void addQuantity(Integer amount) {
-        this.amount += amount;
+    public void addQuantity(Integer optionItemId, Integer amount) {
+        if (containsSameOptionItem(optionItemId)) {
+            this.amount += amount;
+        }
     }
 }

@@ -198,7 +198,7 @@ public class BasketQueryService {
         return basketProductInfoRepository.findByUserIdAndOptionItemId(userId, optionItemReqId);
     }
 
-    public Optional<List<BasketProductInfo>> findAllByUserIdAndProductId(Integer userId, int productId) {
-        return basketProductInfoRepository.findAllByProductIdAndUserId(userId, productId);
+    public List<BasketProductInfo> findAllByUserIdAndProductId(Integer userId, int productId) {
+        return basketProductInfoRepository.findAllByUserIdAndProductId(userId, productId);
     }
 }
