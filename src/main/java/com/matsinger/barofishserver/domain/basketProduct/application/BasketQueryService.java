@@ -177,7 +177,7 @@ public class BasketQueryService {
     @NotNull
     private static BasketProductInfoDto getBasketProductInfoDto(BasketProductInfo productInfo, Product product, OptionItem optionItem, StoreInfo storeInfo) {
         BasketProductInfoDto basketProductInfoDto = BasketProductInfoDto.builder()
-                .id(productInfo.getId())
+                .id(product.getId())
                 .productId(product.getId())
                 .state(product.getState())
                 .image(product.getImages())
