@@ -3,6 +3,7 @@ package com.matsinger.barofishserver.domain.basketProduct.api;
 import com.matsinger.barofishserver.domain.basketProduct.application.BasketCommandService;
 import com.matsinger.barofishserver.domain.basketProduct.application.BasketQueryService;
 import com.matsinger.barofishserver.domain.basketProduct.dto.AddBasketReq;
+import com.matsinger.barofishserver.domain.basketProduct.dto.BasketProductDtoV2;
 import com.matsinger.barofishserver.global.exception.BusinessException;
 import com.matsinger.barofishserver.jwt.JwtService;
 import com.matsinger.barofishserver.jwt.TokenAuthType;
@@ -13,6 +14,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
@@ -45,15 +47,15 @@ public class BasketControllerV2 {
         return ResponseEntity.ok(res);
     }
 
-//    @GetMapping("/list")
-//    public ResponseEntity<CustomResponse<List<BasketProductDto>>> selectBasket(@RequestHeader(value = "Authorization") Optional<String> auth) {
-//        CustomResponse<List<BasketProductDto>> res = new CustomResponse<>();
-//
-//        Integer userId = null;
-//        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth);
-//
-//        List<BasketProductDto> dtos = basketQueryService.selectBasketList(tokenInfo.getId());
-//        res.setData(Optional.ofNullable(dtos));
-//        return ResponseEntity.ok(res);
-//    }
+    @GetMapping("/list")
+    public ResponseEntity<CustomResponse<List<BasketProductDtoV2>>> selectBasketV2(@RequestHeader(value = "Authorization") Optional<String> auth) {
+        CustomResponse<List<BasketProductDtoV2>> res = new CustomResponse<>();
+
+        Integer userId = null;
+        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth);
+
+        List<BasketProductDtoV2> response = basketQueryService.selectBasketListV2(tokenInfo.getId());
+        res.setData(Optional.ofNullable(response));
+        return ResponseEntity.ok(res);
+    }
 }
