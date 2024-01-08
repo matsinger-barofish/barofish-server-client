@@ -380,13 +380,13 @@ public class ProductService {
     }
 
     public SimpleProductDto convert2SimpleDto(Product product, Integer userId) {
-        SimpleProductDto productDto = product.convert2SimpleDto();
         List<Inquiry> inquiries = inquiryQueryService.selectInquiryListWithProductId(product.getId());
         List<Review>
                 reviews =
                 reviewQueryService.selectReviewListByProduct(product.getId(), PageRequest.of(0, 50)).getContent();
 
         StoreInfo store = storeService.selectStoreInfo(product.getStoreId());
+        SimpleProductDto productDto = product.convert2SimpleDto();
         List<Product> comparedProducts = selectComparedProductList(product.getId());
         ReviewTotalStatistic
                 reviewStatistics =

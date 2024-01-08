@@ -250,6 +250,7 @@ public class Product {
                 .pointRate(this.getPointRate())
                 .promotionStartAt(this.promotionStartAt)
                 .promotionEndAt(this.promotionEndAt)
+                .minOrderPrice(minOrderPrice)
                 .build();
     }
 
