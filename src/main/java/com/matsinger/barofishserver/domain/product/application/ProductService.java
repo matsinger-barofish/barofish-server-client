@@ -369,9 +369,12 @@ public class ProductService {
                 .storeName(storeInfo.getName())
                 .parentCategoryId(product.getCategory() != null ? product.getCategory().getCategoryId() : null)
                 .filterValues(productFilterService.selectProductFilterValueListWithProductId(product.getId()))
-                .minOrderPrice(product.getMinOrderPrice())
-                .minStorePrice(storeInfo.getMinStorePrice())
                 .deliverFeeType(product.getDeliverFeeType())
+                .minOrderPrice(product.getMinOrderPrice())
+                .productDeliveryFee(product.getDeliverFee())
+                .isConditional(storeInfo.isConditional())
+                .minStorePrice(storeInfo.getMinStorePrice())
+                .storeDeliverFee(storeInfo.getDeliveryFee())
                 .storeImage(storeInfo.getProfileImage())
                 .build();
     }
