@@ -1,7 +1,6 @@
 package com.matsinger.barofishserver.jwt.exception;
 
-import com.matsinger.barofishserver.global.error.ErrorCode;
-import io.jsonwebtoken.JwtException;
+import com.matsinger.barofishserver.global.exception.ErrorCode;
 import lombok.Getter;
 
 @Getter

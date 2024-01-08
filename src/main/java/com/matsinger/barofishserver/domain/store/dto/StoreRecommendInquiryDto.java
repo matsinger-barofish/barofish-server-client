@@ -34,6 +34,7 @@ public class StoreRecommendInquiryDto {
                 .refundDeliverFee(this.refundDeliverFee)
                 .oneLineDescription(this.oneLineDescription)
                 .deliverCompany(this.deliverCompany)
+                .isLike(this.isLike)
                 .build();
     }
 }

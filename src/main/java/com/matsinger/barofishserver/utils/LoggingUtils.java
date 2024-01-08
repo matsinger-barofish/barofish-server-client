@@ -7,6 +7,7 @@ import com.matsinger.barofishserver.jwt.TokenInfo;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -26,70 +27,63 @@ public class LoggingUtils {
     private final PrettyConverter converter;
 
 
-    public void error(MultiAccessRequestWrapper request, Exception exception) throws IOException {
+    public void doLog(HttpServletRequest request, Exception exception, String errorType) throws IOException {
 
         String jwtToken = extractBearerToken(request);
-        TokenInfo tokenInfo = jwtService.extractIdAndAuthType(jwtToken);
-        Integer id = tokenInfo.getId();
-
+        Integer id = getIdFromJwtToken(jwtToken);
         String url = request.getMethod() + "\t" + request.getRequestURI();
         String queryString = request.getQueryString();
-
         StackTraceElement[] stackTraceElement = exception != null ? exception.getStackTrace() : null;
+
+        // multipart/form-data는 타입 캐스팅을 할 수 없고 바디를 추출할 수 없어 경우의 수를 나눠준다.
+        boolean isMultipart = false;
+        try {
+            isMultipart = request.getContentType().startsWith("multipart/form-data");
+        } catch (Exception e) {
+            isMultipart = false;
+        }
+
+        String requestBody = parseRequest(request, isMultipart);
+
         String exceptionInfo = getExceptionInfo(
                 exception.getMessage(),
                 jwtToken,
                 id,
                 url,
                 queryString,
-                converter.convert(request.getContents()),
+                requestBody,
                 stackTraceElement);
 
-        logger.error(exceptionInfo);
+        if (errorType.equals("error")) {
+            logger.error(exceptionInfo);
+        }
+        if (errorType.equals("warn")) {
+            logger.warn(exceptionInfo);
+        }
+        if (errorType.equals("info")) {
+            logger.info(exceptionInfo);
+        }
     }
 
-    public void warn(MultiAccessRequestWrapper request, Exception exception) throws IOException {
-
-        String jwtToken = extractBearerToken(request);
-        TokenInfo tokenInfo = jwtService.extractIdAndAuthType(jwtToken);
-        Integer id = tokenInfo.getId();
-
-        String url = request.getMethod() + "\t" + request.getRequestURI();
-        String queryString = request.getQueryString();
-
-        StackTraceElement[] stackTraceElement = exception != null ? exception.getStackTrace() : null;
-        String exceptionInfo = getExceptionInfo(
-                exception.getMessage(),
-                jwtToken,
-                id,
-                url,
-                queryString,
-                converter.convert(request.getContents()),
-                stackTraceElement);
-
-        logger.warn(exceptionInfo);
+    private String parseRequest(HttpServletRequest request, boolean isMultipart) throws IOException {
+        if (!isMultipart) {
+            MultiAccessRequestWrapper wrapRequest = (MultiAccessRequestWrapper) request;
+            return converter.convert(wrapRequest.getContents());
+        }
+        return null;
     }
 
-    public void info(MultiAccessRequestWrapper request, Exception exception) throws IOException {
-
-        String jwtToken = extractBearerToken(request);
-        TokenInfo tokenInfo = jwtService.extractIdAndAuthType(jwtToken);
-        Integer id = tokenInfo.getId();
-
-        String url = request.getMethod() + "\t" + request.getRequestURI();
-        String queryString = request.getQueryString();
-
-        StackTraceElement[] stackTraceElement = exception != null ? exception.getStackTrace() : null;
-        String exceptionInfo = getExceptionInfo(
-                exception.getMessage(),
-                jwtToken,
-                id,
-                url,
-                queryString,
-                converter.convert(request.getContents()),
-                stackTraceElement);
-
-        logger.info(exceptionInfo);
+    @Nullable
+    private Integer getIdFromJwtToken(String jwtToken) {
+        if (jwtToken == null) {
+            return null;
+        }
+        try {
+            TokenInfo tokenInfo = jwtService.extractIdAndAuthType(jwtToken);
+            return tokenInfo.getId();
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     private static String getExceptionInfo(String message,
@@ -99,6 +93,8 @@ public class LoggingUtils {
                                            String queryString,
                                            String requestBody,
                                            StackTraceElement[] stackTraceElement) {
+
+
         String exceptionInfo = "";
         exceptionInfo += "\n" + "에러 로그 시작" + "\n";
 

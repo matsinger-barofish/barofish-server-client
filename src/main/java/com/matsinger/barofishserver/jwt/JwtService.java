@@ -3,7 +3,7 @@ package com.matsinger.barofishserver.jwt;
 import com.matsinger.barofishserver.domain.admin.application.AdminQueryService;
 import com.matsinger.barofishserver.domain.store.application.StoreService;
 import com.matsinger.barofishserver.domain.user.application.UserCommandService;
-import com.matsinger.barofishserver.global.error.ErrorCode;
+import com.matsinger.barofishserver.global.exception.ErrorCode;
 import com.matsinger.barofishserver.jwt.exception.JwtBusinessException;
 import lombok.RequiredArgsConstructor;
 import org.jetbrains.annotations.NotNull;
