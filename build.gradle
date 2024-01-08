@@ -26,14 +26,12 @@ repositories {
 }
 
 dependencies {
-    // 이 빌드 때문에 오류 발생
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springframework.boot:spring-boot-starter-validation'
     developmentOnly 'org.springframework.boot:spring-boot-devtools'
     implementation "org.springframework.security:spring-security-crypto:6.0.2"
     implementation group: 'com.squareup.okhttp3', name: 'okhttp', version: '4.10.0'
-    // 이 빌드 때문에 오류 발생
 
     testImplementation 'org.testng:testng:7.1.0'
     compileOnly 'org.projectlombok:lombok'
@@ -62,21 +60,19 @@ dependencies {
 
     // 모니터닝을 위한 디펜던시 시작
     implementation 'org.springframework.boot:spring-boot-starter-actuator' // 엑츄에이터
-
-//    implementation 'io.opentelemetry:opentelemetry-bom:1.31.0'
-//    implementation 'io.micrometer:micrometer-registry-otlp' // runtime scope?
-//    implementation 'io.micrometer:micrometer-tracing-bridge-otel:1.1.6'
-//    implementation 'io.opentelemetry:opentelemetry-api:1.31.0' //
-//    implementation 'io.opentelemetry:opentelemetry-sdk:1.31.0' //
-//    implementation 'io.opentelemetry:opentelemetry-sdk-common:1.31.0' //
-//    implementation 'io.opentelemetry:opentelemetry-sdk-metrics:1.31.0' //
-//    implementation 'io.opentelemetry:opentelemetry-sdk-trace:1.31.0'
-//    implementation 'io.opentelemetry:opentelemetry-sdk-extension-autoconfigure-spi:1.31.0'
-//    implementation 'io.opentelemetry:opentelemetry-exporter-otlp:1.31.0' //
-//    implementation 'io.opentelemetry:opentelemetry-exporter-common:1.31.0' //
-//    implementation 'io.opentelemetry:opentelemetry-exporter-otlp-common:1.31.0' //
-//    implementation 'io.opentelemetry.instrumentation:opentelemetry-logback-appender-1.0:1.31.0-alpha' //
-//    implementation 'io.opentelemetry.instrumentation:opentelemetry-instrumentation-api-semconv:1.31.0-alpha' //
+    implementation 'io.micrometer:micrometer-registry-otlp' // runtime scope?
+    implementation 'io.micrometer:micrometer-tracing-bridge-otel:1.1.6'
+    implementation 'io.opentelemetry:opentelemetry-api:1.31.0' //
+    implementation 'io.opentelemetry:opentelemetry-sdk:1.31.0' //
+    implementation 'io.opentelemetry:opentelemetry-sdk-common:1.31.0' //
+    implementation 'io.opentelemetry:opentelemetry-sdk-metrics:1.31.0' //
+    implementation 'io.opentelemetry:opentelemetry-sdk-trace:1.31.0'
+    implementation 'io.opentelemetry:opentelemetry-sdk-extension-autoconfigure-spi:1.31.0'
+    implementation 'io.opentelemetry:opentelemetry-exporter-otlp:1.31.0' //
+    implementation 'io.opentelemetry:opentelemetry-exporter-common:1.31.0' //
+    implementation 'io.opentelemetry:opentelemetry-exporter-otlp-common:1.31.0' //
+    implementation 'io.opentelemetry.instrumentation:opentelemetry-logback-appender-1.0:1.31.0-alpha' //
+    implementation 'io.opentelemetry.instrumentation:opentelemetry-instrumentation-api-semconv:1.31.0-alpha' //
     // 모니터닝을 위한 디펜던시 끝
 
 
