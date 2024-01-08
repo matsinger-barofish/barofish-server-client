@@ -118,16 +118,6 @@ public class OrderProductCancelCalculator {
                 combinedProductsTotalPrice += orderProductInfo.getPrice();
                 free.add(orderProductInfo);
             }
-            if (orderProductInfo.isCFix()) {
-                cFixMaxDeliveryFee = orderProductInfo.compareWithDeliveryFee(cFixMaxDeliveryFee);
-                combinedProductsTotalPrice += orderProductInfo.getPrice();
-                cFix.add(orderProductInfo);
-            }
-            if (orderProductInfo.isCIfOver()) {
-                cIfOverMaxDeliveryFee = orderProductInfo.compareWithDeliveryFee(cIfOverMaxDeliveryFee);
-                combinedProductsTotalPrice += orderProductInfo.getPrice();
-                cIfOver.add(orderProductInfo);
-            }
             if (orderProductInfo.isFIX()) {
                 fix.add(orderProductInfo);
             }
