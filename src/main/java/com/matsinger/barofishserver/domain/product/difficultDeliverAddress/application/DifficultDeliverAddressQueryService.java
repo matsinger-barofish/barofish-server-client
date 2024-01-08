@@ -26,7 +26,7 @@ public class DifficultDeliverAddressQueryService {
     }
 
     public void validateDifficultDeliveryRegion(Integer productId,
-                                                          OrderDeliverPlace orderDeliverPlace) {
+                                                OrderDeliverPlace orderDeliverPlace) {
         List<String> difficultDeliveryBcodes = getDifficultDeliveryBcodes(productId);
         String orderDeliveryPlaceAreaCode = orderDeliverPlace.getBcode().substring(0, 5);
 

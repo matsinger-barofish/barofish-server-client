@@ -296,6 +296,9 @@ public class Product {
     }
 
     public boolean isPromotionEnd() {
+        if (promotionEndAt == null && promotionEndAt == null) {
+            return false;
+        }
         if (promotionStartAt.after(Timestamp.valueOf(LocalDateTime.now())) ||
                 promotionEndAt.before(Timestamp.valueOf(LocalDateTime.now()))) {
             return true;
