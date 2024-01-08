@@ -2,13 +2,15 @@ package com.matsinger.barofishserver.domain.user.paymentMethod.application;
 
 import com.matsinger.barofishserver.domain.payment.dto.CheckValidCardRes;
 import com.matsinger.barofishserver.domain.payment.portone.application.PortOneCallbackService;
-import com.matsinger.barofishserver.domain.user.paymentMethod.domain.PaymentMethod;
 import com.matsinger.barofishserver.domain.user.dto.AddPaymentMethodReq;
+import com.matsinger.barofishserver.domain.user.paymentMethod.domain.PaymentMethod;
 import com.matsinger.barofishserver.domain.user.paymentMethod.repository.PaymentMethodRepository;
+import com.matsinger.barofishserver.global.exception.BusinessException;
 import com.matsinger.barofishserver.utils.AES256;
 import com.matsinger.barofishserver.utils.Common;
 import com.matsinger.barofishserver.utils.RegexConstructor;
 import com.siot.IamportRestClient.IamportClient;
+import com.siot.IamportRestClient.exception.IamportResponseException;
 import com.siot.IamportRestClient.request.BillingCustomerData;
 import com.siot.IamportRestClient.response.BillingCustomer;
 import com.siot.IamportRestClient.response.IamportResponse;
@@ -16,6 +18,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
 import java.util.regex.Pattern;
 
 @Service
@@ -34,7 +37,7 @@ public class PaymentMethodCommandService {
     @Value("${iamport.credentials.keyin-pg}")
     public String keyinPg;
 
-    public PaymentMethod addPaymentMethod(AddPaymentMethodReq request, int userId) throws Exception {
+    public PaymentMethod addPaymentMethod(AddPaymentMethodReq request, int userId) {
 
         String name = util.validateString(request.getName(), 20L, "이름");
 
@@ -43,10 +46,10 @@ public class PaymentMethodCommandService {
         validateCardInfo(request, userId, hashedCardNo);
 
         if (request.getPasswordTwoDigit() == null) {
-            throw new IllegalArgumentException("비밀번호 두자리를 입력해주세요.");
+            throw new BusinessException("비밀번호 두자리를 입력해주세요.");
         }
         if (!Pattern.matches(re.cardPassword, request.getPasswordTwoDigit())) {
-            throw new IllegalArgumentException("비밀번호는 숫자 2자리입니다.");
+            throw new BusinessException("비밀번호는 숫자 2자리입니다.");
         }
         String password2Digit = aes256.encrypt(request.getPasswordTwoDigit());
 
@@ -58,7 +61,7 @@ public class PaymentMethodCommandService {
         CheckValidCardRes validCardRes = checkValidCard(paymentMethod);
         if (validCardRes == null) {
             paymentMethodRepository.deleteById(paymentMethod.getId());
-            throw new IllegalArgumentException("유효하지 않은 카드입니다.");
+            throw new BusinessException("유효하지 않은 카드입니다.");
         }
         paymentMethod.setCardName(validCardRes.getCardName());
         paymentMethod.setCustomerUid(validCardRes.getCustomerUid());
@@ -67,29 +70,29 @@ public class PaymentMethodCommandService {
 
     private void validateCardInfo(AddPaymentMethodReq request, int userId, String hashedCardNo) {
         if (request.getCardNo() == null) {
-            throw new IllegalArgumentException("카드번호를 입력해주세요.");
+            throw new BusinessException("카드번호를 입력해주세요.");
         }
         if (!Pattern.matches(re.cardNo, request.getCardNo())) {
-            throw new IllegalArgumentException("카드번호 형식을 확인해주세요.");
+            throw new BusinessException("카드번호 형식을 확인해주세요.");
         }
         if (paymentMethodRepository.existsByCardNoAndUserId(hashedCardNo, userId)) {
-            throw new IllegalArgumentException("이미 등록된 카드입니다.");
+            throw new BusinessException("이미 등록된 카드입니다.");
         }
         if (request.getExpiryAt() == null) {
-            throw new IllegalArgumentException("유효기간(월/년) 입력해주세요.");
+            throw new BusinessException("유효기간(월/년) 입력해주세요.");
         }
         if (!Pattern.matches(re.expiryAt, request.getExpiryAt())) {
-            throw new IllegalArgumentException("유효기간 형식을 확인해주세요.");
+            throw new BusinessException("유효기간 형식을 확인해주세요.");
         }
         if (request.getBirth() == null) {
-            throw new IllegalArgumentException("생년월일을 입력해주세요");
+            throw new BusinessException("생년월일을 입력해주세요");
         }
         if (!Pattern.matches(re.birth, request.getBirth())) {
-            throw new IllegalArgumentException("생년월일 형식을 확인해주세요.");
+            throw new BusinessException("생년월일 형식을 확인해주세요.");
         }
     }
 
-    private CheckValidCardRes checkValidCard(PaymentMethod paymentMethod) throws Exception {
+    private CheckValidCardRes checkValidCard(PaymentMethod paymentMethod) {
         IamportClient iamportClient = callbackService.getIamportClient();
         String customerUid = "customer_" + paymentMethod.getUserId() + "_" + paymentMethod.getId();
         String cardNo = aes256.decrypt(paymentMethod.getCardNo());
@@ -102,8 +105,17 @@ public class PaymentMethodCommandService {
         BillingCustomerData billingCustomerData = new BillingCustomerData(customerUid, cardNo, expiry, birth);
         billingCustomerData.setPwd2Digit(aes256.decrypt(paymentMethod.getPasswordTwoDigit()));
         billingCustomerData.setPg(keyinPg);
-        IamportResponse<BillingCustomer> billingCustomerRes = iamportClient.postBillingCustomer(customerUid,
-                billingCustomerData);
+
+        IamportResponse<BillingCustomer> billingCustomerRes = null;
+        try {
+            billingCustomerRes = iamportClient.postBillingCustomer(customerUid,
+                    billingCustomerData);
+        } catch (IOException e) {
+            throw new BusinessException("결제 요청에 실패했습니다.");
+        } catch (IamportResponseException e) {
+            throw new BusinessException("결제 요청에 실패했습니다.");
+        }
+
         if (billingCustomerRes.getCode() != 0) {
             System.out.println(billingCustomerRes.getCode() + ": " + billingCustomerRes.getMessage());
             return null;

@@ -11,43 +11,43 @@ import com.matsinger.barofishserver.domain.compare.filter.repository.CompareFilt
 import com.matsinger.barofishserver.domain.compare.repository.SaveProductRepository;
 import com.matsinger.barofishserver.domain.inquiry.application.InquiryQueryService;
 import com.matsinger.barofishserver.domain.inquiry.domain.Inquiry;
-import com.matsinger.barofishserver.domain.product.domain.*;
-import com.matsinger.barofishserver.domain.product.optionitem.domain.OptionItem;
-import com.matsinger.barofishserver.domain.product.optionitem.dto.OptionItemDto;
-import com.matsinger.barofishserver.domain.product.optionitem.repository.OptionItemRepository;
-import com.matsinger.barofishserver.domain.review.application.ReviewQueryService;
-import com.matsinger.barofishserver.domain.review.domain.Review;
-import com.matsinger.barofishserver.domain.review.dto.ReviewDto;
-import com.matsinger.barofishserver.domain.review.dto.ReviewTotalStatistic;
-import com.matsinger.barofishserver.domain.review.repository.ReviewLikeRepository;
-import com.matsinger.barofishserver.domain.review.repository.ReviewRepository;
-import com.matsinger.barofishserver.domain.store.application.StoreService;
-import com.matsinger.barofishserver.domain.store.domain.Store;
-import com.matsinger.barofishserver.domain.store.repository.StoreInfoRepository;
 import com.matsinger.barofishserver.domain.product.difficultDeliverAddress.application.DifficultDeliverAddressQueryService;
+import com.matsinger.barofishserver.domain.product.domain.*;
 import com.matsinger.barofishserver.domain.product.dto.ExcelProductDto;
 import com.matsinger.barofishserver.domain.product.dto.ExcelProductDto2;
 import com.matsinger.barofishserver.domain.product.dto.ProductListDto;
 import com.matsinger.barofishserver.domain.product.option.domain.Option;
 import com.matsinger.barofishserver.domain.product.option.dto.OptionDto;
 import com.matsinger.barofishserver.domain.product.option.repository.OptionRepository;
+import com.matsinger.barofishserver.domain.product.optionitem.domain.OptionItem;
+import com.matsinger.barofishserver.domain.product.optionitem.dto.OptionItemDto;
+import com.matsinger.barofishserver.domain.product.optionitem.repository.OptionItemRepository;
+import com.matsinger.barofishserver.domain.product.productfilter.application.ProductFilterService;
 import com.matsinger.barofishserver.domain.product.productfilter.domain.ProductFilterValue;
 import com.matsinger.barofishserver.domain.product.productfilter.dto.ProductFilterValueDto;
 import com.matsinger.barofishserver.domain.product.productfilter.repository.ProductFilterRepository;
 import com.matsinger.barofishserver.domain.product.repository.ProductRepository;
-import com.matsinger.barofishserver.domain.product.productfilter.application.ProductFilterService;
+import com.matsinger.barofishserver.domain.review.application.ReviewQueryService;
+import com.matsinger.barofishserver.domain.review.domain.Review;
+import com.matsinger.barofishserver.domain.review.dto.ReviewDto;
+import com.matsinger.barofishserver.domain.review.dto.ReviewTotalStatistic;
+import com.matsinger.barofishserver.domain.review.repository.ReviewLikeRepository;
+import com.matsinger.barofishserver.domain.review.repository.ReviewRepository;
 import com.matsinger.barofishserver.domain.searchFilter.application.SearchFilterQueryService;
 import com.matsinger.barofishserver.domain.searchFilter.domain.ProductSearchFilterMap;
 import com.matsinger.barofishserver.domain.searchFilter.domain.SearchFilterField;
 import com.matsinger.barofishserver.domain.searchFilter.dto.SearchFilterFieldDto;
 import com.matsinger.barofishserver.domain.searchFilter.repository.ProductSearchFilterMapRepository;
+import com.matsinger.barofishserver.domain.store.application.StoreService;
+import com.matsinger.barofishserver.domain.store.domain.Store;
 import com.matsinger.barofishserver.domain.store.domain.StoreInfo;
+import com.matsinger.barofishserver.domain.store.repository.StoreInfoRepository;
+import com.matsinger.barofishserver.global.exception.BusinessException;
 import com.matsinger.barofishserver.utils.Common;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.data.domain.Page;
-
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -316,7 +316,7 @@ public class ProductService {
 
     public Product findById(Integer id) {
         return productRepository.findById(id).orElseThrow(() -> {
-            throw new IllegalArgumentException("상품 정보를 찾을 수 없습니다.");
+            throw new BusinessException("상품 정보를 찾을 수 없습니다.");
         });
     }
 
@@ -334,12 +334,13 @@ public class ProductService {
 
     public ProductListDto convert2ListDto(Product product, Integer userId) {
         StoreInfo storeInfo = storeService.selectStoreInfo(product.getStoreId());
-        Integer reviewCount = reviewQueryService.countReviewWithProductId(product.getId());
+        Integer reviewCount = reviewQueryService.countReviewWithoutDeleted(product.getId(), false);
         OptionItem optionItem = selectOptionItem(product.getRepresentOptionItemId());
         Boolean
                 isLike =
-                userId != null ? saveProductRepository.existsById(SaveProductId.builder().userId(userId).productId(
-                        product.getId()).build()) : null;
+                userId != null
+                        ? saveProductRepository.existsById(SaveProductId.builder().userId(userId).productId(product.getId()).build())
+                        : null;
         return ProductListDto.builder().id(product.getId()).state(product.getState()).image(product.getImages().substring(
                 1,
                 product.getImages().length() -
@@ -353,27 +354,39 @@ public class ProductService {
 
     public ProductListDto convert2ListDto(Product product) {
         StoreInfo storeInfo = storeService.selectStoreInfo(product.getStoreId());
-        Integer reviewCount = reviewQueryService.countReviewWithProductId(product.getId());
+        Integer reviewCount = reviewQueryService.countReviewWithoutDeleted(product.getId(), false);
         OptionItem optionItem = selectOptionItem(product.getRepresentOptionItemId());
-        return ProductListDto.builder().id(product.getId()).state(product.getState()).image(product.getImages().substring(
-                1,
-                product.getImages().length() -
-                        1).split(",")[0]).originPrice(optionItem.getOriginPrice()).isNeedTaxation(product.getNeedTaxation()).discountPrice(
-                optionItem.getDiscountPrice()).title(product.getTitle()).reviewCount(reviewCount).storeId(storeInfo.getStoreId()).storeName(
-                storeInfo.getName()).parentCategoryId(product.getCategory() !=
-                null ? product.getCategory().getCategoryId() : null).filterValues(productFilterService.selectProductFilterValueListWithProductId(
-                product.getId())).minOrderPrice(product.getMinOrderPrice()).deliverFeeType(product.getDeliverFeeType()).storeImage(
-                storeInfo.getProfileImage()).build();
+        return ProductListDto.builder()
+                .id(product.getId())
+                .state(product.getState())
+                .image(product.getImages().substring(1, product.getImages().length() - 1).split(",")[0])
+                .originPrice(optionItem.getOriginPrice())
+                .isNeedTaxation(product.getNeedTaxation())
+                .discountPrice(optionItem.getDiscountPrice())
+                .title(product.getTitle())
+                .reviewCount(reviewCount)
+                .storeId(storeInfo.getStoreId())
+                .storeName(storeInfo.getName())
+                .parentCategoryId(product.getCategory() != null ? product.getCategory().getCategoryId() : null)
+                .filterValues(productFilterService.selectProductFilterValueListWithProductId(product.getId()))
+                .deliverFeeType(product.getDeliverFeeType())
+                .minOrderPrice(product.getMinOrderPrice())
+                .productDeliveryFee(product.getDeliverFee())
+                .isConditional(storeInfo.isConditional())
+                .minStorePrice(storeInfo.getMinStorePrice())
+                .storeDeliverFee(storeInfo.getDeliveryFee())
+                .storeImage(storeInfo.getProfileImage())
+                .build();
     }
 
     public SimpleProductDto convert2SimpleDto(Product product, Integer userId) {
-        SimpleProductDto productDto = product.convert2SimpleDto();
         List<Inquiry> inquiries = inquiryQueryService.selectInquiryListWithProductId(product.getId());
         List<Review>
                 reviews =
                 reviewQueryService.selectReviewListByProduct(product.getId(), PageRequest.of(0, 50)).getContent();
 
         StoreInfo store = storeService.selectStoreInfo(product.getStoreId());
+        SimpleProductDto productDto = product.convert2SimpleDto();
         List<Product> comparedProducts = selectComparedProductList(product.getId());
         ReviewTotalStatistic
                 reviewStatistics =
@@ -549,7 +562,7 @@ public class ProductService {
                 optionItems =
                 optionItemRepository.findAllByOptionIdAndState(option.getId(), OptionItemState.ACTIVE);
         List<OptionItemDto> itemDtos = optionItems.stream().map(v -> {
-            OptionItemDto optionItemDto = v.convert2Dto();
+            OptionItemDto optionItemDto = v.convert2Dto(product);
             optionItemDto.setDeliverBoxPerAmount(product.getDeliverBoxPerAmount());
             optionItemDto.setPointRate(product.getPointRate());
             return optionItemDto;

@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.matsinger.barofishserver.domain.order.domain.Orders;
 import com.matsinger.barofishserver.domain.product.domain.Product;
 
+import com.matsinger.barofishserver.domain.product.domain.ProductDeliverFeeType;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -38,19 +39,22 @@ public class OrderProductInfo {
     private OrderProductState state;
     @Basic
     @Column(name = "settle_price")
-    private Integer settlePrice;
+    private Integer settlePrice;                            // 정산가격 = 공급가(매입가)
     @Basic
     @Column(name = "origin_price")
-    private Integer originPrice;
+    private Integer originPrice;                            // 상품가격
     @Basic
     @Column(name = "price", nullable = false)
-    private int price;
+    private int price;                                      // 상품가격 * 수량
     @Basic
     @Column(name = "amount", nullable = false)
     private int amount;
     @Basic
     @Column(name = "delivery_fee", nullable = false)
     private int deliveryFee;
+    @Basic @Column(name = "delivery_fee_type", nullable = false)
+    @Enumerated(EnumType.STRING)
+    private ProductDeliverFeeType deliveryFeeType;
 
     @Basic
     @Column(name = "cancel_reason", nullable = true)
@@ -153,6 +157,24 @@ public class OrderProductInfo {
 
     public void setDeliveryFee(int deliveryFee) {
         this.deliveryFee = deliveryFee;
+    }
+    public boolean isIfOver() {
+        return deliveryFeeType.equals(ProductDeliverFeeType.FIX);
+    }
+    public boolean isFree() {
+        return deliveryFeeType.equals(ProductDeliverFeeType.FIX);
+    }
+
+    public Integer getTotalProductPrice() {
+        return originPrice * amount;
+    }
+
+    public Integer getTotalPriceMinusDeliveryFee() {
+        return getTotalProductPrice() - deliveryFee;
+    }
+
+    public int getTotalPriceContainsDeliveryFee() {
+        return getTotalProductPrice() + deliveryFee;
     }
 
     @Override

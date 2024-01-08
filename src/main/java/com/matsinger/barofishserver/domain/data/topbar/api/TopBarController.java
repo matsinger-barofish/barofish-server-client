@@ -2,14 +2,14 @@ package com.matsinger.barofishserver.domain.data.topbar.api;
 
 import com.matsinger.barofishserver.domain.data.topbar.application.TopBarCommandService;
 import com.matsinger.barofishserver.domain.data.topbar.application.TopBarQueryService;
-import com.matsinger.barofishserver.domain.data.topbar.domain.TopBarProductMap;
 import com.matsinger.barofishserver.domain.data.topbar.domain.TopBar;
+import com.matsinger.barofishserver.domain.data.topbar.domain.TopBarProductMap;
+import com.matsinger.barofishserver.domain.product.application.ProductService;
+import com.matsinger.barofishserver.domain.product.domain.Product;
+import com.matsinger.barofishserver.domain.product.dto.ProductListDto;
 import com.matsinger.barofishserver.jwt.JwtService;
 import com.matsinger.barofishserver.jwt.TokenAuthType;
 import com.matsinger.barofishserver.jwt.TokenInfo;
-import com.matsinger.barofishserver.domain.product.domain.Product;
-import com.matsinger.barofishserver.domain.product.application.ProductService;
-import com.matsinger.barofishserver.domain.product.dto.ProductListDto;
 import com.matsinger.barofishserver.utils.Common;
 import com.matsinger.barofishserver.utils.CustomResponse;
 import lombok.RequiredArgsConstructor;
@@ -17,7 +17,9 @@ import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.*;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 
 @RestController
 @RequiredArgsConstructor
@@ -111,8 +113,8 @@ public class TopBarController {
     public ResponseEntity<CustomResponse<TopBar>> addTopBar(@RequestHeader(value = "Authorization") Optional<String> auth,
                                                             @RequestPart(value = "name") String name) throws Exception {
         CustomResponse<TopBar> res = new CustomResponse<>();
-        Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
-        if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
+
+        jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
 
         name = utils.validateString(name, 20L, "이름");
         TopBar topBar = new TopBar();
@@ -127,8 +129,8 @@ public class TopBarController {
                                                                @PathVariable("id") Integer id,
                                                                @RequestPart(value = "name") String name) throws Exception {
         CustomResponse<TopBar> res = new CustomResponse<>();
-        Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
-        if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
+
+                TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
 
         TopBar topbar = topBarQueryService.selectTopBar(id);
         name = utils.validateString(name, 20L, "이름");
@@ -143,8 +145,8 @@ public class TopBarController {
                                                                                @RequestPart(value = "topBarId") Integer topBarId,
                                                                                @RequestPart(value = "productId") Integer productId) {
         CustomResponse<TopBarProductMap> res = new CustomResponse<>();
-        Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
-        if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
+
+                TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
 
         TopBar topBar = topBarQueryService.selectTopBar(topBarId);
         Product product = productService.findById(productId);
@@ -160,8 +162,8 @@ public class TopBarController {
     public ResponseEntity<CustomResponse<Boolean>> deleteTopBar(@RequestHeader(value = "Authorization") Optional<String> auth,
                                                                 @PathVariable("id") Integer id) {
         CustomResponse<Boolean> res = new CustomResponse<>();
-        Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
-        if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
+
+                TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
 
         TopBar topBar = topBarQueryService.selectTopBar(id);
         Boolean result = topBarCommandService.delete(id);

@@ -4,6 +4,7 @@ import com.matsinger.barofishserver.domain.admin.log.application.AdminLogQuerySe
 import com.matsinger.barofishserver.domain.admin.log.domain.AdminLog;
 import com.matsinger.barofishserver.domain.admin.log.domain.AdminLogType;
 import com.matsinger.barofishserver.domain.admin.log.dto.AdminLogDto;
+import com.matsinger.barofishserver.global.exception.BusinessException;
 import com.matsinger.barofishserver.jwt.JwtService;
 import com.matsinger.barofishserver.jwt.TokenAuthType;
 import com.matsinger.barofishserver.jwt.TokenInfo;
@@ -17,7 +18,10 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 
 @RestController
 @RequiredArgsConstructor
@@ -33,11 +37,11 @@ public class AdminLogController {
                                                                                 @RequestParam(value = "type") AdminLogType type,
                                                                                 @RequestParam(value = "targetId") String targetId) {
         CustomResponse<Page<AdminLogDto>> res = new CustomResponse<>();
-        Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
-        if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
 
-        if (type == null) return res.throwError("타입을 입력해주세요.", "INPUT_CHECK_REQUIRED");
-        if (targetId == null) return res.throwError("대상 아이디를 입력해주세요.", " INPUT_CHECK_REQUIRED");
+                TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
+
+        if (type == null) throw new BusinessException("타입을 입력해주세요.");
+        if (targetId == null) throw new BusinessException("대상 아이디를 입력해주세요.");
         PageRequest pageRequest = PageRequest.of(page, take, Sort.by(Sort.Direction.DESC, "createdAt"));
         Specification<AdminLog> spec = (root, query, builder) -> {
             List<Predicate> predicates = new ArrayList<>();

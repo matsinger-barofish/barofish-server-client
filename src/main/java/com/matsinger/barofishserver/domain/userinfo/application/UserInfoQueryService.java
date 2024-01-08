@@ -8,7 +8,10 @@ import com.matsinger.barofishserver.domain.user.deliverplace.repository.DeliverP
 import com.matsinger.barofishserver.domain.userinfo.domain.UserInfo;
 import com.matsinger.barofishserver.domain.userinfo.dto.UserInfoDto;
 import com.matsinger.barofishserver.domain.userinfo.repository.UserInfoRepository;
+import com.matsinger.barofishserver.global.exception.BusinessException;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,12 +29,16 @@ public class UserInfoQueryService {
     private final NotificationRepository notificationRepository;
     private final CompareItemQueryService compareItemQueryService;
 
+    private final Logger logger = LoggerFactory.getLogger(this.getClass().getSimpleName());
+
     public UserInfoDto showMyPage(Integer userId) {
 
         UserInfo findUserInfo = userInfoRepository.findByUserId(userId)
                 .orElseThrow(() -> {
-                    throw new IllegalArgumentException("유저 정보를 찾을 수 없습니다.");
+                    throw new BusinessException("유저 정보를 찾을 수 없습니다.");
                 });
+
+        logger.info("userId = {}", findUserInfo.getUserId()); // jwt 로깅을 위해 추가
 
         List<DeliverPlace> deliverPlaces = deliverPlaceRepository.findAllByUserId(userId);
         Integer reviewCount = reviewRepository.countAllByUserId(userId);
@@ -61,12 +68,11 @@ public class UserInfoQueryService {
             return userInfoOptional.get().getUserId();
         }
 
-//        for (UserAuth userAuth : userInfoOptional.get().getUser().getUserAuth()) {
-//            if (userAuth.getLoginType() == LoginType.APPLE) {
-//                return userAuth.getUserId();
-//            }
-//        }
-
         return null;
+    }
+
+    public UserInfo findByUserId(int userId) {
+        return userInfoRepository.findByUserId(userId)
+                .orElseThrow(() -> new BusinessException("유저 정보를 찾을 수 없습니다."));
     }
 }

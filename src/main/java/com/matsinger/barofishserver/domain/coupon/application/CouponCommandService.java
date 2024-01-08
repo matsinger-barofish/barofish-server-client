@@ -14,11 +14,13 @@ import com.matsinger.barofishserver.domain.user.domain.UserState;
 import com.matsinger.barofishserver.domain.user.repository.UserRepository;
 import com.matsinger.barofishserver.domain.userinfo.domain.UserInfo;
 import com.matsinger.barofishserver.domain.userinfo.repository.UserInfoRepository;
+import com.matsinger.barofishserver.global.exception.BusinessException;
 import com.matsinger.barofishserver.utils.Common;
 import jakarta.persistence.Tuple;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -34,6 +36,8 @@ public class CouponCommandService {
     private final OrderProductInfoRepository infoRepository;
     private final Common utils;
     private final UserInfoRepository userInfoRepository;
+    private final CouponQueryService couponQueryService;
+    private final CouponUserMapCommandService couponUserMapCommandService;
 
     public void downloadCoupon(Integer userId, Integer couponId) {
         couponUserMapRepository.save(CouponUserMap.builder().couponId(couponId).userId(userId).isUsed(false).build());
@@ -68,8 +72,8 @@ public class CouponCommandService {
         }
     }
 
-    public void useCoupon(Integer couponId, Integer userId) {
-        Optional<CouponUserMap> map = couponUserMapRepository.findById(new CouponUserMapId(userId, couponId));
+    public void useCouponV1(Integer couponId, Integer userId) {
+        Optional<CouponUserMap> map = couponUserMapRepository.findByUserIdAndCouponId(userId, couponId);
         map.ifPresent(couponUserMap -> {
             couponUserMap.setIsUsed(true);
             couponUserMapRepository.save(couponUserMap);
@@ -105,7 +109,7 @@ public class CouponCommandService {
             couponUserMapRepository.save(couponUserMap);
 
             UserInfo findUserInfo = userInfoRepository.findByUserId(userId)
-                    .orElseThrow(() -> new IllegalArgumentException("유저 정보를 찾을 수 없습니다."));
+                    .orElseThrow(() -> new BusinessException("유저 정보를 찾을 수 없습니다."));
 
             notificationCommandService.sendFcmToUser(
                     findUserInfo.getUserId(),
@@ -119,11 +123,11 @@ public class CouponCommandService {
 
     public Coupon publishNewUserCoupon(Integer userId) {
         Coupon signUpCoupon = couponRepository.findById(7)
-                .orElseThrow(() -> new IllegalArgumentException("회원가입 쿠폰을 찾을 수 없습니다."));
+                .orElseThrow(() -> new BusinessException("회원가입 쿠폰을 찾을 수 없습니다."));
 
         if (couponUserMapRepository.findById(
                 new CouponUserMapId(userId, signUpCoupon.getId())).isPresent()) {
-            throw new IllegalArgumentException("이미 회원가입 쿠폰을 발급 받으셨습니다.");
+            throw new BusinessException("이미 회원가입 쿠폰을 발급 받으셨습니다.");
         }
         CouponUserMap userSignUpCoupon = CouponUserMap.builder()
                 .userId(userId)
@@ -138,5 +142,19 @@ public class CouponCommandService {
 
     public void addCouponUserMapList(List<CouponUserMap> couponUserMaps) {
         couponUserMapRepository.saveAll(couponUserMaps);
+    }
+
+    @Transactional
+    public Coupon useCoupon(Integer userId, Integer couponId) {
+        if (couponId == null) {
+            return null;
+        }
+
+        Coupon coupon = couponQueryService.findById(couponId);
+        coupon.isAvailable(coupon.getMinPrice());
+        coupon.checkExpiration();
+
+        couponUserMapCommandService.useCoupon(userId, couponId);
+        return coupon;
     }
 }

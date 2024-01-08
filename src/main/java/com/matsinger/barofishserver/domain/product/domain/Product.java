@@ -2,14 +2,16 @@ package com.matsinger.barofishserver.domain.product.domain;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.matsinger.barofishserver.domain.category.domain.Category;
-import com.matsinger.barofishserver.domain.review.domain.Review;
 import com.matsinger.barofishserver.domain.product.dto.ProductListDto;
+import com.matsinger.barofishserver.domain.review.domain.Review;
 import com.matsinger.barofishserver.domain.store.domain.Store;
+import com.matsinger.barofishserver.global.exception.BusinessException;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.ColumnDefault;
 
 import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -68,7 +70,7 @@ public class Product {
     private int expectedDeliverDay;
 
     @Column(name = "forwarding_time", nullable = false)
-    private int forwardingTime;
+    private String forwardingTime;
 
     @Basic
 //    @Max(value = (long) 0.1, message = "상품 적립 포인트는 10퍼센트를 초과할 수 없습니다.")
@@ -121,6 +123,15 @@ public class Product {
 
     @Column(name = "item_code")
     private String itemCode;
+
+    @Column(name = "difficulty_level_of_trimming", length =10)
+    private Double difficultyLevelOfTrimming;
+
+    @Column(name = "the_scent_of_the_sea", length = 10)
+    private Double theScentOfTheSea;
+
+    @Column(name = "recommended_cooking_way", length = 10)
+    private String recommendedCookingWay;
 
     public void setPointRate(Float pointRate) {
         this.pointRate = pointRate / 100;
@@ -231,14 +242,15 @@ public class Product {
                 .originPrice(originPrice)
                 .deliveryInfo(deliveryInfo)
                 .forwardingTime(this.forwardingTime)
-                .description(descriptionImages)
-                .descriptionImages(descriptionImages.substring(1, descriptionImages.length() - 1).split(", "))
+                .description(this.descriptionImages)
+                .descriptionImages(this.descriptionImages.substring(1, descriptionImages.length() - 1).split(", "))
                 .representOptionItemId(this.representOptionItemId)
                 .deliverBoxPerAmount(this.getDeliverBoxPerAmount())
                 .createdAt(this.getCreatedAt())
                 .pointRate(this.getPointRate())
                 .promotionStartAt(this.promotionStartAt)
                 .promotionEndAt(this.promotionEndAt)
+                .minOrderPrice(minOrderPrice)
                 .build();
     }
 
@@ -269,5 +281,43 @@ public class Product {
                 deliveryInfo,
                 descriptionImages,
                 createdAt);
+    }
+
+    public boolean isDeliveryTypeFix() {
+        return deliverFeeType.equals(ProductDeliverFeeType.FIX);
+    }
+
+    public boolean isDeliveryTypeFreeIfOver() {
+        return deliverFeeType.equals(ProductDeliverFeeType.FREE_IF_OVER);
+    }
+
+    public boolean isDeliveryTypeFree() {
+        return deliverFeeType.equals(ProductDeliverFeeType.FREE);
+    }
+
+    public boolean isPromotionEnd() {
+        if (promotionEndAt == null && promotionEndAt == null) {
+            return false;
+        }
+        if (promotionStartAt.after(Timestamp.valueOf(LocalDateTime.now())) ||
+                promotionEndAt.before(Timestamp.valueOf(LocalDateTime.now()))) {
+            return true;
+        }
+        return false;
+    }
+
+    public void validateState() {
+        if (!state.equals(ProductState.ACTIVE)) {
+            if (state.equals(ProductState.SOLD_OUT))
+                throw new BusinessException("품절된 상품입니다.");
+            if (state.equals(ProductState.DELETED))
+                throw new BusinessException("주문 불가능한 상품입니다.");
+            if (state.equals(ProductState.INACTIVE))
+                throw new BusinessException("주문 불가능한 상품입니다.");
+        }
+    }
+
+    public boolean meetConditions(int totalPrice) {
+        return totalPrice >= this.minOrderPrice;
     }
 }

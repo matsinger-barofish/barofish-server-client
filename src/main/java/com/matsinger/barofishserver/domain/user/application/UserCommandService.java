@@ -22,7 +22,10 @@ import com.matsinger.barofishserver.domain.notification.application.Notification
 import com.matsinger.barofishserver.domain.notification.dto.NotificationMessage;
 import com.matsinger.barofishserver.domain.notification.dto.NotificationMessageType;
 import com.matsinger.barofishserver.domain.notification.repository.NotificationRepository;
+import com.matsinger.barofishserver.domain.order.domain.Orders;
 import com.matsinger.barofishserver.domain.order.orderprductinfo.repository.OrderProductInfoRepository;
+import com.matsinger.barofishserver.domain.order.repository.OrderDeliverPlaceRepository;
+import com.matsinger.barofishserver.domain.order.repository.OrderRepository;
 import com.matsinger.barofishserver.domain.payment.domain.Payments;
 import com.matsinger.barofishserver.domain.payment.repository.PaymentRepository;
 import com.matsinger.barofishserver.domain.report.repository.ReportRepository;
@@ -36,16 +39,13 @@ import com.matsinger.barofishserver.domain.user.deliverplace.DeliverPlace;
 import com.matsinger.barofishserver.domain.user.deliverplace.repository.DeliverPlaceRepository;
 import com.matsinger.barofishserver.domain.user.domain.User;
 import com.matsinger.barofishserver.domain.user.domain.UserState;
-import com.matsinger.barofishserver.domain.user.exception.UserException;
-import com.matsinger.barofishserver.domain.order.domain.Orders;
-import com.matsinger.barofishserver.domain.order.repository.OrderDeliverPlaceRepository;
-import com.matsinger.barofishserver.domain.order.repository.OrderRepository;
 import com.matsinger.barofishserver.domain.user.dto.AppleJoinReq;
 import com.matsinger.barofishserver.domain.user.dto.SnsJoinLoginResponseDto;
+import com.matsinger.barofishserver.domain.user.dto.SnsJoinReq;
 import com.matsinger.barofishserver.domain.user.dto.UserJoinReq;
+import com.matsinger.barofishserver.domain.user.exception.UserException;
 import com.matsinger.barofishserver.domain.user.paymentMethod.repository.PaymentMethodRepository;
 import com.matsinger.barofishserver.domain.user.repository.UserRepository;
-import com.matsinger.barofishserver.domain.user.dto.SnsJoinReq;
 import com.matsinger.barofishserver.domain.userauth.application.UserAuthCommandService;
 import com.matsinger.barofishserver.domain.userauth.domain.LoginType;
 import com.matsinger.barofishserver.domain.userauth.domain.UserAuth;
@@ -54,17 +54,18 @@ import com.matsinger.barofishserver.domain.userinfo.application.UserInfoCommandS
 import com.matsinger.barofishserver.domain.userinfo.domain.UserInfo;
 import com.matsinger.barofishserver.domain.userinfo.dto.UserInfoDto;
 import com.matsinger.barofishserver.domain.userinfo.repository.UserInfoRepository;
+import com.matsinger.barofishserver.global.exception.BusinessException;
 import com.matsinger.barofishserver.utils.Common;
 import com.matsinger.barofishserver.utils.S3.S3Uploader;
 import com.matsinger.barofishserver.utils.fcm.FcmTokenRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.*;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.net.MalformedURLException;
 import java.sql.Timestamp;
 import java.util.*;
 
@@ -110,7 +111,7 @@ public class UserCommandService {
     private final NotificationCommandService notificationCommandService;
 
     @Transactional
-    public SnsJoinLoginResponseDto createSnsUserAndSave(SnsJoinReq request) throws MalformedURLException {
+    public SnsJoinLoginResponseDto createSnsUserAndSave(SnsJoinReq request) {
 
         userJoinValidator.nullCheck(request.getLoginType());
         userJoinValidator.nullCheck(request.getLoginId());
@@ -119,7 +120,7 @@ public class UserCommandService {
         userRepository.save(user);
 
         UserAuth createdUserAuth = userAuthCommandService.createUserAuth(request, user);
-        Grade grade = gradeRepository.findById(1).orElseThrow(() -> new IllegalStateException("등급 정보를 찾을 수 없습니다."));
+        Grade grade = gradeRepository.findById(1).orElseThrow(() -> new BusinessException("등급 정보를 찾을 수 없습니다."));
         UserInfo createdUserInfo = userInfoCommandService.createAndSaveUserInfo(user, request, "", grade);
 
         Coupon publishedCoupon = couponCommandService.publishNewUserCoupon(user.getId());
@@ -136,7 +137,7 @@ public class UserCommandService {
     }
 
     @Transactional
-    public int createIdPwUserAndSave(UserJoinReq request) throws Exception {
+    public int createIdPwUserAndSave(UserJoinReq request) {
         User
                 createdUser =
                 User.builder().state(UserState.ACTIVE).joinAt(new Timestamp(System.currentTimeMillis())).build();
@@ -145,7 +146,7 @@ public class UserCommandService {
         userAuthCommandService.createIdPwUserAuthAndSave(createdUser, request);
         Grade
                 findGrade =
-                gradeRepository.findById(1).orElseThrow(() -> new IllegalArgumentException("등급 정보를 찾을 수 없습니다."));
+                gradeRepository.findById(1).orElseThrow(() -> new BusinessException("등급 정보를 찾을 수 없습니다."));
         UserInfo createdUserInfo = userInfoCommandService.createAndSaveIdPwUserInfo(createdUser, request, findGrade);
 
         setAndSaveDeliverPlace(createdUser, createdUserInfo, request);
@@ -164,8 +165,7 @@ public class UserCommandService {
     }
 
     @Transactional
-    public int addAppleUser(AppleJoinReq request, String phoneNumber, MultipartFile profileImage)
-            throws Exception {
+    public int addAppleUser(AppleJoinReq request, String phoneNumber, MultipartFile profileImage) {
 
         utils.validateString(request.getName(), 20L, "이름");
         utils.validateString(request.getNickname(), 50L, "닉네임");
@@ -204,13 +204,13 @@ public class UserCommandService {
         return savedUser.getId();
     }
 
-    public DeliverPlace setAndSaveDeliverPlace(User user, UserInfo userInfo, UserJoinReq request) throws Exception {
+    public DeliverPlace setAndSaveDeliverPlace(User user, UserInfo userInfo, UserJoinReq request) {
 
         String address = utils.validateString(request.getAddress(), 100L, "주소");
         String addressDetail = utils.validateString(request.getAddressDetail(), 100L, "상세 주소");
 
         if (request.getPostalCode() == null) {
-            throw new IllegalArgumentException("우편 번호를 입력해주세요.");
+            throw new BusinessException("우편 번호를 입력해주세요.");
         }
 
         DeliverPlace
@@ -224,10 +224,10 @@ public class UserCommandService {
 
     public void withdrawUser(int userId) {
         User findUser = userRepository.findById(userId).orElseThrow(() -> {
-            throw new IllegalArgumentException("유저를 찾을 수 없습니다.");
+            throw new BusinessException("유저를 찾을 수 없습니다.");
         });
         UserInfo findUserInfo = userInfoRepository.findByUserId(userId).orElseThrow(() -> {
-            throw new IllegalArgumentException("유저를 찾을 수 없습니다.");
+            throw new BusinessException("유저를 찾을 수 없습니다.");
         });
         findUser.setState(UserState.DELETED);
         findUser.setWithdrawAt(utils.now());
@@ -339,7 +339,7 @@ public class UserCommandService {
 
     public UserAuth checkUserAuthExist(LoginType loginType, String loginId) {
         return userAuthRepository.findByLoginTypeAndLoginId(loginType, loginId).orElseThrow(() -> {
-            throw new IllegalArgumentException("유저를 찾을 수 없습니다.");
+            throw new BusinessException("유저를 찾을 수 없습니다.");
         });
     }
 
@@ -392,7 +392,7 @@ public class UserCommandService {
 
     public UserInfo selectUserWithPhone(String phone) {
         return userInfoRepository.findByPhone(phone).orElseThrow(() -> {
-            throw new IllegalArgumentException("휴대폰 번호를 찾을 수 없습니다.");
+            throw new BusinessException("휴대폰 번호를 찾을 수 없습니다.");
         });
     }
 
@@ -418,12 +418,12 @@ public class UserCommandService {
                     isLoginTypeExists = true;
                 }
                 if (userAuth.getUser().getState() == UserState.DELETED) {
-//                    throw new IllegalArgumentException("탈퇴한 유저입니다.");
+//                    throw new BusinessException("탈퇴한 유저입니다.");
                     userAuth.getUser().setState(UserState.ACTIVE);
                     userAuth.getUser().setWithdrawAt(null);
                 }
                 if (userAuth.getUser().getState() == UserState.BANNED) {
-                    throw new IllegalArgumentException("운영 정책상 비활성된 유저입니다.");
+                    throw new BusinessException("운영 정책상 비활성된 유저입니다.");
                 }
             }
         }
@@ -441,7 +441,7 @@ public class UserCommandService {
     }
 
     @Transactional
-    public boolean addUserAuthIfPhoneNumberExists(UserJoinReq request) throws Exception {
+    public boolean addUserAuthIfPhoneNumberExists(UserJoinReq request) {
 
         Optional<UserInfo> optionalUserInfo = userInfoRepository.findByPhone(request.getPhone().replace("-", ""));
 
@@ -454,15 +454,15 @@ public class UserCommandService {
 
         for (UserAuth userAuth : existingUserAuth) {
             if (userAuth.getLoginType() == LoginType.IDPW) {
-                throw new IllegalArgumentException("회원가입된 이력이 있습니다");
+                throw new BusinessException("회원가입된 이력이 있습니다");
             }
             if (userAuth.getUser().getState() == UserState.DELETED) {
-//                throw new IllegalArgumentException("탈퇴한 유저입니다.");
+//                throw new BusinessException("탈퇴한 유저입니다.");
                 userAuth.getUser().setState(UserState.ACTIVE);
                 userAuth.getUser().setWithdrawAt(null);
             }
             if (userAuth.getUser().getState() == UserState.BANNED) {
-                throw new IllegalArgumentException("운영 정책상 비활성된 유저입니다.");
+                throw new BusinessException("운영 정책상 비활성된 유저입니다.");
             }
         }
 

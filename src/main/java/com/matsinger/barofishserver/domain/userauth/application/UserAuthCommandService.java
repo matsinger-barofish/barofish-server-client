@@ -1,17 +1,18 @@
 package com.matsinger.barofishserver.domain.userauth.application;
 
 import com.matsinger.barofishserver.domain.user.domain.User;
+import com.matsinger.barofishserver.domain.user.dto.SnsJoinReq;
 import com.matsinger.barofishserver.domain.user.dto.UserJoinReq;
+import com.matsinger.barofishserver.domain.user.dto.UserUpdateReq;
 import com.matsinger.barofishserver.domain.user.exception.UserException;
 import com.matsinger.barofishserver.domain.user.repository.UserRepository;
-import com.matsinger.barofishserver.domain.userauth.domain.UserAuth;
-import com.matsinger.barofishserver.jwt.JwtProvider;
-import com.matsinger.barofishserver.domain.user.dto.SnsJoinReq;
-import com.matsinger.barofishserver.domain.user.dto.UserUpdateReq;
 import com.matsinger.barofishserver.domain.userauth.domain.LoginType;
+import com.matsinger.barofishserver.domain.userauth.domain.UserAuth;
 import com.matsinger.barofishserver.domain.userauth.repository.UserAuthRepository;
 import com.matsinger.barofishserver.domain.userinfo.domain.UserInfo;
 import com.matsinger.barofishserver.domain.userinfo.repository.UserInfoRepository;
+import com.matsinger.barofishserver.global.exception.BusinessException;
+import com.matsinger.barofishserver.jwt.JwtProvider;
 import com.matsinger.barofishserver.utils.Common;
 import com.matsinger.barofishserver.utils.RegexConstructor;
 import com.matsinger.barofishserver.utils.sms.SmsService;
@@ -47,7 +48,7 @@ public class UserAuthCommandService {
             UserAuth findUserAuth = optionalUserAuth.get();
             User findUser = userRepository.findById(findUserAuth.getUserId()).get();
             userValidator.validateUserState(findUser);
-            throw new IllegalArgumentException("중복된 아이디가 존재합니다.");
+            throw new BusinessException("중복된 아이디가 존재합니다.");
         }
 
         UserAuth userAuth = request.toUserAuth();
@@ -58,12 +59,16 @@ public class UserAuthCommandService {
         return userAuthRepository.save(userAuth);
     }
 
-    public UserAuth createIdPwUserAuthAndSave(User createdUser, UserJoinReq request) throws Exception {
+    public UserAuth createIdPwUserAuthAndSave(User createdUser, UserJoinReq request) {
 
         String email = util.validateString(request.getEmail(), 300L, "이메일");
         String password = request.getPassword();
 
         validate(email, password);
+        Optional<UserAuth> optionalUserAuth = userAuthRepository.findByLoginTypeAndLoginId(LoginType.IDPW, email);
+        if (optionalUserAuth.isPresent()) {
+            throw new BusinessException("이메일 주소가 존재합니다." + "\n" + "다른 이메일 주소를 입력해주세요.");
+        }
 
         UserAuth
                 createdUserAuth =
@@ -80,43 +85,43 @@ public class UserAuthCommandService {
         UserAuth userAuth = userAuthRepository.findFirstByUserId(userId);
 
         if (request.getNewPassword() == null) {
-            throw new IllegalArgumentException("비밀번호를 입력해주세요.");
+            throw new BusinessException("비밀번호를 입력해주세요.");
         }
         if (request.getOldPassword() == null) {
-            throw new IllegalArgumentException("변경 전 비밀번호를 입력해주세요.");
+            throw new BusinessException("변경 전 비밀번호를 입력해주세요.");
         }
         if (!userAuth.getLoginType().equals(LoginType.IDPW)) {
-            throw new IllegalArgumentException("소셜 로그인 유저입니다.");
+            throw new BusinessException("소셜 로그인 유저입니다.");
         }
         if (!BCrypt.checkpw(request.getOldPassword(), userAuth.getPassword())) {
-            throw new IllegalArgumentException("이전 비밀번호와 일치하지 않습니다.");
+            throw new BusinessException("이전 비밀번호와 일치하지 않습니다.");
         }
         if (!Pattern.matches(re.password, request.getNewPassword()))
-            throw new IllegalArgumentException("비밀번호 형식을 확인해주세요.");
+            throw new BusinessException("비밀번호 형식을 확인해주세요.");
         String password = BCrypt.hashpw(request.getNewPassword(), BCrypt.gensalt());
         userAuth.setPassword(password);
     }
 
     private void validate(String email, String password) {
         if (!Pattern.matches(re.email, email)) {
-            throw new IllegalArgumentException("이메일 형식을 확인해주세요.");
+            throw new BusinessException("이메일 형식을 확인해주세요.");
         }
 
         if (!Pattern.matches(re.password, password)) {
-            throw new IllegalArgumentException("비밀번호 형식을 확인해주세요.");
+            throw new BusinessException("비밀번호 형식을 확인해주세요.");
         }
     }
 
     public String resetPassword(String phoneNumber) {
         UserInfo
                 findUserInfo =
-                userInfoRepository.findByPhone(phoneNumber).orElseThrow(() -> new IllegalArgumentException(
+                userInfoRepository.findByPhone(phoneNumber).orElseThrow(() -> new BusinessException(
                         "휴대폰 번호를 찾을 수 없습니다."));
 
         UserAuth findUserAuth = userAuthRepository.findFirstByUserId(findUserInfo.getUserId());
 
         if (findUserInfo == null) {
-            new IllegalArgumentException("소셜 로그인 유저입니다.");
+            new BusinessException("소셜 로그인 유저입니다.");
         }
         String newPassword = generateRandomString(6);
         findUserAuth.setPassword(BCrypt.hashpw(newPassword, BCrypt.gensalt()));

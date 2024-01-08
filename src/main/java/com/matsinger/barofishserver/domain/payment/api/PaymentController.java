@@ -27,14 +27,11 @@ public class PaymentController {
     public ResponseEntity<CustomResponse<Boolean>> cancelOrder(@RequestHeader(value = "Authorization") Optional<String> auth,
                                                                @PathVariable("orderId") String orderId) {
         CustomResponse<Boolean> res = new CustomResponse<>();
-        Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.PARTNER), auth);
-        if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
-        try {
-            Integer storeId = tokenInfo.get().getId();
-            Orders order = orderService.selectOrder(orderId);
-            return ResponseEntity.ok(res);
-        } catch (Exception e) {
-            return res.defaultError(e);
-        }
+
+                TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN, TokenAuthType.PARTNER), auth);
+
+        Integer storeId = tokenInfo.getId();
+        Orders order = orderService.selectOrder(orderId);
+        return ResponseEntity.ok(res);
     }
 }

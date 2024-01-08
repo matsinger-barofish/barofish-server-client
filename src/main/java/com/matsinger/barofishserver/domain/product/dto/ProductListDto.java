@@ -14,6 +14,7 @@ import java.util.List;
 @NoArgsConstructor
 public class ProductListDto {
     Integer id;
+    Integer productId;
     ProductState state;
     String image;
     String title;
@@ -24,9 +25,22 @@ public class ProductListDto {
     Boolean isLike;
     Integer storeId;
     String storeName;
-    Integer minOrderPrice;
-    String storeImage;
     ProductDeliverFeeType deliverFeeType;
+    Integer minOrderPrice;
+    Integer productDeliveryFee;
+    Boolean isConditional;
+    Integer minStorePrice;
+    Integer storeDeliverFee;
+    String storeImage;
     Integer parentCategoryId;
     List<ProductFilterValueDto> filterValues;
+
+    Boolean tastingNoteExists;
+
+    public void convertImageUrlsToFirstUrl() {
+        String processedUrls = this.image.substring(1, this.image.length() - 1);
+        String[] parsedUrls = processedUrls.split(", ");
+
+        this.image = parsedUrls[0];
+    }
 }

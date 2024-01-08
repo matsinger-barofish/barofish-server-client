@@ -13,6 +13,7 @@ import com.matsinger.barofishserver.domain.store.application.StoreService;
 import com.matsinger.barofishserver.domain.store.dto.SimpleStore;
 import com.matsinger.barofishserver.domain.userinfo.domain.UserInfo;
 import com.matsinger.barofishserver.domain.userinfo.repository.UserInfoRepository;
+import com.matsinger.barofishserver.global.exception.BusinessException;
 import com.matsinger.barofishserver.utils.S3.S3Uploader;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -82,12 +83,15 @@ public class ReviewCommandService {
 
     public ReviewDto convert2Dto(Review review, Integer userId) {
         ReviewDto dto = review.convert2Dto();
+
         UserInfo
                 userDto =
                 userInfoRepository.findById(review.getUserId()).orElseThrow(() -> new Error("유저 정보를 찾을 수 없습니다."));
         SimpleStore store = storeService.selectStoreInfo(review.getStore().getId()).convert2Dto();
         Integer likeCount = countReviewLike(review.getId());
-        dto.setIsLike(userId != null ? reviewLikeRepository.existsByUserIdAndReviewId(userId, review.getId()) : false);
+        dto.setIsLike(userId != null
+                ? reviewLikeRepository.existsByUserIdAndReviewId(userId, review.getId())
+                : false);
         dto.setLikeCount(likeCount);
         dto.setUser(userDto.convert2Dto());
         dto.setStore(store);
@@ -137,11 +141,11 @@ public class ReviewCommandService {
     }
 
     @Transactional
-    public Integer update(Integer userId, Integer reviewId, UpdateReviewReq data, List<MultipartFile> images) throws Exception {
+    public Integer update(Integer userId, Integer reviewId, UpdateReviewReq data, List<MultipartFile> images) {
 
         Review findReview = reviewQueryService.findById(reviewId);
         if (findReview.getUserId() != userId) {
-            throw new IllegalArgumentException("타인의 리뷰입니다.");
+            throw new BusinessException("타인의 리뷰입니다.");
         }
 
         deleteAndSetEvaluations(reviewId, data);
@@ -170,7 +174,7 @@ public class ReviewCommandService {
         }
     }
 
-    private void deleteExistingImagesAndSetNewImages(List<MultipartFile> images, Review findReview) throws Exception {
+    private void deleteExistingImagesAndSetNewImages(List<MultipartFile> images, Review findReview) {
         if (images != null) {
             String processedUrls = findReview.getImages().substring(1, findReview.getImages().length() - 1);
             String[] parsedUrls = processedUrls.split(", ");

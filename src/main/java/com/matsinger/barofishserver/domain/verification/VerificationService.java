@@ -1,5 +1,6 @@
 package com.matsinger.barofishserver.domain.verification;
 
+import com.matsinger.barofishserver.global.exception.BusinessException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -17,11 +18,11 @@ public class VerificationService {
         Verification verification = null;
 
         if (verificationId == null) {
-            throw new IllegalArgumentException("인증을 먼저 진행해주세요.");
+            throw new BusinessException("인증을 먼저 진행해주세요.");
         } else if (verificationId != null) {
             verification = selectVerificationById(verificationId);
             if (verification == null || verification.getExpiredAt() != null)
-                throw new IllegalArgumentException("인증을 먼저 진행해주세요.");
+                throw new BusinessException("인증을 먼저 진행해주세요.");
         }
     }
 

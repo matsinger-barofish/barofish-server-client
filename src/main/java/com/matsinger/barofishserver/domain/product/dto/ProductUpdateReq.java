@@ -24,13 +24,14 @@ public class ProductUpdateReq {
     private Integer minOrderPrice;
     private String deliveryInfo;
     private Integer expectedDeliverDay;
-    private Integer forwardingTime;
+    private String forwardingTime;
     private Integer deliverBoxPerAmount;
     private String descriptionContent;
     private Boolean needTaxation;
     private Float pointRate;
     private Timestamp promotionStartAt;
     private Timestamp promotionEndAt;
+
     private List<Integer> difficultDeliverAddressIds;
     private List<Integer> searchFilterFieldIds;
     private List<ProductFilterValueReq> filterValues;

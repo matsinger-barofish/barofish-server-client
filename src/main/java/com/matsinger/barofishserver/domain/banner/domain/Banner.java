@@ -57,13 +57,20 @@ public class Banner {
     private Category category;
 
     public BannerDto convert2Dto() {
-        return BannerDto.builder().id(this.id).state(this.state).type(this.type).curationId(this.curation !=
-                null ? this.curation.getId() : null).curationName(this.curation !=
-                null ? this.curation.getTitle() : null).noticeId(this.notice !=
-                null ? this.notice.getId() : null).noticeTitle(this.notice !=
-                null ? this.notice.getTitle() : null).categoryId(this.category !=
-                null ? this.category.getId() : null).categoryName(this.category !=
-                null ? this.category.getName() : null).image(this.image).link(this.link).sortNo(this.sortNo).build();
+        return BannerDto.builder()
+                .id(this.id)
+                .state(this.state)
+                .type(this.type)
+                .curationId(this.curation != null ? this.curation.getId() : null)
+                .curationName(this.curation != null ? this.curation.getTitle() : null)
+                .noticeId(this.notice != null ? this.notice.getId() : null)
+                .noticeTitle(this.notice != null ? this.notice.getTitle() : null)
+                .categoryId(this.category != null ? this.category.getId() : null)
+                .categoryName(this.category != null ? this.category.getName() : null)
+                .image(this.image)
+                .link(this.link)
+                .sortNo(this.sortNo)
+                .build();
     }
 
     public void setState(BannerState state) {

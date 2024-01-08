@@ -5,6 +5,7 @@ import com.matsinger.barofishserver.domain.user.paymentMethod.domain.PaymentMeth
 import com.matsinger.barofishserver.domain.user.paymentMethod.dto.PaymentMethodDto;
 import com.matsinger.barofishserver.domain.user.paymentMethod.repository.PaymentMethodRepository;
 import com.matsinger.barofishserver.domain.user.repository.UserRepository;
+import com.matsinger.barofishserver.global.exception.BusinessException;
 import com.matsinger.barofishserver.utils.AES256;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -27,7 +28,7 @@ public class PaymentMethodQueryService {
     public Optional<List<PaymentMethodDto>> getPaymentMethods(int userId) {
         User
                 findUser =
-                userRepository.findById(userId).orElseThrow(() -> new IllegalArgumentException("유저를 찾을 수 없습니다."));
+                userRepository.findById(userId).orElseThrow(() -> new BusinessException("유저를 찾을 수 없습니다."));
 
         List<PaymentMethod> paymentMethods = paymentMethodRepository.findAllByUserId(userId);
         Optional<List<PaymentMethodDto>> paymentMethodDtos = Optional.of(paymentMethods.stream().map(method -> {
@@ -40,7 +41,7 @@ public class PaymentMethodQueryService {
         return paymentMethodDtos;
     }
 
-    public PaymentMethodDto convert2Dto(PaymentMethod paymentMethod) throws Exception {
+    public PaymentMethodDto convert2Dto(PaymentMethod paymentMethod) {
         return PaymentMethodDto.builder().id(paymentMethod.getId()).userId(paymentMethod.getUserId()).cardNo(aes256.decrypt(
                 paymentMethod.getCardNo()).replaceAll("(\\d{6})(\\d{6})(\\d{3})(\\d)", "$1******$3*")).expiryAt(
                 paymentMethod.getExpiryAt()).birth(paymentMethod.getBirth()).cardName(paymentMethod.getCardName()).name(

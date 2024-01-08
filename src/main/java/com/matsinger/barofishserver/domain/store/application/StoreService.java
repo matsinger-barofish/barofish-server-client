@@ -1,20 +1,20 @@
 package com.matsinger.barofishserver.domain.store.application;
 
 
+import com.matsinger.barofishserver.domain.product.repository.ProductRepository;
 import com.matsinger.barofishserver.domain.review.domain.Review;
 import com.matsinger.barofishserver.domain.review.dto.ReviewDto;
 import com.matsinger.barofishserver.domain.review.dto.ReviewStatistic;
-import com.matsinger.barofishserver.domain.review.repository.ReviewRepository;
-import com.matsinger.barofishserver.domain.store.domain.*;
-import com.matsinger.barofishserver.domain.product.repository.ProductRepository;
 import com.matsinger.barofishserver.domain.review.dto.v2.ReviewEvaluationSummaryDto;
+import com.matsinger.barofishserver.domain.review.repository.ReviewRepository;
 import com.matsinger.barofishserver.domain.review.repository.ReviewRepositoryImpl;
+import com.matsinger.barofishserver.domain.store.domain.*;
+import com.matsinger.barofishserver.domain.store.dto.SimpleStore;
+import com.matsinger.barofishserver.domain.store.dto.StoreDto;
 import com.matsinger.barofishserver.domain.store.repository.StoreInfoRepository;
 import com.matsinger.barofishserver.domain.store.repository.StoreRepository;
 import com.matsinger.barofishserver.domain.store.repository.StoreScrapRepository;
-import com.matsinger.barofishserver.domain.store.dto.SimpleStore;
-import com.matsinger.barofishserver.domain.store.dto.StoreAdditionalDto;
-import com.matsinger.barofishserver.domain.store.dto.StoreDto;
+import com.matsinger.barofishserver.global.exception.BusinessException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -41,21 +41,7 @@ public class StoreService {
 
     public StoreDto convert2Dto(Store store, Boolean isUser) {
         StoreInfo storeInfo = selectStoreInfo(store.getId());
-        StoreAdditionalDto
-                additionalDto =
-                isUser ? null : StoreAdditionalDto.builder().settlementRate(storeInfo.getSettlementRate()).bankName(
-                        storeInfo.getBankName()).bankHolder(storeInfo.getBankHolder()).bankAccount(storeInfo.getBankAccount()).representativeName(
-                        storeInfo.getRepresentativeName()).companyId(storeInfo.getCompanyId()).businessType(storeInfo.getBusinessType()).mosRegistrationNumber(
-                        storeInfo.getMosRegistrationNumber()).businessAddress(storeInfo.getBusinessAddress()).postalCode(
-                        storeInfo.getPostalCode()).lotNumberAddress(storeInfo.getLotNumberAddress()).streetNameAddress(
-                        storeInfo.getStreetNameAddress()).addressDetail(storeInfo.getAddressDetail()).tel(storeInfo.getTel()).email(
-                        storeInfo.getEmail()).faxNumber(storeInfo.getFaxNumber()).mosRegistration(storeInfo.getMosRegistration()).businessRegistration(
-                        storeInfo.getBusinessRegistration()).bankAccountCopy(storeInfo.getBankAccountCopy()).build();
-        return StoreDto.builder().id(store.getId()).state(store.getState()).loginId(store.getLoginId()).joinAt(store.getJoinAt()).backgroundImage(
-                storeInfo.getBackgroudImage()).profileImage(storeInfo.getProfileImage()).name(storeInfo.getName()).isReliable(
-                storeInfo.getIsReliable()).location(storeInfo.getLocation()).visitNote(storeInfo.getVisitNote()).keyword(
-                storeInfo.getKeyword().split(",")).oneLineDescription(storeInfo.getOneLineDescription()).refundDeliverFee(
-                storeInfo.getRefundDeliverFee()).additionalData(additionalDto).deliverCompany(storeInfo.getDeliverCompany()).build();
+        return storeInfo.toStoreDto(store, isUser);
     }
 
     public SimpleStore convert2SimpleDto(StoreInfo storeInfo, Integer userId) {
@@ -89,7 +75,7 @@ public class StoreService {
         SimpleStore simpleStore = SimpleStore.builder()
                         .loginId(store.getLoginId())
                         .storeId(storeInfo.getStoreId())
-                        .backgroundImage(storeInfo.getBackgroudImage())
+                        .backgroundImage(storeInfo.getbackgroundImage())
                         .profileImage(storeInfo.getProfileImage())
                         .name(storeInfo.getName())
                         .location(storeInfo.getLocation())
@@ -104,6 +90,9 @@ public class StoreService {
                         .reviewCount(reviewCount)
                         .productCount(productCount)
                         .deliverCompany(storeInfo.getDeliverCompany())
+                        .minStorePrice(storeInfo.getMinStorePrice())
+                        .deliveryFee(storeInfo.getDeliveryFee())
+                        .isConditional(storeInfo.getIsConditional())
                         .build();
         return simpleStore;
     }
@@ -151,13 +140,13 @@ public class StoreService {
 
     public Store selectStore(Integer id) {
         return storeRepository.findById(id).orElseThrow(() -> {
-            throw new IllegalArgumentException("상점 정보를 찾을 수 없습니다.");
+            throw new BusinessException("상점 정보를 찾을 수 없습니다.");
         });
     }
 
     public StoreInfo selectStoreInfo(Integer id) {
         return storeInfoRepository.findById(id).orElseThrow(() -> {
-            throw new IllegalArgumentException("상점 정보를 찾을 수 없습니다.");
+            throw new BusinessException("상점 정보를 찾을 수 없습니다.");
         });
     }
 
@@ -171,7 +160,7 @@ public class StoreService {
 
     public Store selectStoreByLoginId(String loginId) {
         Store store = storeRepository.findByLoginId(loginId).orElseThrow(() -> {
-            throw new IllegalArgumentException("스토어 정보를 찾을 수 없습니다.");
+            throw new BusinessException("스토어 정보를 찾을 수 없습니다.");
         });
         return store;
     }

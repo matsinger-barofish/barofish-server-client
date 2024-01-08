@@ -1,10 +1,9 @@
 package com.matsinger.barofishserver.utils;
 
+import com.matsinger.barofishserver.global.exception.ErrorCode;
 import lombok.Getter;
 import lombok.Setter;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.ResponseEntity;
 
 import java.util.Optional;
 
@@ -17,19 +16,12 @@ public class CustomResponse<T> {
     private String code = null;
     private Optional<T> data;
 
-    public ResponseEntity<CustomResponse<T>> throwError(String errorMsg, String code) {
-        this.setIsSuccess(false);
-        this.setErrorMsg(errorMsg);
-        this.setCode(code);
-        return ResponseEntity.ok(this);
+    public void setCode(ErrorCode errorCode) {
+        this.ErrorMsg = errorCode.getMessage();
+        this.code = errorCode.getCode();
     }
 
-    public ResponseEntity<CustomResponse<T>> defaultError(Exception e) {
-        this.setIsSuccess(false);
-        System.out.println(e);
-        this.setErrorMsg(e.getMessage());
-        this.setCode("INTERNAL_SERVER_ERROR");
-        this.setData(null);
-        return ResponseEntity.ok(this);
+    public void setCode(String errorCode) {
+        this.code = errorCode;
     }
 }

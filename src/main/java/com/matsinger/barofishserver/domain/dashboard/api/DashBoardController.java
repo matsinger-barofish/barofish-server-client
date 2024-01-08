@@ -33,13 +33,11 @@ public class DashBoardController {
     @GetMapping("")
     public ResponseEntity<CustomResponse<DashBoard>> selectDashBoard(@RequestHeader(value = "Authorization") Optional<String> auth) {
         CustomResponse<DashBoard> res = new CustomResponse<>();
-        Optional<TokenInfo>
-                tokenInfo =
-                jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN, TokenAuthType.PARTNER), auth);
-        if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
+
+                TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN, TokenAuthType.PARTNER), auth);
 
         Integer storeId = null;
-        if (tokenInfo.get().getType().equals(TokenAuthType.PARTNER)) storeId = tokenInfo.get().getId();
+        if (tokenInfo.getType().equals(TokenAuthType.PARTNER)) storeId = tokenInfo.getId();
         Integer dailyJoinCount = storeId == null ? dashBoardService.selectJoinCount(DashBoardType.DAILY) : null;
         List<InquiryDto> inquiries = new ArrayList<>();
         if (storeId == null) inquiries = dashBoardService.selectInquiryList(null);

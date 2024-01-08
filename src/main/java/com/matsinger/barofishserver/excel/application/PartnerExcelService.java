@@ -39,7 +39,7 @@ public class PartnerExcelService {
         StoreInfo storeInfo;
     }
 
-    public StoreData convertRow2StoreInfo(Row row) throws Exception {
+    public StoreData convertRow2StoreInfo(Row row) {
         //입점사명 0
         String partnerName = row.getCell(0).getStringCellValue();
         // 입점사 ID 1
@@ -130,7 +130,7 @@ public class PartnerExcelService {
                             BCrypt.gensalt())).joinAt(utils.now()).build();
             StoreInfo
                     storeInfo =
-                    StoreInfo.builder().backgroudImage(s3Url + "/default_backgroud.png").profileImage(s3Url +
+                    StoreInfo.builder().backgroundImage(s3Url + "/default_backgroud.png").profileImage(s3Url +
                             "/default_profile.png").name(partnerName).location(location).keyword(keyword).visitNote("").oneLineDescription(
                             "").settlementRate(settlementRate).bankName(bankName).bankHolder(bankHolder).bankAccount(
                             bankAccount).representativeName(representativeName).companyId(companyId).businessType(
@@ -141,7 +141,7 @@ public class PartnerExcelService {
         }
     }
 
-    public void processPartnerExcel(MultipartFile file) throws Exception {
+    public void processPartnerExcel(MultipartFile file) {
         XSSFSheet sheet = excelService.readExcel(file);
         Iterator<Row> rowIterator = sheet.iterator();
         Row firstRow = rowIterator.next();

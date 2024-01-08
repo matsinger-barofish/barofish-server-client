@@ -31,12 +31,12 @@ public class CompareFilterController {
     @GetMapping("/management")
     public ResponseEntity<CustomResponse<List<CompareFilter>>> selectCompareFilterAllList(@RequestHeader(value = "Authorization") Optional<String> auth) {
         CustomResponse<List<CompareFilter>> res = new CustomResponse<>();
-        Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
-        if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
 
-            List<CompareFilter> compareFilters = compareFilterQueryService.selectCompareFilterList();
-            res.setData(Optional.ofNullable(compareFilters));
-            return ResponseEntity.ok(res);
+        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
+
+        List<CompareFilter> compareFilters = compareFilterQueryService.selectCompareFilterList();
+        res.setData(Optional.ofNullable(compareFilters));
+        return ResponseEntity.ok(res);
     }
 
     @Getter
@@ -48,8 +48,8 @@ public class CompareFilterController {
     public ResponseEntity<CustomResponse<CompareFilterDto>> addCompareFilter(@RequestHeader(value = "Authorization") Optional<String> auth,
                                                                              @RequestPart(value = "data") AddCompareFilterReq data) throws Exception {
         CustomResponse<CompareFilterDto> res = new CustomResponse<>();
-        Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
-        if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
+
+        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
 
         String name = utils.validateString(data.name, 20L, "이름");
         CompareFilter
@@ -64,8 +64,8 @@ public class CompareFilterController {
                                                                              @PathVariable("id") Integer id,
                                                                              @RequestPart(value = "data") AddCompareFilterReq data) throws Exception {
         CustomResponse<CompareFilterDto> res = new CustomResponse<>();
-        Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
-        if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
+
+        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
 
         CompareFilter compareFilter = compareFilterQueryService.selectCompareFilter(id);
         if (data.name != null) {
@@ -81,12 +81,12 @@ public class CompareFilterController {
     public ResponseEntity<CustomResponse<Boolean>> addCompareFilter(@RequestHeader(value = "Authorization") Optional<String> auth,
                                                                     @PathVariable("id") Integer id) {
         CustomResponse<Boolean> res = new CustomResponse<>();
-        Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
-        if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
 
-            compareFilterQueryService.selectCompareFilter(id);
-            compareFilterCommandService.deleteCompareFilter(id);
-            res.setData(Optional.of(true));
-            return ResponseEntity.ok(res);
+        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
+
+        compareFilterQueryService.selectCompareFilter(id);
+        compareFilterCommandService.deleteCompareFilter(id);
+        res.setData(Optional.of(true));
+        return ResponseEntity.ok(res);
     }
 }

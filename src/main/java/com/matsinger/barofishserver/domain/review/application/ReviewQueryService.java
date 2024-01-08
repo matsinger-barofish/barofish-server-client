@@ -1,13 +1,14 @@
 package com.matsinger.barofishserver.domain.review.application;
 
 import com.matsinger.barofishserver.domain.review.domain.*;
-import com.matsinger.barofishserver.domain.review.dto.v2.*;
 import com.matsinger.barofishserver.domain.review.dto.ReviewStatistic;
 import com.matsinger.barofishserver.domain.review.dto.ReviewTotalStatistic;
+import com.matsinger.barofishserver.domain.review.dto.v2.*;
 import com.matsinger.barofishserver.domain.review.repository.ReviewEvaluationRepository;
 import com.matsinger.barofishserver.domain.review.repository.ReviewLikeRepository;
 import com.matsinger.barofishserver.domain.review.repository.ReviewRepository;
 import com.matsinger.barofishserver.domain.review.repository.ReviewRepositoryImpl;
+import com.matsinger.barofishserver.global.exception.BusinessException;
 import jakarta.persistence.Tuple;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -39,6 +40,10 @@ public class ReviewQueryService {
 
     public Integer countReviewWithProductId(Integer productId) {
         return reviewRepository.countAllByProductId(productId);
+    }
+
+    public Integer countReviewWithoutDeleted(Integer productId, boolean isDeleted) {
+        return reviewRepository.countAllByProductIdAndIsDeleted(productId, isDeleted);
     }
 
     public Integer countAllReviewByUserId(Integer userId) {
@@ -144,7 +149,7 @@ public class ReviewQueryService {
 
     public Review findById(Integer id) {
         return reviewRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("후기를 찾을 수 없습니다."));
+                .orElseThrow(() -> new BusinessException("후기를 찾을 수 없습니다."));
     }
 
     public StoreReviewDto getPagedProductSumStoreReviewInfo(Integer storeId, Integer userId, ReviewOrderByType orderType, PageRequest pageRequest) {

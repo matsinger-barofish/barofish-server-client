@@ -8,6 +8,7 @@ import com.matsinger.barofishserver.domain.product.repository.ProductRepository;
 import com.matsinger.barofishserver.domain.store.application.StoreService;
 import com.matsinger.barofishserver.domain.userinfo.domain.UserInfo;
 import com.matsinger.barofishserver.domain.userinfo.repository.UserInfoRepository;
+import com.matsinger.barofishserver.global.exception.BusinessException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -33,7 +34,7 @@ public class InquiryCommandService {
         inquiryDto.setStore(storeService.selectStoreInfo(product.getStoreId()).convert2Dto());
         UserInfo
                 findUserInfo =
-                userInfoRepository.findById(inquiry.getUserId()).orElseThrow(() -> new IllegalArgumentException(
+                userInfoRepository.findById(inquiry.getUserId()).orElseThrow(() -> new BusinessException(
                         "유저 정보를 찾을 수 " + "없습니다."));
         inquiryDto.setUser(findUserInfo.convert2Dto());
         inquiryDto.setIsMine(userId != null && userId == inquiry.getUserId());

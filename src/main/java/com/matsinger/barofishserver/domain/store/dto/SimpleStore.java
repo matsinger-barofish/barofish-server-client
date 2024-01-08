@@ -29,6 +29,10 @@ public class SimpleStore {
 
     private Boolean isLike;
 
+    private Boolean isConditional;
+    private Integer minStorePrice;
+    private Integer deliveryFee;
+
     @Builder.Default
     private List<ReviewStatistic> reviewStatistic = new ArrayList<>();
 

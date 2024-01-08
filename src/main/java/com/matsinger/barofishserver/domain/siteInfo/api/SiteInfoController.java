@@ -1,22 +1,26 @@
 package com.matsinger.barofishserver.domain.siteInfo.api;
 
+import com.matsinger.barofishserver.domain.siteInfo.application.SiteInfoCommandService;
 import com.matsinger.barofishserver.domain.siteInfo.application.SiteInfoQueryService;
+import com.matsinger.barofishserver.domain.siteInfo.domain.SiteInformation;
+import com.matsinger.barofishserver.domain.siteInfo.dto.SiteInfoDto;
+import com.matsinger.barofishserver.domain.siteInfo.dto.SiteInfoReq;
+import com.matsinger.barofishserver.global.exception.BusinessException;
 import com.matsinger.barofishserver.jwt.JwtService;
 import com.matsinger.barofishserver.jwt.TokenAuthType;
 import com.matsinger.barofishserver.jwt.TokenInfo;
-import com.matsinger.barofishserver.domain.siteInfo.application.SiteInfoCommandService;
-import com.matsinger.barofishserver.domain.siteInfo.dto.SiteInfoDto;
-import com.matsinger.barofishserver.domain.siteInfo.domain.SiteInformation;
-import com.matsinger.barofishserver.domain.siteInfo.dto.SiteInfoReq;
 import com.matsinger.barofishserver.utils.CustomResponse;
 import com.matsinger.barofishserver.utils.RegexConstructor;
 import com.matsinger.barofishserver.utils.S3.S3Uploader;
-import lombok.*;
+import lombok.RequiredArgsConstructor;
 import org.json.JSONArray;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 import java.util.regex.Pattern;
 
 @RestController
@@ -56,8 +60,8 @@ public class SiteInfoController {
                                                                       @RequestHeader(value = "Authorization") Optional<String> auth,
                                                                       @RequestPart(value = "data") SiteInfoReq data) {
         CustomResponse<SiteInfoDto> res = new CustomResponse<>();
-        Optional<TokenInfo> tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
-        if (tokenInfo == null) return res.throwError("인증이 필요합니다.", "FORBIDDEN");
+
+                TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
 
         SiteInformation siteInformation = siteInfoQueryService.selectSiteInfo(id);
         if (id.startsWith("HTML")) {
@@ -66,20 +70,20 @@ public class SiteInfoController {
             SiteInformation result = siteInfoCommandService.updateSiteInfo(siteInformation);
             res.setData(Optional.of(result.convert2Dto()));
         } else if (id.startsWith("INT_")) {
-            if (!data.getContent().matches("[0-9]+")) return res.throwError("숫자만 입력가능합니다.", "INPUT_CHECK_REQUIRED");
+            if (!data.getContent().matches("[0-9]+")) throw new BusinessException("숫자만 입력가능합니다.");
             siteInformation.setContent(data.getContent());
             SiteInformation result = siteInfoCommandService.updateSiteInfo(siteInformation);
             res.setData(Optional.of(result.convert2Dto()));
         } else if (id.startsWith("INTERNAL")) {
-            return res.throwError("수정 불가능한 데이터입니다.", "NOT_ALLOWED");
+            throw new BusinessException("수정 불가능한 데이터입니다.");
         } else if (id.startsWith("URL")) {
             if (!Pattern.matches(reg.httpUrl, data.getContent()))
-                return res.throwError("URL 형식을 확인해주세요.", "INPUT_CHECK_REQUIRED");
+                throw new BusinessException("URL 형식을 확인해주세요.");
             siteInformation.setContent(data.getContent());
             SiteInformation result = siteInfoCommandService.updateSiteInfo(siteInformation);
             res.setData(Optional.ofNullable(result.convert2Dto()));
         } else if (id.startsWith("TC")) {
-            if (data.getTcContent() == null) return res.throwError("내용을 입력해주세요.", "INPUT_CHECK_REQUIRED");
+            if (data.getTcContent() == null) throw new BusinessException("내용을 입력해주세요.");
             JSONArray json = new JSONArray(data.getTcContent());
             String jsonString = json.toString();
             siteInformation.setContent(jsonString);
