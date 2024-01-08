@@ -43,7 +43,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Stream;
 
 @Service
 @RequiredArgsConstructor
@@ -71,7 +70,7 @@ public class OrderCommandService {
     private final CouponUserMapQueryService couponUserMapQueryService;
     private final DeliverPlaceRepository deliverPlaceRepository;
     private final DifficultDeliverAddressQueryService difficultDeliverAddressQueryService;
-    private DeliverPlaceQueryService deliverPlaceQueryService;
+    private final DeliverPlaceQueryService deliverPlaceQueryService;
 
     private void validateRequestInfo(OrderReq request) {
         utils.validateString(request.getName(), 20L, "주문자 이름");
@@ -150,7 +149,7 @@ public class OrderCommandService {
                 .userId(userId)
                 .paymentWay(request.getPaymentWay())
                 .state(OrderState.WAIT_DEPOSIT)
-                .couponId(request.getCouponId())
+                .couponId(request.getCouponId() != null ? request.getCouponId() : null)
                 .orderedAt(utils.now())
                 .totalPrice(finalOrderPrice)
                 .usePoint(request.getPoint())
@@ -165,8 +164,10 @@ public class OrderCommandService {
     }
 
     private void validateCouponAndPoint(OrderReq request, int totalOrderPriceMinusDeliveryFee, UserInfo userInfo) {
-        Coupon coupon = couponQueryService.findById(request.getCouponId());
-        coupon.isAvailable(totalOrderPriceMinusDeliveryFee);
+        if (request.getCouponId() != null) {
+            Coupon coupon = couponQueryService.findById(request.getCouponId());
+            coupon.isAvailable(totalOrderPriceMinusDeliveryFee);
+        }
         userInfo.validatePoint(request.getPoint());
     }
 
@@ -206,6 +207,52 @@ public class OrderCommandService {
         }
     }
 
+    private void setSConditionalDeliveryFee(StoreInfo storeInfo, List<OrderProductInfo> orderProductInfos) {
+        int totalStoreProductPrice = orderProductInfos.stream().mapToInt(v -> v.getTotalProductPrice()).sum();
+        if (storeInfo.meetConditions(totalStoreProductPrice)) {
+        }
+        if (!storeInfo.meetConditions(totalStoreProductPrice)) {
+            int maxProductPrice = orderProductInfos.stream().mapToInt(v -> v.getTotalProductPrice()).max().getAsInt();
+            OrderProductInfo maxPriceOrderProduct = orderProductInfos.stream()
+                    .filter(v -> v.getTotalProductPrice() == maxProductPrice).findFirst().get();
+            maxPriceOrderProduct.setDeliveryFee(storeInfo.getDeliveryFee());
+        }
+    }
+
+    private void setPConditionalDeliveryFee(List<OrderProductInfo> orderProductInfos) {
+        int[] productIds = orderProductInfos.stream()
+                .mapToInt(v -> v.getProductId()).distinct().toArray();
+
+        for (Integer productId : productIds) {
+            Product product = productQueryService.findById(productId);
+
+            if (product.isDeliveryTypeFree()) {
+            }
+            if (product.isDeliveryTypeFreeIfOver()) {
+                setIfOverDeliveryFee(product, orderProductInfos);
+            }
+        }
+    }
+
+    private void setIfOverDeliveryFee(Product product, List<OrderProductInfo> orderProductInfos) {
+        List<OrderProductInfo> targetProductInfos = orderProductInfos.stream()
+                .filter(v -> v.getProductId() == product.getId()).toList();
+        int totalPrice = targetProductInfos.stream()
+                .mapToInt(v -> v.getTotalProductPrice()).sum();
+        if (product.meetConditions(totalPrice)) {
+        }
+        if (!product.meetConditions(totalPrice)) {
+            int maxProductPrice = targetProductInfos.stream()
+                    .mapToInt(v -> v.getTotalProductPrice()).max().getAsInt();
+            OrderProductInfo maxPriceOrderProduct = targetProductInfos.stream()
+                    .filter(v -> v.getTotalProductPrice() == maxProductPrice)
+                    .findFirst().get();
+            int maxDeliveryFee = targetProductInfos.stream()
+                    .mapToInt(v -> v.getDeliveryFee()).max().getAsInt();
+            maxPriceOrderProduct.setDeliveryFee(maxDeliveryFee);
+        }
+    }
+
     public void setVbankInfo(OrderReq request, Orders orders) {
         if (request.getPaymentWay().equals(OrderPaymentWay.VIRTUAL_ACCOUNT)) {
             if (request.getVbankRefundInfo() == null)
@@ -239,51 +286,6 @@ public class OrderCommandService {
         return finalOrderPrice;
     }
 
-    private void setPConditionalDeliveryFee(List<OrderProductInfo> orderProductInfos) {
-        int[] productIds = orderProductInfos.stream()
-                .mapToInt(v -> v.getProductId()).distinct().toArray();
-
-        for (Integer productId : productIds) {
-            Product product = productQueryService.findById(productId);
-
-            if (product.isDeliveryTypeFree()) {
-            }
-            if (product.isDeliveryTypeFreeIfOver()) {
-                setIfOverDeliveryFee(product, orderProductInfos);
-            }
-        }
-    }
-
-    private void setIfOverDeliveryFee(Product product, List<OrderProductInfo> orderProductInfos) {
-        Stream<OrderProductInfo> targetProductInfos = orderProductInfos.stream()
-                .filter(v -> v.getProductId() == product.getId());
-        int totalPrice = targetProductInfos
-                .mapToInt(v -> v.getTotalProductPrice()).sum();
-        if (product.meetConditions(totalPrice)) {
-        }
-        if (!product.meetConditions(totalPrice)) {
-            int maxProductPrice = targetProductInfos
-                    .mapToInt(v -> v.getTotalProductPrice()).max().getAsInt();
-            OrderProductInfo maxPriceOrderProduct = targetProductInfos
-                    .filter(v -> v.getTotalProductPrice() == maxProductPrice)
-                    .findFirst().get();
-            int maxDeliveryFee = targetProductInfos.mapToInt(v -> v.getDeliveryFee()).max().getAsInt();
-            maxPriceOrderProduct.setDeliveryFee(maxDeliveryFee);
-        }
-    }
-
-    private void setSConditionalDeliveryFee(StoreInfo storeInfo, List<OrderProductInfo> orderProductInfos) {
-        int totalStoreProductPrice = orderProductInfos.stream().mapToInt(v -> v.getTotalProductPrice()).sum();
-        if (storeInfo.meetConditions(totalStoreProductPrice)) {
-        }
-        if (storeInfo.meetConditions(totalStoreProductPrice)) {
-            int maxProductPrice = orderProductInfos.stream().mapToInt(v -> v.getTotalProductPrice()).max().getAsInt();
-            OrderProductInfo maxPriceOrderProduct = orderProductInfos.stream()
-                    .filter(v -> v.getTotalProductPrice() == maxProductPrice).findFirst().get();
-            maxPriceOrderProduct.setDeliveryFee(storeInfo.getDeliveryFee());
-        }
-    }
-
 
 
     private Map<StoreInfo, List<OrderProductInfo>> createStoreMapAndReduceQuantity(OrderReq request,
@@ -297,7 +299,6 @@ public class OrderCommandService {
             createStoreMap(orderId, orderProductReq, optionItem, findedProduct, storeMap);
 
             validateProductStatesAndDeleteBasket(userInfo.getUserId(), findedProduct);
-            optionItem.reduceQuantity(orderProductReq.getAmount());
         }
         return storeMap;
     }

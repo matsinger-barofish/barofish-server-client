@@ -141,7 +141,7 @@ public class BasketQueryService {
 
             response.add(
                     BasketProductDtoV2.builder()
-                    .id(productInfo.getId())
+                    .id(product.getId())
                     .store(storeInfo.toBasketStoreDto())
                     .product(basketProductInfoDto)
                     .amount(productInfo.getAmount())
