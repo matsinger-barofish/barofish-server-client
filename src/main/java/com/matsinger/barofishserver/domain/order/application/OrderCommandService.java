@@ -12,6 +12,7 @@ import com.matsinger.barofishserver.domain.order.dto.VBankRefundInfo;
 import com.matsinger.barofishserver.domain.order.orderprductinfo.application.OrderProductInfoCommandService;
 import com.matsinger.barofishserver.domain.order.orderprductinfo.domain.OrderProductInfo;
 import com.matsinger.barofishserver.domain.order.orderprductinfo.domain.OrderProductState;
+import com.matsinger.barofishserver.domain.order.orderprductinfo.repository.OrderProductInfoRepository;
 import com.matsinger.barofishserver.domain.order.repository.OrderRepository;
 import com.matsinger.barofishserver.domain.payment.application.PaymentService;
 import com.matsinger.barofishserver.domain.payment.dto.KeyInPaymentReq;
@@ -39,10 +40,8 @@ import org.jetbrains.annotations.Nullable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -71,6 +70,7 @@ public class OrderCommandService {
     private final DeliverPlaceRepository deliverPlaceRepository;
     private final DifficultDeliverAddressQueryService difficultDeliverAddressQueryService;
     private final DeliverPlaceQueryService deliverPlaceQueryService;
+    private final OrderProductInfoRepository orderProductInfoRepository;
 
     private void validateRequestInfo(OrderReq request) {
         utils.validateString(request.getName(), 20L, "주문자 이름");
@@ -116,7 +116,7 @@ public class OrderCommandService {
         DeliverPlace deliverPlace = deliverPlaceQueryService.findById(request.getDeliverPlaceId());
         OrderDeliverPlace orderDeliverPlace = deliverPlace.toOrderDeliverPlace(orderId);
 
-        Map<StoreInfo, List<OrderProductInfo>> storeMap = createStoreMapAndReduceQuantity(request, userInfo, orderId);
+        Map<StoreInfo, List<OrderProductInfo>> storeMap = createStoreMap(request, userInfo, orderId);
 
         int totalOrderDeliveryFee = 0;
         int totalOrderProductPrice = 0;
@@ -161,6 +161,18 @@ public class OrderCommandService {
 
         setVbankInfo(request, order);
         processKeyInPayment(request, orderId, totalTaxFreePrice);
+
+        save(storeMap, order);
+    }
+
+    private void save(Map<StoreInfo, List<OrderProductInfo>> storeMap, Orders order) {
+        orderRepository.save(order);
+
+        List<OrderProductInfo> orderProductInfos =
+                storeMap.values()
+                        .stream().flatMap(Collection::stream)
+                        .collect(Collectors.toList());
+        orderProductInfoRepository.saveAll(orderProductInfos);
     }
 
     private void validateCouponAndPoint(OrderReq request, int totalOrderPriceMinusDeliveryFee, UserInfo userInfo) {
@@ -234,21 +246,28 @@ public class OrderCommandService {
         }
     }
 
-    private void setIfOverDeliveryFee(Product product, List<OrderProductInfo> orderProductInfos) {
+    private void setIfOverDeliveryFee(Product targetProduct, List<OrderProductInfo> orderProductInfos) {
         List<OrderProductInfo> targetProductInfos = orderProductInfos.stream()
-                .filter(v -> v.getProductId() == product.getId()).toList();
+                .filter(v -> v.getProductId() == targetProduct.getId()).toList();
         int totalPrice = targetProductInfos.stream()
                 .mapToInt(v -> v.getTotalProductPrice()).sum();
-        if (product.meetConditions(totalPrice)) {
+        if (targetProduct.meetConditions(totalPrice)) {
         }
-        if (!product.meetConditions(totalPrice)) {
+        if (!targetProduct.meetConditions(totalPrice)) {
             int maxProductPrice = targetProductInfos.stream()
                     .mapToInt(v -> v.getTotalProductPrice()).max().getAsInt();
             OrderProductInfo maxPriceOrderProduct = targetProductInfos.stream()
                     .filter(v -> v.getTotalProductPrice() == maxProductPrice)
                     .findFirst().get();
-            int maxDeliveryFee = targetProductInfos.stream()
-                    .mapToInt(v -> v.getDeliveryFee()).max().getAsInt();
+
+            int[] targetProductIds = targetProductInfos.stream().mapToInt(v -> v.getProductId()).toArray();
+            int maxDeliveryFee = 0;
+            for (int targetProductId : targetProductIds) {
+                Product product = productQueryService.findById(targetProductId);
+                if (product.getDeliverFee() > maxDeliveryFee) {
+                    maxDeliveryFee = product.getDeliverFee();
+                }
+            }
             maxPriceOrderProduct.setDeliveryFee(maxDeliveryFee);
         }
     }
@@ -288,17 +307,16 @@ public class OrderCommandService {
 
 
 
-    private Map<StoreInfo, List<OrderProductInfo>> createStoreMapAndReduceQuantity(OrderReq request,
-                                                                                   UserInfo userInfo,
-                                                                                   String orderId) {
+    private Map<StoreInfo, List<OrderProductInfo>> createStoreMap(OrderReq request,
+                                                                  UserInfo userInfo,
+                                                                  String orderId) {
         Map<StoreInfo, List<OrderProductInfo>> storeMap = new HashMap<>();
         for (OrderProductReq orderProductReq : request.getProducts()) {
             Product findedProduct = productQueryService.findById(orderProductReq.getProductId());
             OptionItem optionItem = optionItemQueryService.findById(orderProductReq.getOptionId());
 
-            createStoreMap(orderId, orderProductReq, optionItem, findedProduct, storeMap);
-
             validateProductStatesAndDeleteBasket(userInfo.getUserId(), findedProduct);
+            createStoreMap(orderId, orderProductReq, optionItem, findedProduct, storeMap);
         }
         return storeMap;
     }

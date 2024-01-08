@@ -52,7 +52,8 @@ public class OrderProductInfo {
     @Basic
     @Column(name = "delivery_fee", nullable = false)
     private int deliveryFee;
-    @Basic @Column(name = "delivery_fee_type", nullable = true)
+    @Basic @Column(name = "delivery_fee_type", nullable = false)
+    @Enumerated(EnumType.STRING)
     private ProductDeliverFeeType deliveryFeeType;
 
     @Basic
