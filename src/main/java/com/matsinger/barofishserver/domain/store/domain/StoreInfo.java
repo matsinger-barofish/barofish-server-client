@@ -1,5 +1,6 @@
 package com.matsinger.barofishserver.domain.store.domain;
 
+import com.matsinger.barofishserver.domain.basketProduct.dto.BasketStoreDto;
 import com.matsinger.barofishserver.domain.store.dto.SimpleStore;
 import com.matsinger.barofishserver.domain.store.dto.StoreAdditionalDto;
 import com.matsinger.barofishserver.domain.store.dto.StoreDto;
@@ -257,6 +258,18 @@ public class StoreInfo {
 
     public boolean meetConditions(int totalStoreProductPrice) {
         return totalStoreProductPrice >= this.minStorePrice;
+    }
+
+    public BasketStoreDto toBasketStoreDto() {
+        return BasketStoreDto.builder()
+                .storeId(storeId)
+                .name(name)
+                .backgroundImage(backgroundImage)
+                .profileImage(profileImage)
+                .isConditional(isConditional)
+                .minStorePrice(minStorePrice)
+                .deliveryFee(deliveryFee)
+                .build();
     }
 }
 

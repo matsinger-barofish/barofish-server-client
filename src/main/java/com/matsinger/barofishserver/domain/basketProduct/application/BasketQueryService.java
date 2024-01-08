@@ -3,24 +3,32 @@ package com.matsinger.barofishserver.domain.basketProduct.application;
 import com.matsinger.barofishserver.domain.basketProduct.domain.BasketProductInfo;
 import com.matsinger.barofishserver.domain.basketProduct.domain.BasketProductOption;
 import com.matsinger.barofishserver.domain.basketProduct.dto.BasketProductDto;
-import com.matsinger.barofishserver.domain.basketProduct.dto.BasketStoreInquiryDto;
+import com.matsinger.barofishserver.domain.basketProduct.dto.BasketProductDtoV2;
+import com.matsinger.barofishserver.domain.basketProduct.dto.BasketProductInfoDto;
 import com.matsinger.barofishserver.domain.basketProduct.repository.BasketProductInfoRepository;
 import com.matsinger.barofishserver.domain.basketProduct.repository.BasketProductOptionRepository;
 import com.matsinger.barofishserver.domain.basketProduct.repository.BasketQueryRepository;
+import com.matsinger.barofishserver.domain.product.application.ProductQueryService;
 import com.matsinger.barofishserver.domain.product.application.ProductService;
 import com.matsinger.barofishserver.domain.product.domain.Product;
 import com.matsinger.barofishserver.domain.product.dto.ProductListDto;
+import com.matsinger.barofishserver.domain.product.option.application.OptionQueryService;
+import com.matsinger.barofishserver.domain.product.option.domain.Option;
+import com.matsinger.barofishserver.domain.product.optionitem.application.OptionItemQueryService;
 import com.matsinger.barofishserver.domain.product.optionitem.domain.OptionItem;
 import com.matsinger.barofishserver.domain.product.optionitem.dto.OptionItemDto;
 import com.matsinger.barofishserver.domain.product.optionitem.repository.OptionItemRepository;
 import com.matsinger.barofishserver.domain.product.productfilter.application.ProductFilterService;
 import com.matsinger.barofishserver.domain.review.repository.ReviewRepository;
+import com.matsinger.barofishserver.domain.store.application.StoreQueryService;
 import com.matsinger.barofishserver.domain.store.application.StoreService;
+import com.matsinger.barofishserver.domain.store.domain.Store;
 import com.matsinger.barofishserver.domain.store.domain.StoreInfo;
 import com.matsinger.barofishserver.domain.store.dto.SimpleStore;
 import com.matsinger.barofishserver.global.exception.BusinessException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -38,6 +46,10 @@ public class BasketQueryService {
     private final StoreService storeService;
     private final ProductFilterService productFilterService;
     private final ProductService productService;
+    private final ProductQueryService productQueryService;
+    private final StoreQueryService storeQueryService;
+    private final OptionQueryService optionQueryService;
+    private final OptionItemQueryService optionItemQueryService;
     private BasketQueryRepository basketQueryRepository;
 
     public BasketProductInfo selectBasket(Integer id) {
@@ -114,21 +126,79 @@ public class BasketQueryService {
                 product.getId())).build();
     }
 
-    public void selectBasketListV2(Integer userId) {
-        List<BasketStoreInquiryDto> basketStoreInquiryDtos = basketQueryRepository.selectBasketProducts(userId);
+    public List<BasketProductDtoV2> selectBasketListV2(Integer userId) {
+        List<BasketProductInfo> productInfos = basketProductInfoRepository.findAllByUserId(userId);
+        List<BasketProductDtoV2> response = new ArrayList<>();
+        for (BasketProductInfo productInfo : productInfos) {
+            Product product = productQueryService.findById(productInfo.getProductId());
+            Store store = storeQueryService.findById(productInfo.getStoreId());
+            StoreInfo storeInfo = store.getStoreInfo();
+            Option option = optionQueryService.findById(productInfo.getOptionId());
+            OptionItem optionItem = optionItemQueryService.findById(productInfo.getOptionItemId());
 
-        for (BasketStoreInquiryDto storeDto : basketStoreInquiryDtos) {
-            storeDto.getProducts().forEach(v -> v.calculateDeliveryFee());
+            BasketProductInfoDto basketProductInfoDto = getBasketProductInfoDto(productInfo, product, optionItem, storeInfo);
+            OptionItemDto optionItemDto = getOptionItemDto(productInfo, optionItem, product);
 
-
+            response.add(
+                    BasketProductDtoV2.builder()
+                    .id(productInfo.getId())
+                    .store(storeInfo.toBasketStoreDto())
+                    .product(basketProductInfoDto)
+                    .amount(productInfo.getAmount())
+                    .deliverFeeType(product.getDeliverFeeType())
+                    .minOrderPrice(product.getMinOrderPrice())
+                    .deliveryFee(product.getDeliverFee())
+                    .isConditional(storeInfo.getIsConditional())
+                    .minStorePrice(storeInfo.getMinStorePrice())
+                    .option(optionItemDto)
+                    .build()
+            );
         }
+        return response;
+    }
+
+    private static OptionItemDto getOptionItemDto(BasketProductInfo productInfo, OptionItem optionItem, Product product) {
+        OptionItemDto optionItemDto = OptionItemDto.builder()
+                .id(optionItem.getId())
+                .optionId(optionItem.getOptionId())
+                .name(optionItem.getName())
+                .discountPrice(optionItem.getDiscountPrice())
+                .amount(productInfo.getAmount())
+                .purchasePrice(optionItem.getPurchasePrice())
+                .originPrice(optionItem.getOriginPrice())
+                .deliveryFee(product.getDeliverFee())
+                .deliverBoxPerAmount(optionItem.getDeliverBoxPerAmount())
+                .pointRate(product.getPointRate())
+                .minOrderPrice(product.getMinOrderPrice())
+                .build();
+        return optionItemDto;
+    }
+
+    @NotNull
+    private static BasketProductInfoDto getBasketProductInfoDto(BasketProductInfo productInfo, Product product, OptionItem optionItem, StoreInfo storeInfo) {
+        BasketProductInfoDto basketProductInfoDto = BasketProductInfoDto.builder()
+                .id(productInfo.getId())
+                .productId(product.getId())
+                .state(product.getState())
+                .image(product.getImages())
+                .title(product.getTitle())
+                .isNeedTaxation(product.getNeedTaxation())
+                .discountPrice(optionItem.getDiscountPrice())
+                .originPrice(optionItem.getOriginPrice())
+                .storeId(storeInfo.getStoreId())
+                .minOrderPrice(product.getMinOrderPrice())
+                .minStorePrice(storeInfo.getMinStorePrice())
+                .deliverFeeType(product.getDeliverFeeType())
+                .build();
+        basketProductInfoDto.convertImageUrlsToFirstUrl();
+        return basketProductInfoDto;
     }
 
     public Optional<BasketProductInfo> findByUserIdAndOptionItemId(Integer userId, Integer optionItemReqId) {
         return basketProductInfoRepository.findByUserIdAndOptionItemId(userId, optionItemReqId);
     }
 
-    public Optional<List<BasketProductInfo>> findAllByUserIdAndProductId(Integer userId, int productId) {
-        return basketProductInfoRepository.findAllByProductIdAndUserId(userId, productId);
+    public List<BasketProductInfo> findAllByUserIdAndProductId(Integer userId, int productId) {
+        return basketProductInfoRepository.findAllByUserIdAndProductId(userId, productId);
     }
 }
