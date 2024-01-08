@@ -185,12 +185,6 @@ public class BasketCommandService {
         }
     }
 
-    private void addQuantityToExistingBasketProduct(Integer userId, AddBasketOptionReq optionReq) {
-        BasketProductInfo basketProductInfo = basketQueryService.findByUserIdAndOptionItemId(userId, optionReq.getOptionId()).get();
-        basketProductInfo.addQuantity(optionReq.getOptionId(), optionReq.getAmount());
-        basketProductInfoRepository.save(basketProductInfo);
-    }
-
     private void addBasketProduct(Integer userId,
                                   AddBasketOptionReq optionReq,
                                   Option option,
@@ -205,15 +199,9 @@ public class BasketCommandService {
                 .isNeeded(option.getIsNeeded())
                 .optionItemId(optionItem.getId())
                 .amount(optionReq.getAmount())
+                .deliveryFee(0)
                 .build()
         );
-    }
-
-    private void checkNecessaryOptionExistsInBasket(List<BasketProductInfo> basketProductInfos) {
-        boolean necessaryOptionExists = basketProductInfos.stream().anyMatch(v -> v.isNeeded());
-        if (!necessaryOptionExists) {
-            throw new BusinessException("장바구니에 필수옵션이 존재하지 않습니다.");
-        }
     }
 
     public void addAmount(Integer userId, Integer orderProductInfoId, Integer amount) {

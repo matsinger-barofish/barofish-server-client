@@ -252,7 +252,10 @@ public class ProductQueryService {
             String reviewPictureUrls = review.getReviewPictureUrls();
 
             String removedBrackets = removeBrackets(reviewPictureUrls);
-            List<String> reviewImages = Arrays.stream(removedBrackets.split(", ")).toList();
+            List<String> reviewImages =
+                    removedBrackets != null
+                            ? Arrays.stream(removedBrackets.split(", ")).toList()
+                            : null;
 
             response.add(ProductPhotiReviewDto.builder()
                     .reviewId(review.getReviewId())
@@ -265,14 +268,17 @@ public class ProductQueryService {
     }
 
     private String removeBrackets(String reviewPictureUrls) {
-        StringBuilder sb = new StringBuilder();
-        for (char c : reviewPictureUrls.toCharArray()) {
-            if (c == '[' || c == ']') {
-                continue;
+        if (reviewPictureUrls != null) {
+            StringBuilder sb = new StringBuilder();
+            for (char c : reviewPictureUrls.toCharArray()) {
+                if (c == '[' || c == ']') {
+                    continue;
+                }
+                sb.append(c);
             }
-            sb.append(c);
+            return sb.toString();
         }
-        return sb.toString();
+        return null;
     }
 
     private void validateProductExists(Integer productId) {
