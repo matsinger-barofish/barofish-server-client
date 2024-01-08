@@ -9,6 +9,7 @@ import com.matsinger.barofishserver.domain.store.repository.StoreQueryRepository
 import com.matsinger.barofishserver.domain.store.repository.StoreRepository;
 import com.matsinger.barofishserver.global.exception.BusinessException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
@@ -18,6 +19,7 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class StoreQueryService {
 
     private final StoreRepository storeRepository;
@@ -25,6 +27,7 @@ public class StoreQueryService {
     private final StoreQueryRepository storeQueryRepository;
 
     public Store findById(int id) {
+        log.info("storeId = {}", id);
         return storeRepository.findById(id)
                 .orElseThrow(() -> new BusinessException("파트너를 찾을 수 없습니다."));
     }
