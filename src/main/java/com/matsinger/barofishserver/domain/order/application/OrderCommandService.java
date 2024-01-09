@@ -219,7 +219,11 @@ public class OrderCommandService {
     }
 
     private void setDeliveryFeeToHighestPriceProduct(List<OrderProductInfo> targetProductInfos) {
-        log.info("targetProductInfos = {}", targetProductInfos.toString());
+        // 계산할 배송비가 없으면 그냥 return
+        if (targetProductInfos.isEmpty()) {
+            return;
+        }
+
         int highestPrice = targetProductInfos.stream()
                 .mapToInt(v -> v.getTotalProductPrice()).max().getAsInt();
         OrderProductInfo maxPriceOrderProduct = targetProductInfos.stream()
