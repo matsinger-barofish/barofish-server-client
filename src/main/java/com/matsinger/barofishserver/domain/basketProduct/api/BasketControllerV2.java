@@ -72,5 +72,4 @@ public class BasketControllerV2 {
         res.setData(Optional.ofNullable(response));
         return ResponseEntity.ok(res);
     }
-
 }
