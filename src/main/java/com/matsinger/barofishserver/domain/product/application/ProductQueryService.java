@@ -260,7 +260,7 @@ public class ProductQueryService {
             response.add(ProductPhotiReviewDto.builder()
                     .reviewId(review.getReviewId())
                     .imageUrls(reviewImages)
-                    .imageCount(reviewImages.size())
+                    .imageCount(reviewImages != null ? reviewImages.size() : null)
                     .build()
             );
         }
