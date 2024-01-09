@@ -109,7 +109,7 @@ public class OrderCommandService {
     }
 
     @Transactional
-    public void proceedOrder(OrderReq request, Integer userId) {
+    public String proceedOrder(OrderReq request, Integer userId) {
         if (request.getTotalPrice() == 0) {
             throw new RuntimeException("주문 에러 발생");
         }
@@ -164,7 +164,7 @@ public class OrderCommandService {
         setVbankInfo(request, order);
         processKeyInPayment(request, orderId, totalTaxFreePrice);
 
-        save(storeMap, order);
+        return save(storeMap, order);
     }
 
     private void calculateDeliveryFee(StoreInfo storeInfo, List<OrderProductInfo> storeOrderProducts) {
@@ -241,14 +241,15 @@ public class OrderCommandService {
         maxPriceOrderProduct.setDeliveryFee(maxDeliveryFee);
     }
 
-    private void save(Map<StoreInfo, List<OrderProductInfo>> storeMap, Orders order) {
-        orderRepository.save(order);
+    private String save(Map<StoreInfo, List<OrderProductInfo>> storeMap, Orders order) {
+        Orders savedOrder = orderRepository.save(order);
 
         List<OrderProductInfo> orderProductInfos =
                 storeMap.values()
                         .stream().flatMap(Collection::stream)
                         .collect(Collectors.toList());
         orderProductInfoRepository.saveAll(orderProductInfos);
+        return savedOrder.getId();
     }
 
     private void validateCouponAndPoint(OrderReq request, int totalOrderPriceMinusDeliveryFee, UserInfo userInfo) {
