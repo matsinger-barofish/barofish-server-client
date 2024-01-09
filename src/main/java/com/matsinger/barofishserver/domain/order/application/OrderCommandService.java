@@ -311,7 +311,6 @@ public class OrderCommandService {
 
     private Integer validateFinalPrice(OrderReq request, int totalOrderPriceContainsDeliveryFee) {
         int finalOrderPrice = totalOrderPriceContainsDeliveryFee - request.getCouponDiscountPrice() - request.getPoint();
-        log.info("finalOrderPrice = {}", finalOrderPrice);
         if (finalOrderPrice != request.getTotalPrice()) {
             throw new BusinessException("총 금액을 확인해주세요.");
         }
