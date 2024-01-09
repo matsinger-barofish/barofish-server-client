@@ -320,4 +320,11 @@ public class Product {
     public boolean meetConditions(int totalPrice) {
         return totalPrice >= this.minOrderPrice;
     }
+
+    public int getMaxDeliveryFee(int deliverFee) {
+        if (deliverFee > this.deliverFee) {
+            return deliverFee;
+        }
+        return this.deliverFee;
+    }
 }
