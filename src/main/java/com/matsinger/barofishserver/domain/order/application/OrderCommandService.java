@@ -36,6 +36,7 @@ import com.matsinger.barofishserver.domain.userinfo.domain.UserInfo;
 import com.matsinger.barofishserver.global.exception.BusinessException;
 import com.matsinger.barofishserver.utils.Common;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.Nullable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -45,6 +46,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class OrderCommandService {
 
     private final OrderService orderService;
@@ -165,6 +167,75 @@ public class OrderCommandService {
         save(storeMap, order);
     }
 
+    private void calculateDeliveryFee(StoreInfo storeInfo, List<OrderProductInfo> storeOrderProducts) {
+        storeOrderProducts.forEach(v -> v.setDeliveryFee(0)); // 배송비 초기화
+        if (storeInfo.isConditional()) {
+            setSConditionalDeliveryFee(storeInfo, storeOrderProducts);
+        }
+
+        if (!storeInfo.isConditional()) {
+            setPConditionalDeliveryFee(storeOrderProducts);
+        }
+    }
+
+    private void setSConditionalDeliveryFee(StoreInfo storeInfo, List<OrderProductInfo> orderProductInfos) {
+        int totalStoreProductPrice = orderProductInfos.stream().mapToInt(v -> v.getTotalProductPrice()).sum();
+        if (storeInfo.meetConditions(totalStoreProductPrice)) {
+        }
+        if (!storeInfo.meetConditions(totalStoreProductPrice)) {
+            setDeliveryFeeToHighestPriceProduct(orderProductInfos);
+        }
+    }
+
+    private void setPConditionalDeliveryFee(List<OrderProductInfo> pConditionProducts) {
+        int[] productIds = pConditionProducts.stream()
+                .mapToInt(v -> v.getProductId()).distinct().toArray();
+
+        List<OrderProductInfo> deliveryFeeCalculatingGroup = new ArrayList<>();
+        addProductsNeedToCalculateDeliveryFee(pConditionProducts, productIds, deliveryFeeCalculatingGroup);
+
+        setDeliveryFeeToHighestPriceProduct(deliveryFeeCalculatingGroup);
+    }
+
+    private void addProductsNeedToCalculateDeliveryFee(List<OrderProductInfo> pConditionProducts, int[] productIds, List<OrderProductInfo> deliveryFeeCalculatingGroup) {
+        for (Integer productId : productIds) {
+            Product product = productQueryService.findById(productId);
+            List<OrderProductInfo> pConditionProduct = pConditionProducts.stream()
+                    .filter(v -> v.getProductId() == product.getId()).toList();
+
+            if (product.isDeliveryTypeFree()) {
+            }
+            if (product.isDeliveryTypeFix()) {
+                deliveryFeeCalculatingGroup.addAll(pConditionProduct);
+            }
+            if (product.isDeliveryTypeFreeIfOver()) {
+                int totalPrice = pConditionProduct.stream()
+                        .mapToInt(v -> v.getTotalProductPrice()).sum();
+                if (!product.meetConditions(totalPrice)) {
+                    deliveryFeeCalculatingGroup.addAll(pConditionProduct);
+                }
+            }
+        }
+    }
+
+    private void setDeliveryFeeToHighestPriceProduct(List<OrderProductInfo> targetProductInfos) {
+        int highestPrice = targetProductInfos.stream()
+                .mapToInt(v -> v.getTotalProductPrice()).max().getAsInt();
+        OrderProductInfo maxPriceOrderProduct = targetProductInfos.stream()
+                .filter(v -> v.getTotalProductPrice() == highestPrice)
+                .findFirst().get();
+
+        int[] targetProductIds = targetProductInfos.stream().mapToInt(v -> v.getProductId()).toArray();
+        int maxDeliveryFee = 0;
+        for (int targetProductId : targetProductIds) {
+            Product product = productQueryService.findById(targetProductId);
+            if (product.getDeliverFee() > maxDeliveryFee) {
+                maxDeliveryFee = product.getDeliverFee();
+            }
+        }
+        maxPriceOrderProduct.setDeliveryFee(maxDeliveryFee);
+    }
+
     private void save(Map<StoreInfo, List<OrderProductInfo>> storeMap, Orders order) {
         orderRepository.save(order);
 
@@ -208,70 +279,6 @@ public class OrderCommandService {
         }
     }
 
-    private void calculateDeliveryFee(StoreInfo storeInfo, List<OrderProductInfo> orderProductInfos) {
-        orderProductInfos.forEach(v -> v.setDeliveryFee(0)); // 배송비 초기화
-        if (storeInfo.isConditional()) {
-            setSConditionalDeliveryFee(storeInfo, orderProductInfos);
-        }
-
-        if (!storeInfo.isConditional()) {
-            setPConditionalDeliveryFee(orderProductInfos);
-        }
-    }
-
-    private void setSConditionalDeliveryFee(StoreInfo storeInfo, List<OrderProductInfo> orderProductInfos) {
-        int totalStoreProductPrice = orderProductInfos.stream().mapToInt(v -> v.getTotalProductPrice()).sum();
-        if (storeInfo.meetConditions(totalStoreProductPrice)) {
-        }
-        if (!storeInfo.meetConditions(totalStoreProductPrice)) {
-            int maxProductPrice = orderProductInfos.stream().mapToInt(v -> v.getTotalProductPrice()).max().getAsInt();
-            OrderProductInfo maxPriceOrderProduct = orderProductInfos.stream()
-                    .filter(v -> v.getTotalProductPrice() == maxProductPrice).findFirst().get();
-            maxPriceOrderProduct.setDeliveryFee(storeInfo.getDeliveryFee());
-        }
-    }
-
-    private void setPConditionalDeliveryFee(List<OrderProductInfo> orderProductInfos) {
-        int[] productIds = orderProductInfos.stream()
-                .mapToInt(v -> v.getProductId()).distinct().toArray();
-
-        for (Integer productId : productIds) {
-            Product product = productQueryService.findById(productId);
-
-            if (product.isDeliveryTypeFree()) {
-            }
-            if (product.isDeliveryTypeFreeIfOver()) {
-                setIfOverDeliveryFee(product, orderProductInfos);
-            }
-        }
-    }
-
-    private void setIfOverDeliveryFee(Product targetProduct, List<OrderProductInfo> orderProductInfos) {
-        List<OrderProductInfo> targetProductInfos = orderProductInfos.stream()
-                .filter(v -> v.getProductId() == targetProduct.getId()).toList();
-        int totalPrice = targetProductInfos.stream()
-                .mapToInt(v -> v.getTotalProductPrice()).sum();
-        if (targetProduct.meetConditions(totalPrice)) {
-        }
-        if (!targetProduct.meetConditions(totalPrice)) {
-            int maxProductPrice = targetProductInfos.stream()
-                    .mapToInt(v -> v.getTotalProductPrice()).max().getAsInt();
-            OrderProductInfo maxPriceOrderProduct = targetProductInfos.stream()
-                    .filter(v -> v.getTotalProductPrice() == maxProductPrice)
-                    .findFirst().get();
-
-            int[] targetProductIds = targetProductInfos.stream().mapToInt(v -> v.getProductId()).toArray();
-            int maxDeliveryFee = 0;
-            for (int targetProductId : targetProductIds) {
-                Product product = productQueryService.findById(targetProductId);
-                if (product.getDeliverFee() > maxDeliveryFee) {
-                    maxDeliveryFee = product.getDeliverFee();
-                }
-            }
-            maxPriceOrderProduct.setDeliveryFee(maxDeliveryFee);
-        }
-    }
-
     public void setVbankInfo(OrderReq request, Orders orders) {
         if (request.getPaymentWay().equals(OrderPaymentWay.VIRTUAL_ACCOUNT)) {
             if (request.getVbankRefundInfo() == null)
@@ -299,6 +306,7 @@ public class OrderCommandService {
 
     private Integer validateFinalPrice(OrderReq request, int totalOrderPriceContainsDeliveryFee) {
         int finalOrderPrice = totalOrderPriceContainsDeliveryFee - request.getCouponDiscountPrice() - request.getPoint();
+        log.info("finalOrderPrice = {}", finalOrderPrice);
         if (finalOrderPrice != request.getTotalPrice()) {
             throw new BusinessException("총 금액을 확인해주세요.");
         }
