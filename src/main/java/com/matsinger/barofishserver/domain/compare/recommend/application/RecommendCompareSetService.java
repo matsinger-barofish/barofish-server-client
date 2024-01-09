@@ -1,14 +1,14 @@
 package com.matsinger.barofishserver.domain.compare.recommend.application;
 
 import com.matsinger.barofishserver.domain.compare.domain.SaveProductId;
-import com.matsinger.barofishserver.domain.compare.recommend.domain.RecommendCompareSetType;
 import com.matsinger.barofishserver.domain.compare.recommend.domain.RecommendCompareSet;
+import com.matsinger.barofishserver.domain.compare.recommend.domain.RecommendCompareSetType;
 import com.matsinger.barofishserver.domain.compare.recommend.dto.RecommendCompareSetDto;
 import com.matsinger.barofishserver.domain.compare.recommend.repository.RecommendCompareSetRepository;
 import com.matsinger.barofishserver.domain.compare.repository.SaveProductRepository;
 import com.matsinger.barofishserver.domain.product.application.ProductService;
 import com.matsinger.barofishserver.domain.product.dto.ProductListDto;
-
+import com.matsinger.barofishserver.global.exception.BusinessException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -63,7 +63,7 @@ public class RecommendCompareSetService {
 
     public RecommendCompareSet selectRecommendCompareSet(Integer id) {
         return recommendCompareSetRepository.findById(id).orElseThrow(() -> {
-            throw new Error("추천 비교하기 세트 정보를 찾을 수 없습니다.");
+            throw new BusinessException("추천 비교하기 세트 정보를 찾을 수 없습니다.");
         });
     }
 

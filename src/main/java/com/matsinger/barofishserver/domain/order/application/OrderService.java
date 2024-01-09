@@ -171,7 +171,7 @@ public class OrderService {
 
     public OrderDeliverPlace selectDeliverPlace(String orderId) {
         return orderDeliverPlaceRepository.findById(orderId).orElseThrow(() -> {
-            throw new Error("주문 배송지 정보를 찾을 수 없습니다.");
+            throw new BusinessException("주문 배송지 정보를 찾을 수 없습니다.");
         });
     }
 
@@ -188,7 +188,7 @@ public class OrderService {
 
     public Orders selectOrder(String id) {
         return orderRepository.findById(id).orElseThrow(() -> {
-            throw new Error("주문 정보를 찾을 수 없습니다.");
+            throw new BusinessException("주문 정보를 찾을 수 없습니다.");
         });
     }
 
@@ -263,7 +263,7 @@ public class OrderService {
 
     public OrderProductInfo selectOrderProductInfo(Integer orderProductInfoId) {
         return infoRepository.findById(orderProductInfoId).orElseThrow(() -> {
-            throw new Error("주문 상품 정보를 찾을 수 없습니다.");
+            throw new BusinessException("주문 상품 정보를 찾을 수 없습니다.");
         });
     }
 
@@ -350,12 +350,12 @@ public class OrderService {
 
     public void cancelOrderedProduct(Integer orderProductInfoId) throws Exception {
         OrderProductInfo info = infoRepository.findById(orderProductInfoId).orElseThrow(() -> {
-            throw new Error("주문 상품 정보를 찾을 수 없습니다.");
+            throw new BusinessException("주문 상품 정보를 찾을 수 없습니다.");
         });
         if (info.getState().equals(OrderProductState.CANCELED)) throw new Exception("이미 취소된 상품입니다.");
         Orders order = orderRepository.findById(info.getOrderId()).orElseThrow(() -> {
             try {
-                throw new Exception("주문 정보를 찾을 수 없습니다.");
+                throw new BusinessException("주문 정보를 찾을 수 없습니다.");
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }

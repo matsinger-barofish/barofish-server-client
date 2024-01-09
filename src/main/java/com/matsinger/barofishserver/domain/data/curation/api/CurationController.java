@@ -208,10 +208,10 @@ public class CurationController {
                 jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
 
         Curation curation = curationQueryService.selectCuration(id);
-        if (curation == null) throw new Error("큐레이션 정보를 찾을 수 없습니다.");
+        if (curation == null) throw new BusinessException("큐레이션 정보를 찾을 수 없습니다.");
         for (Integer productId : productIds) {
             Product product = productService.findById(productId);
-            if (product == null) throw new Error("상품 정보를 찾을 수 없습니다.");
+            if (product == null) throw new BusinessException("상품 정보를 찾을 수 없습니다.");
         }
         List<CurationProductMap> result = curationCommandService.addProduct(id, productIds);
         res.setData(Optional.of(true));
@@ -228,7 +228,7 @@ public class CurationController {
 
         if (id == 0) throw new BusinessException("삭제 불가능한 큐레이션입니다.");
         Curation curation = curationQueryService.selectCuration(id);
-        if (curation == null) throw new Error("큐레이션 데이터를 찾을 수 없습니다.");
+        if (curation == null) throw new BusinessException("큐레이션 데이터를 찾을 수 없습니다.");
         curationCommandService.delete(id);
         List<Curation> curations = curationQueryService.selectCurations();
         for (int i = 0; i < curations.size(); i++) {

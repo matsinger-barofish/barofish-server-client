@@ -2,6 +2,7 @@ package com.matsinger.barofishserver.domain.siteInfo.application;
 
 import com.matsinger.barofishserver.domain.siteInfo.domain.SiteInformation;
 import com.matsinger.barofishserver.domain.siteInfo.repository.SiteInfoRepository;
+import com.matsinger.barofishserver.global.exception.BusinessException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -19,7 +20,7 @@ public class SiteInfoQueryService {
 
     public SiteInformation selectSiteInfo(String id) {
         return siteInfoRepository.findById(id).orElseThrow(() -> {
-            throw new Error("정보를 찾을 수 없습니다.");
+            throw new BusinessException("정보를 찾을 수 없습니다.");
         });
     }
 }

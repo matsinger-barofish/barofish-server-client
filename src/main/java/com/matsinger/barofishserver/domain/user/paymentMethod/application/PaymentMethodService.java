@@ -3,6 +3,7 @@ package com.matsinger.barofishserver.domain.user.paymentMethod.application;
 import com.matsinger.barofishserver.domain.user.paymentMethod.domain.PaymentMethod;
 import com.matsinger.barofishserver.domain.user.paymentMethod.dto.PaymentMethodDto;
 import com.matsinger.barofishserver.domain.user.paymentMethod.repository.PaymentMethodRepository;
+import com.matsinger.barofishserver.global.exception.BusinessException;
 import com.matsinger.barofishserver.utils.AES256;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -26,7 +27,7 @@ public class PaymentMethodService {
 
     public PaymentMethod selectPaymentMethod(Integer id) {
         return paymentMethodRepository.findById(id).orElseThrow(() -> {
-            throw new Error("결제 수단 정보를 찾을 수 없습니다.");
+            throw new BusinessException("결제 수단 정보를 찾을 수 없습니다.");
         });
     }
 

@@ -135,7 +135,7 @@ public class ProductService {
 
     public OptionItem selectOptionItem(Integer optionItemId) {
         return optionItemRepository.findById(optionItemId).orElseThrow(() -> {
-            throw new Error("옵션 아이템 정보를 찾을 수 없습니다.");
+            throw new BusinessException("옵션 아이템 정보를 찾을 수 없습니다.");
         });
     }
 
@@ -250,7 +250,7 @@ public class ProductService {
 
     public ProductListDto createProductListDtos(Integer id) {
         Product findProduct = productRepository.findById(id).orElseThrow(() -> {
-            throw new Error("상품 정보를 찾을 수 없습니다.");
+            throw new BusinessException("상품 정보를 찾을 수 없습니다.");
         });
         int productId = findProduct.getId();
         String productImages = findProduct.getImages();
@@ -291,7 +291,7 @@ public class ProductService {
 
     public Product selectProduct(Integer id) {
         return productRepository.findById(id).orElseThrow(() -> {
-            throw new Error("상품 정보를 찾을 수 없습니다.");
+            throw new BusinessException("상품 정보를 찾을 수 없습니다.");
         });
     }
 
@@ -301,7 +301,7 @@ public class ProductService {
 
     public Option selectOption(Integer id) {
         return optionRepository.findById(id).orElseThrow(() -> {
-            throw new Error("상품 옵션 정보를 찾을 수 없습니다.");
+            throw new BusinessException("상품 옵션 정보를 찾을 수 없습니다.");
         });
     }
 
