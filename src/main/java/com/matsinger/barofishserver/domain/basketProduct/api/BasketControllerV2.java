@@ -2,8 +2,10 @@ package com.matsinger.barofishserver.domain.basketProduct.api;
 
 import com.matsinger.barofishserver.domain.basketProduct.application.BasketCommandService;
 import com.matsinger.barofishserver.domain.basketProduct.application.BasketQueryService;
+import com.matsinger.barofishserver.domain.basketProduct.domain.BasketProductInfo;
 import com.matsinger.barofishserver.domain.basketProduct.dto.AddBasketReq;
 import com.matsinger.barofishserver.domain.basketProduct.dto.BasketProductDtoV2;
+import com.matsinger.barofishserver.domain.basketProduct.dto.DeleteBasketReq;
 import com.matsinger.barofishserver.global.exception.BusinessException;
 import com.matsinger.barofishserver.jwt.JwtService;
 import com.matsinger.barofishserver.jwt.TokenAuthType;
@@ -70,6 +72,22 @@ public class BasketControllerV2 {
 
         List<BasketProductDtoV2> response = basketQueryService.selectBasketListV2(tokenInfo.getId());
         res.setData(Optional.ofNullable(response));
+        return ResponseEntity.ok(res);
+    }
+
+    @DeleteMapping("/")
+    public ResponseEntity<CustomResponse<Boolean>> deleteBasketV2(@RequestHeader(value = "Authorization") Optional<String> auth,
+                                                                @RequestPart(value = "data") DeleteBasketReq data) {
+        CustomResponse<Boolean> res = new CustomResponse<>();
+
+        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth);
+
+        for (Integer basketId : data.getIds()) {
+            BasketProductInfo info = basketQueryService.selectBasket(basketId);
+            if (tokenInfo.getId() != info.getUserId())
+                throw new BusinessException("타인의 장바구니 정보입니다.");
+        }
+        basketCommandService.deleteBasketV2(tokenInfo.getId(), data.getIds());
         return ResponseEntity.ok(res);
     }
 
