@@ -13,6 +13,7 @@ import com.matsinger.barofishserver.domain.order.orderprductinfo.application.Ord
 import com.matsinger.barofishserver.domain.order.orderprductinfo.domain.OrderProductInfo;
 import com.matsinger.barofishserver.domain.order.orderprductinfo.domain.OrderProductState;
 import com.matsinger.barofishserver.domain.order.orderprductinfo.repository.OrderProductInfoRepository;
+import com.matsinger.barofishserver.domain.order.repository.OrderDeliverPlaceRepository;
 import com.matsinger.barofishserver.domain.order.repository.OrderRepository;
 import com.matsinger.barofishserver.domain.payment.application.PaymentService;
 import com.matsinger.barofishserver.domain.payment.dto.KeyInPaymentReq;
@@ -73,6 +74,7 @@ public class OrderCommandService {
     private final DifficultDeliverAddressQueryService difficultDeliverAddressQueryService;
     private final DeliverPlaceQueryService deliverPlaceQueryService;
     private final OrderProductInfoRepository orderProductInfoRepository;
+    private final OrderDeliverPlaceRepository orderDeliverPlaceRepository;
 
     private void validateRequestInfo(OrderReq request) {
         utils.validateString(request.getName(), 20L, "주문자 이름");
@@ -164,7 +166,7 @@ public class OrderCommandService {
         setVbankInfo(request, order);
         processKeyInPayment(request, orderId, totalTaxFreePrice);
 
-        return save(storeMap, order);
+        return save(storeMap, order, orderDeliverPlace);
     }
 
     private void calculateDeliveryFee(StoreInfo storeInfo, List<OrderProductInfo> storeOrderProducts) {
@@ -241,7 +243,7 @@ public class OrderCommandService {
         maxPriceOrderProduct.setDeliveryFee(maxDeliveryFee);
     }
 
-    private String save(Map<StoreInfo, List<OrderProductInfo>> storeMap, Orders order) {
+    private String save(Map<StoreInfo, List<OrderProductInfo>> storeMap, Orders order, OrderDeliverPlace orderDeliverPlace) {
         Orders savedOrder = orderRepository.save(order);
 
         List<OrderProductInfo> orderProductInfos =
@@ -249,6 +251,7 @@ public class OrderCommandService {
                         .stream().flatMap(Collection::stream)
                         .collect(Collectors.toList());
         orderProductInfoRepository.saveAll(orderProductInfos);
+        orderDeliverPlaceRepository.save(orderDeliverPlace);
         return savedOrder.getId();
     }
 
