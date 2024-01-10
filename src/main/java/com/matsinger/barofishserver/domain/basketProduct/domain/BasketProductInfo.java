@@ -54,4 +54,8 @@ public class BasketProductInfo {
             this.amount += amount;
         }
     }
+
+    public boolean equalOptionItem(int optionItemId) {
+        return this.optionItemId == optionItemId;
+    }
 }

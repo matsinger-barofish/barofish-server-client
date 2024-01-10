@@ -69,6 +69,76 @@ public class BasketCommandService {
         basketProductInfoRepository.save(info);
     }
 
+    @Transactional
+    public void deleteBasketV2(Integer userId, List<Integer> basketProductInfoIds) {
+        List<BasketProductInfo> allProductsToBeDeleted = basketProductInfoRepository.findAllById(basketProductInfoIds);
+        List<BasketProductInfo> allExistingProducts = basketProductInfoRepository.findAllByUserId(userId);
+
+        int[] uniqueProductIdsToBeDeleted = allProductsToBeDeleted.stream()
+                .mapToInt(v -> v.getProductId()).distinct().toArray();
+
+        for (int productIdToBeDeleted : uniqueProductIdsToBeDeleted) {
+            ArrayList<BasketProductInfo> basketProducts = new ArrayList<>(
+                    allExistingProducts.stream()
+                    .filter(v -> v.getProductId() == productIdToBeDeleted)
+                    .toList()
+            );
+            List<BasketProductInfo> toBeDeleted =
+                    allProductsToBeDeleted.stream()
+                    .filter(v -> v.getProductId() == productIdToBeDeleted)
+                    .toList();
+
+            if (necessaryOptionDoesntExistsDeleteAll(basketProducts, allExistingProducts, toBeDeleted)) {
+                continue;
+            }
+
+            remove(basketProducts, toBeDeleted);
+
+            if (!basketProducts.isEmpty()) {
+                validateIfNecessaryOptionExists(basketProducts);
+            }
+        }
+        basketProductInfoRepository.deleteAllByIdIn(basketProductInfoIds);
+    }
+
+    private static void validateIfNecessaryOptionExists(ArrayList<BasketProductInfo> basketProducts) {
+        boolean productNecessaryOptionExists = false;
+        for (BasketProductInfo existingProduct : basketProducts) {
+            if (productNecessaryOptionExists == false) {
+                productNecessaryOptionExists = existingProduct.isNeeded();
+            }
+            if (productNecessaryOptionExists) {
+                break;
+            }
+        }
+        if (!productNecessaryOptionExists) {
+            throw new BusinessException("선택 옵션을 먼저 삭제한 후" + "\n" + "필수 옵션을 제거해주세요.");
+        }
+    }
+
+    private static void remove(ArrayList<BasketProductInfo> basketProducts, List<BasketProductInfo> toBeDeleted) {
+        List<BasketProductInfo> tobeDeletedBasketProducts = new ArrayList<>();
+        for (BasketProductInfo existingProduct : basketProducts) {
+            for (BasketProductInfo toBeDeletedProduct : toBeDeleted) {
+                if (existingProduct.equalOptionItem(toBeDeletedProduct.getOptionItemId())) {
+                    tobeDeletedBasketProducts.add(existingProduct);
+                }
+            }
+        }
+        basketProducts.removeAll(tobeDeletedBasketProducts);
+    }
+
+    private boolean necessaryOptionDoesntExistsDeleteAll(ArrayList<BasketProductInfo> basketProducts, List<BasketProductInfo> allExistingProducts, List<BasketProductInfo> toBeDeleted) {
+        // 장바구니에 필수옵션이 없으면 모든 옵션아이템을 지운다.
+        boolean necessaryOptionDoesntExists = basketProducts.stream()
+                .noneMatch(v -> v.isNeeded() == true);
+        if (necessaryOptionDoesntExists) {
+            allExistingProducts.removeAll(toBeDeleted);
+            return true;
+        }
+        return false;
+    }
+
     @Transactional(rollbackFor = Exception.class)
     public void deleteBasket(List<Integer> basketIds) {
         basketProductOptionRepository.deleteAllByOrderProductIdIn(basketIds);
