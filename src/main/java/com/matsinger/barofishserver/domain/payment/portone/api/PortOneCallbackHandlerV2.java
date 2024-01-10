@@ -13,7 +13,7 @@ import java.io.IOException;
 @Slf4j
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/v2/callback/iamport_pay_result")
+@RequestMapping("/callback/iamport_pay_result")
 public class PortOneCallbackHandlerV2 {
 
     private final PortOneCommandService portOneCommandService;

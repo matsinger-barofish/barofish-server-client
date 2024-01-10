@@ -129,7 +129,7 @@ public class S3Uploader {
         for (FileUpdateInput file : files) {
             if (file.getExistingFile() != null) {
                 if (file.getExistingFile() == null)
-                    throw new Error("파일을 입력해주세요.");
+                    throw new BusinessException("파일을 입력해주세요.");
                 result.add(file.getExistingFile());
             } else if (file.getNewFile() != null) {
                 String fileUrl = upload(file.getNewFile(), path);

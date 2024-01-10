@@ -2,6 +2,7 @@ package com.matsinger.barofishserver.domain.report.application;
 
 import com.matsinger.barofishserver.domain.report.domain.Report;
 import com.matsinger.barofishserver.domain.report.repository.ReportRepository;
+import com.matsinger.barofishserver.global.exception.BusinessException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -31,7 +32,7 @@ public class ReportQueryService {
 
     public Report selectReport(Integer id) {
         return reportRepository.findById(id).orElseThrow(() -> {
-            throw new Error("신고 내역을 찾을 수 없습니다.");
+            throw new BusinessException("신고 내역을 찾을 수 없습니다.");
         });
     }
 }

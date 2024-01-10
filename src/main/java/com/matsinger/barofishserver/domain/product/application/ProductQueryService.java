@@ -253,14 +253,14 @@ public class ProductQueryService {
 
             String removedBrackets = removeBrackets(reviewPictureUrls);
             List<String> reviewImages =
-                    removedBrackets != null
+                    removedBrackets != "[]"
                             ? Arrays.stream(removedBrackets.split(", ")).toList()
-                            : null;
+                            : new ArrayList<>();
 
             response.add(ProductPhotiReviewDto.builder()
                     .reviewId(review.getReviewId())
                     .imageUrls(reviewImages)
-                    .imageCount(reviewImages != null ? reviewImages.size() : null)
+                    .imageCount(reviewImages.isEmpty() ? null : reviewImages.size())
                     .build()
             );
         }
@@ -268,6 +268,9 @@ public class ProductQueryService {
     }
 
     private String removeBrackets(String reviewPictureUrls) {
+        if (reviewPictureUrls == "[]") {
+            return reviewPictureUrls;
+        }
         if (reviewPictureUrls != null) {
             StringBuilder sb = new StringBuilder();
             for (char c : reviewPictureUrls.toCharArray()) {

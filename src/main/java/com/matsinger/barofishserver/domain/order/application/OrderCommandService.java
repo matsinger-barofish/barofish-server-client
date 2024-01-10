@@ -13,6 +13,7 @@ import com.matsinger.barofishserver.domain.order.orderprductinfo.application.Ord
 import com.matsinger.barofishserver.domain.order.orderprductinfo.domain.OrderProductInfo;
 import com.matsinger.barofishserver.domain.order.orderprductinfo.domain.OrderProductState;
 import com.matsinger.barofishserver.domain.order.orderprductinfo.repository.OrderProductInfoRepository;
+import com.matsinger.barofishserver.domain.order.repository.OrderDeliverPlaceRepository;
 import com.matsinger.barofishserver.domain.order.repository.OrderRepository;
 import com.matsinger.barofishserver.domain.payment.application.PaymentService;
 import com.matsinger.barofishserver.domain.payment.dto.KeyInPaymentReq;
@@ -73,6 +74,7 @@ public class OrderCommandService {
     private final DifficultDeliverAddressQueryService difficultDeliverAddressQueryService;
     private final DeliverPlaceQueryService deliverPlaceQueryService;
     private final OrderProductInfoRepository orderProductInfoRepository;
+    private final OrderDeliverPlaceRepository orderDeliverPlaceRepository;
 
     private void validateRequestInfo(OrderReq request) {
         utils.validateString(request.getName(), 20L, "주문자 이름");
@@ -109,7 +111,7 @@ public class OrderCommandService {
     }
 
     @Transactional
-    public void proceedOrder(OrderReq request, Integer userId) {
+    public String proceedOrder(OrderReq request, Integer userId) {
         if (request.getTotalPrice() == 0) {
             throw new RuntimeException("주문 에러 발생");
         }
@@ -164,7 +166,7 @@ public class OrderCommandService {
         setVbankInfo(request, order);
         processKeyInPayment(request, orderId, totalTaxFreePrice);
 
-        save(storeMap, order);
+        return save(storeMap, order, orderDeliverPlace);
     }
 
     private void calculateDeliveryFee(StoreInfo storeInfo, List<OrderProductInfo> storeOrderProducts) {
@@ -219,6 +221,11 @@ public class OrderCommandService {
     }
 
     private void setDeliveryFeeToHighestPriceProduct(List<OrderProductInfo> targetProductInfos) {
+        // 계산할 배송비가 없으면 그냥 return
+        if (targetProductInfos.isEmpty()) {
+            return;
+        }
+
         int highestPrice = targetProductInfos.stream()
                 .mapToInt(v -> v.getTotalProductPrice()).max().getAsInt();
         OrderProductInfo maxPriceOrderProduct = targetProductInfos.stream()
@@ -236,14 +243,16 @@ public class OrderCommandService {
         maxPriceOrderProduct.setDeliveryFee(maxDeliveryFee);
     }
 
-    private void save(Map<StoreInfo, List<OrderProductInfo>> storeMap, Orders order) {
-        orderRepository.save(order);
+    private String save(Map<StoreInfo, List<OrderProductInfo>> storeMap, Orders order, OrderDeliverPlace orderDeliverPlace) {
+        Orders savedOrder = orderRepository.save(order);
 
         List<OrderProductInfo> orderProductInfos =
                 storeMap.values()
                         .stream().flatMap(Collection::stream)
                         .collect(Collectors.toList());
         orderProductInfoRepository.saveAll(orderProductInfos);
+        orderDeliverPlaceRepository.save(orderDeliverPlace);
+        return savedOrder.getId();
     }
 
     private void validateCouponAndPoint(OrderReq request, int totalOrderPriceMinusDeliveryFee, UserInfo userInfo) {
@@ -306,7 +315,6 @@ public class OrderCommandService {
 
     private Integer validateFinalPrice(OrderReq request, int totalOrderPriceContainsDeliveryFee) {
         int finalOrderPrice = totalOrderPriceContainsDeliveryFee - request.getCouponDiscountPrice() - request.getPoint();
-        log.info("finalOrderPrice = {}", finalOrderPrice);
         if (finalOrderPrice != request.getTotalPrice()) {
             throw new BusinessException("총 금액을 확인해주세요.");
         }

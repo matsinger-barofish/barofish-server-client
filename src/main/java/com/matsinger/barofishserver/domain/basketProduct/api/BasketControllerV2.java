@@ -90,5 +90,4 @@ public class BasketControllerV2 {
         basketCommandService.deleteBasketV2(tokenInfo.getId(), data.getIds());
         return ResponseEntity.ok(res);
     }
-
 }

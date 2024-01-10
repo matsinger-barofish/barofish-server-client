@@ -33,9 +33,10 @@ public class OrderControllerV2 {
 
         TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth);
 
-        orderCommandService.proceedOrder(request, tokenInfo.getId());
+        String orderId = orderCommandService.proceedOrder(request, tokenInfo.getId());
 
         res.setIsSuccess(true);
+        res.setData(Optional.ofNullable(OrderDto.builder().id(orderId).build()));
         return ResponseEntity.ok(res);
     }
 }

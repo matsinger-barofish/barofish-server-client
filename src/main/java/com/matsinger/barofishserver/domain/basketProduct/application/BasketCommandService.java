@@ -63,7 +63,7 @@ public class BasketCommandService {
 
     public void updateAmountBasket(Integer basketId, Integer amount) {
         BasketProductInfo info = basketProductInfoRepository.findById(basketId).orElseThrow(() -> {
-            throw new Error("장바구니 상품 정보를 찾을 수 없습니다.");
+            throw new BusinessException("장바구니 상품 정보를 찾을 수 없습니다.");
         });
         info.setAmount(amount);
         basketProductInfoRepository.save(info);

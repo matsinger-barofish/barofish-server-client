@@ -121,7 +121,7 @@ public class CategoryController {
         Category category = categoryQueryService.findById(id);
         if (category.getCategoryId() == null) {
             List<Category> categories = categoryQueryService.findAll(id);
-            if (categories.size() != 0) throw new Error("하위 카테고리가 존재합니다.");
+            if (categories.size() != 0) throw new BusinessException("하위 카테고리가 존재합니다.");
         }
         List<Product> products = productService.selectProductWithCategoryId(category.getId());
         if (products.stream().anyMatch(v -> v.getState().equals(ProductState.ACTIVE)))

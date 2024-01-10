@@ -36,7 +36,8 @@ import java.util.List;
 @Slf4j
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/callback/iamport_pay_result")
+//@RequestMapping("/callback/iamport_pay_result")
+@RequestMapping("v1/callback/iamport_pay_result")
 public class PortOneCallbackHandler {
 
     private final Common utils;
