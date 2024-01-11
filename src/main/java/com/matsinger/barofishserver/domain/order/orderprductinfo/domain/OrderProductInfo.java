@@ -31,8 +31,8 @@ public class OrderProductInfo {
     @Basic
     @Column(name = "product_id", nullable = false)
     private int productId;
-    @Column(name = "store_id", nullable = false)
-    private int storeId;
+    @Column(name = "store_id")
+    private Integer storeId;
     @Basic
     @Column(name = "option_item_id", nullable = false)
     private int optionItemId;
