@@ -14,5 +14,5 @@ public enum OrderProductState {
     REFUND_REQUEST,
     REFUND_ACCEPT,
     REFUND_DONE,
-    DELIVERY_DIFFICULT
+    DELIVERY_DIFFICULT;
 }

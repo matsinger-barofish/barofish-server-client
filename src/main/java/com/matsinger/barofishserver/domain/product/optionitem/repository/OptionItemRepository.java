@@ -17,4 +17,6 @@ public interface OptionItemRepository extends JpaRepository<OptionItem, Integer>
     List<OptionItem> findAllByOptionIdAndState(Integer optionId, OptionItemState state);
 
     Optional<OptionItem> findFirstByNameAndOptionId(String name, Integer optionId);
+
+    List<OptionItem> findAllByOptionId(Integer optionId);
 }

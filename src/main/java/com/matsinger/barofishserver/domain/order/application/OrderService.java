@@ -292,7 +292,7 @@ public class OrderService {
                 default:
                     return false;
             }
-        })) throw new Exception("취소 불가능한 상태입니다.");
+        })) throw new BusinessException("취소 불가능한 상태입니다.");
         if (infos.stream().anyMatch(v -> v.getState().equals(OrderProductState.WAIT_DEPOSIT))) {
             infos.forEach(info -> info.setState(OrderProductState.CANCELED));
             updateOrderProductInfos(infos);
@@ -336,11 +336,11 @@ public class OrderService {
             case REFUND_REQUEST:
             case REFUND_ACCEPT:
             case REFUND_DONE:
-                throw new Exception("취소 불가능한 상태입니다.");
+                throw new BusinessException("취소 불가능한 상태입니다.");
             case CANCEL_REQUEST:
-                throw new Exception("이미 취소 요청된 상태입니다.");
+                throw new BusinessException("이미 취소 요청된 상태입니다.");
             case CANCELED:
-                throw new Exception("취소 완료된 상태입니다.");
+                throw new BusinessException("취소 완료된 상태입니다.");
             case DELIVERY_READY:
             default:
                 info.setState(OrderProductState.CANCEL_REQUEST);

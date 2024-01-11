@@ -77,4 +77,8 @@ public class Option {
     public int hashCode() {
         return Objects.hash(id, isNeeded, description);
     }
+
+    public boolean isNeeded() {
+        return this.isNeeded;
+    }
 }

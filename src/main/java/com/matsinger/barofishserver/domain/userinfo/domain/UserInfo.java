@@ -139,4 +139,8 @@ public class UserInfo {
     public int hashCode() {
         return Objects.hash(userId, profileImage, email, nickname, phone, isAgreeMarketing);
     }
+
+    public void addPoint(Integer point) {
+        this.point += point;
+    }
 }

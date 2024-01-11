@@ -16,7 +16,7 @@ import java.util.Objects;
 @Getter
 @Setter
 @Table(name = "store_info", schema = "barofish_dev", catalog = "")
-public class StoreInfo {
+public class StoreInfo implements ConditionalObject{
     @Id
     @Column(name = "store_id", nullable = false)
     private int storeId;
@@ -256,10 +256,6 @@ public class StoreInfo {
         return isConditional;
     }
 
-    public boolean meetConditions(int totalStoreProductPrice) {
-        return totalStoreProductPrice >= this.minStorePrice;
-    }
-
     public BasketStoreDto toBasketStoreDto() {
         return BasketStoreDto.builder()
                 .storeId(storeId)
@@ -270,6 +266,16 @@ public class StoreInfo {
                 .minStorePrice(minStorePrice)
                 .deliveryFee(deliveryFee)
                 .build();
+    }
+
+    @Override
+    public Integer getId() {
+        return this.storeId;
+    }
+
+    @Override
+    public Boolean meetConditions(int totalStoreProductPrice) {
+        return totalStoreProductPrice >= this.minStorePrice;
     }
 }
 

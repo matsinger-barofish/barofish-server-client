@@ -31,6 +31,8 @@ public class OrderProductInfo {
     @Basic
     @Column(name = "product_id", nullable = false)
     private int productId;
+    @Column(name = "store_id", nullable = false)
+    private int storeId;
     @Basic
     @Column(name = "option_item_id", nullable = false)
     private int optionItemId;
@@ -195,5 +197,13 @@ public class OrderProductInfo {
     @Override
     public int hashCode() {
         return Objects.hash(id, orderId, productId, state, price, amount, deliveryFee);
+    }
+
+    public boolean equalToProductId(int productId) {
+        return this.productId == productId;
+    }
+
+    public boolean equalToOptionItemId(int optionItemId) {
+        return this.optionItemId == optionItemId;
     }
 }
