@@ -331,25 +331,26 @@ public class OrderCommandService {
         return storeMap;
     }
 
-    private void createStoreMap(String orderId, OrderProductReq orderProductReq, OptionItem optionItem, Product findedProduct, Map<StoreInfo, List<OrderProductInfo>> storeMap) {
+    private void createStoreMap(String orderId, OrderProductReq orderProductReq, OptionItem optionItem, Product product, Map<StoreInfo, List<OrderProductInfo>> storeMap) {
         int totalProductPrice = optionItem.getDiscountPrice() * orderProductReq.getAmount();
         OrderProductInfo orderProductInfo = OrderProductInfo.builder()
                 .orderId(orderId)
-                .productId(findedProduct.getId())
+                .productId(product.getId())
+                .storeId(product.getStoreId())
                 .optionItemId(orderProductReq.getOptionId())
                 .settlePrice(optionItem.getPurchasePrice())
                 .originPrice(optionItem.getDiscountPrice())
                 .price(totalProductPrice)
                 .amount(orderProductReq.getAmount())
-                .deliveryFeeType(findedProduct.getDeliverFeeType())
+                .deliveryFeeType(product.getDeliverFeeType())
                 .isSettled(false)
-                .isTaxFree(!findedProduct.getNeedTaxation())
-                .taxFreeAmount(findedProduct.getNeedTaxation() == false ? totalProductPrice : 0)
+                .isTaxFree(!product.getNeedTaxation())
+                .taxFreeAmount(product.getNeedTaxation() == false ? totalProductPrice : 0)
                 .state(OrderProductState.WAIT_DEPOSIT)
                 .build();
 
 
-        StoreInfo storeInfo = storeInfoQueryService.findByStoreId(findedProduct.getStoreId());
+        StoreInfo storeInfo = storeInfoQueryService.findByStoreId(product.getStoreId());
         List<OrderProductInfo> orderProductInfos = storeMap.getOrDefault(storeInfo, new ArrayList<>());
         orderProductInfos.add(orderProductInfo);
         storeMap.put(storeInfo, orderProductInfos);
