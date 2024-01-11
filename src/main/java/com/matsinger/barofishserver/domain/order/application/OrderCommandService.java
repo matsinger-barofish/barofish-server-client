@@ -6,6 +6,8 @@ import com.matsinger.barofishserver.domain.coupon.application.CouponQueryService
 import com.matsinger.barofishserver.domain.coupon.application.CouponUserMapQueryService;
 import com.matsinger.barofishserver.domain.coupon.domain.Coupon;
 import com.matsinger.barofishserver.domain.notification.application.NotificationCommandService;
+import com.matsinger.barofishserver.domain.notification.dto.NotificationMessage;
+import com.matsinger.barofishserver.domain.notification.dto.NotificationMessageType;
 import com.matsinger.barofishserver.domain.order.domain.*;
 import com.matsinger.barofishserver.domain.order.dto.*;
 import com.matsinger.barofishserver.domain.order.orderprductinfo.application.OrderProductInfoCommandService;
@@ -388,7 +390,11 @@ public class OrderCommandService {
         validateAndSetCancelState(request, cancelProduct);
         cancel(order, calculator.getTotalCancelPrice(), calculator.getNonTaxablePrice());
 
-        RestorePointAndCouponIfAllCanceled(allOrderProducts, isCouponUsed, order);
+        notificationCommandService.sendFcmToUser(order.getUserId(),
+                NotificationMessageType.ORDER_CANCEL,
+                NotificationMessage.builder().productName(product.getTitle()).isCanceledByRegion(false).build());
+
+        restorePointAndCouponIfAllCanceled(allOrderProducts, isCouponUsed, order);
         orderProductInfoRepository.saveAll(allOrderProducts);
         orderRepository.save(order);
     }
@@ -429,7 +435,7 @@ public class OrderCommandService {
         calculator.calculate();
     }
 
-    private void RestorePointAndCouponIfAllCanceled(List<OrderProductInfo> allOrderProducts, boolean isCouponUsed, Orders order) {
+    private void restorePointAndCouponIfAllCanceled(List<OrderProductInfo> allOrderProducts, boolean isCouponUsed, Orders order) {
         boolean allCanceled= allOrderProducts.stream()
                 .allMatch(v -> v.getState().equals(OrderProductState.CANCELED));
         if (allCanceled || isCouponUsed) {
@@ -539,11 +545,11 @@ public class OrderCommandService {
             OrderProductState state = toBeCanceled.getState();
             if (state.equals(OrderProductState.WAIT_DEPOSIT)) {
                 toBeCanceled.setState(OrderProductState.CANCELED);
-                continue;
+                return;
             }
             if (state.equals(OrderProductState.PAYMENT_DONE)) {
                 toBeCanceled.setState(OrderProductState.CANCELED);
-                continue;
+                return;
             }
             if (state.equals(OrderProductState.PAYMENT_DONE) ||
                     state.equals(OrderProductState.DELIVERY_DONE) ||
@@ -564,8 +570,8 @@ public class OrderCommandService {
             if (state.equals(OrderProductState.DELIVERY_READY)) {
                 throw new BusinessException("상품이 출고되어 취소가 불가능합니다.");
             }
+            throw new BusinessException("취소 불가능한 상태입니다.");
         }
-        throw new BusinessException("취소 불가능한 상태입니다.");
     }
 
     private void validateAndSwitchStateWhenAllCancel(List<OrderProductInfo> allOrderProducts) {
