@@ -384,7 +384,7 @@ public class OrderCommandService {
 
         allOrderProducts.remove(cancelProduct);
         CancelPriceCalculator calculator = createCancelPriceCalculator(cancelProduct, product, allOrderProducts);
-        removeProduct(product, storeInfo, allOrderProducts, calculator);
+        calculateNewDeliveryFee(product, storeInfo, allOrderProducts, calculator);
         validateAndSetCancelState(request, cancelProduct);
         cancel(order, calculator.getTotalCancelPrice(), calculator.getNonTaxablePrice());
 
@@ -393,10 +393,10 @@ public class OrderCommandService {
         orderRepository.save(order);
     }
 
-    private void removeProduct(Product product,
-                               StoreInfo storeInfo,
-                               List<OrderProductInfo> orderProductInfos,
-                               CancelPriceCalculator calculator) {
+    private void calculateNewDeliveryFee(Product product,
+                                         StoreInfo storeInfo,
+                                         List<OrderProductInfo> orderProductInfos,
+                                         CancelPriceCalculator calculator) {
         if (orderProductInfos.isEmpty()) {
             calculator.setNewDeliveryFee(0);
             calculator.calculate();
