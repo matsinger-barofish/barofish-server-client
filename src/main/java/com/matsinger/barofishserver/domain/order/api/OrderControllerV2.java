@@ -3,6 +3,7 @@ package com.matsinger.barofishserver.domain.order.api;
 import com.matsinger.barofishserver.domain.order.application.OrderCommandService;
 import com.matsinger.barofishserver.domain.order.dto.OrderDto;
 import com.matsinger.barofishserver.domain.order.dto.OrderReq;
+import com.matsinger.barofishserver.domain.order.dto.RequestCancelReq;
 import com.matsinger.barofishserver.jwt.JwtService;
 import com.matsinger.barofishserver.jwt.TokenAuthType;
 import com.matsinger.barofishserver.jwt.TokenInfo;
@@ -12,6 +13,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
@@ -37,6 +39,31 @@ public class OrderControllerV2 {
 
         res.setIsSuccess(true);
         res.setData(Optional.ofNullable(OrderDto.builder().id(orderId).build()));
+        return ResponseEntity.ok(res);
+    }
+
+    // 결제 취소
+    @PostMapping("/cancel/{orderProductInfoId}")
+    public ResponseEntity<CustomResponse<Boolean>> cancelOrderByUserV2(@RequestHeader(value = "Authorization") Optional<String> auth,
+                                                                     @PathVariable("orderProductInfoId") Integer orderProductInfoId,
+                                                                     @RequestPart(value = "data") RequestCancelReq data) {
+        CustomResponse<Boolean> res = new CustomResponse<>();
+
+        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth);
+        orderCommandService.cancelOrderByUser(tokenInfo.getId(), orderProductInfoId, data);
+
+        res.setData(Optional.of(true));
+        return ResponseEntity.ok(res);
+    }
+
+    @PostMapping("/cancel/partner")
+    public ResponseEntity<CustomResponse<Boolean>> cancelOrdersByPartnerV2(@RequestHeader(value = "Authorization") Optional<String> auth,
+                                                                         @RequestPart(value = "orderProductInfoIds") List<Integer> orderProductInfoIds) {
+        CustomResponse<Boolean> res = new CustomResponse<>();
+
+        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.PARTNER, TokenAuthType.ADMIN), auth);
+
+        res.setData(Optional.of(true));
         return ResponseEntity.ok(res);
     }
 }
