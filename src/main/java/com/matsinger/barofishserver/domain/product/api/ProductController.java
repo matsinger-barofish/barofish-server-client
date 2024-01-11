@@ -537,13 +537,13 @@ public class ProductController {
             product.setDeliverFee(0);
             product.setMinOrderPrice(0);
         }
-//        if (data.getDeliverFeeType().equals(ProductDeliverFeeType.FIX)) {
-//            if (product.getDeliverFee() == null && data.getDeliveryFee() == null)
-//                throw new BusinessException("배송비를 입력해주세요.");
-//            product.setDeliverFeeType(ProductDeliverFeeType.FIX);
-//            product.setDeliverFee(data.getDeliveryFee());
-//            product.setMinOrderPrice(null);
-//        }
+        if (data.getDeliverFeeType().equals(ProductDeliverFeeType.FIX)) {
+            if (product.getDeliverFee() == null && data.getDeliveryFee() == null)
+                throw new BusinessException("배송비를 입력해주세요.");
+            product.setDeliverFeeType(ProductDeliverFeeType.FIX);
+            product.setDeliverFee(data.getDeliveryFee());
+            product.setMinOrderPrice(null);
+        }
         if (data.getDeliverFeeType().equals(ProductDeliverFeeType.S_CONDITIONAL)) {
             StoreInfo storeInfo = storeInfoQueryService.findByStoreId(product.getStoreId());
             product.setDeliverFeeType(ProductDeliverFeeType.S_CONDITIONAL);
