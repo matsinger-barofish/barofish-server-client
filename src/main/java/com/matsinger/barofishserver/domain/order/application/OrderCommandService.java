@@ -568,14 +568,13 @@ public class OrderCommandService {
                 toBeCanceled.setState(OrderProductState.CANCELED);
                 containState = true;
             }
-            if (state.equals(OrderProductState.PAYMENT_DONE) ||
-                    state.equals(OrderProductState.DELIVERY_DONE) ||
-                    state.equals(OrderProductState.EXCHANGE_REQUEST) ||
-                    state.equals(OrderProductState.EXCHANGE_ACCEPT) ||
-                    state.equals(OrderProductState.FINAL_CONFIRM) ||
-                    state.equals(OrderProductState.REFUND_REQUEST) ||
-                    state.equals(OrderProductState.REFUND_ACCEPT) ||
-                    state.equals(OrderProductState.REFUND_DONE)) {
+            if (state.equals(OrderProductState.DELIVERY_DONE) ||
+                state.equals(OrderProductState.EXCHANGE_REQUEST) ||
+                state.equals(OrderProductState.EXCHANGE_ACCEPT) ||
+                state.equals(OrderProductState.FINAL_CONFIRM) ||
+                state.equals(OrderProductState.REFUND_REQUEST) ||
+                state.equals(OrderProductState.REFUND_ACCEPT) ||
+                state.equals(OrderProductState.REFUND_DONE)) {
                 throw new BusinessException("취소 불가능한 상태입니다.");
             }
             if (state.equals(OrderProductState.CANCEL_REQUEST)) {
