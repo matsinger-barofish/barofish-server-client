@@ -37,6 +37,7 @@ import com.siot.IamportRestClient.request.CancelData;
 import com.siot.IamportRestClient.response.IamportResponse;
 import com.siot.IamportRestClient.response.Payment;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -48,6 +49,7 @@ import java.util.List;
 @Service
 @Transactional
 @RequiredArgsConstructor
+@Slf4j
 public class PortOneCommandService {
 
     private final PaymentService paymentService;
@@ -205,6 +207,9 @@ public class PortOneCommandService {
                         String.format("가상계좌 예금주명: %s\n", payments.getVbankHolder()) +
                         "24시간 이내로 이체해주세요.";
         sms.sendSms(payments.getBuyerTel(), smsContent, "가상 계좌 결제 요청");
+        log.info("=== smsDataReceived ===");
+        log.info("vbankName = {}", payments.getVbankName());
+        log.info("phoneNumber = {}", payments.getBuyerTel());
     }
 
     public void processWhenStatusCanceled(PortOneBodyData request) {
