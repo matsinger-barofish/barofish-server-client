@@ -41,6 +41,7 @@ public class SearchFilterQueryService {
 
     public SearchFilterField selectSearchFilterField(Integer id) {
         return searchFilterFieldRepository.findById(id).orElseThrow(() -> {
+            log.info("searchFilterFieldId = {}", id);
             throw new BusinessException("검색 필터 필드 정보를 찾을 수 없습니다.");
         });
     }
