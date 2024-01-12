@@ -412,6 +412,7 @@ public class OrderCommandService {
         Integer couponDiscount = order.getCouponDiscount();
         Integer usedPoint = order.getUsedPoint();
         order.setTotalPrice(totalProductAndDeliveryPrice + couponDiscount + usedPoint);
+        order.setOriginTotalPrice(totalProductAndDeliveryPrice);
 
         checkAllProductsCanceledAndRestoreCouponAndPoint(allOrderProducts, order);
         orderProductInfoRepository.saveAll(allOrderProducts);
