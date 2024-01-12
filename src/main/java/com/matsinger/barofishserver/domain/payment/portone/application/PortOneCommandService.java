@@ -1,6 +1,7 @@
 package com.matsinger.barofishserver.domain.payment.portone.application;
 
 import com.matsinger.barofishserver.domain.basketProduct.application.BasketCommandService;
+import com.matsinger.barofishserver.domain.basketProduct.repository.BasketQueryRepository;
 import com.matsinger.barofishserver.domain.coupon.application.CouponCommandService;
 import com.matsinger.barofishserver.domain.notification.application.NotificationCommandService;
 import com.matsinger.barofishserver.domain.notification.dto.NotificationMessage;
@@ -70,6 +71,7 @@ public class PortOneCommandService {
     private final OrderQueryService orderQueryService;
     private final PaymentRepository paymentRepository;
     private final OrderProductInfoQueryService orderProductInfoQueryService;
+    private final BasketQueryRepository basketQueryRepository;
 
     @Transactional
     public void processWhenStatusReady(PortOneBodyData request) {
@@ -125,7 +127,9 @@ public class PortOneCommandService {
             sendNotification(order, orderProductInfos.get(0), false);
             userInfo.usePoint(order.getUsePoint());
             couponCommandService.useCouponV1(order.getCouponId(), order.getUserId());
-            basketCommandService.deleteBasketAfterOrder(order, orderProductInfos);
+            basketQueryRepository.deleteAllBasketByUserIdAndOptionIds(
+                    userInfo.getUserId(),
+                    orderProductInfos.stream().map(v -> v.getOptionItemId()).toList());
 
             userCommandService.updateUserInfo(userInfo);
             orderProductInfoCommandService.saveAll(orderProductInfos);
