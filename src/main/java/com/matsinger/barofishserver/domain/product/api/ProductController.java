@@ -349,7 +349,6 @@ public class ProductController {
             if (data.getDeliveryFee() == null) throw new BusinessException("배송비를 입력해주세요.");
             if (data.getMinOrderPrice() == null)
                 throw new BusinessException("무료 배송 최소 금액을 입력해주세요.");
-            data.setMinOrderPrice(0);
         }
         if (data.getDeliverFeeType().equals(ProductDeliverFeeType.S_CONDITIONAL)) {
             StoreInfo storeInfo = store.get().getStoreInfo();
