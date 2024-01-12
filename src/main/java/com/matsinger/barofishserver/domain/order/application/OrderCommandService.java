@@ -364,11 +364,9 @@ public class OrderCommandService {
         Orders order = tobeCanceled.getOrder();
         List<OrderProductInfo> allOrderProducts = orderProductInfoRepository.findAllByOrderId(order.getId());
         validateRequest(userId, request, order);
-        
-        boolean allCanceled = false;
+
         if (order.isCouponUsed()) {
             cancelAll(allOrderProducts, order);
-            allCanceled = true;
         }
 
         OptionItem optionItem = optionItemQueryService.findById(tobeCanceled.getOptionItemId());
@@ -405,7 +403,7 @@ public class OrderCommandService {
                 NotificationMessageType.ORDER_CANCEL,
                 NotificationMessage.builder().productName(product.getTitle()).isCanceledByRegion(false).build());
 
-        restorePointAndCouponIfAllCanceled(allOrderProducts, allCanceled, order);
+        checkAllProductsCanceledAndRestoreCouponAndPoint(allOrderProducts, order);
         orderProductInfoRepository.saveAll(allOrderProducts);
         orderRepository.save(order);
     }
@@ -445,10 +443,11 @@ public class OrderCommandService {
         calculator.calculate();
     }
 
-    private void restorePointAndCouponIfAllCanceled(List<OrderProductInfo> allOrderProducts, boolean isCouponUsed, Orders order) {
-        boolean allCanceled= allOrderProducts.stream()
+    private void checkAllProductsCanceledAndRestoreCouponAndPoint(List<OrderProductInfo> allOrderProducts, Orders order) {
+        boolean allProductsCanceled = allOrderProducts.stream()
                 .allMatch(v -> v.getState().equals(OrderProductState.CANCELED));
-        if (allCanceled || isCouponUsed) {
+        if (allProductsCanceled) {
+            order.setState(OrderState.CANCELED);
             UserInfo userInfo = userInfoQueryService.findByUserId(order.getUserId());
             userInfo.addPoint(order.getUsedPoint());
             couponCommandService.unUseCoupon(order.getUsedCouponId(), userInfo.getUserId());
