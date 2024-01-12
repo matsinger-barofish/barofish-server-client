@@ -206,4 +206,9 @@ public class OrderProductInfo {
     public boolean equalToOptionItemId(int optionItemId) {
         return this.optionItemId == optionItemId;
     }
+
+    public boolean isCancelableState() {
+        return this.state == OrderProductState.WAIT_DEPOSIT ||
+                this.state == OrderProductState.PAYMENT_DONE;
+    }
 }

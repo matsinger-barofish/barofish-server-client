@@ -382,15 +382,16 @@ public class OrderCommandService {
         }
 
         if (option.isNeeded()) {
-            List<OrderProductInfo> sameProduct = allOrderProducts.stream()
+            List<OrderProductInfo> sameProducts = allOrderProducts.stream()
                     .filter(v -> v.getProductId() == product.getId())
+                    .filter(v -> v.isCancelableState())
                     .toList();
-            boolean productContainsNecessaryOption = productContainsNecessaryOption(option, sameProduct);
+            boolean productContainsNecessaryOption = productContainsNecessaryOption(option, sameProducts);
             if (productContainsNecessaryOption) {
                 cancelProducts = List.of(tobeCanceled);
             }
             if (!productContainsNecessaryOption) {
-                cancelProducts = sameProduct;
+                cancelProducts = sameProducts;
             }
         }
         ArrayList<OrderProductInfo> notToBeRemoved = new ArrayList<>();
