@@ -31,17 +31,17 @@ public class CancelPriceCalculator {
 
     public void calculateTaxPrice() {
         // 상품이 과세일 경우
-        // 과세 금액 = 취소할 상품 금액 + (취소한 다음의 배송비 - 기존 배송비)
+        // 과세 금액 = 취소할 상품 금액 + 새로운 배송비
         if (isTaxFree) {
-            taxablePrice = productPriceToBeCanceled - (newDeliveryFee - existingDeliveryFee);
+            taxablePrice = productPriceToBeCanceled - newDeliveryFee;
             nonTaxablePrice = 0;
         }
         // 상품이 비과세일 경우
-        // 과세 금액 = (취소한 다음의 배송비 - 기존 배송비)
-        // 비과세 금액 = 취소할 상품 가격 - (취소한 다음의 배송비 - 기존 배송비)
+        // 과세 금액 = 새로운 배송비
+        // 비과세 금액 = 취소할 상품 가격 - 새로운 배송비
         if (!isTaxFree) {
-            taxablePrice = existingDeliveryFee - newDeliveryFee;
-            nonTaxablePrice = productPriceToBeCanceled - (existingDeliveryFee - newDeliveryFee);
+            taxablePrice = newDeliveryFee;
+            nonTaxablePrice = productPriceToBeCanceled - newDeliveryFee;
         }
     }
 

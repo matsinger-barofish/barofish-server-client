@@ -421,7 +421,6 @@ public class OrderCommandService {
                     .filter(v -> v.getProductId() == product.getId()).toList();
             if (product.isDeliveryTypeFree()) {
                 sameProduct.forEach(v -> v.setDeliveryFee(0));
-
             }
             if (product.isDeliveryTypeFix()) {
                 calculator.setNewDeliveryFee(
@@ -505,9 +504,10 @@ public class OrderCommandService {
                 .mapToInt(v -> v.getDeliveryFee()).sum();
 
         CancelPriceCalculator taxPriceDto = CancelPriceCalculator.builder()
-                .isTaxFree(product.needTaxation())
+                .isTaxFree(!product.needTaxation())
                 .existingDeliveryFee(existingDeliveryFee)
                 .productPriceToBeCanceled(totalProductPrice)
+                .newDeliveryFee(0)
                 .build();
         return taxPriceDto;
     }
