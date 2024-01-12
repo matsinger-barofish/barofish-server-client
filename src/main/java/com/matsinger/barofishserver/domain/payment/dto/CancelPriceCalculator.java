@@ -22,7 +22,7 @@ public class CancelPriceCalculator {
 
     private Integer taxablePrice;
     private Integer nonTaxablePrice;
-    private Integer totalCancelPrice;
+    private Integer finalCancelPrice;
 
     public void calculate() {
         calculateTaxPrice();
@@ -30,24 +30,24 @@ public class CancelPriceCalculator {
     }
 
     public void calculateTaxPrice() {
-        // 상품이 과세일 경우
-        // 과세 금액 = 취소할 상품 금액 + 새로운 배송비
-        if (isTaxFree) {
-            taxablePrice = productPriceToBeCanceled - newDeliveryFee;
-            nonTaxablePrice = 0;
-        }
         // 상품이 비과세일 경우
         // 과세 금액 = 새로운 배송비
         // 비과세 금액 = 취소할 상품 가격 - 새로운 배송비
-        if (!isTaxFree) {
+        if (isTaxFree) {
             taxablePrice = newDeliveryFee;
             nonTaxablePrice = productPriceToBeCanceled - newDeliveryFee;
+        }
+        // 상품이 과세일 경우
+        // 과세 금액 = 취소할 상품 금액 + 새로운 배송비
+        if (!isTaxFree) {
+            taxablePrice = productPriceToBeCanceled + newDeliveryFee;
+            nonTaxablePrice = 0;
         }
     }
 
     // 취소할 금액 = 취소할 상품 가격 + 기존 배송비 - 취소한 다음의 배송비
     public void calculateTotalCancelPrice() {
-        this.totalCancelPrice = productPriceToBeCanceled + existingDeliveryFee - newDeliveryFee;
+        this.finalCancelPrice = productPriceToBeCanceled + existingDeliveryFee - newDeliveryFee;
     }
 
     public void setNewDeliveryFee(int newDeliveryFee) {

@@ -393,11 +393,13 @@ public class OrderCommandService {
                 cancelProducts = sameProduct;
             }
         }
-
-        CancelPriceCalculator calculator = createCancelPriceCalculator(cancelProducts, product, allOrderProducts);
-        calculateNewDeliveryFee(product, storeInfo, allOrderProducts, calculator);
+        ArrayList<OrderProductInfo> notToBeRemoved = new ArrayList<>();
+        notToBeRemoved.addAll(allOrderProducts);
+        notToBeRemoved.removeAll(cancelProducts);
+        CancelPriceCalculator calculator = createCancelPriceCalculator(cancelProducts, product);
+        calculateNewDeliveryFee(product, storeInfo, notToBeRemoved, calculator);
         validateAndSetCancelState(request, cancelProducts);
-        cancel(order, calculator.getTotalCancelPrice(), calculator.getNonTaxablePrice());
+        cancel(order, calculator.getFinalCancelPrice(), calculator.getNonTaxablePrice());
 
         notificationCommandService.sendFcmToUser(order.getUserId(),
                 NotificationMessageType.ORDER_CANCEL,
@@ -405,6 +407,7 @@ public class OrderCommandService {
 
         checkAllProductsCanceledAndRestoreCouponAndPoint(allOrderProducts, order);
         orderProductInfoRepository.saveAll(allOrderProducts);
+        orderProductInfoRepository.saveAll(cancelProducts);
         orderRepository.save(order);
     }
 
@@ -510,16 +513,16 @@ public class OrderCommandService {
         validateAndSwitchWhenPartialCancel(tobeCanceled);
     }
 
-    private CancelPriceCalculator createCancelPriceCalculator(List<OrderProductInfo> tobeCanceled, Product product, List<OrderProductInfo> orderProductInfos) {
-        int totalProductPrice = tobeCanceled.stream()
+    private CancelPriceCalculator createCancelPriceCalculator(List<OrderProductInfo> tobeCanceled, Product product) {
+        int productPriceToBeCanceled = tobeCanceled.stream()
                 .mapToInt(v -> v.getTotalProductPrice()).sum();
-        int existingDeliveryFee = orderProductInfos.stream()
+        int existingDeliveryFee = tobeCanceled.stream()
                 .mapToInt(v -> v.getDeliveryFee()).sum();
 
         CancelPriceCalculator taxPriceDto = CancelPriceCalculator.builder()
                 .isTaxFree(!product.needTaxation())
                 .existingDeliveryFee(existingDeliveryFee)
-                .productPriceToBeCanceled(totalProductPrice)
+                .productPriceToBeCanceled(productPriceToBeCanceled)
                 .newDeliveryFee(0)
                 .build();
         return taxPriceDto;
