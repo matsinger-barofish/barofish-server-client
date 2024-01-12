@@ -365,10 +365,10 @@ public class OrderCommandService {
         List<OrderProductInfo> allOrderProducts = orderProductInfoRepository.findAllByOrderId(order.getId());
         validateRequest(userId, request, order);
         
-        boolean isCouponUsed = false;
+        boolean allCanceled = false;
         if (order.isCouponUsed()) {
             cancelAll(allOrderProducts, order);
-            isCouponUsed = true;
+            allCanceled = true;
         }
 
         OptionItem optionItem = optionItemQueryService.findById(tobeCanceled.getOptionItemId());
@@ -376,25 +376,36 @@ public class OrderCommandService {
         Product product = productQueryService.findById(tobeCanceled.getProductId());
         StoreInfo storeInfo = storeInfoQueryService.findByStoreId(product.getStoreId());
 
-        List<OrderProductInfo> cancelProduct = new ArrayList<>();
+        // 필수옵션은 여러개가 있을 수 있다.
+        // 주문목록에 필수옵션이 있는지 여부를 체크하고 필수옵션이 포함돼 있지 않으면 해당 상품
+        List<OrderProductInfo> cancelProducts = new ArrayList<>();
         if (!option.isNeeded()) {
-            cancelProduct = List.of(tobeCanceled);
-        }
-        if (option.isNeeded()) {
-            cancelProduct = extractSameOptions(option, allOrderProducts);
+            cancelProducts = List.of(tobeCanceled);
         }
 
-        allOrderProducts.remove(cancelProduct);
-        CancelPriceCalculator calculator = createCancelPriceCalculator(cancelProduct, product, allOrderProducts);
+        if (option.isNeeded()) {
+            List<OrderProductInfo> sameProduct = allOrderProducts.stream()
+                    .filter(v -> v.getProductId() == product.getId())
+                    .toList();
+            boolean productContainsNecessaryOption = productContainsNecessaryOption(option, sameProduct);
+            if (productContainsNecessaryOption) {
+                cancelProducts = List.of(tobeCanceled);
+            }
+            if (!productContainsNecessaryOption) {
+                cancelProducts = sameProduct;
+            }
+        }
+
+        CancelPriceCalculator calculator = createCancelPriceCalculator(cancelProducts, product, allOrderProducts);
         calculateNewDeliveryFee(product, storeInfo, allOrderProducts, calculator);
-        validateAndSetCancelState(request, cancelProduct);
+        validateAndSetCancelState(request, cancelProducts);
         cancel(order, calculator.getTotalCancelPrice(), calculator.getNonTaxablePrice());
 
         notificationCommandService.sendFcmToUser(order.getUserId(),
                 NotificationMessageType.ORDER_CANCEL,
                 NotificationMessage.builder().productName(product.getTitle()).isCanceledByRegion(false).build());
 
-        restorePointAndCouponIfAllCanceled(allOrderProducts, isCouponUsed, order);
+        restorePointAndCouponIfAllCanceled(allOrderProducts, allCanceled, order);
         orderProductInfoRepository.saveAll(allOrderProducts);
         orderRepository.save(order);
     }
@@ -516,17 +527,17 @@ public class OrderCommandService {
     }
 
     @NotNull
-    private List<OrderProductInfo> extractSameOptions(Option option, List<OrderProductInfo> orderProductInfos) {
-        List<OrderProductInfo> sameOptions = new ArrayList<>();
-        List<OptionItem> sameOptionItems = optionItemRepository.findAllByOptionId(option.getId());
-        for (OrderProductInfo orderProductInfo : orderProductInfos) {
-            for (OptionItem sameOption : sameOptionItems) {
-                if (orderProductInfo.equalToOptionItemId(sameOption.getId())) {
-                    sameOptions.add(orderProductInfo);
+    private boolean productContainsNecessaryOption(Option optionToBeCanceled, List<OrderProductInfo> sameProducts) {
+        for (OrderProductInfo sameProduct : sameProducts) {
+            OptionItem optionItem = optionItemQueryService.findById(sameProduct.getOptionItemId());
+            Option basketOption = optionQueryService.findById(optionItem.getOptionId());
+            if (basketOption.getId() != optionToBeCanceled.getId()) {
+                if (basketOption.isNeeded()) {
+                    return true;
                 }
             }
         }
-        return sameOptions;
+        return false;
     }
 
     private int cancelWhenConditional(ConditionalObject conditionalObject, List<OrderProductInfo> sameConditional) {
