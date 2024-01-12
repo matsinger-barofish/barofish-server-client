@@ -406,6 +406,13 @@ public class OrderCommandService {
                 NotificationMessageType.ORDER_CANCEL,
                 NotificationMessage.builder().productName(product.getTitle()).isCanceledByRegion(false).build());
 
+        int totalProductAndDeliveryPrice = allOrderProducts.stream()
+                .filter(v -> v.isCancelableState())
+                .mapToInt(v -> v.getTotalPriceContainsDeliveryFee()).sum();
+        Integer couponDiscount = order.getCouponDiscount();
+        Integer usedPoint = order.getUsedPoint();
+        order.setTotalPrice(totalProductAndDeliveryPrice + couponDiscount + usedPoint);
+
         checkAllProductsCanceledAndRestoreCouponAndPoint(allOrderProducts, order);
         orderProductInfoRepository.saveAll(allOrderProducts);
         orderProductInfoRepository.saveAll(cancelProducts);
