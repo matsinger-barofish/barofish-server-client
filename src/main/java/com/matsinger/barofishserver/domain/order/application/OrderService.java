@@ -544,7 +544,7 @@ public class OrderService {
         return infoRepository.findAllByProduct_StoreIdAndIsSettled(storeId, isSettled);
     }
 
-    public boolean checkProductCanDeliver(OrderDeliverPlace orderDeliverPlace, OrderProductInfo orderProductInfo) {
+    public boolean canDeliver(OrderDeliverPlace orderDeliverPlace, OrderProductInfo orderProductInfo) {
         List<String>
                 difficultDeliverBcode =
                 difficultDeliverAddressQueryService

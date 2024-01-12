@@ -421,7 +421,7 @@ public class OrderController {
                         .postalCode(deliverPlace.getPostalCode())
                         .bcode(deliverPlace.getBcode())
                         .build();
-        if (infos.stream().anyMatch(v -> !orderService.checkProductCanDeliver(orderDeliverPlace, v)))
+        if (infos.stream().anyMatch(v -> !orderService.canDeliver(orderDeliverPlace, v)))
             throw new BusinessException("배송지에 배송 불가능한 상품이 포함돼 있습니다.");
         Orders
                 order =

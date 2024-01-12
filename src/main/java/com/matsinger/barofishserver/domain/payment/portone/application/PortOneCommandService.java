@@ -42,6 +42,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -88,39 +89,46 @@ public class PortOneCommandService {
         Payments payments = paymentService.getPaymentInfoFromPortOne(order.getId(), request.getImp_uid());
         List<OrderProductInfo> orderProductInfos = orderProductInfoQueryService.findAllByOrderId(order.getId());
 
+        boolean containsCannotDeliverPlace = false;
+        List<OrderProductInfo> cannotDeliveryProducts = new ArrayList<>();
         for (OrderProductInfo orderProductInfo : orderProductInfos) {
-            boolean canDeliver = orderService.checkProductCanDeliver(order.getDeliverPlace(), orderProductInfo);
+            boolean canDeliver = orderService.canDeliver(order.getDeliverPlace(), orderProductInfo);
             if (!canDeliver) {
-                orderProductInfos.forEach( opi -> {
-                    opi.setCancelReasonContent("배송 불가 지역");
-                    opi.setState(OrderProductState.DELIVERY_DIFFICULT);
-                    opi.setCancelReason(OrderCancelReason.ORDER_FAULT);
-                });
-                order.setState(OrderState.DELIVERY_DIFFICULT);
-                order.setImpUid(request.getImp_uid());
-
-                sendNotification(order, orderProductInfo, true);
-
-                CancelData cancelData = createCancelData(orderProductInfos, order);
-                requestRefund(cancelData);
+                orderProductInfo.setCancelReasonContent("배송 불가 지역");
+                orderProductInfo.setState(OrderProductState.DELIVERY_DIFFICULT);
+                orderProductInfo.setCancelReason(OrderCancelReason.ORDER_FAULT);
+                cannotDeliveryProducts.add(orderProductInfo);
+                containsCannotDeliverPlace = true;
             }
-            if (canDeliver) {
+        }
+
+        if (containsCannotDeliverPlace) {
+            order.setState(OrderState.DELIVERY_DIFFICULT);
+            order.setImpUid(request.getImp_uid());
+            sendNotification(order, cannotDeliveryProducts.get(0), true);
+
+            CancelData cancelData = createAllCancelData(orderProductInfos, order);
+            requestRefund(cancelData);
+        }
+
+        if (!containsCannotDeliverPlace) {
+            for (OrderProductInfo orderProductInfo : orderProductInfos) {
                 orderProductInfo.setState(OrderProductState.PAYMENT_DONE);
-                order.setState(OrderState.PAYMENT_DONE);
-                order.setImpUid(request.getImp_uid());
-
-                UserInfo userInfo = userInfoQueryService.findByUserId(order.getUserId());
-                sendNotification(order, orderProductInfo, false);
                 reduceQuantity(orderProductInfo);
-                userInfo.usePoint(order.getUsePoint());
-                couponCommandService.useCouponV1(order.getCouponId(), order.getUserId());
-                basketCommandService.deleteBasketAfterOrder(order, orderProductInfos);
-
-                userCommandService.updateUserInfo(userInfo);
-                orderProductInfoCommandService.saveAll(orderProductInfos);
-                orderRepository.save(order);
-                paymentCommandService.save(payments);
             }
+            order.setState(OrderState.PAYMENT_DONE);
+            order.setImpUid(request.getImp_uid());
+
+            UserInfo userInfo = userInfoQueryService.findByUserId(order.getUserId());
+            sendNotification(order, orderProductInfos.get(0), false);
+            userInfo.usePoint(order.getUsePoint());
+            couponCommandService.useCouponV1(order.getCouponId(), order.getUserId());
+            basketCommandService.deleteBasketAfterOrder(order, orderProductInfos);
+
+            userCommandService.updateUserInfo(userInfo);
+            orderProductInfoCommandService.saveAll(orderProductInfos);
+            orderRepository.save(order);
+            paymentCommandService.save(payments);
         }
     }
 
@@ -139,7 +147,7 @@ public class PortOneCommandService {
     }
 
     @NotNull
-    private static CancelData createCancelData(List<OrderProductInfo> orderProductInfos, Orders order) {
+    private static CancelData createAllCancelData(List<OrderProductInfo> orderProductInfos, Orders order) {
         int deliveryFeeSum = orderProductInfos.stream().mapToInt(v -> v.getDeliveryFee()).sum();
         int orderProductsAndDeliveryFeeSum = order.getOriginTotalPrice() + deliveryFeeSum;
         int taxFreeAmount = orderProductInfos.stream().mapToInt(v -> v.getTaxFreeAmount()).sum();

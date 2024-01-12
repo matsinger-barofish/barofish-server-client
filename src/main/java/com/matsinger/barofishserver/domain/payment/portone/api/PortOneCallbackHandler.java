@@ -89,7 +89,7 @@ public class PortOneCallbackHandler {
                     Payments paymentData = paymentService.getPaymentInfoFromPortOne(order.getId(), data.getImp_uid());
                     List<OrderProductInfo> infos = orderService.selectOrderProductInfoListWithOrderId(order.getId());
                     infos.forEach(info -> {
-                        if (!orderService.checkProductCanDeliver(order.getDeliverPlace(), info)) {
+                        if (!orderService.canDeliver(order.getDeliverPlace(), info)) {
                             int cancelPrice = 0;
                             try {
                                 GetCancelPriceDto
