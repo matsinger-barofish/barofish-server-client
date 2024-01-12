@@ -127,9 +127,10 @@ public class PortOneCommandService {
             sendNotification(order, orderProductInfos.get(0), false);
             userInfo.usePoint(order.getUsePoint());
             couponCommandService.useCouponV1(order.getCouponId(), order.getUserId());
-            basketQueryRepository.deleteAllBasketByUserIdAndOptionIds(
-                    userInfo.getUserId(),
-                    orderProductInfos.stream().map(v -> v.getOptionItemId()).toList());
+
+//            basketQueryRepository.deleteAllBasketByUserIdAndOptionIds(
+//                    userInfo.getUserId(),
+//                    orderProductInfos.stream().map(v -> v.getOptionItemId()).toList());
 
             userCommandService.updateUserInfo(userInfo);
             orderProductInfoCommandService.saveAll(orderProductInfos);
