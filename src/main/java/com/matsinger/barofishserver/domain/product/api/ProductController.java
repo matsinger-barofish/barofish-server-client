@@ -497,6 +497,12 @@ public class ProductController {
         if (tokenInfo.getType().equals(TokenAuthType.PARTNER) &&
                 product.getStoreId() != tokenInfo.getId())
             throw new BusinessException("타지점의 상품입니다.");
+
+        // 파트너 바꿈
+        if (product.getStoreId() != data.getStoreId()) {
+            product.setStoreId(data.getStoreId());
+        }
+
         if (data.getCategoryId() != null) {
             Category category = categoryQueryService.findById(data.getCategoryId());
             product.setCategory(category);
