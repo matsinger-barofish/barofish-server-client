@@ -453,6 +453,7 @@ public class OrderCommandService {
     private void cancel(Orders order,
                         Integer totalCancelPrice,
                         Integer taxFreePrice) {
+        log.info("impUid = {}", order.getImpUid());
         log.info("totalCancelPrice = {}", totalCancelPrice);
         log.info("taxFreePrice = {}", taxFreePrice);
         CancelData cancelData = new CancelData(
