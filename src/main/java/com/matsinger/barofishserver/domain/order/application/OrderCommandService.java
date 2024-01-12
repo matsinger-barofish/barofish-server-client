@@ -399,7 +399,7 @@ public class OrderCommandService {
         CancelPriceCalculator calculator = createCancelPriceCalculator(cancelProducts, product);
         calculateNewDeliveryFee(product, storeInfo, notToBeRemoved, calculator);
         validateAndSetCancelState(request, cancelProducts);
-        cancel(order, calculator.getFinalCancelPrice(), calculator.getNonTaxablePrice());
+//        cancel(order, calculator.getFinalCancelPrice(), calculator.getNonTaxablePrice());
 
         notificationCommandService.sendFcmToUser(order.getUserId(),
                 NotificationMessageType.ORDER_CANCEL,
@@ -557,15 +557,16 @@ public class OrderCommandService {
     }
 
     private void validateAndSwitchWhenPartialCancel(List<OrderProductInfo> orderProductInfos) {
+        boolean containState = false;
         for (OrderProductInfo toBeCanceled : orderProductInfos) {
             OrderProductState state = toBeCanceled.getState();
             if (state.equals(OrderProductState.WAIT_DEPOSIT)) {
                 toBeCanceled.setState(OrderProductState.CANCELED);
-                return;
+                containState = true;
             }
             if (state.equals(OrderProductState.PAYMENT_DONE)) {
                 toBeCanceled.setState(OrderProductState.CANCELED);
-                return;
+                containState = true;
             }
             if (state.equals(OrderProductState.PAYMENT_DONE) ||
                     state.equals(OrderProductState.DELIVERY_DONE) ||
@@ -586,7 +587,9 @@ public class OrderCommandService {
             if (state.equals(OrderProductState.DELIVERY_READY)) {
                 throw new BusinessException("상품이 출고되어 취소가 불가능합니다.");
             }
-            throw new BusinessException("취소 불가능한 상태입니다.");
+            if (!containState) {
+                throw new RuntimeException("주문 상태를 확인해주세요.");
+            }
         }
     }
 
