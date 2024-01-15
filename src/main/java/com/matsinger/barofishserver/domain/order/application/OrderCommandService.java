@@ -42,6 +42,7 @@ import com.matsinger.barofishserver.domain.user.paymentMethod.application.Paymen
 import com.matsinger.barofishserver.domain.user.paymentMethod.domain.PaymentMethod;
 import com.matsinger.barofishserver.domain.userinfo.application.UserInfoQueryService;
 import com.matsinger.barofishserver.domain.userinfo.domain.UserInfo;
+import com.matsinger.barofishserver.domain.userinfo.repository.UserInfoRepository;
 import com.matsinger.barofishserver.global.exception.BusinessException;
 import com.matsinger.barofishserver.utils.Common;
 import com.siot.IamportRestClient.IamportClient;
@@ -94,6 +95,7 @@ public class OrderCommandService {
     private final OptionItemRepository optionItemRepository;
     private final CouponCommandService couponCommandService;
     private final PortOneCallbackService callbackService;
+    private final UserInfoRepository userInfoRepository;
 
     @Transactional
     public String proceedOrder(OrderReq request, Integer userId) {
@@ -367,6 +369,7 @@ public class OrderCommandService {
 
         if (order.isCouponUsed()) {
             cancelAll(allOrderProducts, order);
+            return;
         }
 
         OptionItem optionItem = optionItemQueryService.findById(tobeCanceled.getOptionItemId());
@@ -416,7 +419,6 @@ public class OrderCommandService {
 
         checkAllProductsCanceledAndRestoreCouponAndPoint(allOrderProducts, order);
         orderProductInfoRepository.saveAll(allOrderProducts);
-        orderProductInfoRepository.saveAll(cancelProducts);
         orderRepository.save(order);
     }
 
@@ -477,7 +479,10 @@ public class OrderCommandService {
                 order.getTotalPrice(),
                 allOrderProducts.stream().mapToInt(v -> v.getTaxFreeAmount()).sum()
         );
+
         orderProductInfoRepository.saveAll(allOrderProducts);
+        orderRepository.save(order);
+        userInfoRepository.save(userInfo);
     }
 
     private void cancel(Orders order,
