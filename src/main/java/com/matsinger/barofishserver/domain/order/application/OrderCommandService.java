@@ -136,6 +136,7 @@ public class OrderCommandService {
         int totalOrderPriceMinusDeliveryFee = totalOrderProductPrice - totalOrderDeliveryFee;
         int totalOrderPriceContainsDeliveryFee = totalOrderProductPrice + totalOrderDeliveryFee;
 
+
         validateCouponAndPoint(request, totalOrderPriceMinusDeliveryFee, userInfo);
         Integer finalOrderPrice = validateFinalPrice(request, totalOrderPriceContainsDeliveryFee);
 
@@ -248,7 +249,7 @@ public class OrderCommandService {
         return savedOrder.getId();
     }
 
-    private void validateProductStatesAndDeleteBasket(Integer userId, Product findedProduct) {
+    private void validateProductStates(Integer userId, Product findedProduct) {
         if (findedProduct.isPromotionEnd()) {
             basketCommandService.deleteBasket(findedProduct.getId(), userId);
             throw new BusinessException("프로모션 기간이 아닌 상품이 포함되어 있습니다.");
@@ -333,7 +334,7 @@ public class OrderCommandService {
             Product findedProduct = productQueryService.findById(orderProductReq.getProductId());
             OptionItem optionItem = optionItemQueryService.findById(orderProductReq.getOptionId());
 
-            validateProductStatesAndDeleteBasket(userInfo.getUserId(), findedProduct);
+            validateProductStates(userInfo.getUserId(), findedProduct);
             createStoreMap(orderId, orderProductReq, optionItem, findedProduct, storeMap);
         }
         return storeMap;
@@ -393,7 +394,7 @@ public class OrderCommandService {
                     .filter(v -> v.getProductId() == product.getId())
                     .filter(v -> v.isCancelableState())
                     .toList();
-            boolean productContainsNecessaryOption = productContainsNecessaryOption(option, sameProducts);
+            boolean productContainsNecessaryOption = productContainsNecessaryOption(tobeCanceled, sameProducts);
             if (productContainsNecessaryOption) {
                 cancelProducts = List.of(tobeCanceled);
             }
@@ -551,14 +552,15 @@ public class OrderCommandService {
     }
 
     @NotNull
-    private boolean productContainsNecessaryOption(Option optionToBeCanceled, List<OrderProductInfo> sameProducts) {
-        for (OrderProductInfo sameProduct : sameProducts) {
+    private boolean productContainsNecessaryOption(OrderProductInfo tobeCanceled, List<OrderProductInfo> sameProducts) {
+        ArrayList<OrderProductInfo> sameProductsOfBasket = new ArrayList<>(sameProducts);
+        sameProductsOfBasket.remove(tobeCanceled);
+
+        for (OrderProductInfo sameProduct : sameProductsOfBasket) {
             OptionItem optionItem = optionItemQueryService.findById(sameProduct.getOptionItemId());
             Option basketOption = optionQueryService.findById(optionItem.getOptionId());
-            if (basketOption.getId() != optionToBeCanceled.getId()) {
-                if (basketOption.isNeeded()) {
-                    return true;
-                }
+            if (basketOption.isNeeded()) {
+                return true;
             }
         }
         return false;
