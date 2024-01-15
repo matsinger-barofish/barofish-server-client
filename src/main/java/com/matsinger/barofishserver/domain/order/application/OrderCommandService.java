@@ -403,7 +403,7 @@ public class OrderCommandService {
         CancelPriceCalculator calculator = createCancelPriceCalculator(cancelProducts, product);
         calculateNewDeliveryFee(product, storeInfo, notToBeRemoved, calculator);
         validateAndSetCancelState(request, cancelProducts);
-//        cancel(order, calculator.getFinalCancelPrice(), calculator.getNonTaxablePrice());
+        cancel(order, calculator.getFinalCancelPrice(), calculator.getNonTaxablePrice());
 
         notificationCommandService.sendFcmToUser(order.getUserId(),
                 NotificationMessageType.ORDER_CANCEL,
