@@ -18,9 +18,12 @@ import com.matsinger.barofishserver.domain.order.orderprductinfo.repository.Orde
 import com.matsinger.barofishserver.domain.order.repository.OrderDeliverPlaceRepository;
 import com.matsinger.barofishserver.domain.order.repository.OrderRepository;
 import com.matsinger.barofishserver.domain.payment.application.PaymentService;
+import com.matsinger.barofishserver.domain.payment.domain.PaymentState;
+import com.matsinger.barofishserver.domain.payment.domain.Payments;
 import com.matsinger.barofishserver.domain.payment.dto.KeyInPaymentReq;
 import com.matsinger.barofishserver.domain.payment.dto.CancelPriceCalculator;
 import com.matsinger.barofishserver.domain.payment.portone.application.PortOneCallbackService;
+import com.matsinger.barofishserver.domain.payment.repository.PaymentRepository;
 import com.matsinger.barofishserver.domain.product.application.ProductQueryService;
 import com.matsinger.barofishserver.domain.product.difficultDeliverAddress.application.DifficultDeliverAddressQueryService;
 import com.matsinger.barofishserver.domain.product.domain.Product;
@@ -96,6 +99,7 @@ public class OrderCommandService {
     private final CouponCommandService couponCommandService;
     private final PortOneCallbackService callbackService;
     private final UserInfoRepository userInfoRepository;
+    private final PaymentRepository paymentRepository;
 
     @Transactional
     public String proceedOrder(OrderReq request, Integer userId) {
@@ -469,6 +473,8 @@ public class OrderCommandService {
     }
 
     private void cancelAll(List<OrderProductInfo> allOrderProducts, Orders order) {
+        Payments payment = paymentRepository.findFirstByImpUid(order.getImpUid());
+        payment.setStatus(PaymentState.CANCELED);
         allOrderProducts.forEach(v -> v.setState(OrderProductState.CANCELED));
         order.setState(OrderState.CANCELED);
         couponCommandService.unUseCoupon(order.getCouponId(), order.getUserId());
@@ -480,6 +486,7 @@ public class OrderCommandService {
                 allOrderProducts.stream().mapToInt(v -> v.getTaxFreeAmount()).sum()
         );
 
+        paymentRepository.save(payment);
         orderProductInfoRepository.saveAll(allOrderProducts);
         orderRepository.save(order);
         userInfoRepository.save(userInfo);
