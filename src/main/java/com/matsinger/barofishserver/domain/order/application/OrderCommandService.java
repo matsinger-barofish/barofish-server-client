@@ -521,10 +521,12 @@ public class OrderCommandService {
             IamportResponse<Payment> cancelResult = iamportClient.cancelPaymentByImpUid(cancelData);
             if (cancelResult.getCode() != 0) {
                 System.out.println(cancelResult.getMessage());
+                log.info(cancelResult.getMessage());
                 throw new BusinessException("환불에 실패하였습니다.");
             }
         } catch (Exception e) {
-            throw new BusinessException("환불에 실패하였습니다.");
+
+            throw new BusinessException(e.getMessage());
         }
     }
 
