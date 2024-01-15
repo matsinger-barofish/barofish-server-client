@@ -507,7 +507,7 @@ public class OrderCommandService {
                 true,
                 BigDecimal.valueOf(totalCancelPrice)
         );
-        cancelData.setTax_free(BigDecimal.valueOf(taxFreePrice));
+//        cancelData.setTax_free(BigDecimal.valueOf(taxFreePrice));
         if (order.getVbankRefundInfo() != null) {
             VBankRefundInfo refundInfo = order.getVbankRefundInfo();
             cancelData.setRefund_holder(refundInfo.getBankHolder());
