@@ -467,8 +467,16 @@ public class OrderCommandService {
     }
 
     private void cancelAll(List<OrderProductInfo> allOrderProducts, Orders order) {
-        validateAndSwitchStateWhenAllCancel(allOrderProducts);
-        cancelAllProducts(allOrderProducts, order);
+        allOrderProducts.forEach(v -> v.setState(OrderProductState.CANCELED));
+        order.setState(OrderState.CANCELED);
+        couponCommandService.unUseCoupon(order.getCouponId(), order.getUserId());
+        UserInfo userInfo = userInfoQueryService.findByUserId(order.getUserId());
+        userInfo.addPoint(order.getUsedPoint());
+
+        cancel(order,
+                order.getTotalPrice(),
+                allOrderProducts.stream().mapToInt(v -> v.getTaxFreeAmount()).sum()
+        );
         orderProductInfoRepository.saveAll(allOrderProducts);
     }
 
@@ -492,13 +500,6 @@ public class OrderCommandService {
         }
 
         sendPortOneCancelData(cancelData);
-    }
-
-    private void cancelAllProducts(List<OrderProductInfo> allOrderProducts, Orders order) {
-        cancel(order,
-                order.getTotalPrice(),
-                allOrderProducts.stream().mapToInt(v -> v.getTaxFreeAmount()).sum()
-        );
     }
 
     private void sendPortOneCancelData(CancelData cancelData) {
@@ -598,36 +599,6 @@ public class OrderCommandService {
             if (!containState) {
                 throw new RuntimeException("주문 상태를 확인해주세요.");
             }
-        }
-    }
-
-    private void validateAndSwitchStateWhenAllCancel(List<OrderProductInfo> allOrderProducts) {
-        if (allOrderProducts.stream().anyMatch(v -> {
-            switch (v.getState()) {
-                case ON_DELIVERY:
-                case DELIVERY_DONE:
-                case EXCHANGE_REQUEST:
-                case EXCHANGE_ACCEPT:
-                case FINAL_CONFIRM:
-                case REFUND_REQUEST:
-                case REFUND_ACCEPT:
-                case REFUND_DONE:
-                case CANCEL_REQUEST:
-                case CANCELED:
-                    return true;
-                case WAIT_DEPOSIT:
-                case PAYMENT_DONE:
-                case DELIVERY_READY:
-                default:
-                    return false;
-            }
-        })) throw new BusinessException("취소 불가능한 상태입니다.");
-
-        if (allOrderProducts.stream().anyMatch(v -> v.getState().equals(OrderProductState.WAIT_DEPOSIT))) {
-            allOrderProducts.forEach(info -> info.setState(OrderProductState.CANCELED));
-        }
-        if (allOrderProducts.stream().anyMatch(v -> v.getState().equals(OrderProductState.DELIVERY_READY))) {
-            allOrderProducts.forEach(info -> info.setState(OrderProductState.CANCEL_REQUEST));
         }
     }
 
