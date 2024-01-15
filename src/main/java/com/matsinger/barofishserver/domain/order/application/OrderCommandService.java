@@ -113,6 +113,9 @@ public class OrderCommandService {
 
         Map<StoreInfo, List<OrderProductInfo>> storeMap = createStoreMap(request, userInfo, orderId);
 
+        log.info("orderId = {}", orderId);
+        log.info("totalOrderPrice = {}", request.getTotalPrice());
+
         int totalOrderDeliveryFee = 0;
         int totalOrderProductPrice = 0;
         int totalTaxFreePrice = 0;
