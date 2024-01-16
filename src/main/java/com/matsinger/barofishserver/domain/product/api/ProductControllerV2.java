@@ -134,9 +134,9 @@ public class ProductControllerV2 {
     public ResponseEntity<CustomResponse<List<ProductPhotiReviewDto>>> getProductReviewPhotos(@PathVariable(value = "id") Integer productId) {
         CustomResponse<List<ProductPhotiReviewDto>> response = new CustomResponse<>();
 
-        List<ProductPhotiReviewDto> productPhotiReviewDtos = productQueryService.getProductPictures(productId);
+        List<ProductPhotiReviewDto> productPhotoReviewDtos = productQueryService.getProductPictures(productId);
         response.setIsSuccess(true);
-        response.setData(Optional.of(productPhotiReviewDtos));
+        response.setData(Optional.of(productPhotoReviewDtos));
 
         return ResponseEntity.ok(response);
     }

@@ -112,7 +112,7 @@ public class BasketCommandService {
             }
         }
         if (!productNecessaryOptionExists) {
-            throw new BusinessException("선택 옵션을 먼저 삭제한 후" + "\n" + "필수 옵션을 제거해주세요.");
+            throw new BusinessException("선택옵션을 먼저 제거한 후" + "\n" + "필수옵션을 제거해주세요.");
         }
     }
 

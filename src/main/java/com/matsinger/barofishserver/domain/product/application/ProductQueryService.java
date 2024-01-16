@@ -253,7 +253,7 @@ public class ProductQueryService {
 
             String removedBrackets = removeBrackets(reviewPictureUrls);
             List<String> reviewImages =
-                    removedBrackets != "[]"
+                    removedBrackets != "[]" || removedBrackets != null
                             ? Arrays.stream(removedBrackets.split(", ")).toList()
                             : new ArrayList<>();
 
