@@ -9,7 +9,10 @@ import com.matsinger.barofishserver.domain.notification.application.Notification
 import com.matsinger.barofishserver.domain.notification.dto.NotificationMessage;
 import com.matsinger.barofishserver.domain.notification.dto.NotificationMessageType;
 import com.matsinger.barofishserver.domain.order.domain.*;
-import com.matsinger.barofishserver.domain.order.dto.*;
+import com.matsinger.barofishserver.domain.order.dto.OrderProductReq;
+import com.matsinger.barofishserver.domain.order.dto.OrderReq;
+import com.matsinger.barofishserver.domain.order.dto.RequestCancelReq;
+import com.matsinger.barofishserver.domain.order.dto.VBankRefundInfo;
 import com.matsinger.barofishserver.domain.order.orderprductinfo.application.OrderProductInfoCommandService;
 import com.matsinger.barofishserver.domain.order.orderprductinfo.application.OrderProductInfoQueryService;
 import com.matsinger.barofishserver.domain.order.orderprductinfo.domain.OrderProductInfo;
@@ -20,22 +23,20 @@ import com.matsinger.barofishserver.domain.order.repository.OrderRepository;
 import com.matsinger.barofishserver.domain.payment.application.PaymentService;
 import com.matsinger.barofishserver.domain.payment.domain.PaymentState;
 import com.matsinger.barofishserver.domain.payment.domain.Payments;
+import com.matsinger.barofishserver.domain.payment.dto.CancelManager;
 import com.matsinger.barofishserver.domain.payment.dto.KeyInPaymentReq;
-import com.matsinger.barofishserver.domain.payment.dto.CancelPriceCalculator;
 import com.matsinger.barofishserver.domain.payment.portone.application.PortOneCallbackService;
 import com.matsinger.barofishserver.domain.payment.repository.PaymentRepository;
 import com.matsinger.barofishserver.domain.product.application.ProductQueryService;
 import com.matsinger.barofishserver.domain.product.difficultDeliverAddress.application.DifficultDeliverAddressQueryService;
 import com.matsinger.barofishserver.domain.product.domain.Product;
 import com.matsinger.barofishserver.domain.product.option.application.OptionQueryService;
-import com.matsinger.barofishserver.domain.product.option.domain.Option;
 import com.matsinger.barofishserver.domain.product.optionitem.application.OptionItemCommandService;
 import com.matsinger.barofishserver.domain.product.optionitem.application.OptionItemQueryService;
 import com.matsinger.barofishserver.domain.product.optionitem.domain.OptionItem;
 import com.matsinger.barofishserver.domain.product.optionitem.repository.OptionItemRepository;
 import com.matsinger.barofishserver.domain.product.repository.ProductRepository;
 import com.matsinger.barofishserver.domain.store.application.StoreInfoQueryService;
-import com.matsinger.barofishserver.domain.store.domain.ConditionalObject;
 import com.matsinger.barofishserver.domain.store.domain.StoreInfo;
 import com.matsinger.barofishserver.domain.user.deliverplace.DeliverPlace;
 import com.matsinger.barofishserver.domain.user.deliverplace.application.DeliverPlaceQueryService;
@@ -54,7 +55,6 @@ import com.siot.IamportRestClient.response.IamportResponse;
 import com.siot.IamportRestClient.response.Payment;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -370,152 +370,92 @@ public class OrderCommandService {
 
     @Transactional
     public void cancelOrderByUser(Integer userId, Integer orderProductInfoId, RequestCancelReq request) {
-        OrderProductInfo tobeCanceled = orderProductInfoQueryService.findById(orderProductInfoId);
-        Orders order = tobeCanceled.getOrder();
+        OrderProductInfo cancelRequestedProduct = orderProductInfoQueryService.findById(orderProductInfoId);
+        Orders order = cancelRequestedProduct.getOrder();
         List<OrderProductInfo> allOrderProducts = orderProductInfoRepository.findAllByOrderId(order.getId());
         validateRequest(userId, request, order);
 
         if (order.isCouponUsed()) {
-            cancelAll(allOrderProducts, order);
-            return;
+            CancelManager cancelManager = new CancelManager(
+                    order, allOrderProducts, List.of());
+            cancel(order, cancelManager, request);
         }
 
-        OptionItem optionItem = optionItemQueryService.findById(tobeCanceled.getOptionItemId());
-        Option option = optionQueryService.findById(optionItem.getOptionId());
-        Product product = productQueryService.findById(tobeCanceled.getProductId());
+        Product product = productQueryService.findById(cancelRequestedProduct.getProductId());
         StoreInfo storeInfo = storeInfoQueryService.findByStoreId(product.getStoreId());
 
-        // 필수옵션은 여러개가 있을 수 있다.
-        // 주문목록에 필수옵션이 있는지 여부를 체크하고 필수옵션이 포함돼 있지 않으면 해당 상품
-        List<OrderProductInfo> cancelProducts = new ArrayList<>();
-        if (!option.isNeeded()) {
-            cancelProducts = List.of(tobeCanceled);
-        }
-
-        if (option.isNeeded()) {
-            List<OrderProductInfo> sameProducts = allOrderProducts.stream()
-                    .filter(v -> v.getProductId() == product.getId())
-                    .filter(v -> v.isCancelableState())
+        if (order.isCouponUsed()) {
+            List<OrderProductInfo> tobeCanceled = allOrderProducts.stream()
+                    .filter(v -> v.getState() != OrderProductState.CANCELED)
+                    .filter(v -> v.getStoreId() == storeInfo.getStoreId())
                     .toList();
-            boolean productContainsNecessaryOption = productContainsNecessaryOption(tobeCanceled, sameProducts);
-            if (productContainsNecessaryOption) {
-                cancelProducts = List.of(tobeCanceled);
-            }
-            if (!productContainsNecessaryOption) {
-                cancelProducts = sameProducts;
-            }
+            List<OrderProductInfo> notTobeCanceled = allOrderProducts.stream()
+                    .filter(v -> v.getState() != OrderProductState.CANCELED)
+                    .filter(v -> v.getStoreId() != storeInfo.getStoreId())
+                    .toList();
+
+            setCancelReason(request, tobeCanceled);
+
+            CancelManager cancelManager = new CancelManager(
+                    order, tobeCanceled, notTobeCanceled);
+
+            cancel(order, cancelManager, request);
         }
-        ArrayList<OrderProductInfo> notToBeRemoved = new ArrayList<>();
-        notToBeRemoved.addAll(allOrderProducts);
-        notToBeRemoved.removeAll(cancelProducts);
-        CancelPriceCalculator calculator = createCancelPriceCalculator(cancelProducts, product);
-        calculateNewDeliveryFee(product, storeInfo, notToBeRemoved, calculator);
-        validateAndSetCancelState(request, cancelProducts);
-        cancel(order, calculator.getFinalCancelPrice(), calculator.getNonTaxablePrice());
 
         notificationCommandService.sendFcmToUser(order.getUserId(),
                 NotificationMessageType.ORDER_CANCEL,
-                NotificationMessage.builder().productName(product.getTitle()).isCanceledByRegion(false).build());
-
-        int totalProductAndDeliveryPrice = allOrderProducts.stream()
-                .filter(v -> v.isCancelableState())
-                .mapToInt(v -> v.getTotalPriceContainsDeliveryFee()).sum();
-        Integer couponDiscount = order.getCouponDiscount();
-        Integer usedPoint = order.getUsedPoint();
-        order.setTotalPrice(totalProductAndDeliveryPrice + couponDiscount + usedPoint);
-        order.setOriginTotalPrice(totalProductAndDeliveryPrice);
-
-        checkAllProductsCanceledAndRestoreCouponAndPoint(allOrderProducts, order);
-        orderProductInfoRepository.saveAll(allOrderProducts);
-        orderRepository.save(order);
-    }
-
-    private void calculateNewDeliveryFee(Product product,
-                                         StoreInfo storeInfo,
-                                         List<OrderProductInfo> orderProductInfos,
-                                         CancelPriceCalculator calculator) {
-        if (orderProductInfos.isEmpty()) {
-            calculator.setNewDeliveryFee(0);
-            calculator.calculate();
-            return;
-        }
-
-        if (storeInfo.isConditional()) {
-            List<OrderProductInfo> sameStore = orderProductInfos.stream()
-                    .filter(v -> v.getStoreId() == storeInfo.getId()).toList();
-            calculator.setNewDeliveryFee(
-                    cancelWhenConditional(storeInfo, sameStore)
-            );
-        }
-        if (!storeInfo.isConditional()) {
-            List<OrderProductInfo> sameProduct = orderProductInfos.stream()
-                    .filter(v -> v.getProductId() == product.getId()).toList();
-            if (product.isDeliveryTypeFree()) {
-                sameProduct.forEach(v -> v.setDeliveryFee(0));
-            }
-            if (product.isDeliveryTypeFix()) {
-                calculator.setNewDeliveryFee(
-                        setDeliveryFeeToMostExpensiveProduct(sameProduct));
-            }
-            if (product.isDeliveryTypeFreeIfOver()) {
-                calculator.setNewDeliveryFee(
-                        cancelWhenConditional(product, sameProduct));
-            }
-        }
-        calculator.calculate();
-    }
-
-    private void checkAllProductsCanceledAndRestoreCouponAndPoint(List<OrderProductInfo> allOrderProducts, Orders order) {
-        boolean allProductsCanceled = allOrderProducts.stream()
-                .allMatch(v -> v.getState().equals(OrderProductState.CANCELED));
-        if (allProductsCanceled) {
-            order.setState(OrderState.CANCELED);
-            UserInfo userInfo = userInfoQueryService.findByUserId(order.getUserId());
-            userInfo.addPoint(order.getUsedPoint());
-            couponCommandService.unUseCoupon(order.getUsedCouponId(), userInfo.getUserId());
-        }
-    }
-
-    private void cancelAll(List<OrderProductInfo> allOrderProducts, Orders order) {
-        Payments payment = paymentRepository.findFirstByImpUid(order.getImpUid());
-        payment.setStatus(PaymentState.CANCELED);
-        allOrderProducts.forEach(v -> v.setState(OrderProductState.CANCELED));
-        order.setState(OrderState.CANCELED);
-        couponCommandService.unUseCoupon(order.getCouponId(), order.getUserId());
-        UserInfo userInfo = userInfoQueryService.findByUserId(order.getUserId());
-        userInfo.addPoint(order.getUsedPoint());
-
-        cancel(order,
-                order.getTotalPrice(),
-                allOrderProducts.stream().mapToInt(v -> v.getTaxFreeAmount()).sum()
-        );
-
-        paymentRepository.save(payment);
-        orderProductInfoRepository.saveAll(allOrderProducts);
-        orderRepository.save(order);
-        userInfoRepository.save(userInfo);
+                NotificationMessage.builder()
+                        .productName(product.getTitle())
+                        .isCanceledByRegion(false)
+                        .build());
     }
 
     private void cancel(Orders order,
-                        Integer totalCancelPrice,
-                        Integer taxFreePrice) {
+                        CancelManager cancelManager,
+                        RequestCancelReq request) {
+
         log.info("impUid = {}", order.getImpUid());
-        log.info("totalCancelPrice = {}", totalCancelPrice);
-        log.info("taxFreePrice = {}", taxFreePrice);
+        log.info("totalCancelPrice = {}", cancelManager.getNonTaxablePriceTobeCanceled() + cancelManager.getTaxablePriceTobeCanceled());
+        log.info("taxFreePrice = {}", cancelManager.getNonTaxablePriceTobeCanceled());
+
         CancelData cancelData = new CancelData(
                 order.getImpUid(),
                 true,
-                BigDecimal.valueOf(totalCancelPrice)
+                BigDecimal.valueOf(cancelManager.getNonTaxablePriceTobeCanceled() + cancelManager.getTaxablePriceTobeCanceled())
         );
-//        cancelData.setTax_free(BigDecimal.valueOf(taxFreePrice));
+        cancelData.setTax_free(BigDecimal.valueOf(cancelManager.getNonTaxablePriceTobeCanceled()));
+        setVbankRefundInfo(order, cancelData);
+        sendPortOneCancelData(cancelData);
+
+        if (cancelManager.allCanceled()) {
+            Payments payment = paymentRepository.findFirstByImpUid(order.getImpUid());
+            payment.setStatus(PaymentState.CANCELED);
+            order.setState(OrderState.CANCELED);
+
+            couponCommandService.unUseCoupon(order.getCouponId(), order.getUserId());
+
+            UserInfo userInfo = userInfoQueryService.findByUserId(order.getUserId());
+            userInfo.addPoint(order.getUsedPoint());
+
+            paymentRepository.save(payment);
+            userInfoRepository.save(userInfo);
+        }
+        setCancelReason(request, cancelManager.getTobeCanceled());
+        cancelManager.validateStateAndSetCanceled();
+        order.setTotalPrice(cancelManager.getOrderPriceAfterCancellation());
+        order.setOriginTotalPrice(cancelManager.getProductAndDeliveryFee());
+
+        orderProductInfoRepository.saveAll(cancelManager.getAllOrderProducts());
+        orderRepository.save(order);
+    }
+
+    private static void setVbankRefundInfo(Orders order, CancelData cancelData) {
         if (order.getVbankRefundInfo() != null) {
             VBankRefundInfo refundInfo = order.getVbankRefundInfo();
             cancelData.setRefund_holder(refundInfo.getBankHolder());
             cancelData.setRefund_bank(refundInfo.getBankCode());
             cancelData.setRefund_account(refundInfo.getBankAccount());
         }
-
-        sendPortOneCancelData(cancelData);
     }
 
     private void sendPortOneCancelData(CancelData cancelData) {
@@ -533,91 +473,10 @@ public class OrderCommandService {
         }
     }
 
-    private void validateAndSetCancelState(RequestCancelReq request, List<OrderProductInfo> tobeCanceled) {
+    private void setCancelReason(RequestCancelReq request, List<OrderProductInfo> tobeCanceled) {
         for (OrderProductInfo cancelProduct : tobeCanceled) {
             cancelProduct.setCancelReason(request.getCancelReason());
             cancelProduct.setCancelReasonContent(request.getContent());
-        }
-        validateAndSwitchWhenPartialCancel(tobeCanceled);
-    }
-
-    private CancelPriceCalculator createCancelPriceCalculator(List<OrderProductInfo> tobeCanceled, Product product) {
-        int productPriceToBeCanceled = tobeCanceled.stream()
-                .mapToInt(v -> v.getTotalProductPrice()).sum();
-        int existingDeliveryFee = tobeCanceled.stream()
-                .mapToInt(v -> v.getDeliveryFee()).sum();
-
-        CancelPriceCalculator taxPriceDto = CancelPriceCalculator.builder()
-                .isTaxFree(!product.needTaxation())
-                .existingDeliveryFee(existingDeliveryFee)
-                .productPriceToBeCanceled(productPriceToBeCanceled)
-                .newDeliveryFee(0)
-                .build();
-        return taxPriceDto;
-    }
-
-    @NotNull
-    private boolean productContainsNecessaryOption(OrderProductInfo tobeCanceled, List<OrderProductInfo> sameProducts) {
-        ArrayList<OrderProductInfo> sameProductsOfBasket = new ArrayList<>(sameProducts);
-        sameProductsOfBasket.remove(tobeCanceled);
-
-        for (OrderProductInfo sameProduct : sameProductsOfBasket) {
-            OptionItem optionItem = optionItemQueryService.findById(sameProduct.getOptionItemId());
-            Option basketOption = optionQueryService.findById(optionItem.getOptionId());
-            if (basketOption.isNeeded()) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    private int cancelWhenConditional(ConditionalObject conditionalObject, List<OrderProductInfo> sameConditional) {
-        Integer newDeliveryFee = 0;
-        int newTotalProductPrice = sameConditional.stream()
-                .mapToInt(v -> v.getTotalProductPrice()).sum();
-        if (conditionalObject.meetConditions(newTotalProductPrice)) {
-            sameConditional.forEach(v -> v.setDeliveryFee(0));
-            newDeliveryFee = 0;
-        }
-        if (!conditionalObject.meetConditions(newTotalProductPrice)) {
-            newDeliveryFee = setDeliveryFeeToMostExpensiveProduct(sameConditional);
-        }
-        return newDeliveryFee;
-    }
-
-    private void validateAndSwitchWhenPartialCancel(List<OrderProductInfo> orderProductInfos) {
-        boolean containState = false;
-        for (OrderProductInfo toBeCanceled : orderProductInfos) {
-            OrderProductState state = toBeCanceled.getState();
-            if (state.equals(OrderProductState.WAIT_DEPOSIT)) {
-                toBeCanceled.setState(OrderProductState.CANCELED);
-                containState = true;
-            }
-            if (state.equals(OrderProductState.PAYMENT_DONE)) {
-                toBeCanceled.setState(OrderProductState.CANCELED);
-                containState = true;
-            }
-            if (state.equals(OrderProductState.DELIVERY_DONE) ||
-                state.equals(OrderProductState.EXCHANGE_REQUEST) ||
-                state.equals(OrderProductState.EXCHANGE_ACCEPT) ||
-                state.equals(OrderProductState.FINAL_CONFIRM) ||
-                state.equals(OrderProductState.REFUND_REQUEST) ||
-                state.equals(OrderProductState.REFUND_ACCEPT) ||
-                state.equals(OrderProductState.REFUND_DONE)) {
-                throw new BusinessException("취소 불가능한 상태입니다.");
-            }
-            if (state.equals(OrderProductState.CANCEL_REQUEST)) {
-                throw new BusinessException("이미 취소 요청된 상태입니다.");
-            }
-            if (state.equals(OrderProductState.CANCELED)) {
-                throw new BusinessException("취소 완료된 상태입니다.");
-            }
-            if (state.equals(OrderProductState.DELIVERY_READY)) {
-                throw new BusinessException("상품이 출고되어 취소가 불가능합니다.");
-            }
-            if (!containState) {
-                throw new RuntimeException("주문 상태를 확인해주세요.");
-            }
         }
     }
 

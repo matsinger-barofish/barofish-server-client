@@ -114,7 +114,6 @@ public class UserInfo {
         }
     }
     public void usePoint(Integer pointToUse) {
-        System.out.println("usePoint = " + pointToUse);
         if (pointToUse != null && point < pointToUse) {
             throw new BusinessException("보유한 적립금보다 많은 적립금입니다.");
         }
