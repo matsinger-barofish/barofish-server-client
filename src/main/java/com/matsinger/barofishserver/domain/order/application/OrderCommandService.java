@@ -164,40 +164,40 @@ public class OrderCommandService {
         return save(storeMap, order, orderDeliverPlace);
     }
 
-    private void calculateDeliveryFee(StoreInfo storeInfo, List<OrderProductInfo> storeOrderProducts) {
-        storeOrderProducts.forEach(v -> v.setDeliveryFee(0)); // 배송비 초기화
+    private void calculateDeliveryFee(StoreInfo storeInfo, List<OrderProductInfo> sameStoreProducts) {
+        sameStoreProducts.forEach(v -> v.setDeliveryFee(0)); // 배송비 초기화
         if (storeInfo.isConditional()) {
-            setSConditionalDeliveryFee(storeInfo, storeOrderProducts);
+            setSConditionalDeliveryFee(storeInfo, sameStoreProducts);
         }
 
         if (!storeInfo.isConditional()) {
-            setPConditionalDeliveryFee(storeOrderProducts);
+            setPConditionalDeliveryFee(sameStoreProducts);
         }
     }
 
-    private void setSConditionalDeliveryFee(StoreInfo storeInfo, List<OrderProductInfo> orderProductInfos) {
-        int totalStoreProductPrice = orderProductInfos.stream().mapToInt(v -> v.getTotalProductPrice()).sum();
+    private void setSConditionalDeliveryFee(StoreInfo storeInfo, List<OrderProductInfo> sameStoreProducts) {
+        int totalStoreProductPrice = sameStoreProducts.stream().mapToInt(v -> v.getTotalProductPrice()).sum();
         if (storeInfo.meetConditions(totalStoreProductPrice)) {
         }
         if (!storeInfo.meetConditions(totalStoreProductPrice)) {
-            setDeliveryFeeToMostExpensiveProduct(orderProductInfos);
+            setDeliveryFeeToMostExpensiveProduct(sameStoreProducts);
         }
     }
 
-    private void setPConditionalDeliveryFee(List<OrderProductInfo> pConditionProducts) {
-        int[] productIds = pConditionProducts.stream()
+    private void setPConditionalDeliveryFee(List<OrderProductInfo> sameStoreProducts) {
+        int[] productIds = sameStoreProducts.stream()
                 .mapToInt(v -> v.getProductId()).distinct().toArray();
 
-        List<OrderProductInfo> deliveryFeeCalculatingGroup = new ArrayList<>();
-        addProductsNeedToCalculateDeliveryFee(pConditionProducts, productIds, deliveryFeeCalculatingGroup);
-
+        List<OrderProductInfo> deliveryFeeCalculatingGroup = addProductsNeedToCalculateDeliveryFee(sameStoreProducts, productIds);
         setDeliveryFeeToMostExpensiveProduct(deliveryFeeCalculatingGroup);
     }
 
-    private void addProductsNeedToCalculateDeliveryFee(List<OrderProductInfo> pConditionProducts, int[] productIds, List<OrderProductInfo> deliveryFeeCalculatingGroup) {
+    private List<OrderProductInfo> addProductsNeedToCalculateDeliveryFee(List<OrderProductInfo> sameStoreProducts,
+                                                                         int[] productIds) {
+        List<OrderProductInfo> deliveryFeeCalculatingGroup = new ArrayList<>();
         for (Integer productId : productIds) {
             Product product = productQueryService.findById(productId);
-            List<OrderProductInfo> pConditionProduct = pConditionProducts.stream()
+            List<OrderProductInfo> pConditionProduct = sameStoreProducts.stream()
                     .filter(v -> v.getProductId() == product.getId()).toList();
 
             if (product.isDeliveryTypeFree()) {
@@ -213,6 +213,7 @@ public class OrderCommandService {
                 }
             }
         }
+        return deliveryFeeCalculatingGroup;
     }
 
     private Integer setDeliveryFeeToMostExpensiveProduct(List<OrderProductInfo> targetProductInfos) {
@@ -414,7 +415,7 @@ public class OrderCommandService {
                         CancelManager cancelManager,
                         RequestCancelReq request) {
 
-        log.info("impUid = {}", order.getImpUid()
+        log.info("impUid = {}", order.getImpUid());
         log.info("totalCancelPrice = {}", cancelManager.getNonTaxablePriceTobeCanceled() + cancelManager.getTaxablePriceTobeCanceled());
         log.info("taxFreePrice = {}", cancelManager.getNonTaxablePriceTobeCanceled());
 
