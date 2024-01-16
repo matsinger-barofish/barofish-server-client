@@ -439,17 +439,19 @@ public class OrderCommandService {
             order.setState(OrderState.CANCELED);
 
             couponCommandService.unUseCoupon(order.getCouponId(), order.getUserId());
-
             UserInfo userInfo = userInfoQueryService.findByUserId(order.getUserId());
             userInfo.addPoint(order.getUsedPoint());
 
             paymentRepository.save(payment);
             userInfoRepository.save(userInfo);
         }
+        if (!cancelManager.allCanceled()) {
+            // 부분취소일 때만 주문에 가격 설정. 전체 취소할 때 가격 설정하면 전체취소 주문 가격이 0원이 됨
+            order.setTotalPrice(cancelManager.getOrderPriceAfterCancellation());
+            order.setOriginTotalPrice(cancelManager.getProductAndDeliveryFee());
+        }
         setCancelReason(request, cancelManager.getTobeCanceled());
         cancelManager.validateStateAndSetCanceled();
-        order.setTotalPrice(cancelManager.getOrderPriceAfterCancellation());
-        order.setOriginTotalPrice(cancelManager.getProductAndDeliveryFee());
 
         orderProductInfoRepository.saveAll(cancelManager.getAllOrderProducts());
         orderRepository.save(order);
