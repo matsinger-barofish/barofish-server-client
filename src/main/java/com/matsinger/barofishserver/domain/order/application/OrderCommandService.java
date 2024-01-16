@@ -385,7 +385,7 @@ public class OrderCommandService {
         Product product = productQueryService.findById(cancelRequestedProduct.getProductId());
         StoreInfo storeInfo = storeInfoQueryService.findByStoreId(product.getStoreId());
 
-        if (order.isCouponUsed()) {
+        if (!order.isCouponUsed()) {
             List<OrderProductInfo> tobeCanceled = allOrderProducts.stream()
                     .filter(v -> v.getState() != OrderProductState.CANCELED)
                     .filter(v -> v.getStoreId() == storeInfo.getStoreId())
@@ -469,7 +469,6 @@ public class OrderCommandService {
                 throw new BusinessException("환불에 실패하였습니다.");
             }
         } catch (Exception e) {
-
             throw new BusinessException(e.getMessage());
         }
     }
