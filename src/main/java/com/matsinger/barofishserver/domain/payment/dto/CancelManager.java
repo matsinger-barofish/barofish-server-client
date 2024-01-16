@@ -108,17 +108,7 @@ public class CancelManager {
         return allOrderProducts;
     }
 
-    public int getAllCancelPrice() {
-        return nonTaxablePriceTobeCanceled +
-                taxablePriceTobeCanceled -
-                order.getCouponDiscount() -
-                order.getUsedPoint();
-    }
-
-    public int getPartialCancelPrice() {
-        return nonTaxablePriceTobeCanceled +
-                taxablePriceTobeCanceled -
-                order.getCouponDiscount() -
-                order.getUsedPoint();
+    public int getCancelPrice() {
+        return nonTaxablePriceTobeCanceled + taxablePriceTobeCanceled;
     }
 }
