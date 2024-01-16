@@ -25,6 +25,8 @@ public class CancelManager {
     private int nonTaxablePriceTobeCanceled;
     private int taxablePriceTobeCanceled;
 
+    private boolean allCanceled = false;
+
     public CancelManager(Orders order, List<OrderProductInfo> tobeCanceled, List<OrderProductInfo> notTobeCanceled) {
         this.tobeCanceled = tobeCanceled;
         this.notTobeCanceled = notTobeCanceled;
@@ -40,8 +42,21 @@ public class CancelManager {
         notTobeCanceledDeliveryFee = notTobeCanceled.stream()
                 .mapToInt(v -> v.getDeliveryFee()).sum();
 
-        nonTaxablePriceTobeCanceled = tobeCanceled.stream()
-                .mapToInt(v -> v.getTaxFreeAmount()).sum();
+        if (notTobeCanceled.isEmpty()) {
+            allCanceled = tobeCanceled.stream()
+                    .noneMatch(v -> v.getState().equals(OrderProductState.CANCELED));
+        }
+
+        // 쿠폰, 포인트는 포트원에 보내는 주문 가격에 포함돼 있지 않기 때문에 비과세 가격에서 쿠폰, 포인트 가격을 빼줌
+        if (allCanceled) {
+            nonTaxablePriceTobeCanceled = tobeCanceled.stream()
+                    .mapToInt(v -> v.getTaxFreeAmount()).sum() -
+                    order.getCouponDiscount() - order.getUsedPoint();
+        }
+        if (!allCanceled) {
+            nonTaxablePriceTobeCanceled = tobeCanceled.stream()
+                    .mapToInt(v -> v.getTaxFreeAmount()).sum();
+        }
         taxablePriceTobeCanceled = cancelProductPrice - nonTaxablePriceTobeCanceled + cancelDeliveryFee;
     }
 
