@@ -363,6 +363,8 @@ public class OrderService {
         GetCancelPriceDto cancelData = getCancelPrice(order, List.of(info));
         int price = cancelData.getCancelPrice();
         int taxFreeAmount = info.getTaxFreeAmount() != null && info.getIsTaxFree() ? info.getTaxFreeAmount() : 0;
+        log.info("v1 cancelPrice = {}", price);
+        log.info("v1 taxFreeAmount = {}", info.getTaxFreeAmount());
         VBankRefundInfo
                 vBankRefundInfo =
                 order.getPaymentWay().equals(OrderPaymentWay.VIRTUAL_ACCOUNT) ? VBankRefundInfo.builder().bankHolder(
