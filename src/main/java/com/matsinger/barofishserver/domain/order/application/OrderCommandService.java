@@ -131,7 +131,7 @@ public class OrderCommandService {
                     .sum();
             totalOrderDeliveryFee += storeOrderProductInfos.stream()
                     .mapToInt(v -> v.getDeliveryFee())
-                    .sum();
+                    .max().getAsInt();
             totalTaxFreePrice += storeOrderProductInfos.stream()
                     .mapToInt(v -> v.getTaxFreeAmount()).sum();
         }
@@ -414,7 +414,7 @@ public class OrderCommandService {
                         CancelManager cancelManager,
                         RequestCancelReq request) {
 
-        log.info("impUid = {}", order.getImpUid());
+        log.info("impUid = {}", order.getImpUid()
         log.info("totalCancelPrice = {}", cancelManager.getNonTaxablePriceTobeCanceled() + cancelManager.getTaxablePriceTobeCanceled());
         log.info("taxFreePrice = {}", cancelManager.getNonTaxablePriceTobeCanceled());
 
