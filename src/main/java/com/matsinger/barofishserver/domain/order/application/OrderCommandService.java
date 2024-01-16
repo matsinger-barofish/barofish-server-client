@@ -414,16 +414,21 @@ public class OrderCommandService {
     private void cancel(Orders order,
                         CancelManager cancelManager,
                         RequestCancelReq request) {
-
-        log.info("impUid = {}", order.getImpUid());
-        log.info("totalCancelPrice = {}", cancelManager.getNonTaxablePriceTobeCanceled() + cancelManager.getTaxablePriceTobeCanceled());
-        log.info("taxFreePrice = {}", cancelManager.getNonTaxablePriceTobeCanceled());
-
+        Integer cancelPrice = null;
+        if (cancelManager.allCanceled()) {
+            cancelPrice = cancelManager.getAllCancelPrice();
+        }
+        if (!cancelManager.allCanceled()) {
+            cancelPrice = cancelManager.getPartialCancelPrice();
+        }
         CancelData cancelData = new CancelData(
                 order.getImpUid(),
                 true,
-                BigDecimal.valueOf(cancelManager.getNonTaxablePriceTobeCanceled() + cancelManager.getTaxablePriceTobeCanceled())
+                BigDecimal.valueOf(cancelPrice)
         );
+        log.info("impUid = {}", order.getImpUid());
+        log.info("totalCancelPrice = {}", cancelPrice);
+        log.info("taxFreePrice = {}", cancelManager.getNonTaxablePriceTobeCanceled());
         cancelData.setTax_free(BigDecimal.valueOf(cancelManager.getNonTaxablePriceTobeCanceled()));
         setVbankRefundInfo(order, cancelData);
         sendPortOneCancelData(cancelData);
