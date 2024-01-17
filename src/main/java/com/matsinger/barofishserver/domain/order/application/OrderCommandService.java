@@ -174,7 +174,7 @@ public class OrderCommandService {
             }
             allOrderProduct.stream()
                     .filter(v -> !cannotDeliverProductIds.contains(v))
-                    .forEach(v -> v.setState(OrderProductState.WAIT_DEPOSIT));
+                    .forEach(v -> v.setState(OrderProductState.CANCELED));
         }
 
         save(storeMap, order, orderDeliverPlace);
