@@ -109,6 +109,7 @@ public class PortOneCommandService {
         if (containsCannotDeliverPlace) {
             order.setState(OrderState.DELIVERY_DIFFICULT);
             order.setImpUid(request.getImp_uid());
+            payments.setStatus(PaymentState.FAILED);
             sendNotification(order, cannotDeliveryProducts.get(0), true);
 
             CancelData cancelData = createAllCancelData(orderProductInfos, order);

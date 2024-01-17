@@ -3,6 +3,7 @@ package com.matsinger.barofishserver.domain.order.api;
 import com.matsinger.barofishserver.domain.order.application.OrderCommandService;
 import com.matsinger.barofishserver.domain.order.dto.OrderDto;
 import com.matsinger.barofishserver.domain.order.dto.OrderReq;
+import com.matsinger.barofishserver.domain.order.dto.OrderResponse;
 import com.matsinger.barofishserver.domain.order.dto.RequestCancelReq;
 import com.matsinger.barofishserver.jwt.JwtService;
 import com.matsinger.barofishserver.jwt.TokenAuthType;
@@ -35,10 +36,23 @@ public class OrderControllerV2 {
 
         TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth);
 
-        String orderId = orderCommandService.proceedOrder(request, tokenInfo.getId());
+        OrderResponse orderResponse = orderCommandService.proceedOrder(request, tokenInfo.getId());
 
         res.setIsSuccess(true);
-        res.setData(Optional.ofNullable(OrderDto.builder().id(orderId).build()));
+        res.setData(Optional.ofNullable(
+                OrderDto.builder()
+                        .id(orderResponse.getOrderId())
+                        .build())
+        );
+        if (orderResponse.isCanDeliver()) {
+            return ResponseEntity.ok(res);
+        }
+        if (!orderResponse.isCanDeliver()) {
+            res.setErrorMsg("배송지에 배송 불가능한 상품이 포함돼 있습니다.");
+            return ResponseEntity
+                    .badRequest()
+                    .body(res);
+        }
         return ResponseEntity.ok(res);
     }
 

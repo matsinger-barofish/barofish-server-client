@@ -9,10 +9,7 @@ import com.matsinger.barofishserver.domain.notification.application.Notification
 import com.matsinger.barofishserver.domain.notification.dto.NotificationMessage;
 import com.matsinger.barofishserver.domain.notification.dto.NotificationMessageType;
 import com.matsinger.barofishserver.domain.order.domain.*;
-import com.matsinger.barofishserver.domain.order.dto.OrderProductReq;
-import com.matsinger.barofishserver.domain.order.dto.OrderReq;
-import com.matsinger.barofishserver.domain.order.dto.RequestCancelReq;
-import com.matsinger.barofishserver.domain.order.dto.VBankRefundInfo;
+import com.matsinger.barofishserver.domain.order.dto.*;
 import com.matsinger.barofishserver.domain.order.orderprductinfo.application.OrderProductInfoCommandService;
 import com.matsinger.barofishserver.domain.order.orderprductinfo.application.OrderProductInfoQueryService;
 import com.matsinger.barofishserver.domain.order.orderprductinfo.domain.OrderProductInfo;
@@ -102,7 +99,7 @@ public class OrderCommandService {
     private final PaymentRepository paymentRepository;
 
     @Transactional
-    public String proceedOrder(OrderReq request, Integer userId) {
+    public OrderResponse proceedOrder(OrderReq request, Integer userId) {
         if (request.getTotalPrice() == 0) {
             throw new RuntimeException("주문 에러 발생");
         }
@@ -119,11 +116,20 @@ public class OrderCommandService {
         int totalOrderDeliveryFee = 0;
         int totalOrderProductPrice = 0;
         int totalTaxFreePrice = 0;
+        boolean canDeliver = true;
+        List<Integer> cannotDeliverProductIds = new ArrayList<>();
         for (StoreInfo storeInfo : storeMap.keySet()) {
 
             List<OrderProductInfo> storeOrderProductInfos = storeMap.get(storeInfo);
-//            validateDifficultDeliveryRegion(orderDeliverPlace, storeOrderProductInfos);
-
+            canDeliver = validateDifficultDeliveryRegion(orderDeliverPlace, storeOrderProductInfos);
+            if (!canDeliver) {
+                cannotDeliverProductIds.addAll(
+                        storeOrderProductInfos.stream()
+                                .filter(v -> v.getState() == OrderProductState.DELIVERY_DIFFICULT)
+                                .map(v -> v.getProductId()).distinct()
+                                .toList()
+                );
+            }
             calculateDeliveryFee(storeInfo, storeOrderProductInfos);
 
             totalOrderProductPrice += storeOrderProductInfos.stream()
@@ -147,7 +153,7 @@ public class OrderCommandService {
                 .id(orderId)
                 .userId(userId)
                 .paymentWay(request.getPaymentWay())
-                .state(OrderState.WAIT_DEPOSIT)
+                .state(canDeliver == true ? OrderState.WAIT_DEPOSIT : OrderState.DELIVERY_DIFFICULT)
                 .couponId(request.getCouponId() != null ? request.getCouponId() : null)
                 .orderedAt(utils.now())
                 .totalPrice(finalOrderPrice)
@@ -159,9 +165,18 @@ public class OrderCommandService {
                 .build();
 
         setVbankInfo(request, order);
-        processKeyInPayment(request, orderId, totalTaxFreePrice);
 
-        return save(storeMap, order, orderDeliverPlace);
+        if (canDeliver) {
+            processKeyInPayment(request, orderId, totalTaxFreePrice);
+        }
+
+        save(storeMap, order, orderDeliverPlace);
+
+        return OrderResponse. builder()
+                .orderId(orderId)
+                .canDeliver(canDeliver)
+                .cannotDeliverProductIds(cannotDeliverProductIds)
+                .build();
     }
 
     private void calculateDeliveryFee(StoreInfo storeInfo, List<OrderProductInfo> sameStoreProducts) {
@@ -309,14 +324,20 @@ public class OrderCommandService {
         }
     }
 
-    private void validateDifficultDeliveryRegion(OrderDeliverPlace orderDeliverPlace, List<OrderProductInfo> orderProductInfos) {
+    private boolean validateDifficultDeliveryRegion(OrderDeliverPlace orderDeliverPlace, List<OrderProductInfo> orderProductInfos) {
         int[] uniqueProductIds = orderProductInfos.stream()
                 .mapToInt(v -> v.getProductId())
                 .distinct().toArray();
+        boolean canDeliver = true;
         for (int productId : uniqueProductIds) {
-            difficultDeliverAddressQueryService
-                    .validateDifficultDeliveryRegion(productId, orderDeliverPlace);
+            canDeliver = difficultDeliverAddressQueryService
+                    .canDeliver(productId, orderDeliverPlace);
+
+            orderProductInfos.stream()
+                    .filter(v -> v.getProductId() == productId)
+                    .forEach(v -> v.setState(OrderProductState.DELIVERY_DIFFICULT));
         }
+        return canDeliver;
     }
 
     private Integer validateFinalPrice(OrderReq request, int totalOrderPriceContainsDeliveryFee) {
