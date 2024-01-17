@@ -2,6 +2,8 @@ package com.matsinger.barofishserver.domain.settlement.application;
 
 import com.matsinger.barofishserver.domain.coupon.application.CouponQueryService;
 import com.matsinger.barofishserver.domain.deliver.application.DeliveryQueryService;
+import com.matsinger.barofishserver.domain.order.application.OrderQueryService;
+import com.matsinger.barofishserver.domain.order.application.OrderService;
 import com.matsinger.barofishserver.domain.order.orderprductinfo.domain.OrderProductInfo;
 import com.matsinger.barofishserver.domain.order.orderprductinfo.repository.OrderProductInfoRepository;
 import com.matsinger.barofishserver.domain.product.option.application.OptionQueryService;
@@ -16,8 +18,7 @@ import com.matsinger.barofishserver.domain.settlement.repository.SettlementRepos
 import com.matsinger.barofishserver.domain.store.application.StoreService;
 import com.matsinger.barofishserver.domain.store.domain.StoreInfo;
 import com.matsinger.barofishserver.domain.user.application.UserQueryService;
-import com.matsinger.barofishserver.domain.order.application.OrderQueryService;
-import com.matsinger.barofishserver.domain.order.application.OrderService;
+import com.matsinger.barofishserver.global.exception.BusinessException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -46,7 +47,7 @@ public class SettlementQueryService {
 
     public Settlement selectSettlement(Integer id) {
         return settlementRepository.findById(id).orElseThrow(() -> {
-            throw new Error("정산 내역 정보를 찾을 수 없습니다.");
+            throw new BusinessException("정산 내역 정보를 찾을 수 없습니다.");
         });
     }
 

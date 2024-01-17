@@ -61,7 +61,7 @@ public class DeliverService {
 
     public DeliveryCompany selectDeliveryCompanyWithCode(String code) {
         return deliveryCompanyRepository.findById(code).orElseThrow(() -> {
-            throw new Error("유효하지 않은 택배사 코드입니다.");
+            throw new BusinessException("유효하지 않은 택배사 코드입니다.");
         });
     }
 
@@ -89,7 +89,7 @@ public class DeliverService {
 //        JSONObject object = object.getJSONObject("tracking_info");
             try {
                 Boolean status = object.getBoolean("status");
-//                if (!status) throw new Error("유효하지 않은 운송장 번호이거나 택배사 코드입니다.");
+//                if (!status) throw new BusinessException("유효하지 않은 운송장 번호이거나 택배사 코드입니다.");
                 return null;
             } catch (Exception e) {}
             try {
@@ -111,7 +111,7 @@ public class DeliverService {
                 return trackingInfo;
             } catch (Exception e) {
                 return null;
-//                throw new Error("유효하지 않은 운송장 번호이거나 택배사 코드입니다.");
+//                throw new BusinessException("유효하지 않은 운송장 번호이거나 택배사 코드입니다.");
             }
         } catch (Error e) {
             return null;

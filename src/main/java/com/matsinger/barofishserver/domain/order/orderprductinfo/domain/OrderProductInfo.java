@@ -17,6 +17,7 @@ import java.util.Objects;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@ToString
 @Entity
 @Table(name = "order_product_info", schema = "barofish_dev", catalog = "")
 public class OrderProductInfo {
@@ -30,6 +31,8 @@ public class OrderProductInfo {
     @Basic
     @Column(name = "product_id", nullable = false)
     private int productId;
+    @Column(name = "store_id")
+    private Integer storeId;
     @Basic
     @Column(name = "option_item_id", nullable = false)
     private int optionItemId;
@@ -52,7 +55,8 @@ public class OrderProductInfo {
     @Basic
     @Column(name = "delivery_fee", nullable = false)
     private int deliveryFee;
-    @Basic @Column(name = "delivery_fee_type", nullable = true)
+    @Basic @Column(name = "delivery_fee_type", nullable = false)
+    @Enumerated(EnumType.STRING)
     private ProductDeliverFeeType deliveryFeeType;
 
     @Basic
@@ -157,9 +161,6 @@ public class OrderProductInfo {
     public void setDeliveryFee(int deliveryFee) {
         this.deliveryFee = deliveryFee;
     }
-    public boolean isFIX() {
-        return deliveryFeeType.equals(ProductDeliverFeeType.FIX);
-    }
     public boolean isIfOver() {
         return deliveryFeeType.equals(ProductDeliverFeeType.FIX);
     }
@@ -167,18 +168,16 @@ public class OrderProductInfo {
         return deliveryFeeType.equals(ProductDeliverFeeType.FIX);
     }
 
-    public int compareWithDeliveryFee(int deliveryFee) {
-        if (this.deliveryFee > deliveryFee) {
-            return this.deliveryFee;
-        }
-        return deliveryFee;
+    public Integer getTotalProductPrice() {
+        return originPrice * amount;
     }
 
-    public int compareWithPrice(int price) {
-        if (this.price > price) {
-            return this.price;
-        }
-        return price;
+    public Integer getTotalPriceMinusDeliveryFee() {
+        return getTotalProductPrice() - deliveryFee;
+    }
+
+    public int getTotalPriceContainsDeliveryFee() {
+        return getTotalProductPrice() + deliveryFee;
     }
 
     @Override
@@ -198,5 +197,18 @@ public class OrderProductInfo {
     @Override
     public int hashCode() {
         return Objects.hash(id, orderId, productId, state, price, amount, deliveryFee);
+    }
+
+    public boolean equalToProductId(int productId) {
+        return this.productId == productId;
+    }
+
+    public boolean equalToOptionItemId(int optionItemId) {
+        return this.optionItemId == optionItemId;
+    }
+
+    public boolean isCancelableState() {
+        return this.state == OrderProductState.WAIT_DEPOSIT ||
+                this.state == OrderProductState.PAYMENT_DONE;
     }
 }

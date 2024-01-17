@@ -60,7 +60,7 @@ public class BannerQueryService {
 
     public Banner selectBanner(Integer id) {
         return bannerRepository.findById(id).orElseThrow(() -> {
-            throw new Error("배너 정보를 찾을 수 없습니다.");
+            throw new BusinessException("배너 정보를 찾을 수 없습니다.");
         });
     }
 

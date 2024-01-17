@@ -66,7 +66,7 @@ public class PaymentService {
         return PaymentState.FAILED;
     }
 
-    public Payments getPaymentInfo(String orderId, String impUid) {
+    public Payments getPaymentInfoFromPortOne(String orderId, String impUid) {
         IamportClient iamportClient = callbackService.getIamportClient();
 
         IamportResponse<Payment> paymentResponse = null;
@@ -108,8 +108,9 @@ public class PaymentService {
         IamportClient iamportClient = callbackService.getIamportClient();
         CancelData
                 cancelData =
-                amount != null ? new CancelData(impUid, true, BigDecimal.valueOf(amount)) : new CancelData(impUid,
-                        true);
+                amount != null
+                        ? new CancelData(impUid, true, BigDecimal.valueOf(amount))
+                        : new CancelData(impUid, true);
         if (taxFreeAmount != null) cancelData.setTax_free(BigDecimal.valueOf(taxFreeAmount));
         if (vBankRefundInfo != null) {
             cancelData.setRefund_holder(vBankRefundInfo.getBankHolder());

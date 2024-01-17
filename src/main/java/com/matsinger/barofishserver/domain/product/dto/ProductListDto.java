@@ -25,9 +25,13 @@ public class ProductListDto {
     Boolean isLike;
     Integer storeId;
     String storeName;
-    Integer minOrderPrice;
-    String storeImage;
     ProductDeliverFeeType deliverFeeType;
+    Integer minOrderPrice;
+    Integer productDeliveryFee;
+    Boolean isConditional;
+    Integer minStorePrice;
+    Integer storeDeliverFee;
+    String storeImage;
     Integer parentCategoryId;
     List<ProductFilterValueDto> filterValues;
 

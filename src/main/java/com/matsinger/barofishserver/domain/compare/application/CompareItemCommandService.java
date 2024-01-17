@@ -11,13 +11,14 @@ import com.matsinger.barofishserver.domain.compare.filter.dto.CompareFilterDto;
 import com.matsinger.barofishserver.domain.compare.repository.CompareItemRepository;
 import com.matsinger.barofishserver.domain.compare.repository.CompareSetRepository;
 import com.matsinger.barofishserver.domain.compare.repository.SaveProductRepository;
-import com.matsinger.barofishserver.domain.product.optionitem.domain.OptionItem;
 import com.matsinger.barofishserver.domain.product.application.ProductService;
 import com.matsinger.barofishserver.domain.product.domain.Product;
+import com.matsinger.barofishserver.domain.product.optionitem.domain.OptionItem;
 import com.matsinger.barofishserver.domain.product.productfilter.application.ProductFilterService;
 import com.matsinger.barofishserver.domain.product.productfilter.dto.ProductFilterValueDto;
 import com.matsinger.barofishserver.domain.store.application.StoreService;
 import com.matsinger.barofishserver.domain.store.domain.StoreInfo;
+import com.matsinger.barofishserver.global.exception.BusinessException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -60,7 +61,7 @@ public class CompareItemCommandService {
     @Transactional
     public void deleteCompareSet(Integer id) {
         CompareSet compareSet = compareSetRepository.findById(id).orElseThrow(() -> {
-            throw new Error("이미 제거된 비교하기 조합입니다.");
+            throw new BusinessException("이미 제거된 비교하기 조합입니다.");
         });
         compareItemRepository.deleteByCompareSetId(compareSet.getId());
         compareSetRepository.deleteById(id);

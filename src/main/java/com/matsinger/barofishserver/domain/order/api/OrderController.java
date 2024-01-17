@@ -36,7 +36,7 @@ import com.matsinger.barofishserver.domain.user.deliverplace.DeliverPlace;
 import com.matsinger.barofishserver.domain.user.paymentMethod.application.PaymentMethodService;
 import com.matsinger.barofishserver.domain.user.paymentMethod.domain.PaymentMethod;
 import com.matsinger.barofishserver.domain.userinfo.domain.UserInfo;
-import com.matsinger.barofishserver.global.ErrorCode;
+import com.matsinger.barofishserver.global.exception.ErrorCode;
 import com.matsinger.barofishserver.global.exception.BusinessException;
 import com.matsinger.barofishserver.jwt.JwtService;
 import com.matsinger.barofishserver.jwt.TokenAuthType;
@@ -84,7 +84,7 @@ public class OrderController {
     public ResponseEntity<CustomResponse<PointRuleRes>> selectPointRule(@RequestHeader(value = "Authorization") Optional<String> auth) {
         CustomResponse<PointRuleRes> res = new CustomResponse<>();
 
-                TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth);
+        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth);
         Integer userId = tokenInfo.getId();
 
         UserInfo userInfo = userService.selectUserInfo(userId);
@@ -116,7 +116,7 @@ public class OrderController {
                                                                 @RequestHeader(value = "Authorization") Optional<String> auth) {
         CustomResponse<OrderDto> res = new CustomResponse<>();
 
-                TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN, TokenAuthType.PARTNER, TokenAuthType.USER), auth);
+        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN, TokenAuthType.PARTNER, TokenAuthType.USER), auth);
 
         Orders order = orderService.selectOrder(id);
         if (!tokenInfo.getType().equals(TokenAuthType.ADMIN)) {
@@ -296,8 +296,7 @@ public class OrderController {
                                                                  @RequestBody OrderReq data) throws Exception {
         CustomResponse<OrderDto> res = new CustomResponse<>();
 
-                TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth);
-
+        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth);
 
         Integer userId = tokenInfo.getId();
         String orderId = orderService.getOrderId();
@@ -335,7 +334,6 @@ public class OrderController {
                 throw new BusinessException("프로모션 기간이 아닌 상품이 포함되어 있습니다.");
             }
 
-
             if (!product.getState().equals(ProductState.ACTIVE)) {
                 if (product.getState().equals(ProductState.SOLD_OUT))
                     throw new BusinessException("품절된 상품입니다.");
@@ -360,12 +358,24 @@ public class OrderController {
                             productReq.getAmount(),
                             data.getProducts());
             optionItems.add(productService.selectOptionItem(productReq.getOptionId()));
-            infos.add(OrderProductInfo.builder().optionItemId(optionItem.getId()).orderId(orderId).productId(
-                    productReq.getProductId()).state(OrderProductState.WAIT_DEPOSIT).settlePrice(storeInfo.getSettlementRate() !=
-                    null ? (int) ((storeInfo.getSettlementRate() / 100.) *
-                    optionItem.getPurchasePrice()) : optionItem.getPurchasePrice()).originPrice(optionItem.getDiscountPrice()).price(
-                    price).amount(productReq.getAmount()).isSettled(false).deliveryFee(deliveryFee).taxFreeAmount(
-                    productReq.getTaxFreeAmount()).isTaxFree(!product.getNeedTaxation()).build());
+            infos.add(
+                    OrderProductInfo.builder()
+                            .optionItemId(optionItem.getId())
+                            .orderId(orderId)
+                            .productId(productReq.getProductId())
+                            .state(OrderProductState.WAIT_DEPOSIT)
+                            .settlePrice(
+                                    storeInfo.getSettlementRate() != null
+                                            ? (int) ((storeInfo.getSettlementRate() / 100.) * optionItem.getPurchasePrice())
+                                            : optionItem.getPurchasePrice())
+                            .originPrice(optionItem.getDiscountPrice())
+                            .price(price)
+                            .amount(productReq.getAmount())
+                            .isSettled(false)
+                            .deliveryFee(deliveryFee)
+                            .taxFreeAmount(productReq.getTaxFreeAmount())
+                            .isTaxFree(!product.getNeedTaxation())
+                            .build());
         }
         infos.forEach(i -> {
             List<OrderProductInfo> sameStoreOrderInfos = infos.stream().filter(v -> {
@@ -400,11 +410,18 @@ public class OrderController {
         DeliverPlace deliverPlace = userService.selectDeliverPlace(data.getDeliverPlaceId());
         OrderDeliverPlace
                 orderDeliverPlace =
-                OrderDeliverPlace.builder().orderId(orderId).name(deliverPlace.getName()).receiverName(deliverPlace.getReceiverName()).tel(
-                        deliverPlace.getTel()).address(deliverPlace.getAddress()).addressDetail(deliverPlace.getAddressDetail()).deliverMessage(
-                        deliverPlace.getDeliverMessage()).postalCode(deliverPlace.getPostalCode()).bcode(
-                        deliverPlace.getBcode()).build();
-        if (infos.stream().anyMatch(v -> !orderService.checkProductCanDeliver(orderDeliverPlace, v)))
+                OrderDeliverPlace.builder()
+                        .orderId(orderId)
+                        .name(deliverPlace.getName())
+                        .receiverName(deliverPlace.getReceiverName())
+                        .tel(deliverPlace.getTel())
+                        .address(deliverPlace.getAddress())
+                        .addressDetail(deliverPlace.getAddressDetail())
+                        .deliverMessage(deliverPlace.getDeliverMessage())
+                        .postalCode(deliverPlace.getPostalCode())
+                        .bcode(deliverPlace.getBcode())
+                        .build();
+        if (infos.stream().anyMatch(v -> !orderService.canDeliver(orderDeliverPlace, v)))
             throw new BusinessException("배송지에 배송 불가능한 상품이 포함돼 있습니다.");
         Orders
                 order =
@@ -506,7 +523,7 @@ public class OrderController {
                                                                      @RequestPart(value = "data") RequestCancelReq data) throws Exception {
         CustomResponse<Boolean> res = new CustomResponse<>();
 
-                TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth);
+        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth);
 
         OrderProductInfo info = orderService.selectOrderProductInfo(orderProductInfoId);
         Orders order = orderService.selectOrder(info.getOrderId());
@@ -536,7 +553,7 @@ public class OrderController {
                                                                          @RequestPart(value = "orderProductInfoIds") List<Integer> orderProductInfoIds) throws Exception {
         CustomResponse<Boolean> res = new CustomResponse<>();
 
-                TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.PARTNER, TokenAuthType.ADMIN), auth);
+        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.PARTNER, TokenAuthType.ADMIN), auth);
 
         Integer adminId = null;
         if (tokenInfo.getType().equals(TokenAuthType.ADMIN)) adminId = tokenInfo.getId();
@@ -918,7 +935,7 @@ public class OrderController {
                                                                             @PathVariable("orderProductInfoId") Integer orderProductInfoId) {
         CustomResponse<Boolean> res = new CustomResponse<>();
 
-                TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN, TokenAuthType.PARTNER), auth);
+        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN, TokenAuthType.PARTNER), auth);
 
 
         Integer adminId = null;
@@ -949,7 +966,7 @@ public class OrderController {
                                                                              @PathVariable("orderProductInfoId") Integer orderProductInfoId) {
         CustomResponse<Boolean> res = new CustomResponse<>();
 
-                TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN, TokenAuthType.PARTNER), auth);
+        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN, TokenAuthType.PARTNER), auth);
 
         Integer adminId = null;
         if (tokenInfo.getType().equals(TokenAuthType.ADMIN)) adminId = tokenInfo.getId();

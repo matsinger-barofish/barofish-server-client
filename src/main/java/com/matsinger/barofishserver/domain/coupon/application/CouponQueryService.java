@@ -99,7 +99,7 @@ public class CouponQueryService {
 
     public Coupon validateCoupon(int couponId, int minOrderPrice) {
         Coupon coupon = findById(couponId);
-        coupon.checkAvailablePrice(minOrderPrice);
+        coupon.isAvailable(minOrderPrice);
         coupon.checkExpiration();
 
         return coupon;

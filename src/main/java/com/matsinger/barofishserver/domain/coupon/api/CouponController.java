@@ -140,7 +140,7 @@ public class CouponController {
     public ResponseEntity<CustomResponse<List<Coupon>>> selectDownloadedCoupon(@RequestHeader(value = "Authorization") Optional<String> auth) {
         CustomResponse<List<Coupon>> res = new CustomResponse<>();
 
-                TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth);
+        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth);
 
         List<Coupon> coupons = couponQueryService.selectDownloadedCoupon(tokenInfo.getId());
         res.setData(Optional.ofNullable(coupons));
@@ -152,7 +152,7 @@ public class CouponController {
                                                                         @PathVariable("id") Integer id) {
         CustomResponse<Boolean> res = new CustomResponse<>();
 
-                TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth);
+        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth);
 
         Boolean checkDownloaded = couponQueryService.checkHasCoupon(id, tokenInfo.getId());
         if (checkDownloaded) throw new BusinessException("이미 다운로드 받은 쿠폰입니다.");

@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.matsinger.barofishserver.domain.category.domain.Category;
 import com.matsinger.barofishserver.domain.product.dto.ProductListDto;
 import com.matsinger.barofishserver.domain.review.domain.Review;
+import com.matsinger.barofishserver.domain.store.domain.ConditionalObject;
 import com.matsinger.barofishserver.domain.store.domain.Store;
 import com.matsinger.barofishserver.global.exception.BusinessException;
 import jakarta.persistence.*;
@@ -23,7 +24,7 @@ import java.util.Objects;
 @Setter
 @Builder
 @Table(name = "product", schema = "barofish_dev", catalog = "")
-public class Product {
+public class Product implements ConditionalObject {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Id
     @Column(name = "id", nullable = false)
@@ -137,10 +138,6 @@ public class Product {
         this.pointRate = pointRate / 100;
     }
 
-    public int getId() {
-        return id;
-    }
-
     public void setId(int id) {
         this.id = id;
     }
@@ -250,6 +247,7 @@ public class Product {
                 .pointRate(this.getPointRate())
                 .promotionStartAt(this.promotionStartAt)
                 .promotionEndAt(this.promotionEndAt)
+                .minOrderPrice(minOrderPrice)
                 .build();
     }
 
@@ -290,11 +288,14 @@ public class Product {
         return deliverFeeType.equals(ProductDeliverFeeType.FREE_IF_OVER);
     }
 
-    public boolean isDeliveryTypeFee() {
+    public boolean isDeliveryTypeFree() {
         return deliverFeeType.equals(ProductDeliverFeeType.FREE);
     }
 
     public boolean isPromotionEnd() {
+        if (promotionEndAt == null && promotionEndAt == null) {
+            return false;
+        }
         if (promotionStartAt.after(Timestamp.valueOf(LocalDateTime.now())) ||
                 promotionEndAt.before(Timestamp.valueOf(LocalDateTime.now()))) {
             return true;
@@ -311,5 +312,30 @@ public class Product {
             if (state.equals(ProductState.INACTIVE))
                 throw new BusinessException("주문 불가능한 상품입니다.");
         }
+    }
+
+    public int getMaxDeliveryFee(int deliverFee) {
+        if (deliverFee > this.deliverFee) {
+            return deliverFee;
+        }
+        return this.deliverFee;
+    }
+
+    public boolean isSConditional() {
+        return this.deliverFeeType.equals(ProductDeliverFeeType.S_CONDITIONAL);
+    }
+
+    @Override
+    public Boolean meetConditions(int totalPrice) {
+        return totalPrice >= this.minOrderPrice;
+    }
+
+    @Override
+    public Integer getId() {
+        return id;
+    }
+
+    public boolean needTaxation() {
+        return this.needTaxation == true;
     }
 }

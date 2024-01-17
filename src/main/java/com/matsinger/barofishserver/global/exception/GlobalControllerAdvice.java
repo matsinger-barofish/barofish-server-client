@@ -46,10 +46,4 @@ public class GlobalControllerAdvice implements HandlerInterceptor {
         customResponse.setErrorMsg(e.getMessage());
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(customResponse);
     }
-
-    @Override
-    public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex) throws Exception {
-
-        HandlerInterceptor.super.afterCompletion(request, response, handler, ex);
-    }
 }

@@ -1,6 +1,5 @@
 package com.matsinger.barofishserver.global.exception;
 
-import com.matsinger.barofishserver.global.ErrorCode;
 import lombok.Getter;
 
 @Getter

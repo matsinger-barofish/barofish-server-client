@@ -23,6 +23,7 @@ public class OrderProductDto {
     private Integer deliverFee;
     private ProductDeliverFeeType deliverFeeType;
     private Integer minOrderPrice;
+    private Integer minStorePrice;
     private ProductListDto product;
     private OrderProductState state;
     private String optionName;

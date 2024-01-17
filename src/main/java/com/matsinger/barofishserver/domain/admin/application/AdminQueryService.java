@@ -4,6 +4,7 @@ import com.matsinger.barofishserver.domain.admin.domain.Admin;
 import com.matsinger.barofishserver.domain.admin.domain.AdminAuth;
 import com.matsinger.barofishserver.domain.admin.repository.AdminAuthRepository;
 import com.matsinger.barofishserver.domain.admin.repository.AdminRepository;
+import com.matsinger.barofishserver.global.exception.BusinessException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -38,14 +39,14 @@ public class AdminQueryService {
 
     public Admin selectAdmin(Integer adminId) {
         return adminRepository.findById(adminId).orElseThrow(() -> {
-            throw new Error("관리자 정보를 찾을 수 없습니다.");
+            throw new BusinessException("관리자 정보를 찾을 수 없습니다.");
         });
     }
 
     //AdminAuth
     public AdminAuth selectAdminAuth(Integer adminId) {
         return adminAuthRepository.findById(adminId).orElseThrow(() -> {
-            throw new Error("관리장 정보를 찾을 수 없습니다.");
+            throw new BusinessException("관리장 정보를 찾을 수 없습니다.");
         });
     }
 }
