@@ -122,7 +122,7 @@ public class OrderCommandService {
         for (StoreInfo storeInfo : storeMap.keySet()) {
 
             List<OrderProductInfo> storeOrderProductInfos = storeMap.get(storeInfo);
-            validateDifficultDeliveryRegion(orderDeliverPlace, storeOrderProductInfos);
+//            validateDifficultDeliveryRegion(orderDeliverPlace, storeOrderProductInfos);
 
             calculateDeliveryFee(storeInfo, storeOrderProductInfos);
 
