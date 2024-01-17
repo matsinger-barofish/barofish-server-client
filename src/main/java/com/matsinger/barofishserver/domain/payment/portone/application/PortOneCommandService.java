@@ -133,10 +133,10 @@ public class PortOneCommandService {
 //                    orderProductInfos.stream().map(v -> v.getOptionItemId()).toList());
 
             userCommandService.updateUserInfo(userInfo);
-            orderProductInfoCommandService.saveAll(orderProductInfos);
-            orderRepository.save(order);
-            paymentCommandService.save(payments);
         }
+        orderProductInfoCommandService.saveAll(orderProductInfos);
+        orderRepository.save(order);
+        paymentCommandService.save(payments);
     }
 
     private void requestRefund(CancelData cancelData) {
