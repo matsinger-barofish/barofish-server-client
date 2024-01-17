@@ -175,7 +175,7 @@ public class OrderCommandService {
                 allOrderProduct.addAll(storeMap.get(storeInfo));
             }
             allOrderProduct.stream()
-                    .filter(v -> !cannotDeliverProductIds.contains(v))
+                    .filter(v -> !cannotDeliverProductIds.contains(v.getProductId()))
                     .forEach(v -> v.setState(OrderProductState.CANCELED));
         }
 
