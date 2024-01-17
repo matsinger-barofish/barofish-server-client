@@ -69,7 +69,7 @@ public class OrderService {
     private final ProductService productService;
     private final UserCommandService userService;
     private final StoreService storeService;
-    private final OrderDeliverPlaceRepository deliverPlaceRepository;
+    private final OrderDeliverPlaceRepository orderDeliverPlaceRepository;
     private final ReviewQueryService reviewQueryService;
     private final PaymentService paymentService;
     private final DeliveryCompanyRepository deliveryCompanyRepository;
@@ -116,15 +116,31 @@ public class OrderService {
 
             Boolean isWritten = reviewQueryService.checkReviewWritten(order.getUserId(), product.getId(), opi.getId());
 
-            return OrderProductDto.builder().id(opi.getId()).storeId(storeInfo.getStoreId()).optionItem(optionItemDto).product(
-                    productService.convert2ListDto(productService.selectProduct(opi.getProductId()))).optionName(
-                    optionItem.getName()).amount(opi.getAmount()).state(opi.getState()).price(opi.getPrice()).storeName(
-                    storeInfo.getName()).storeProfile(storeInfo.getProfileImage()).deliverFee(opi.getDeliveryFee()).deliverCompanyCode(
-                    opi.getDeliverCompanyCode()).deliverCompany(deliveryCompany.map(DeliveryCompany::getName).orElse(
-                    null)).invoiceCode(opi.getInvoiceCode()).cancelReason(opi.getCancelReason()).cancelReasonContent(opi.getCancelReasonContent()).isReviewWritten(
-                    isWritten).deliverFeeType(product.getDeliverFeeType()).minOrderPrice(product.getMinOrderPrice()).finalConfirmedAt(
-                    opi.getFinalConfirmedAt()).needTaxation(product.getNeedTaxation()).originPrice(opi.getOriginPrice()).build();
-        }).filter(Objects::nonNull).toList();
+            return OrderProductDto.builder()
+                    .id(opi.getId())
+                    .storeId(storeInfo.getStoreId())
+                    .optionItem(optionItemDto)
+                    .product(productService.convert2ListDto(productService.selectProduct(opi.getProductId())))
+                    .optionName(optionItem.getName())
+                    .amount(opi.getAmount())
+                    .state(opi.getState())
+                    .price(opi.getPrice())
+                    .storeName(storeInfo.getName())
+                    .storeProfile(storeInfo.getProfileImage())
+                    .deliverFee(opi.getDeliveryFee())
+                    .deliverCompanyCode(opi.getDeliverCompanyCode())
+                    .deliverCompany(deliveryCompany.map(DeliveryCompany::getName).orElse(null))
+                    .invoiceCode(opi.getInvoiceCode())
+                    .cancelReason(opi.getCancelReason())
+                    .cancelReasonContent(opi.getCancelReasonContent())
+                    .isReviewWritten(isWritten)
+                    .deliverFeeType(product.getDeliverFeeType())
+                    .minOrderPrice(product.getMinOrderPrice())
+                    .minStorePrice(storeInfo.getMinStorePrice())
+                    .finalConfirmedAt(opi.getFinalConfirmedAt())
+                    .needTaxation(product.getNeedTaxation())
+                    .originPrice(opi.getOriginPrice())
+                    .build();}).filter(Objects::nonNull).toList();
         String couponName = null;
         if (order.getCouponId() != null) {
             Coupon coupon = couponQueryService.selectCoupon(order.getCouponId());
@@ -154,14 +170,14 @@ public class OrderService {
     }
 
     public OrderDeliverPlace selectDeliverPlace(String orderId) {
-        return deliverPlaceRepository.findById(orderId).orElseThrow(() -> {
-            throw new Error("주문 배송지 정보를 찾을 수 없습니다.");
+        return orderDeliverPlaceRepository.findById(orderId).orElseThrow(() -> {
+            throw new BusinessException("주문 배송지 정보를 찾을 수 없습니다.");
         });
     }
 
     public Orders orderProduct(Orders orders, List<OrderProductInfo> infos, OrderDeliverPlace deliverPlace) {
         Orders order = orderRepository.save(orders);
-        deliverPlaceRepository.save(deliverPlace);
+        orderDeliverPlaceRepository.save(deliverPlace);
         infoRepository.saveAll(infos);
         return order;
     }
@@ -172,7 +188,7 @@ public class OrderService {
 
     public Orders selectOrder(String id) {
         return orderRepository.findById(id).orElseThrow(() -> {
-            throw new Error("주문 정보를 찾을 수 없습니다.");
+            throw new BusinessException("주문 정보를 찾을 수 없습니다.");
         });
     }
 
@@ -247,7 +263,7 @@ public class OrderService {
 
     public OrderProductInfo selectOrderProductInfo(Integer orderProductInfoId) {
         return infoRepository.findById(orderProductInfoId).orElseThrow(() -> {
-            throw new Error("주문 상품 정보를 찾을 수 없습니다.");
+            throw new BusinessException("주문 상품 정보를 찾을 수 없습니다.");
         });
     }
 
@@ -276,7 +292,7 @@ public class OrderService {
                 default:
                     return false;
             }
-        })) throw new Exception("취소 불가능한 상태입니다.");
+        })) throw new BusinessException("취소 불가능한 상태입니다.");
         if (infos.stream().anyMatch(v -> v.getState().equals(OrderProductState.WAIT_DEPOSIT))) {
             infos.forEach(info -> info.setState(OrderProductState.CANCELED));
             updateOrderProductInfos(infos);
@@ -320,11 +336,11 @@ public class OrderService {
             case REFUND_REQUEST:
             case REFUND_ACCEPT:
             case REFUND_DONE:
-                throw new Exception("취소 불가능한 상태입니다.");
+                throw new BusinessException("취소 불가능한 상태입니다.");
             case CANCEL_REQUEST:
-                throw new Exception("이미 취소 요청된 상태입니다.");
+                throw new BusinessException("이미 취소 요청된 상태입니다.");
             case CANCELED:
-                throw new Exception("취소 완료된 상태입니다.");
+                throw new BusinessException("취소 완료된 상태입니다.");
             case DELIVERY_READY:
             default:
                 info.setState(OrderProductState.CANCEL_REQUEST);
@@ -334,12 +350,12 @@ public class OrderService {
 
     public void cancelOrderedProduct(Integer orderProductInfoId) throws Exception {
         OrderProductInfo info = infoRepository.findById(orderProductInfoId).orElseThrow(() -> {
-            throw new Error("주문 상품 정보를 찾을 수 없습니다.");
+            throw new BusinessException("주문 상품 정보를 찾을 수 없습니다.");
         });
         if (info.getState().equals(OrderProductState.CANCELED)) throw new Exception("이미 취소된 상품입니다.");
         Orders order = orderRepository.findById(info.getOrderId()).orElseThrow(() -> {
             try {
-                throw new Exception("주문 정보를 찾을 수 없습니다.");
+                throw new BusinessException("주문 정보를 찾을 수 없습니다.");
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
@@ -347,6 +363,8 @@ public class OrderService {
         GetCancelPriceDto cancelData = getCancelPrice(order, List.of(info));
         int price = cancelData.getCancelPrice();
         int taxFreeAmount = info.getTaxFreeAmount() != null && info.getIsTaxFree() ? info.getTaxFreeAmount() : 0;
+        log.info("v1 cancelPrice = {}", price);
+        log.info("v1 taxFreeAmount = {}", info.getTaxFreeAmount());
         VBankRefundInfo
                 vBankRefundInfo =
                 order.getPaymentWay().equals(OrderPaymentWay.VIRTUAL_ACCOUNT) ? VBankRefundInfo.builder().bankHolder(
@@ -528,7 +546,7 @@ public class OrderService {
         return infoRepository.findAllByProduct_StoreIdAndIsSettled(storeId, isSettled);
     }
 
-    public boolean checkProductCanDeliver(OrderDeliverPlace orderDeliverPlace, OrderProductInfo orderProductInfo) {
+    public boolean canDeliver(OrderDeliverPlace orderDeliverPlace, OrderProductInfo orderProductInfo) {
         List<String>
                 difficultDeliverBcode =
                 difficultDeliverAddressQueryService
@@ -546,12 +564,16 @@ public class OrderService {
         List<OrderProductInfo> infos = selectOrderProductInfoListWithOrderId(order.getId());
         infos.forEach(info -> {
             OptionItem optionItem = productService.selectOptionItem(info.getOptionItemId());
-            if (optionItem.getAmount() != null) optionItem.setAmount(optionItem.getAmount() - info.getAmount());
+            if (optionItem.getAmount() != null) {
+                optionItem.setAmount(optionItem.getAmount() - info.getAmount());
+            }
             productService.addOptionItem(optionItem);
             info.setState(OrderProductState.PAYMENT_DONE);
             notificationCommandService.sendFcmToUser(order.getUserId(),
                     NotificationMessageType.PAYMENT_DONE,
-                    NotificationMessage.builder().productName(info.getProduct().getTitle()).build());
+                    NotificationMessage.builder()
+                            .productName(info.getProduct().getTitle())
+                            .build());
         });
         order.setState(OrderState.PAYMENT_DONE);
         updateOrderProductInfo(infos);

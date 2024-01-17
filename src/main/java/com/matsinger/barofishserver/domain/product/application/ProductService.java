@@ -135,7 +135,7 @@ public class ProductService {
 
     public OptionItem selectOptionItem(Integer optionItemId) {
         return optionItemRepository.findById(optionItemId).orElseThrow(() -> {
-            throw new Error("옵션 아이템 정보를 찾을 수 없습니다.");
+            throw new BusinessException("옵션 아이템 정보를 찾을 수 없습니다.");
         });
     }
 
@@ -250,7 +250,7 @@ public class ProductService {
 
     public ProductListDto createProductListDtos(Integer id) {
         Product findProduct = productRepository.findById(id).orElseThrow(() -> {
-            throw new Error("상품 정보를 찾을 수 없습니다.");
+            throw new BusinessException("상품 정보를 찾을 수 없습니다.");
         });
         int productId = findProduct.getId();
         String productImages = findProduct.getImages();
@@ -291,7 +291,7 @@ public class ProductService {
 
     public Product selectProduct(Integer id) {
         return productRepository.findById(id).orElseThrow(() -> {
-            throw new Error("상품 정보를 찾을 수 없습니다.");
+            throw new BusinessException("상품 정보를 찾을 수 없습니다.");
         });
     }
 
@@ -301,7 +301,7 @@ public class ProductService {
 
     public Option selectOption(Integer id) {
         return optionRepository.findById(id).orElseThrow(() -> {
-            throw new Error("상품 옵션 정보를 찾을 수 없습니다.");
+            throw new BusinessException("상품 옵션 정보를 찾을 수 없습니다.");
         });
     }
 
@@ -369,20 +369,24 @@ public class ProductService {
                 .storeName(storeInfo.getName())
                 .parentCategoryId(product.getCategory() != null ? product.getCategory().getCategoryId() : null)
                 .filterValues(productFilterService.selectProductFilterValueListWithProductId(product.getId()))
-                .minOrderPrice(product.getMinOrderPrice())
                 .deliverFeeType(product.getDeliverFeeType())
+                .minOrderPrice(product.getMinOrderPrice())
+                .productDeliveryFee(product.getDeliverFee())
+                .isConditional(storeInfo.isConditional())
+                .minStorePrice(storeInfo.getMinStorePrice())
+                .storeDeliverFee(storeInfo.getDeliveryFee())
                 .storeImage(storeInfo.getProfileImage())
                 .build();
     }
 
     public SimpleProductDto convert2SimpleDto(Product product, Integer userId) {
-        SimpleProductDto productDto = product.convert2SimpleDto();
         List<Inquiry> inquiries = inquiryQueryService.selectInquiryListWithProductId(product.getId());
         List<Review>
                 reviews =
                 reviewQueryService.selectReviewListByProduct(product.getId(), PageRequest.of(0, 50)).getContent();
 
         StoreInfo store = storeService.selectStoreInfo(product.getStoreId());
+        SimpleProductDto productDto = product.convert2SimpleDto();
         List<Product> comparedProducts = selectComparedProductList(product.getId());
         ReviewTotalStatistic
                 reviewStatistics =

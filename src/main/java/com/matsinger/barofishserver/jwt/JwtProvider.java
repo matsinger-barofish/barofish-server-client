@@ -1,6 +1,6 @@
 package com.matsinger.barofishserver.jwt;
 
-import com.matsinger.barofishserver.global.ErrorCode;
+import com.matsinger.barofishserver.global.exception.ErrorCode;
 import com.matsinger.barofishserver.global.exception.BusinessException;
 import com.matsinger.barofishserver.jwt.exception.JwtBusinessException;
 import io.jsonwebtoken.*;

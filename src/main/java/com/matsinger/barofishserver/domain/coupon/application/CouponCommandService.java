@@ -73,6 +73,9 @@ public class CouponCommandService {
     }
 
     public void useCouponV1(Integer couponId, Integer userId) {
+        if (couponId == null) {
+            return;
+        }
         Optional<CouponUserMap> map = couponUserMapRepository.findByUserIdAndCouponId(userId, couponId);
         map.ifPresent(couponUserMap -> {
             couponUserMap.setIsUsed(true);
@@ -151,7 +154,7 @@ public class CouponCommandService {
         }
 
         Coupon coupon = couponQueryService.findById(couponId);
-        coupon.checkAvailablePrice(coupon.getMinPrice());
+        coupon.isAvailable(coupon.getMinPrice());
         coupon.checkExpiration();
 
         couponUserMapCommandService.useCoupon(userId, couponId);

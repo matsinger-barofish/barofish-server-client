@@ -7,6 +7,7 @@ import com.matsinger.barofishserver.domain.data.curation.repository.CurationProd
 import com.matsinger.barofishserver.domain.data.curation.repository.CurationRepository;
 import com.matsinger.barofishserver.domain.product.domain.Product;
 import com.matsinger.barofishserver.domain.product.repository.ProductRepository;
+import com.matsinger.barofishserver.global.exception.BusinessException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -58,7 +59,7 @@ public class CurationQueryService {
     }
     public Curation selectCuration(Integer id) {
         return curationRepository.findById(id).orElseThrow(() -> {
-            throw new Error("큐레이션 정보를 찾을 수 없습니다.");
+            throw new BusinessException("큐레이션 정보를 찾을 수 없습니다.");
         });
     }
     public Integer selectMaxSortNo() {

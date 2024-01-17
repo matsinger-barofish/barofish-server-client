@@ -4,6 +4,7 @@ import com.matsinger.barofishserver.domain.data.topbar.domain.TopBar;
 import com.matsinger.barofishserver.domain.data.topbar.domain.TopBarProductMap;
 import com.matsinger.barofishserver.domain.data.topbar.repository.TopBarProductMapRepository;
 import com.matsinger.barofishserver.domain.data.topbar.repository.TopBarRepository;
+import com.matsinger.barofishserver.global.exception.BusinessException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -24,7 +25,7 @@ public class TopBarCommandService {
     }
     public TopBar update(Integer id, TopBar data) {
         TopBar topBar = topBarRepository.findById(id).orElseThrow(() -> {
-            throw new Error("탑바 카테고리 정보를 찾을 수 없습니다.");
+            throw new BusinessException("탑바 카테고리 정보를 찾을 수 없습니다.");
         });
         if (data.getName() != null) {
             topBar.setName(data.getName());
@@ -36,7 +37,7 @@ public class TopBarCommandService {
     public Boolean delete(Integer id) {
         try {
             topBarRepository.findById(id).orElseThrow(() -> {
-                throw new Error("탑바 카테고리 정보를 찾을 수 었습니다.");
+                throw new BusinessException("탑바 카테고리 정보를 찾을 수 었습니다.");
             });
             topBarProductMapRepository.deleteAllByTopBar_Id(id);
             topBarRepository.deleteById(id);

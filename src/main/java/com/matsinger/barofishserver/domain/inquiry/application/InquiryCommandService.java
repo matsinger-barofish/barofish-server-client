@@ -28,7 +28,7 @@ public class InquiryCommandService {
     public InquiryDto convert2Dto(Inquiry inquiry, Integer userId) {
         InquiryDto inquiryDto = inquiry.convert2Dto();
         Product product = productRepository.findById(inquiry.getProductId()).orElseThrow(() -> {
-            throw new Error("상품 정보를 찾을 수 없습니다.");
+            throw new BusinessException("상품 정보를 찾을 수 없습니다.");
         });
         inquiryDto.setProduct(product.convert2ListDto());
         inquiryDto.setStore(storeService.selectStoreInfo(product.getStoreId()).convert2Dto());

@@ -49,7 +49,7 @@ public class ReviewCommandService {
 
     public void increaseUserPoint(Integer userId, Boolean hasImage) {
         UserInfo userInfo = userInfoRepository.findById(userId).orElseThrow(() -> {
-            throw new Error("유저 정보를 찾을 수 없습니다.");
+            throw new BusinessException("유저 정보를 찾을 수 없습니다.");
         });
         String siteInfoId = hasImage ? "INT_REVIEW_POINT_IMAGE" : "INT_REVIEW_POINT_TEXT";
         SiteInformation siteInformation = siteInfoQueryService.selectSiteInfo(siteInfoId);
@@ -62,7 +62,7 @@ public class ReviewCommandService {
     public ReviewDto convert2Dto(Review review) {
         ReviewDto dto = review.convert2Dto();
         UserInfo userInfo = userInfoRepository.findById(review.getUserId()).orElseThrow(() -> {
-            throw new Error("유저 정보를 찾을 수 없습니다.");
+            throw new BusinessException("유저 정보를 찾을 수 없습니다.");
         });
         SimpleStore
                 store =

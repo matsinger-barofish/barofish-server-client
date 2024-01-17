@@ -252,12 +252,15 @@ public class ProductQueryService {
             String reviewPictureUrls = review.getReviewPictureUrls();
 
             String removedBrackets = removeBrackets(reviewPictureUrls);
-            List<String> reviewImages = Arrays.stream(removedBrackets.split(", ")).toList();
+            List<String> reviewImages =
+                    removedBrackets != "[]" || removedBrackets != null
+                            ? Arrays.stream(removedBrackets.split(", ")).toList()
+                            : new ArrayList<>();
 
             response.add(ProductPhotiReviewDto.builder()
                     .reviewId(review.getReviewId())
                     .imageUrls(reviewImages)
-                    .imageCount(reviewImages.size())
+                    .imageCount(reviewImages.isEmpty() ? null : reviewImages.size())
                     .build()
             );
         }
@@ -265,14 +268,20 @@ public class ProductQueryService {
     }
 
     private String removeBrackets(String reviewPictureUrls) {
-        StringBuilder sb = new StringBuilder();
-        for (char c : reviewPictureUrls.toCharArray()) {
-            if (c == '[' || c == ']') {
-                continue;
-            }
-            sb.append(c);
+        if (reviewPictureUrls == "[]") {
+            return reviewPictureUrls;
         }
-        return sb.toString();
+        if (reviewPictureUrls != null) {
+            StringBuilder sb = new StringBuilder();
+            for (char c : reviewPictureUrls.toCharArray()) {
+                if (c == '[' || c == ']') {
+                    continue;
+                }
+                sb.append(c);
+            }
+            return sb.toString();
+        }
+        return null;
     }
 
     private void validateProductExists(Integer productId) {

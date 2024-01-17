@@ -84,7 +84,7 @@ public class ReviewQueryService {
 
     public Review selectReview(Integer reviewId) {
         return reviewRepository.findById(reviewId).orElseThrow(() -> {
-            throw new Error("리뷰 정보를 찾을 수 없습니다.");
+            throw new BusinessException("리뷰 정보를 찾을 수 없습니다.");
         });
     }
 

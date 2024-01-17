@@ -29,7 +29,7 @@ public class VerificationService {
     public Verification selectVerificationById(Integer id) {
         try {
             return verificationRepository.findById(id).orElseThrow(() -> {
-                throw new Error("인증 정보를 찾을 수 없습니다.");
+                throw new BusinessException("인증 정보를 찾을 수 없습니다.");
             });
         } catch (Error e) {
             return null;

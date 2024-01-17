@@ -58,7 +58,7 @@ public class PaymentMethodQueryService {
 
     public PaymentMethod selectPaymentMethod(Integer id) {
         return paymentMethodRepository.findById(id).orElseThrow(() -> {
-            throw new Error("결제 수단 정보를 찾을 수 없습니다.");
+            throw new BusinessException("결제 수단 정보를 찾을 수 없습니다.");
         });
     }
 

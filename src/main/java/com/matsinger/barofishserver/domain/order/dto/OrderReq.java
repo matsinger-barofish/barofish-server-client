@@ -18,6 +18,7 @@ public class OrderReq {
     private OrderPaymentWay paymentWay;
     private Integer point;
     private Integer totalPrice;
+    private Integer totalDeliveryFee;
     private Integer couponDiscountPrice;
     private List<OrderProductReq> products;
     private Integer taxFreeAmount;

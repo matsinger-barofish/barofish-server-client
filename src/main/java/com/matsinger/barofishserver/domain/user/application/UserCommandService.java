@@ -261,7 +261,7 @@ public class UserCommandService {
 
     public DeliverPlace selectDeliverPlace(Integer id) {
         return deliverPlaceRepository.findById(id).orElseThrow(() -> {
-            throw new Error("배송지 정보를 찾을 수 없습니다.");
+            throw new BusinessException("배송지 정보를 찾을 수 없습니다.");
         });
     }
 
@@ -287,7 +287,7 @@ public class UserCommandService {
 
     public UserInfo selectUserInfo(Integer id) {
         return userInfoRepository.findById(id).orElseThrow(() -> {
-            throw new Error("유저 정보를 찾을 수 없습니다.");
+            throw new BusinessException("유저 정보를 찾을 수 없습니다.");
         });
     }
 
@@ -309,7 +309,7 @@ public class UserCommandService {
 
     public User selectUser(Integer id) {
         return userRepository.findById(id).orElseThrow(() -> {
-            throw new Error("유저 정보를 찾을 수 없습니다.");
+            throw new BusinessException("유저 정보를 찾을 수 없습니다.");
         });
     }
 
@@ -377,7 +377,7 @@ public class UserCommandService {
 
     public Grade selectGrade(Integer id) {
         return gradeRepository.findById(id).orElseThrow(() -> {
-            throw new Error("등급 정보를 찾을 수 없습니다.");
+            throw new BusinessException("등급 정보를 찾을 수 없습니다.");
         });
     }
 

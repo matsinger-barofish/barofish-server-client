@@ -1,6 +1,7 @@
 package com.matsinger.barofishserver.domain.order.domain;
 
 import com.matsinger.barofishserver.domain.order.dto.OrderDto;
+import com.matsinger.barofishserver.domain.order.dto.VBankRefundInfo;
 import com.matsinger.barofishserver.domain.order.orderprductinfo.domain.OrderProductInfo;
 import jakarta.persistence.*;
 import lombok.*;
@@ -125,6 +126,26 @@ public class Orders {
         this.orderedAt = orderedAt;
     }
 
+    public void setVbankRefundInfo(String bankCode, String bankHolder,
+                                   String bankName, String bankAccount) {
+        this.bankCode = bankCode;
+        this.bankHolder = bankHolder;
+        this.bankName = bankName;
+        this.bankAccount = bankAccount;
+    }
+
+    public VBankRefundInfo getVbankRefundInfo() {
+        if (this.bankCode == null) {
+            return null;
+        }
+        return VBankRefundInfo.builder()
+                .bankCode(this.bankCode)
+                .bankHolder(this.bankHolder)
+                .bankName(this.bankName)
+                .bankAccount(this.bankAccount)
+                .build();
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -144,5 +165,23 @@ public class Orders {
 
     public OrderDto toDto() {
         return null;
+    }
+
+    public boolean isCouponUsed() {
+        return couponId != null;
+    }
+
+    public boolean isPointUsed() {
+        return this.usePoint != null;
+    }
+
+    public Integer getUsedPoint() {
+        if (this.usePoint == null) {
+            return 0;
+        }
+        return this.usePoint;
+    }
+    public Integer getUsedCouponId() {
+        return this.couponId;
     }
 }

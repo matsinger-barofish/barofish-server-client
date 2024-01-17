@@ -31,6 +31,7 @@ public class ProductUpdateReq {
     private Float pointRate;
     private Timestamp promotionStartAt;
     private Timestamp promotionEndAt;
+
     private List<Integer> difficultDeliverAddressIds;
     private List<Integer> searchFilterFieldIds;
     private List<ProductFilterValueReq> filterValues;

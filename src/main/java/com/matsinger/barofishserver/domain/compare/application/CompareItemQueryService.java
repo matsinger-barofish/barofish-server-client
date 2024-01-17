@@ -15,6 +15,7 @@ import com.matsinger.barofishserver.domain.compare.repository.CompareSetReposito
 import com.matsinger.barofishserver.domain.compare.repository.SaveProductRepository;
 import com.matsinger.barofishserver.domain.product.application.ProductService;
 import com.matsinger.barofishserver.domain.product.domain.Product;
+import com.matsinger.barofishserver.global.exception.BusinessException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -73,7 +74,7 @@ public class CompareItemQueryService {
 
     public CompareSet selectCompareSet(Integer id) {
         return compareSetRepository.findById(id).orElseThrow(() -> {
-            throw new Error("비교하기 조합 정보를 찾을 수 없습니다.");
+            throw new BusinessException("비교하기 조합 정보를 찾을 수 없습니다.");
         });
     }
 
@@ -99,7 +100,7 @@ public class CompareItemQueryService {
 
     public SaveProduct selectSaveProduct(Integer userId, Integer productId) {
         return saveProductRepository.findById(new SaveProductId(userId, productId)).orElseThrow(() -> {
-            throw new Error("저장된 상품 정보를 찾을 수 없습니다.");
+            throw new BusinessException("저장된 상품 정보를 찾을 수 없습니다.");
         });
     }
 }

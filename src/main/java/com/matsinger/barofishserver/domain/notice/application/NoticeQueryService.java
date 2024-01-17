@@ -3,6 +3,7 @@ package com.matsinger.barofishserver.domain.notice.application;
 import com.matsinger.barofishserver.domain.notice.domain.Notice;
 import com.matsinger.barofishserver.domain.notice.domain.NoticeType;
 import com.matsinger.barofishserver.domain.notice.repository.NoticeRepository;
+import com.matsinger.barofishserver.global.exception.BusinessException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -32,7 +33,7 @@ public class NoticeQueryService {
 
     public Notice selectNotice(Integer noticeId) {
         return noticeRepository.findById(noticeId).orElseThrow(() -> {
-            throw new Error("공지사항 정보를 찾을 수 없습니다.");
+            throw new BusinessException("공지사항 정보를 찾을 수 없습니다.");
         });
     }
 }
