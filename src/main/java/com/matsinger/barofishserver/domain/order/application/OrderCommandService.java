@@ -430,6 +430,13 @@ public class OrderCommandService {
                         CancelManager cancelManager,
                         RequestCancelReq request) {
         Integer cancelPrice = null;
+        if (order.getState().equals(OrderState.WAIT_DEPOSIT)) {
+            order.setState(OrderState.CANCELED);
+            List<OrderProductInfo> orderProductInfos = orderProductInfoQueryService.findAllByOrderId(order.getId());
+            orderProductInfos.forEach(v -> v.setState(OrderProductState.CANCELED));
+            orderProductInfoRepository.saveAll(cancelManager.getAllOrderProducts());
+            orderRepository.save(order);
+        }
         if (cancelManager.allCanceled()) {
             cancelPrice = cancelManager.getAllCancelPrice();
         }
