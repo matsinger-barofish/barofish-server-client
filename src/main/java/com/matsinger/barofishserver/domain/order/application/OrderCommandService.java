@@ -333,9 +333,11 @@ public class OrderCommandService {
             canDeliver = difficultDeliverAddressQueryService
                     .canDeliver(productId, orderDeliverPlace);
 
-            orderProductInfos.stream()
-                    .filter(v -> v.getProductId() == productId)
-                    .forEach(v -> v.setState(OrderProductState.DELIVERY_DIFFICULT));
+            if (!canDeliver) {
+                orderProductInfos.stream()
+                        .filter(v -> v.getProductId() == productId)
+                        .forEach(v -> v.setState(OrderProductState.DELIVERY_DIFFICULT));
+            }
         }
         return canDeliver;
     }
