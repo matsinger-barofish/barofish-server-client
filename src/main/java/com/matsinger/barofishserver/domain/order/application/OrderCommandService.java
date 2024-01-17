@@ -168,6 +168,8 @@ public class OrderCommandService {
 
         if (canDeliver) {
             processKeyInPayment(request, orderId, totalTaxFreePrice);
+        }
+        if (!canDeliver) {
             ArrayList<OrderProductInfo> allOrderProduct = new ArrayList<>();
             for (StoreInfo storeInfo : storeMap.keySet()) {
                 allOrderProduct.addAll(storeMap.get(storeInfo));
