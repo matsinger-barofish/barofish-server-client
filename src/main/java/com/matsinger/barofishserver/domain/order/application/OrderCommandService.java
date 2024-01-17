@@ -168,6 +168,13 @@ public class OrderCommandService {
 
         if (canDeliver) {
             processKeyInPayment(request, orderId, totalTaxFreePrice);
+            ArrayList<OrderProductInfo> allOrderProduct = new ArrayList<>();
+            for (StoreInfo storeInfo : storeMap.keySet()) {
+                allOrderProduct.addAll(storeMap.get(storeInfo));
+            }
+            allOrderProduct.stream()
+                    .filter(v -> !cannotDeliverProductIds.contains(v))
+                    .forEach(v -> v.setState(OrderProductState.WAIT_DEPOSIT));
         }
 
         save(storeMap, order, orderDeliverPlace);
