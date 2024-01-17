@@ -3,14 +3,12 @@ package com.matsinger.barofishserver.domain.order.application;
 import com.matsinger.barofishserver.domain.basketProduct.application.BasketCommandService;
 import com.matsinger.barofishserver.domain.coupon.application.CouponCommandService;
 import com.matsinger.barofishserver.domain.coupon.application.CouponQueryService;
-import com.matsinger.barofishserver.domain.coupon.application.CouponUserMapQueryService;
 import com.matsinger.barofishserver.domain.coupon.domain.Coupon;
 import com.matsinger.barofishserver.domain.notification.application.NotificationCommandService;
 import com.matsinger.barofishserver.domain.notification.dto.NotificationMessage;
 import com.matsinger.barofishserver.domain.notification.dto.NotificationMessageType;
 import com.matsinger.barofishserver.domain.order.domain.*;
 import com.matsinger.barofishserver.domain.order.dto.*;
-import com.matsinger.barofishserver.domain.order.orderprductinfo.application.OrderProductInfoCommandService;
 import com.matsinger.barofishserver.domain.order.orderprductinfo.application.OrderProductInfoQueryService;
 import com.matsinger.barofishserver.domain.order.orderprductinfo.domain.OrderProductInfo;
 import com.matsinger.barofishserver.domain.order.orderprductinfo.domain.OrderProductState;
@@ -27,18 +25,12 @@ import com.matsinger.barofishserver.domain.payment.repository.PaymentRepository;
 import com.matsinger.barofishserver.domain.product.application.ProductQueryService;
 import com.matsinger.barofishserver.domain.product.difficultDeliverAddress.application.DifficultDeliverAddressQueryService;
 import com.matsinger.barofishserver.domain.product.domain.Product;
-import com.matsinger.barofishserver.domain.product.option.application.OptionQueryService;
-import com.matsinger.barofishserver.domain.product.optionitem.application.OptionItemCommandService;
 import com.matsinger.barofishserver.domain.product.optionitem.application.OptionItemQueryService;
 import com.matsinger.barofishserver.domain.product.optionitem.domain.OptionItem;
-import com.matsinger.barofishserver.domain.product.optionitem.repository.OptionItemRepository;
-import com.matsinger.barofishserver.domain.product.repository.ProductRepository;
 import com.matsinger.barofishserver.domain.store.application.StoreInfoQueryService;
 import com.matsinger.barofishserver.domain.store.domain.StoreInfo;
 import com.matsinger.barofishserver.domain.user.deliverplace.DeliverPlace;
 import com.matsinger.barofishserver.domain.user.deliverplace.application.DeliverPlaceQueryService;
-import com.matsinger.barofishserver.domain.user.deliverplace.repository.DeliverPlaceRepository;
-import com.matsinger.barofishserver.domain.user.paymentMethod.application.PaymentMethodCommandService;
 import com.matsinger.barofishserver.domain.user.paymentMethod.application.PaymentMethodService;
 import com.matsinger.barofishserver.domain.user.paymentMethod.domain.PaymentMethod;
 import com.matsinger.barofishserver.domain.userinfo.application.UserInfoQueryService;
@@ -70,29 +62,19 @@ public class OrderCommandService {
     private final ProductQueryService productQueryService;
     private final BasketCommandService basketCommandService;
     private final UserInfoQueryService userInfoQueryService;
-    private final OptionItemCommandService optionItemCommandService;
-    private final BankCodeQueryService bankCodeQueryService;
     private final PaymentMethodService paymentMethodService;
     private final PaymentService paymentService;
     private final OrderRepository orderRepository;
-    private final OrderDeliverPlaceCommandService orderDeliverPlaceCommandService;
-    private final OrderProductInfoCommandService orderProductInfoCommandService;
     private final CouponQueryService couponQueryService;
     private final StoreInfoQueryService storeInfoQueryService;
-    private final ProductRepository productRepository;
-    private final PaymentMethodCommandService paymentMethodCommandService;
     private final OptionItemQueryService optionItemQueryService;
     private final NotificationCommandService notificationCommandService;
     private final OrderQueryService orderQueryService;
-    private final CouponUserMapQueryService couponUserMapQueryService;
-    private final DeliverPlaceRepository deliverPlaceRepository;
     private final DifficultDeliverAddressQueryService difficultDeliverAddressQueryService;
     private final DeliverPlaceQueryService deliverPlaceQueryService;
     private final OrderProductInfoRepository orderProductInfoRepository;
     private final OrderDeliverPlaceRepository orderDeliverPlaceRepository;
     private final OrderProductInfoQueryService orderProductInfoQueryService;
-    private final OptionQueryService optionQueryService;
-    private final OptionItemRepository optionItemRepository;
     private final CouponCommandService couponCommandService;
     private final PortOneCallbackService callbackService;
     private final UserInfoRepository userInfoRepository;
@@ -154,7 +136,7 @@ public class OrderCommandService {
                 .id(orderId)
                 .userId(userId)
                 .paymentWay(request.getPaymentWay())
-                .state(notIncludesCannotDeliverPlace == true ? OrderState.WAIT_DEPOSIT : OrderState.DELIVERY_DIFFICULT)
+                .state(notIncludesCannotDeliverPlace ? OrderState.WAIT_DEPOSIT : OrderState.DELIVERY_DIFFICULT)
                 .couponId(request.getCouponId() != null ? request.getCouponId() : null)
                 .orderedAt(utils.now())
                 .totalPrice(finalOrderPrice)
@@ -175,7 +157,7 @@ public class OrderCommandService {
             for (StoreInfo storeInfo : storeMap.keySet()) {
                 allOrderProduct.addAll(storeMap.get(storeInfo));
             }
-            log.info("cannotDeliverProductIds = {}", cannotDeliverProductIds.toString());
+//            log.info("cannotDeliverProductIds = {}", cannotDeliverProductIds.toString());
             allOrderProduct.stream()
                     .filter(v -> !cannotDeliverProductIds.contains(v.getProductId()))
                     .forEach(v -> v.setState(OrderProductState.CANCELED));
@@ -183,7 +165,7 @@ public class OrderCommandService {
 
         save(storeMap, order, orderDeliverPlace);
 
-        return OrderResponse. builder()
+        return OrderResponse.builder()
                 .orderId(orderId)
                 .canDeliver(notIncludesCannotDeliverPlace)
                 .cannotDeliverProductIds(cannotDeliverProductIds)
@@ -363,7 +345,6 @@ public class OrderCommandService {
     }
 
 
-
     private Map<StoreInfo, List<OrderProductInfo>> createStoreMap(OrderReq request,
                                                                   UserInfo userInfo,
                                                                   String orderId) {
@@ -392,7 +373,7 @@ public class OrderCommandService {
                 .deliveryFeeType(product.getDeliverFeeType())
                 .isSettled(false)
                 .isTaxFree(!product.getNeedTaxation())
-                .taxFreeAmount(product.getNeedTaxation() == false ? totalProductPrice : 0)
+                .taxFreeAmount(!product.getNeedTaxation() ? totalProductPrice : 0)
                 .state(OrderProductState.WAIT_DEPOSIT)
                 .build();
 
@@ -460,9 +441,9 @@ public class OrderCommandService {
                 true,
                 BigDecimal.valueOf(cancelPrice)
         );
-        log.info("impUid = {}", order.getImpUid());
-        log.info("totalCancelPrice = {}", cancelPrice);
-        log.info("taxFreePrice = {}", cancelManager.getNonTaxablePriceTobeCanceled());
+//        log.info("impUid = {}", order.getImpUid());
+//        log.info("totalCancelPrice = {}", cancelPrice);
+//        log.info("taxFreePrice = {}", cancelManager.getNonTaxablePriceTobeCanceled());
         cancelData.setTax_free(BigDecimal.valueOf(cancelManager.getNonTaxablePriceTobeCanceled()));
         setVbankRefundInfo(order, cancelData);
         sendPortOneCancelData(cancelData);
