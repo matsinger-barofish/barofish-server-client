@@ -436,6 +436,7 @@ public class OrderCommandService {
             orderProductInfos.forEach(v -> v.setState(OrderProductState.CANCELED));
             orderProductInfoRepository.saveAll(cancelManager.getAllOrderProducts());
             orderRepository.save(order);
+            return;
         }
         if (cancelManager.allCanceled()) {
             cancelPrice = cancelManager.getAllCancelPrice();
