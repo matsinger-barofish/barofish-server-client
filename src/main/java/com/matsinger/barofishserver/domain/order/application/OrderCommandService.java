@@ -116,12 +116,12 @@ public class OrderCommandService {
         int totalOrderDeliveryFee = 0;
         int totalOrderProductPrice = 0;
         int totalTaxFreePrice = 0;
-        boolean canDeliver = true;
         List<Integer> cannotDeliverProductIds = new ArrayList<>();
+        boolean notIncludesCannotDeliverPlace = true;
         for (StoreInfo storeInfo : storeMap.keySet()) {
 
             List<OrderProductInfo> storeOrderProductInfos = storeMap.get(storeInfo);
-            canDeliver = validateDifficultDeliveryRegion(orderDeliverPlace, storeOrderProductInfos);
+            boolean canDeliver = validateDifficultDeliveryRegion(orderDeliverPlace, storeOrderProductInfos);
             if (!canDeliver) {
                 cannotDeliverProductIds.addAll(
                         storeOrderProductInfos.stream()
@@ -129,6 +129,7 @@ public class OrderCommandService {
                                 .map(v -> v.getProductId()).distinct()
                                 .toList()
                 );
+                notIncludesCannotDeliverPlace = false;
             }
             calculateDeliveryFee(storeInfo, storeOrderProductInfos);
 
@@ -153,7 +154,7 @@ public class OrderCommandService {
                 .id(orderId)
                 .userId(userId)
                 .paymentWay(request.getPaymentWay())
-                .state(canDeliver == true ? OrderState.WAIT_DEPOSIT : OrderState.DELIVERY_DIFFICULT)
+                .state(notIncludesCannotDeliverPlace == true ? OrderState.WAIT_DEPOSIT : OrderState.DELIVERY_DIFFICULT)
                 .couponId(request.getCouponId() != null ? request.getCouponId() : null)
                 .orderedAt(utils.now())
                 .totalPrice(finalOrderPrice)
@@ -166,10 +167,10 @@ public class OrderCommandService {
 
         setVbankInfo(request, order);
 
-        if (canDeliver) {
+        if (notIncludesCannotDeliverPlace) {
             processKeyInPayment(request, orderId, totalTaxFreePrice);
         }
-        if (!canDeliver) {
+        if (!notIncludesCannotDeliverPlace) {
             ArrayList<OrderProductInfo> allOrderProduct = new ArrayList<>();
             for (StoreInfo storeInfo : storeMap.keySet()) {
                 allOrderProduct.addAll(storeMap.get(storeInfo));
@@ -183,7 +184,7 @@ public class OrderCommandService {
 
         return OrderResponse. builder()
                 .orderId(orderId)
-                .canDeliver(canDeliver)
+                .canDeliver(notIncludesCannotDeliverPlace)
                 .cannotDeliverProductIds(cannotDeliverProductIds)
                 .build();
     }
