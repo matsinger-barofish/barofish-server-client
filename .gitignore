@@ -49,3 +49,4 @@ build/generated/
 /src/main/resources/log_xml/
 logs/
 src/main/resources/logback-spring.xml
+src/main/java/com/matsinger/barofishserver/monitoring/
