@@ -7,7 +7,6 @@ import com.matsinger.barofishserver.domain.product.weeksdate.application.WeeksDa
 import com.matsinger.barofishserver.domain.search.application.SearchKeywordCommandService;
 import com.matsinger.barofishserver.domain.user.application.UserCommandService;
 import lombok.AllArgsConstructor;
-import org.springframework.context.annotation.Conditional;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 

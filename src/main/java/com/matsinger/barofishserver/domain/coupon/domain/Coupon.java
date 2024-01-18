@@ -75,11 +75,13 @@ public class Coupon {
             throw new BusinessException("쿠폰 최소 금액에 맞지 않습니다.");
         }
 
-        if (startAt.after(Timestamp.valueOf(LocalDateTime.now()))) {
-            throw new BusinessException("사용기한 전의 쿠폰입니다.");
-        }
-        if (endAt.before(Timestamp.valueOf(LocalDateTime.now()))) {
-            throw new BusinessException("쿠폰 사용 기한이 만료되었습니다.");
+        if (startAt != null && endAt != null) {
+            if (startAt.after(Timestamp.valueOf(LocalDateTime.now()))) {
+                throw new BusinessException("사용기한 전의 쿠폰입니다.");
+            }
+            if (endAt.before(Timestamp.valueOf(LocalDateTime.now()))) {
+                throw new BusinessException("쿠폰 사용 기한이 만료되었습니다.");
+            }
         }
     }
 
