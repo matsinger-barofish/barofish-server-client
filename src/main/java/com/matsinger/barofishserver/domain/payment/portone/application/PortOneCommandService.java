@@ -1,6 +1,7 @@
 package com.matsinger.barofishserver.domain.payment.portone.application;
 
 import com.matsinger.barofishserver.domain.basketProduct.application.BasketCommandService;
+import com.matsinger.barofishserver.domain.basketProduct.repository.BasketQueryRepository;
 import com.matsinger.barofishserver.domain.coupon.application.CouponCommandService;
 import com.matsinger.barofishserver.domain.notification.application.NotificationCommandService;
 import com.matsinger.barofishserver.domain.notification.dto.NotificationMessage;
@@ -37,16 +38,19 @@ import com.siot.IamportRestClient.request.CancelData;
 import com.siot.IamportRestClient.response.IamportResponse;
 import com.siot.IamportRestClient.response.Payment;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
 @Transactional
 @RequiredArgsConstructor
+@Slf4j
 public class PortOneCommandService {
 
     private final PaymentService paymentService;
@@ -67,6 +71,7 @@ public class PortOneCommandService {
     private final OrderQueryService orderQueryService;
     private final PaymentRepository paymentRepository;
     private final OrderProductInfoQueryService orderProductInfoQueryService;
+    private final BasketQueryRepository basketQueryRepository;
 
     @Transactional
     public void processWhenStatusReady(PortOneBodyData request) {
@@ -79,6 +84,12 @@ public class PortOneCommandService {
 
         if (payments.getPayMethod().equals("vbank")) {
             sendVbankDataWithSms(request, payments);
+
+            List<OrderProductInfo> orderProductInfos = orderProductInfoQueryService.findAllByOrderId(order.getId());
+            UserInfo userInfo = userInfoQueryService.findByUserId(order.getUserId());
+            basketQueryRepository.deleteAllBasketByUserIdAndOptionIds(
+                    userInfo.getUserId(),
+                    orderProductInfos.stream().map(v -> v.getOptionItemId()).toList());
         }
     }
 
@@ -88,40 +99,51 @@ public class PortOneCommandService {
         Payments payments = paymentService.getPaymentInfoFromPortOne(order.getId(), request.getImp_uid());
         List<OrderProductInfo> orderProductInfos = orderProductInfoQueryService.findAllByOrderId(order.getId());
 
+        boolean containsCannotDeliverPlace = false;
+        List<OrderProductInfo> cannotDeliveryProducts = new ArrayList<>();
         for (OrderProductInfo orderProductInfo : orderProductInfos) {
-            boolean canDeliver = orderService.checkProductCanDeliver(order.getDeliverPlace(), orderProductInfo);
+            boolean canDeliver = orderService.canDeliver(order.getDeliverPlace(), orderProductInfo);
             if (!canDeliver) {
-                orderProductInfos.forEach( opi -> {
-                    opi.setCancelReasonContent("배송 불가 지역");
-                    opi.setState(OrderProductState.DELIVERY_DIFFICULT);
-                    opi.setCancelReason(OrderCancelReason.ORDER_FAULT);
-                });
-                order.setState(OrderState.DELIVERY_DIFFICULT);
-                order.setImpUid(request.getImp_uid());
-
-                sendNotification(order, orderProductInfo, true);
-
-                CancelData cancelData = createCancelData(orderProductInfos, order);
-                requestRefund(cancelData);
-            }
-            if (canDeliver) {
-                orderProductInfo.setState(OrderProductState.PAYMENT_DONE);
-                order.setState(OrderState.PAYMENT_DONE);
-                order.setImpUid(request.getImp_uid());
-
-                UserInfo userInfo = userInfoQueryService.findByUserId(order.getUserId());
-                sendNotification(order, orderProductInfo, false);
-                reduceQuantity(orderProductInfo);
-                userInfo.usePoint(order.getUsePoint());
-                couponCommandService.useCouponV1(order.getCouponId(), order.getUserId());
-                basketCommandService.deleteBasketAfterOrder(order, orderProductInfos);
-
-                userCommandService.updateUserInfo(userInfo);
-                orderProductInfoCommandService.saveAll(orderProductInfos);
-                orderRepository.save(order);
-                paymentCommandService.save(payments);
+                orderProductInfo.setCancelReasonContent("배송 불가 지역");
+                orderProductInfo.setState(OrderProductState.DELIVERY_DIFFICULT);
+                orderProductInfo.setCancelReason(OrderCancelReason.ORDER_FAULT);
+                cannotDeliveryProducts.add(orderProductInfo);
+                containsCannotDeliverPlace = true;
             }
         }
+
+        if (containsCannotDeliverPlace) {
+            order.setState(OrderState.DELIVERY_DIFFICULT);
+            order.setImpUid(request.getImp_uid());
+            payments.setStatus(PaymentState.FAILED);
+            sendNotification(order, cannotDeliveryProducts.get(0), true);
+
+            CancelData cancelData = createAllCancelData(orderProductInfos, order);
+            requestRefund(cancelData);
+        }
+
+        if (!containsCannotDeliverPlace) {
+            for (OrderProductInfo orderProductInfo : orderProductInfos) {
+                orderProductInfo.setState(OrderProductState.PAYMENT_DONE);
+                reduceQuantity(orderProductInfo);
+            }
+            order.setState(OrderState.PAYMENT_DONE);
+            order.setImpUid(request.getImp_uid());
+
+            UserInfo userInfo = userInfoQueryService.findByUserId(order.getUserId());
+            sendNotification(order, orderProductInfos.get(0), false);
+            userInfo.usePoint(order.getUsePoint());
+            couponCommandService.useCouponV1(order.getCouponId(), order.getUserId());
+
+            basketQueryRepository.deleteAllBasketByUserIdAndOptionIds(
+                    userInfo.getUserId(),
+                    orderProductInfos.stream().map(v -> v.getOptionItemId()).toList());
+
+            userCommandService.updateUserInfo(userInfo);
+        }
+        orderProductInfoCommandService.saveAll(orderProductInfos);
+        orderRepository.save(order);
+        paymentCommandService.save(payments);
     }
 
     private void requestRefund(CancelData cancelData) {
@@ -139,7 +161,7 @@ public class PortOneCommandService {
     }
 
     @NotNull
-    private static CancelData createCancelData(List<OrderProductInfo> orderProductInfos, Orders order) {
+    private static CancelData createAllCancelData(List<OrderProductInfo> orderProductInfos, Orders order) {
         int deliveryFeeSum = orderProductInfos.stream().mapToInt(v -> v.getDeliveryFee()).sum();
         int orderProductsAndDeliveryFeeSum = order.getOriginTotalPrice() + deliveryFeeSum;
         int taxFreeAmount = orderProductInfos.stream().mapToInt(v -> v.getTaxFreeAmount()).sum();
@@ -197,6 +219,9 @@ public class PortOneCommandService {
                         String.format("가상계좌 예금주명: %s\n", payments.getVbankHolder()) +
                         "24시간 이내로 이체해주세요.";
         sms.sendSms(payments.getBuyerTel(), smsContent, "가상 계좌 결제 요청");
+        log.info("=== smsDataReceived ===");
+        log.info("vbankName = {}", payments.getVbankName());
+        log.info("phoneNumber = {}", payments.getBuyerTel());
     }
 
     public void processWhenStatusCanceled(PortOneBodyData request) {

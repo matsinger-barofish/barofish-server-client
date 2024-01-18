@@ -36,7 +36,8 @@ import java.util.List;
 @Slf4j
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/callback/iamport_pay_result")
+//@RequestMapping("/callback/iamport_pay_result")
+@RequestMapping("v1/callback/iamport_pay_result")
 public class PortOneCallbackHandler {
 
     private final Common utils;
@@ -88,7 +89,7 @@ public class PortOneCallbackHandler {
                     Payments paymentData = paymentService.getPaymentInfoFromPortOne(order.getId(), data.getImp_uid());
                     List<OrderProductInfo> infos = orderService.selectOrderProductInfoListWithOrderId(order.getId());
                     infos.forEach(info -> {
-                        if (!orderService.checkProductCanDeliver(order.getDeliverPlace(), info)) {
+                        if (!orderService.canDeliver(order.getDeliverPlace(), info)) {
                             int cancelPrice = 0;
                             try {
                                 GetCancelPriceDto

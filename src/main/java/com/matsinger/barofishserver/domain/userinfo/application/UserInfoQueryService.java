@@ -38,8 +38,6 @@ public class UserInfoQueryService {
                     throw new BusinessException("유저 정보를 찾을 수 없습니다.");
                 });
 
-        logger.info("userId = {}", findUserInfo.getUserId()); // jwt 로깅을 위해 추가
-
         List<DeliverPlace> deliverPlaces = deliverPlaceRepository.findAllByUserId(userId);
         Integer reviewCount = reviewRepository.countAllByUserId(userId);
         Integer notificationCount = notificationRepository.countAllByUserId(userId);

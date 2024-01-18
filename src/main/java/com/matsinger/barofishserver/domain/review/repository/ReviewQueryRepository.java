@@ -26,7 +26,8 @@ public class ReviewQueryRepository {
                 .from(product)
                 .leftJoin(review).on(product.id.eq(review.productId)
                         .and(review.images.notLike("[]")))
-                .where(product.id.eq(productId))
+                .where(product.id.eq(productId)
+                        .and(review.isDeleted.isFalse()))
                 .limit(5)
                 .fetch();
     }

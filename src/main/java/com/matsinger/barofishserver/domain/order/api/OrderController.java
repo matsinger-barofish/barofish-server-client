@@ -421,7 +421,7 @@ public class OrderController {
                         .postalCode(deliverPlace.getPostalCode())
                         .bcode(deliverPlace.getBcode())
                         .build();
-        if (infos.stream().anyMatch(v -> !orderService.checkProductCanDeliver(orderDeliverPlace, v)))
+        if (infos.stream().anyMatch(v -> !orderService.canDeliver(orderDeliverPlace, v)))
             throw new BusinessException("배송지에 배송 불가능한 상품이 포함돼 있습니다.");
         Orders
                 order =
@@ -523,7 +523,7 @@ public class OrderController {
                                                                      @RequestPart(value = "data") RequestCancelReq data) throws Exception {
         CustomResponse<Boolean> res = new CustomResponse<>();
 
-                TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth);
+        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth);
 
         OrderProductInfo info = orderService.selectOrderProductInfo(orderProductInfoId);
         Orders order = orderService.selectOrder(info.getOrderId());
@@ -553,7 +553,7 @@ public class OrderController {
                                                                          @RequestPart(value = "orderProductInfoIds") List<Integer> orderProductInfoIds) throws Exception {
         CustomResponse<Boolean> res = new CustomResponse<>();
 
-                TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.PARTNER, TokenAuthType.ADMIN), auth);
+        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.PARTNER, TokenAuthType.ADMIN), auth);
 
         Integer adminId = null;
         if (tokenInfo.getType().equals(TokenAuthType.ADMIN)) adminId = tokenInfo.getId();
@@ -935,7 +935,7 @@ public class OrderController {
                                                                             @PathVariable("orderProductInfoId") Integer orderProductInfoId) {
         CustomResponse<Boolean> res = new CustomResponse<>();
 
-                TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN, TokenAuthType.PARTNER), auth);
+        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN, TokenAuthType.PARTNER), auth);
 
 
         Integer adminId = null;
@@ -966,7 +966,7 @@ public class OrderController {
                                                                              @PathVariable("orderProductInfoId") Integer orderProductInfoId) {
         CustomResponse<Boolean> res = new CustomResponse<>();
 
-                TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN, TokenAuthType.PARTNER), auth);
+        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN, TokenAuthType.PARTNER), auth);
 
         Integer adminId = null;
         if (tokenInfo.getType().equals(TokenAuthType.ADMIN)) adminId = tokenInfo.getId();

@@ -17,6 +17,7 @@ import java.util.Objects;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@ToString
 @Entity
 @Table(name = "order_product_info", schema = "barofish_dev", catalog = "")
 public class OrderProductInfo {
@@ -30,6 +31,8 @@ public class OrderProductInfo {
     @Basic
     @Column(name = "product_id", nullable = false)
     private int productId;
+    @Column(name = "store_id")
+    private Integer storeId;
     @Basic
     @Column(name = "option_item_id", nullable = false)
     private int optionItemId;
@@ -194,5 +197,18 @@ public class OrderProductInfo {
     @Override
     public int hashCode() {
         return Objects.hash(id, orderId, productId, state, price, amount, deliveryFee);
+    }
+
+    public boolean equalToProductId(int productId) {
+        return this.productId == productId;
+    }
+
+    public boolean equalToOptionItemId(int optionItemId) {
+        return this.optionItemId == optionItemId;
+    }
+
+    public boolean isCancelableState() {
+        return this.state == OrderProductState.WAIT_DEPOSIT ||
+                this.state == OrderProductState.PAYMENT_DONE;
     }
 }

@@ -349,7 +349,6 @@ public class ProductController {
             if (data.getDeliveryFee() == null) throw new BusinessException("배송비를 입력해주세요.");
             if (data.getMinOrderPrice() == null)
                 throw new BusinessException("무료 배송 최소 금액을 입력해주세요.");
-            data.setMinOrderPrice(0);
         }
         if (data.getDeliverFeeType().equals(ProductDeliverFeeType.S_CONDITIONAL)) {
             StoreInfo storeInfo = store.get().getStoreInfo();
@@ -498,6 +497,12 @@ public class ProductController {
         if (tokenInfo.getType().equals(TokenAuthType.PARTNER) &&
                 product.getStoreId() != tokenInfo.getId())
             throw new BusinessException("타지점의 상품입니다.");
+
+        // 파트너 바꿈
+        if (product.getStoreId() != data.getStoreId()) {
+            product.setStoreId(data.getStoreId());
+        }
+
         if (data.getCategoryId() != null) {
             Category category = categoryQueryService.findById(data.getCategoryId());
             product.setCategory(category);
@@ -537,13 +542,13 @@ public class ProductController {
             product.setDeliverFee(0);
             product.setMinOrderPrice(0);
         }
-//        if (data.getDeliverFeeType().equals(ProductDeliverFeeType.FIX)) {
-//            if (product.getDeliverFee() == null && data.getDeliveryFee() == null)
-//                throw new BusinessException("배송비를 입력해주세요.");
-//            product.setDeliverFeeType(ProductDeliverFeeType.FIX);
-//            product.setDeliverFee(data.getDeliveryFee());
-//            product.setMinOrderPrice(null);
-//        }
+        if (data.getDeliverFeeType().equals(ProductDeliverFeeType.FIX)) {
+            if (product.getDeliverFee() == null && data.getDeliveryFee() == null)
+                throw new BusinessException("배송비를 입력해주세요.");
+            product.setDeliverFeeType(ProductDeliverFeeType.FIX);
+            product.setDeliverFee(data.getDeliveryFee());
+            product.setMinOrderPrice(null);
+        }
         if (data.getDeliverFeeType().equals(ProductDeliverFeeType.S_CONDITIONAL)) {
             StoreInfo storeInfo = storeInfoQueryService.findByStoreId(product.getStoreId());
             product.setDeliverFeeType(ProductDeliverFeeType.S_CONDITIONAL);

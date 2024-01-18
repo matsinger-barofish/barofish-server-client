@@ -4,6 +4,7 @@ import com.matsinger.barofishserver.domain.category.filter.repository.CategoryFi
 import com.matsinger.barofishserver.domain.compare.filter.domain.CompareFilter;
 import com.matsinger.barofishserver.domain.compare.filter.repository.CompareFilterRepository;
 import com.matsinger.barofishserver.domain.product.productfilter.repository.ProductFilterRepository;
+import com.matsinger.barofishserver.global.exception.BusinessException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -20,7 +21,7 @@ public class CompareFilterQueryService {
 
     public CompareFilter selectCompareFilter(Integer filterId) {
         return compareFilterRepository.findById(filterId).orElseThrow(() -> {
-            throw new Error("비교하기 항목 정보를 찾을 수 없습니다.");
+            throw new BusinessException("비교하기 항목 정보를 찾을 수 없습니다.");
         });
     }
 

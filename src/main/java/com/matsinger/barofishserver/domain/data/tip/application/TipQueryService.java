@@ -4,6 +4,7 @@ import com.matsinger.barofishserver.domain.data.tip.domain.Tip;
 import com.matsinger.barofishserver.domain.data.tip.domain.TipState;
 import com.matsinger.barofishserver.domain.data.tip.domain.TipType;
 import com.matsinger.barofishserver.domain.data.tip.repository.TipRepository;
+import com.matsinger.barofishserver.global.exception.BusinessException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -28,7 +29,7 @@ public class TipQueryService {
 
     public Tip selectTip(Integer id) {
         return tipRepository.findById(id).orElseThrow(() -> {
-            throw new Error("팁 정보를 찾을 수 없습니다.");
+            throw new BusinessException("팁 정보를 찾을 수 없습니다.");
         });
     }
 

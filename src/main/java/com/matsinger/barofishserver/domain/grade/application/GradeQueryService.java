@@ -2,6 +2,7 @@ package com.matsinger.barofishserver.domain.grade.application;
 
 import com.matsinger.barofishserver.domain.grade.domain.Grade;
 import com.matsinger.barofishserver.domain.grade.repository.GradeRepository;
+import com.matsinger.barofishserver.global.exception.BusinessException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -20,7 +21,7 @@ public class GradeQueryService {
 
     public Grade selectGrade(Integer id) {
         return gradeRepository.findById(id).orElseThrow(() -> {
-            throw new Error("등급 정보를 찾을 수 없습니다.");
+            throw new BusinessException("등급 정보를 찾을 수 없습니다.");
         });
     }
 }

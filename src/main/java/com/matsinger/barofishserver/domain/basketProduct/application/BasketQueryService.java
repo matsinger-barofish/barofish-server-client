@@ -54,7 +54,7 @@ public class BasketQueryService {
 
     public BasketProductInfo selectBasket(Integer id) {
         return basketProductInfoRepository.findById(id).orElseThrow(() -> {
-            throw new Error("장바구니 상품 정보를 찾을 수 없습니다.");
+            throw new BusinessException("장바구니 상품 정보를 찾을 수 없습니다.");
         });
 
     }
@@ -141,7 +141,7 @@ public class BasketQueryService {
 
             response.add(
                     BasketProductDtoV2.builder()
-                    .id(product.getId())
+                    .id(productInfo.getId())
                     .store(storeInfo.toBasketStoreDto())
                     .product(basketProductInfoDto)
                     .amount(productInfo.getAmount())

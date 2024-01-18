@@ -171,7 +171,7 @@ public class OrderService {
 
     public OrderDeliverPlace selectDeliverPlace(String orderId) {
         return orderDeliverPlaceRepository.findById(orderId).orElseThrow(() -> {
-            throw new Error("주문 배송지 정보를 찾을 수 없습니다.");
+            throw new BusinessException("주문 배송지 정보를 찾을 수 없습니다.");
         });
     }
 
@@ -188,7 +188,7 @@ public class OrderService {
 
     public Orders selectOrder(String id) {
         return orderRepository.findById(id).orElseThrow(() -> {
-            throw new Error("주문 정보를 찾을 수 없습니다.");
+            throw new BusinessException("주문 정보를 찾을 수 없습니다.");
         });
     }
 
@@ -263,7 +263,7 @@ public class OrderService {
 
     public OrderProductInfo selectOrderProductInfo(Integer orderProductInfoId) {
         return infoRepository.findById(orderProductInfoId).orElseThrow(() -> {
-            throw new Error("주문 상품 정보를 찾을 수 없습니다.");
+            throw new BusinessException("주문 상품 정보를 찾을 수 없습니다.");
         });
     }
 
@@ -292,7 +292,7 @@ public class OrderService {
                 default:
                     return false;
             }
-        })) throw new Exception("취소 불가능한 상태입니다.");
+        })) throw new BusinessException("취소 불가능한 상태입니다.");
         if (infos.stream().anyMatch(v -> v.getState().equals(OrderProductState.WAIT_DEPOSIT))) {
             infos.forEach(info -> info.setState(OrderProductState.CANCELED));
             updateOrderProductInfos(infos);
@@ -336,11 +336,11 @@ public class OrderService {
             case REFUND_REQUEST:
             case REFUND_ACCEPT:
             case REFUND_DONE:
-                throw new Exception("취소 불가능한 상태입니다.");
+                throw new BusinessException("취소 불가능한 상태입니다.");
             case CANCEL_REQUEST:
-                throw new Exception("이미 취소 요청된 상태입니다.");
+                throw new BusinessException("이미 취소 요청된 상태입니다.");
             case CANCELED:
-                throw new Exception("취소 완료된 상태입니다.");
+                throw new BusinessException("취소 완료된 상태입니다.");
             case DELIVERY_READY:
             default:
                 info.setState(OrderProductState.CANCEL_REQUEST);
@@ -350,12 +350,12 @@ public class OrderService {
 
     public void cancelOrderedProduct(Integer orderProductInfoId) throws Exception {
         OrderProductInfo info = infoRepository.findById(orderProductInfoId).orElseThrow(() -> {
-            throw new Error("주문 상품 정보를 찾을 수 없습니다.");
+            throw new BusinessException("주문 상품 정보를 찾을 수 없습니다.");
         });
         if (info.getState().equals(OrderProductState.CANCELED)) throw new Exception("이미 취소된 상품입니다.");
         Orders order = orderRepository.findById(info.getOrderId()).orElseThrow(() -> {
             try {
-                throw new Exception("주문 정보를 찾을 수 없습니다.");
+                throw new BusinessException("주문 정보를 찾을 수 없습니다.");
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
@@ -363,6 +363,8 @@ public class OrderService {
         GetCancelPriceDto cancelData = getCancelPrice(order, List.of(info));
         int price = cancelData.getCancelPrice();
         int taxFreeAmount = info.getTaxFreeAmount() != null && info.getIsTaxFree() ? info.getTaxFreeAmount() : 0;
+        log.info("v1 cancelPrice = {}", price);
+        log.info("v1 taxFreeAmount = {}", info.getTaxFreeAmount());
         VBankRefundInfo
                 vBankRefundInfo =
                 order.getPaymentWay().equals(OrderPaymentWay.VIRTUAL_ACCOUNT) ? VBankRefundInfo.builder().bankHolder(
@@ -544,7 +546,7 @@ public class OrderService {
         return infoRepository.findAllByProduct_StoreIdAndIsSettled(storeId, isSettled);
     }
 
-    public boolean checkProductCanDeliver(OrderDeliverPlace orderDeliverPlace, OrderProductInfo orderProductInfo) {
+    public boolean canDeliver(OrderDeliverPlace orderDeliverPlace, OrderProductInfo orderProductInfo) {
         List<String>
                 difficultDeliverBcode =
                 difficultDeliverAddressQueryService

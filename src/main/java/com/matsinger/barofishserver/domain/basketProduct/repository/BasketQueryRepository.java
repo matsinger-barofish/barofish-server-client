@@ -7,8 +7,10 @@ import com.matsinger.barofishserver.domain.basketProduct.dto.BasketStoreDto;
 import com.matsinger.barofishserver.domain.product.optionitem.dto.OptionItemDto;
 import com.querydsl.core.types.Projections;
 import com.querydsl.jpa.impl.JPAQueryFactory;
+import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -24,6 +26,7 @@ import static com.matsinger.barofishserver.domain.store.domain.QStoreInfo.storeI
 public class BasketQueryRepository {
 
     private final JPAQueryFactory queryFactory;
+    private final EntityManager em;
 
     public List<BasketProductDtoV2> selectBasketProductInfos(Integer userId) {
         return queryFactory
@@ -85,6 +88,16 @@ public class BasketQueryRepository {
                 .leftJoin(optionItem).on(optionItem.id.eq(basketProductInfo.optionItemId))
                 .where(basketProductInfo.userId.eq(userId))
                 .fetch();
+    }
+
+    @Transactional
+    public void deleteAllBasketByUserIdAndOptionIds(int userId, List<Integer> optionItemIds) {
+        queryFactory.delete(basketProductInfo)
+                .where(basketProductInfo.userId.eq(userId)
+                        .and(basketProductInfo.optionItemId.in(optionItemIds)))
+                .execute();
+        em.flush();
+        em.clear();
     }
 
 //    public List<BasketProductDtoV2> selectBasketProductInfos(Integer userId) {

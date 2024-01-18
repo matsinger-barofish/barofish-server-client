@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.matsinger.barofishserver.domain.category.domain.Category;
 import com.matsinger.barofishserver.domain.product.dto.ProductListDto;
 import com.matsinger.barofishserver.domain.review.domain.Review;
+import com.matsinger.barofishserver.domain.store.domain.ConditionalObject;
 import com.matsinger.barofishserver.domain.store.domain.Store;
 import com.matsinger.barofishserver.global.exception.BusinessException;
 import jakarta.persistence.*;
@@ -23,7 +24,7 @@ import java.util.Objects;
 @Setter
 @Builder
 @Table(name = "product", schema = "barofish_dev", catalog = "")
-public class Product {
+public class Product implements ConditionalObject {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Id
     @Column(name = "id", nullable = false)
@@ -135,10 +136,6 @@ public class Product {
 
     public void setPointRate(Float pointRate) {
         this.pointRate = pointRate / 100;
-    }
-
-    public int getId() {
-        return id;
     }
 
     public void setId(int id) {
@@ -317,7 +314,28 @@ public class Product {
         }
     }
 
-    public boolean meetConditions(int totalPrice) {
+    public int getMaxDeliveryFee(int deliverFee) {
+        if (deliverFee > this.deliverFee) {
+            return deliverFee;
+        }
+        return this.deliverFee;
+    }
+
+    public boolean isSConditional() {
+        return this.deliverFeeType.equals(ProductDeliverFeeType.S_CONDITIONAL);
+    }
+
+    @Override
+    public Boolean meetConditions(int totalPrice) {
         return totalPrice >= this.minOrderPrice;
+    }
+
+    @Override
+    public Integer getId() {
+        return id;
+    }
+
+    public boolean needTaxation() {
+        return this.needTaxation == true;
     }
 }
