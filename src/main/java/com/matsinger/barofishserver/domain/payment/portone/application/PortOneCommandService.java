@@ -84,6 +84,12 @@ public class PortOneCommandService {
 
         if (payments.getPayMethod().equals("vbank")) {
             sendVbankDataWithSms(request, payments);
+
+            List<OrderProductInfo> orderProductInfos = orderProductInfoQueryService.findAllByOrderId(order.getId());
+            UserInfo userInfo = userInfoQueryService.findByUserId(order.getUserId());
+            basketQueryRepository.deleteAllBasketByUserIdAndOptionIds(
+                    userInfo.getUserId(),
+                    orderProductInfos.stream().map(v -> v.getOptionItemId()).toList());
         }
     }
 
