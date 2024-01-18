@@ -27,6 +27,7 @@ public class DifficultDeliverAddressQueryService {
     public boolean canDeliver(Integer productId,
                               OrderDeliverPlace orderDeliverPlace) {
         List<String> difficultDeliveryBcodes = getDifficultDeliveryBcodes(productId);
+        log.info("bcode = {}", orderDeliverPlace.getBcode());
         if (orderDeliverPlace.getBcode() == null) {
             return true;
         }
