@@ -48,4 +48,3 @@ src/main/resources/sql/
 build/generated/
 /src/main/resources/log_xml/
 logs/
-src/main/resources/logback-spring.xml

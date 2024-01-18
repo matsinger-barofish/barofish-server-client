@@ -66,6 +66,8 @@ public class QOrderProductInfo extends EntityPathBase<OrderProductInfo> {
 
     public final EnumPath<OrderProductState> state = createEnum("state", OrderProductState.class);
 
+    public final NumberPath<Integer> storeId = createNumber("storeId", Integer.class);
+
     public final NumberPath<Integer> taxFreeAmount = createNumber("taxFreeAmount", Integer.class);
 
     public QOrderProductInfo(String variable) {
