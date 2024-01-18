@@ -305,6 +305,9 @@ public class StoreController {
                                                              @RequestPart(value = "keyword") String keyword,
                                                              @RequestPart(value = "visitNote", required = false) String visitNote,
                                                              @RequestPart(value = "refundDeliverFee", required = false) Integer refundDeliverFee,
+                                                             @RequestPart(value = "isConditional", required = true) Boolean isConditional,
+                                                             @RequestPart(value = "minStorePrice", required = true) Integer minStorePrice,
+                                                             @RequestPart(value = "deliveryFee", required = true) Integer deliveryFee,
                                                              @RequestPart(value = "oneLineDescription", required = false) String oneLineDescription,
                                                              @RequestPart(value = "deliverCompany", required = false) String deliverCompany,
                                                              @RequestPart(value = "additionalData") AddStoreAdditionalReq data,
@@ -313,7 +316,7 @@ public class StoreController {
                                                              @RequestPart(value = "bankAccountCopy") MultipartFile bankAccountCopy) {
         CustomResponse<StoreDto> res = new CustomResponse<>();
 
-                TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
+        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
 
         Integer adminId = tokenInfo.getId();
         loginId = utils.validateString(loginId, 50L, "로그인 아이디");
@@ -358,6 +361,11 @@ public class StoreController {
                         mosRegistrationNumber).businessAddress(businessAddress).postalCode(postalCode).lotNumberAddress(
                         lotNumberAddress).streetNameAddress(streetNameAddress).addressDetail(addressDetail).tel(tel).email(
                         email).faxNumber(faxNumber).deliverCompany(deliverCompany).isReliable(false).build();
+
+        storeInfoData.setIsConditional(isConditional);
+        storeInfoData.setMinStorePrice(minStorePrice);
+        storeInfoData.setDeliveryFee(deliveryFee);
+
         Store store = storeService.addStore(storeData);
         String
                 backgroundImageUrl =
@@ -379,6 +387,7 @@ public class StoreController {
         String
                 bankAccountCopyUrl =
                 s3.upload(bankAccountCopy, new ArrayList<>(Arrays.asList("store", String.valueOf(store.getId()))));
+
         storeInfoData.setStoreId(store.getId());
         storeInfoData.setVisitNote(visitNoteUrl);
         storeInfoData.setbackgroundImage(backgroundImageUrl);
@@ -449,6 +458,9 @@ public class StoreController {
                                                                     @RequestPart(value = "visitNote", required = false) String visitNote,
                                                                     @RequestPart(value = "deliverCompany", required = false) String deliverCompany,
                                                                     @RequestPart(value = "refundDeliverFee", required = false) Integer refundDeliverFee,
+                                                                    @RequestPart(value = "isConditional", required = true) Boolean isConditional,
+                                                                    @RequestPart(value = "minStorePrice", required = true) Integer minStorePrice,
+                                                                    @RequestPart(value = "deliveryFee", required = true) Integer deliveryFee,
                                                                     @RequestPart(value = "oneLineDescription", required = false) String oneLineDescription,
                                                                     @RequestPart(value = "additionalData", required = false) AddStoreAdditionalReq data,
                                                                     @RequestPart(value = "mosRegistration", required = false) MultipartFile mosRegistration,
@@ -456,7 +468,7 @@ public class StoreController {
                                                                     @RequestPart(value = "bankAccountCopy", required = false) MultipartFile bankAccountCopy) {
         CustomResponse<StoreDto> res = new CustomResponse<>();
 
-                TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN, TokenAuthType.PARTNER), auth);
+        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN, TokenAuthType.PARTNER), auth);
 
         if (tokenInfo.getType().equals(TokenAuthType.PARTNER)) {
             id = tokenInfo.getId();
@@ -594,6 +606,11 @@ public class StoreController {
                     s3.upload(bankAccountCopy, new ArrayList<>(Arrays.asList("store", String.valueOf(id))));
             storeInfo.setBankAccountCopy(bankAccountCopyUrl);
         }
+
+        storeInfo.setIsConditional(isConditional);
+        storeInfo.setMinStorePrice(minStorePrice);
+        storeInfo.setDeliveryFee(deliveryFee);
+
         StoreInfo result = storeService.updateStoreInfo(storeInfo);
         Store store = storeService.selectStore(result.getStoreId());
         if (isAdmin) {

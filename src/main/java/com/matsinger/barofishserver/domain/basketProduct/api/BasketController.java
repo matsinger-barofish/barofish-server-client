@@ -47,7 +47,7 @@ public class BasketController {
         CustomResponse<List<BasketProductDto>> res = new CustomResponse<>();
 
         Integer userId = null;
-                TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth);
+        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth);
 
         List<BasketProductDto> dtos = basketQueryService.selectBasketList(tokenInfo.getId());
         res.setData(Optional.ofNullable(dtos));
@@ -79,8 +79,7 @@ public class BasketController {
                                                              @RequestPart(value = "data") AddBasketReq data) {
         CustomResponse<Boolean> res = new CustomResponse<>();
 
-        Integer userId = null;
-                TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth);
+        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth);
 
         if (data.getProductId() == null) throw new BusinessException("상품 아이디를 입력하세요.");
         if (data.getOptions() == null || data.getOptions().size() == 0)
@@ -118,7 +117,7 @@ public class BasketController {
                         0 ? optionRepository.findAllByOrderProductId(info.getId()).get(0) : null;
         OptionItemDto
                 optionDto =
-                option != null ? productService.selectOptionItem(option.getOptionId()).convert2Dto() : null;
+                option != null ? productService.selectOptionItem(option.getOptionId()).convert2Dto(product) : null;
         BasketProductDto
                 dto =
                 BasketProductDto.builder().product(product.convert2ListDto()).amount(amount).deliveryFee(product.getDeliverFee()).deliverFeeType(

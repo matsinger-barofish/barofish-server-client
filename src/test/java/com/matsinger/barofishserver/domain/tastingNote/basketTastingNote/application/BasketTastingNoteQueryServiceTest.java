@@ -1,6 +1,7 @@
 package com.matsinger.barofishserver.domain.tastingNote.basketTastingNote.application;
 
-import com.matsinger.barofishserver.domain.tastingNote.basketTastingNote.repository.BasketTastingNoteRepository;
+import com.matsinger.barofishserver.domain.basketProduct.application.BasketQueryService;
+import com.matsinger.barofishserver.domain.basketProduct.repository.BasketQueryRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,11 +12,12 @@ import org.springframework.test.context.ActiveProfiles;
 @ActiveProfiles("local")
 class BasketTastingNoteQueryServiceTest {
 
-    @Autowired private BasketTastingNoteRepository basketTastingNoteRepository;
+    @Autowired private BasketQueryRepository basketQueryRepository;
+    @Autowired private BasketQueryService basketQueryService;
 
     @DisplayName("test")
     @Test
     void test() {
-        basketTastingNoteRepository.existsByUserIdAndProduct_Id(10000, 10000);
+         basketQueryService.findAllByUserIdAndProductId(10, 10);
     }
 }

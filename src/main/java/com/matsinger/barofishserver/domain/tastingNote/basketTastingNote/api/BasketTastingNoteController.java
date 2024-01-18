@@ -6,7 +6,7 @@ import com.matsinger.barofishserver.domain.tastingNote.basketTastingNote.dto.Bas
 import com.matsinger.barofishserver.domain.tastingNote.basketTastingNote.dto.BasketTastingNoteDeleteReq;
 import com.matsinger.barofishserver.domain.tastingNote.basketTastingNote.dto.TastingNoteCompareBasketProductDto;
 import com.matsinger.barofishserver.domain.user.application.UserQueryService;
-import com.matsinger.barofishserver.global.error.ErrorCode;
+import com.matsinger.barofishserver.global.exception.ErrorCode;
 import com.matsinger.barofishserver.jwt.JwtService;
 import com.matsinger.barofishserver.jwt.TokenAuthType;
 import com.matsinger.barofishserver.jwt.TokenInfo;

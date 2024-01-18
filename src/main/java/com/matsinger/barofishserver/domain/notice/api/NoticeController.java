@@ -98,7 +98,7 @@ public class NoticeController {
         String content = "";
         Notice
                 notice =
-                Notice.builder().content(content).title(title).createdAt(utils.now()).type(data.getType()).build();
+                Notice.builder().content(content).title(title).createdAt(utils.now()).type(data.getType()).isRepresentative(false).build();
         notice.setContent(s3.uploadEditorStringToS3(data.getContent(),
                 new ArrayList<>(Arrays.asList("notice", String.valueOf(notice.getId())))));
         notice = noticeCommandService.addNotice(notice);
@@ -109,25 +109,12 @@ public class NoticeController {
     @PostMapping("/update/{id}")
     public ResponseEntity<CustomResponse<Notice>> updateNotice(@RequestHeader(value = "Authorization") Optional<String> auth,
                                                                @PathVariable("id") Integer noticeId,
-                                                               @RequestPart(value = "data") NoticeAddReq data) throws Exception {
+                                                               @RequestPart(value = "data") NoticeAddReq data) {
         CustomResponse<Notice> res = new CustomResponse<>();
 
-                jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth);
+        jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
 
-        Notice notice = noticeQueryService.selectNotice(noticeId);
-        if (data.getTitle() != null) {
-            String title = utils.validateString(data.getTitle(), 200L, "제목");
-            notice.setTitle(title);
-        }
-        if (data.getContent() != null) {
-            String
-                    content =
-                    s3.uploadEditorStringToS3(data.getContent(),
-                            new ArrayList<>(Arrays.asList("notice", String.valueOf(notice.getId()))));
-            notice.setContent(content);
-        }
-        notice.setUpdateAt(utils.now());
-        noticeCommandService.updateNotice(notice);
+        Notice notice = noticeCommandService.updateNotice(noticeId, data);
         res.setData(Optional.of(notice));
         return ResponseEntity.ok(res);
     }

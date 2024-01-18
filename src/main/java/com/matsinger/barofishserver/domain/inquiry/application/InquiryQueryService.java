@@ -28,7 +28,7 @@ public class InquiryQueryService {
         return inquiryRepository.findAll(spec, pageRequest);
     }
 
-    public org.springframework.data.domain.Page<Inquiry> selectStoreInquiryList(Integer storeId,
+    public Page<Inquiry> selectStoreInquiryList(Integer storeId,
                                                                                 PageRequest pageRequest) {
         return inquiryRepository.findAllByProduct_StoreId(storeId, pageRequest);
     }

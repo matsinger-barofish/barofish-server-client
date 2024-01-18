@@ -356,25 +356,37 @@ public class ProductService {
         StoreInfo storeInfo = storeService.selectStoreInfo(product.getStoreId());
         Integer reviewCount = reviewQueryService.countReviewWithoutDeleted(product.getId(), false);
         OptionItem optionItem = selectOptionItem(product.getRepresentOptionItemId());
-        return ProductListDto.builder().id(product.getId()).state(product.getState()).image(product.getImages().substring(
-                1,
-                product.getImages().length() -
-                        1).split(",")[0]).originPrice(optionItem.getOriginPrice()).isNeedTaxation(product.getNeedTaxation()).discountPrice(
-                optionItem.getDiscountPrice()).title(product.getTitle()).reviewCount(reviewCount).storeId(storeInfo.getStoreId()).storeName(
-                storeInfo.getName()).parentCategoryId(product.getCategory() !=
-                null ? product.getCategory().getCategoryId() : null).filterValues(productFilterService.selectProductFilterValueListWithProductId(
-                product.getId())).minOrderPrice(product.getMinOrderPrice()).deliverFeeType(product.getDeliverFeeType()).storeImage(
-                storeInfo.getProfileImage()).build();
+        return ProductListDto.builder()
+                .id(product.getId())
+                .state(product.getState())
+                .image(product.getImages().substring(1, product.getImages().length() - 1).split(",")[0])
+                .originPrice(optionItem.getOriginPrice())
+                .isNeedTaxation(product.getNeedTaxation())
+                .discountPrice(optionItem.getDiscountPrice())
+                .title(product.getTitle())
+                .reviewCount(reviewCount)
+                .storeId(storeInfo.getStoreId())
+                .storeName(storeInfo.getName())
+                .parentCategoryId(product.getCategory() != null ? product.getCategory().getCategoryId() : null)
+                .filterValues(productFilterService.selectProductFilterValueListWithProductId(product.getId()))
+                .deliverFeeType(product.getDeliverFeeType())
+                .minOrderPrice(product.getMinOrderPrice())
+                .productDeliveryFee(product.getDeliverFee())
+                .isConditional(storeInfo.isConditional())
+                .minStorePrice(storeInfo.getMinStorePrice())
+                .storeDeliverFee(storeInfo.getDeliveryFee())
+                .storeImage(storeInfo.getProfileImage())
+                .build();
     }
 
     public SimpleProductDto convert2SimpleDto(Product product, Integer userId) {
-        SimpleProductDto productDto = product.convert2SimpleDto();
         List<Inquiry> inquiries = inquiryQueryService.selectInquiryListWithProductId(product.getId());
         List<Review>
                 reviews =
                 reviewQueryService.selectReviewListByProduct(product.getId(), PageRequest.of(0, 50)).getContent();
 
         StoreInfo store = storeService.selectStoreInfo(product.getStoreId());
+        SimpleProductDto productDto = product.convert2SimpleDto();
         List<Product> comparedProducts = selectComparedProductList(product.getId());
         ReviewTotalStatistic
                 reviewStatistics =
@@ -550,7 +562,7 @@ public class ProductService {
                 optionItems =
                 optionItemRepository.findAllByOptionIdAndState(option.getId(), OptionItemState.ACTIVE);
         List<OptionItemDto> itemDtos = optionItems.stream().map(v -> {
-            OptionItemDto optionItemDto = v.convert2Dto();
+            OptionItemDto optionItemDto = v.convert2Dto(product);
             optionItemDto.setDeliverBoxPerAmount(product.getDeliverBoxPerAmount());
             optionItemDto.setPointRate(product.getPointRate());
             return optionItemDto;

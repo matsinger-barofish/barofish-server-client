@@ -10,7 +10,6 @@ import com.matsinger.barofishserver.domain.review.repository.ReviewRepository;
 import com.matsinger.barofishserver.domain.review.repository.ReviewRepositoryImpl;
 import com.matsinger.barofishserver.domain.store.domain.*;
 import com.matsinger.barofishserver.domain.store.dto.SimpleStore;
-import com.matsinger.barofishserver.domain.store.dto.StoreAdditionalDto;
 import com.matsinger.barofishserver.domain.store.dto.StoreDto;
 import com.matsinger.barofishserver.domain.store.repository.StoreInfoRepository;
 import com.matsinger.barofishserver.domain.store.repository.StoreRepository;
@@ -42,21 +41,7 @@ public class StoreService {
 
     public StoreDto convert2Dto(Store store, Boolean isUser) {
         StoreInfo storeInfo = selectStoreInfo(store.getId());
-        StoreAdditionalDto
-                additionalDto =
-                isUser ? null : StoreAdditionalDto.builder().settlementRate(storeInfo.getSettlementRate()).bankName(
-                        storeInfo.getBankName()).bankHolder(storeInfo.getBankHolder()).bankAccount(storeInfo.getBankAccount()).representativeName(
-                        storeInfo.getRepresentativeName()).companyId(storeInfo.getCompanyId()).businessType(storeInfo.getBusinessType()).mosRegistrationNumber(
-                        storeInfo.getMosRegistrationNumber()).businessAddress(storeInfo.getBusinessAddress()).postalCode(
-                        storeInfo.getPostalCode()).lotNumberAddress(storeInfo.getLotNumberAddress()).streetNameAddress(
-                        storeInfo.getStreetNameAddress()).addressDetail(storeInfo.getAddressDetail()).tel(storeInfo.getTel()).email(
-                        storeInfo.getEmail()).faxNumber(storeInfo.getFaxNumber()).mosRegistration(storeInfo.getMosRegistration()).businessRegistration(
-                        storeInfo.getBusinessRegistration()).bankAccountCopy(storeInfo.getBankAccountCopy()).build();
-        return StoreDto.builder().id(store.getId()).state(store.getState()).loginId(store.getLoginId()).joinAt(store.getJoinAt()).backgroundImage(
-                storeInfo.getbackgroundImage()).profileImage(storeInfo.getProfileImage()).name(storeInfo.getName()).isReliable(
-                storeInfo.getIsReliable()).location(storeInfo.getLocation()).visitNote(storeInfo.getVisitNote()).keyword(
-                storeInfo.getKeyword().split(",")).oneLineDescription(storeInfo.getOneLineDescription()).refundDeliverFee(
-                storeInfo.getRefundDeliverFee()).additionalData(additionalDto).deliverCompany(storeInfo.getDeliverCompany()).build();
+        return storeInfo.toStoreDto(store, isUser);
     }
 
     public SimpleStore convert2SimpleDto(StoreInfo storeInfo, Integer userId) {
@@ -105,6 +90,9 @@ public class StoreService {
                         .reviewCount(reviewCount)
                         .productCount(productCount)
                         .deliverCompany(storeInfo.getDeliverCompany())
+                        .minStorePrice(storeInfo.getMinStorePrice())
+                        .deliveryFee(storeInfo.getDeliveryFee())
+                        .isConditional(storeInfo.getIsConditional())
                         .build();
         return simpleStore;
     }

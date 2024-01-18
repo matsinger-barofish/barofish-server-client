@@ -13,6 +13,7 @@ import com.matsinger.barofishserver.domain.product.difficultDeliverAddress.appli
 import com.matsinger.barofishserver.domain.product.domain.ProductSortBy;
 import com.matsinger.barofishserver.domain.product.dto.ExpectedArrivalDateResponse;
 import com.matsinger.barofishserver.domain.product.dto.ProductListDto;
+import com.matsinger.barofishserver.domain.product.dto.ProductPhotiReviewDto;
 import com.matsinger.barofishserver.domain.product.productfilter.application.ProductFilterService;
 import com.matsinger.barofishserver.domain.search.application.SearchKeywordQueryService;
 import com.matsinger.barofishserver.domain.searchFilter.application.SearchFilterQueryService;
@@ -30,6 +31,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
@@ -59,7 +61,7 @@ public class ProductControllerV2 {
     private final S3Uploader s3;
 
     @GetMapping("/list")
-    public ResponseEntity<CustomResponse<Object>> selectProductListByUserV2(@RequestHeader(value = "Authorization", required = false) Optional<String> auth,
+    public ResponseEntity<CustomResponse<Page<ProductListDto>>> selectProductListByUserV2(@RequestHeader(value = "Authorization", required = false) Optional<String> auth,
                                                                                           @RequestParam(value = "page", defaultValue = "1") Integer page,
                                                                                           @RequestParam(value = "take", defaultValue = "10") Integer take,
                                                                                           @RequestParam(value = "sortby", defaultValue = "RECOMMEND", required = false) ProductSortBy sortBy,
@@ -69,12 +71,12 @@ public class ProductControllerV2 {
                                                                                           @RequestParam(value = "keyword", required = false, defaultValue = "") String keyword,
                                                                                           @RequestParam(value = "storeId", required = false) Integer storeId) {
 
-        CustomResponse<Object> res = new CustomResponse<>();
+        CustomResponse<Page<ProductListDto>> res = new CustomResponse<>();
 
         
         TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ALLOW, TokenAuthType.USER), auth);
 
-        Integer userId = tokenInfo.getId();
+        Integer userId = tokenInfo != null ? tokenInfo.getId() : null;
 
         PageRequest pageRequest = PageRequest.of(page - 1, take);
         Page<ProductListDto> result = productQueryService.getPagedProducts(
@@ -92,7 +94,7 @@ public class ProductControllerV2 {
     }
 
     @GetMapping("/list/count")
-    public ResponseEntity<CustomResponse<Integer>> selectProductListByUserV2(@RequestHeader(value = "Authorization", required = false) Optional<String> auth,
+    public ResponseEntity<CustomResponse<Integer>> selectProductCountByUserV2(@RequestHeader(value = "Authorization", required = false) Optional<String> auth,
                                                                                         @RequestParam(value = "categoryIds", required = false) String categoryIds,
                                                                                         @RequestParam(value = "filterFieldIds", required = false) String filterFieldIds,
                                                                                         @RequestParam(value = "curationId", required = false) Integer curationId,
@@ -126,5 +128,16 @@ public class ProductControllerV2 {
 
         res.setData(Optional.of(expectedArrivalDate));
         return ResponseEntity.ok(res);
+    }
+
+    @GetMapping("/{id}/review-pictures")
+    public ResponseEntity<CustomResponse<List<ProductPhotiReviewDto>>> getProductReviewPhotos(@PathVariable(value = "id") Integer productId) {
+        CustomResponse<List<ProductPhotiReviewDto>> response = new CustomResponse<>();
+
+        List<ProductPhotiReviewDto> productPhotiReviewDtos = productQueryService.getProductPictures(productId);
+        response.setIsSuccess(true);
+        response.setData(Optional.of(productPhotiReviewDtos));
+
+        return ResponseEntity.ok(response);
     }
 }

@@ -1,6 +1,9 @@
 package com.matsinger.barofishserver.domain.store.domain;
 
+import com.matsinger.barofishserver.domain.basketProduct.dto.BasketStoreDto;
 import com.matsinger.barofishserver.domain.store.dto.SimpleStore;
+import com.matsinger.barofishserver.domain.store.dto.StoreAdditionalDto;
+import com.matsinger.barofishserver.domain.store.dto.StoreDto;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -55,21 +58,17 @@ public class StoreInfo {
     @Column(name = "one_line_description", nullable = false)
     private String oneLineDescription;
 
-    //    @Basic
-//    @Enumerated(EnumType.STRING)
-//    @ColumnDefault("FREE")
-//    @Column(name = "deliver_fee_type", nullable = false)
-//    private StoreDeliverFeeType deliverFeeType;
-//    @Basic
-//    @ColumnDefault("0")
-//    @Column(name = "deliver_fee", nullable = false)
-//    private Integer deliverFee;
-//    @Basic
-//    @Column(name = "min_order_price", nullable = true)
-//    private Integer minOrderPrice;
     @Basic
     @Column(name = "refund_deliver_fee", nullable = true)
     private Integer refundDeliverFee;
+
+    @Column(name = "is_conditional", nullable = false)
+    private Boolean isConditional;
+    @Basic
+    @Column(name = "min_store_price", nullable = true)
+    private Integer minStorePrice;
+    @Column(name = "delivery_fee")
+    private Integer deliveryFee;
     @Basic
     @Column(name = "settlement_rate", nullable = true)
     Float settlementRate;
@@ -180,6 +179,37 @@ public class StoreInfo {
                 this.refundDeliverFee).oneLineDescription(this.oneLineDescription).build();
     }
 
+    public StoreAdditionalDto toAdditionalDto(Boolean isUser) {
+        if (isUser) {
+            return null;
+        }
+
+        return StoreAdditionalDto.builder()
+                .settlementRate(settlementRate)
+                .bankName(bankName)
+                .bankHolder(bankHolder)
+                .bankAccount(bankAccount)
+                .representativeName(representativeName)
+                .companyId(companyId)
+                .businessType(businessType)
+                .mosRegistrationNumber(mosRegistrationNumber)
+                .businessAddress(businessAddress)
+                .postalCode(postalCode)
+                .lotNumberAddress(lotNumberAddress)
+                .streetNameAddress(streetNameAddress)
+                .addressDetail(addressDetail)
+                .tel(tel)
+                .email(email)
+                .faxNumber(faxNumber)
+                .mosRegistration(mosRegistration)
+                .businessRegistration(businessRegistration)
+                .bankAccountCopy(bankAccountCopy)
+                .isConditional(isConditional)
+                .minOrderPrice(minStorePrice)
+                .deliveryFee(deliveryFee)
+                .build();
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -197,6 +227,49 @@ public class StoreInfo {
     @Override
     public int hashCode() {
         return Objects.hash(backgroundImage, profileImage, name, location, keyword);
+    }
+
+    public StoreDto toStoreDto(Store store, Boolean isUser) {
+        return StoreDto.builder()
+                .id(store.getId())
+                .state(store.getState())
+                .loginId(store.getLoginId())
+                .joinAt(store.getJoinAt())
+                .backgroundImage(backgroundImage)
+                .profileImage(profileImage)
+                .name(name)
+                .isReliable(isReliable)
+                .location(location)
+                .visitNote(visitNote)
+                .keyword(keyword.split(","))
+                .oneLineDescription(oneLineDescription)
+                .refundDeliverFee(refundDeliverFee)
+                .additionalData(toAdditionalDto(isUser))
+                .deliverCompany(deliverCompany)
+                .isConditional(isConditional)
+                .minOrderPrice(minStorePrice)
+                .deliveryFee(deliveryFee)
+                .build();
+    }
+
+    public boolean isConditional() {
+        return isConditional;
+    }
+
+    public boolean meetConditions(int totalStoreProductPrice) {
+        return totalStoreProductPrice >= this.minStorePrice;
+    }
+
+    public BasketStoreDto toBasketStoreDto() {
+        return BasketStoreDto.builder()
+                .storeId(storeId)
+                .name(name)
+                .backgroundImage(backgroundImage)
+                .profileImage(profileImage)
+                .isConditional(isConditional)
+                .minStorePrice(minStorePrice)
+                .deliveryFee(deliveryFee)
+                .build();
     }
 }
 

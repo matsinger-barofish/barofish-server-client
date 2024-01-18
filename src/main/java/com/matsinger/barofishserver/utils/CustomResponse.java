@@ -1,6 +1,6 @@
 package com.matsinger.barofishserver.utils;
 
-import com.matsinger.barofishserver.global.error.ErrorCode;
+import com.matsinger.barofishserver.global.exception.ErrorCode;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.context.annotation.Configuration;

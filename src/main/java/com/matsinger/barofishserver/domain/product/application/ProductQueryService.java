@@ -1,25 +1,17 @@
 package com.matsinger.barofishserver.domain.product.application;
 
-import com.matsinger.barofishserver.domain.compare.filter.repository.CompareFilterRepository;
-import com.matsinger.barofishserver.domain.compare.repository.SaveProductRepository;
-import com.matsinger.barofishserver.domain.inquiry.repository.InquiryRepository;
 import com.matsinger.barofishserver.domain.product.domain.Product;
 import com.matsinger.barofishserver.domain.product.domain.ProductSortBy;
 import com.matsinger.barofishserver.domain.product.dto.ExpectedArrivalDateResponse;
 import com.matsinger.barofishserver.domain.product.dto.ProductListDto;
-import com.matsinger.barofishserver.domain.product.optionitem.repository.OptionItemRepository;
-import com.matsinger.barofishserver.domain.product.productfilter.repository.ProductFilterRepository;
+import com.matsinger.barofishserver.domain.product.dto.ProductPhotiReviewDto;
 import com.matsinger.barofishserver.domain.product.repository.ProductQueryRepository;
 import com.matsinger.barofishserver.domain.product.repository.ProductRepository;
-import com.matsinger.barofishserver.domain.product.weeksdate.application.WeeksDateQueryService;
 import com.matsinger.barofishserver.domain.product.weeksdate.domain.WeeksDate;
 import com.matsinger.barofishserver.domain.product.weeksdate.repository.WeeksDateRepository;
 import com.matsinger.barofishserver.domain.review.application.ReviewQueryService;
-import com.matsinger.barofishserver.domain.review.repository.ReviewRepository;
-import com.matsinger.barofishserver.domain.searchFilter.repository.ProductSearchFilterMapRepository;
-import com.matsinger.barofishserver.domain.searchFilter.repository.SearchFilterFieldRepository;
-import com.matsinger.barofishserver.domain.store.application.StoreService;
-import com.matsinger.barofishserver.domain.store.repository.StoreInfoRepository;
+import com.matsinger.barofishserver.domain.review.dto.ProductReviewPictureInquiryDto;
+import com.matsinger.barofishserver.domain.review.repository.ReviewQueryRepository;
 import com.matsinger.barofishserver.domain.tastingNote.basketTastingNote.repository.BasketTastingNoteRepository;
 import com.matsinger.barofishserver.domain.user.application.UserQueryService;
 import com.matsinger.barofishserver.domain.user.domain.User;
@@ -35,6 +27,8 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 @Service
@@ -43,26 +37,16 @@ import java.util.List;
 public class ProductQueryService {
 
     private final ProductRepository productRepository;
-    private final ReviewRepository reviewRepository;
-    private final OptionItemRepository optionItemRepository;
-    private final ProductFilterRepository productFilterRepository;
-    private final CompareFilterRepository compareFilterRepository;
-    private final StoreInfoRepository storeInfoRepository;
-    private final ProductSearchFilterMapRepository productSearchFilterMapRepository;
-    private final SearchFilterFieldRepository searchFilterFieldRepository;
-    private final SaveProductRepository saveProductRepository;
-    private final InquiryRepository inquiryRepository;
-    private final StoreService storeService;
-    private final ReviewQueryService reviewQueryService;
-    private final WeeksDateQueryService weekDateQueryService;
     private final WeeksDateRepository weeksDateRepository;
     private final ProductQueryRepository productQueryRepository;
     private final UserQueryService userQueryService;
     private final BasketTastingNoteRepository basketTastingNoteRepository;
+    private final ReviewQueryRepository reviewQueryRepository;
+    private final ReviewQueryService reviewQueryService;
 
     public Product findById(int productId) {
         return productRepository.findById(productId)
-                                .orElseThrow(() -> new BusinessException("상품 정보를 찾을 수 없습니다."));
+                .orElseThrow(() -> new BusinessException("상품 정보를 찾을 수 없습니다."));
     }
 
     public Page<ProductListDto> getPagedProducts(
@@ -84,15 +68,19 @@ public class ProductQueryService {
                 keyword,
                 storeId);
 
-        User findedUser = userQueryService.findById(userId);
-        List<Integer> userBasketProductIds = basketTastingNoteRepository.findAllByUserId(findedUser.getId())
-                .stream().map(v -> v.getProductId()).toList();
+        List<Integer> userBasketProductIds = new ArrayList<>();
+        if (userId != null) {
+            User findedUser = userQueryService.findById(userId);
+            userBasketProductIds = basketTastingNoteRepository.findAllByUserId(findedUser.getId())
+                    .stream().map(v -> v.getProductId()).toList();
+        }
 
         for (ProductListDto productDto : productDtos) {
             if (userBasketProductIds.contains(productDto.getProductId())) {
                 productDto.setIsLike(true);
             }
             productDto.convertImageUrlsToFirstUrl();
+            productDto.setReviewCount(reviewQueryService.countReviewWithoutDeleted(productDto.getId(), false));
         }
         return productDtos;
     }
@@ -112,7 +100,6 @@ public class ProductQueryService {
                 storeId
         );
     }
-
 
     public ExpectedArrivalDateResponse getExpectedArrivalDate(LocalDateTime now, Integer productId) {
         Product findProduct = findById(productId);
@@ -139,7 +126,7 @@ public class ProductQueryService {
         boolean isNowBeforeForwardingTime = now.isBefore(forwardingTime);
 
         int expectedArrivalDate = productExpectedArrivalDate;
-        
+
         boolean isTodayHoliday = weeksDatesWithHoliday.get(0).isDeliveryCompanyHoliday();
 
         // 오늘이 휴일이 아니면
@@ -218,7 +205,9 @@ public class ProductQueryService {
         }
 
         for (ProductListDto productDto : productDtos) {
+            // 여러개 이미지 중 하나로 세팅
             productDto.convertImageUrlsToFirstUrl();
+            productDto.setReviewCount(reviewQueryService.countReviewWithoutDeleted(productDto.getId(), false));
         }
 
         return productDtos;
@@ -245,7 +234,57 @@ public class ProductQueryService {
                     null, null
             );
         }
+
+
         throw new BusinessException("탑바를 찾을 수 없습니다.");
     }
 
+    public List<ProductPhotiReviewDto> getProductPictures(Integer productId) {
+        validateProductExists(productId);
+
+        List<ProductReviewPictureInquiryDto> reviews = reviewQueryRepository.getReviewsWhichPictureExists(productId);
+        if (reviews.contains(null)) {
+            return null;
+        }
+
+        List<ProductPhotiReviewDto> response = new ArrayList<>();
+        for (ProductReviewPictureInquiryDto review : reviews) {
+            String reviewPictureUrls = review.getReviewPictureUrls();
+
+            String removedBrackets = removeBrackets(reviewPictureUrls);
+            List<String> reviewImages =
+                    removedBrackets != null
+                            ? Arrays.stream(removedBrackets.split(", ")).toList()
+                            : null;
+
+            response.add(ProductPhotiReviewDto.builder()
+                    .reviewId(review.getReviewId())
+                    .imageUrls(reviewImages)
+                    .imageCount(reviewImages.size())
+                    .build()
+            );
+        }
+        return response;
+    }
+
+    private String removeBrackets(String reviewPictureUrls) {
+        if (reviewPictureUrls != null) {
+            StringBuilder sb = new StringBuilder();
+            for (char c : reviewPictureUrls.toCharArray()) {
+                if (c == '[' || c == ']') {
+                    continue;
+                }
+                sb.append(c);
+            }
+            return sb.toString();
+        }
+        return null;
+    }
+
+    private void validateProductExists(Integer productId) {
+        boolean isProductExists = productRepository.existsById(productId);
+        if (!isProductExists) {
+            throw new BusinessException("상품이 존재하지 않습니다.");
+        }
+    }
 }

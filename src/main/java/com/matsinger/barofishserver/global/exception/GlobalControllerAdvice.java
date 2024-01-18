@@ -1,128 +1,49 @@
 package com.matsinger.barofishserver.global.exception;
 
-import com.matsinger.barofishserver.global.error.ErrorCode;
 import com.matsinger.barofishserver.utils.CustomResponse;
+import com.matsinger.barofishserver.utils.LoggingUtils;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.core.MethodParameter;
-import org.springframework.core.annotation.Order;
-import org.springframework.http.HttpInputMessage;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-import org.springframework.web.servlet.mvc.method.annotation.RequestBodyAdvice;
+import org.springframework.web.servlet.HandlerInterceptor;
 
 import java.io.IOException;
-import java.lang.reflect.Type;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 
 @Slf4j
-@Order(2)
 @RestControllerAdvice(basePackages = {"com.matsinger.barofishserver"})
 @RequiredArgsConstructor
-public class GlobalControllerAdvice implements RequestBodyAdvice {
+public class GlobalControllerAdvice implements HandlerInterceptor {
 
-    private final Logger logger = LoggerFactory.getLogger(this.getClass().getSimpleName());
-
-    private ThreadLocal<Boolean> afterBodyReadExecuted = ThreadLocal.withInitial(() -> false);
+    private final LoggingUtils loggingUtils;
 
     @ExceptionHandler(value = {RuntimeException.class})
-    public ResponseEntity<CustomResponse<Object>> catchException(
+    public ResponseEntity<CustomResponse<Object>> handleRuntimeException(
             HttpServletRequest request,
-            Exception e) {
+            RuntimeException e) throws IOException {
 
-        printExceptionInfo(request, e);
+        loggingUtils.doLog(request, e, "error");
 
         CustomResponse customResponse = new CustomResponse();
         customResponse.setIsSuccess(false);
-        customResponse.setCode(ErrorCode.DEFAULT_ERROR);
-        return ResponseEntity.ok(customResponse);
+        customResponse.setErrorMsg("예기치 못한 오류가 발생했습니다." + "\n" + "불편을 드려 죄송합니다.");
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(customResponse);
     }
 
     @ExceptionHandler(value = {BusinessException.class})
-    public ResponseEntity<CustomResponse<Object>> catchBusinessException(
+    public ResponseEntity<CustomResponse<Object>> handleBusinessException(
             HttpServletRequest request,
-            Exception e) {
+            RuntimeException e) throws IOException {
 
-        printExceptionInfo(request, e);
+        loggingUtils.doLog(request, e, "warn");
 
         CustomResponse customResponse = new CustomResponse();
         customResponse.setIsSuccess(false);
-
         customResponse.setErrorMsg(e.getMessage());
-        customResponse.setCode("1000");
-
-        return ResponseEntity.ok(customResponse);
-    }
-
-    private void printExceptionInfo(HttpServletRequest request, Exception e) {
-        if (!afterBodyReadExecuted.get()) {
-            logger.warn("### Exception Start ###");
-            logger.warn(DateTimeFormatter.ofPattern("yyyy-MM-dd hh:mm:ss").format(LocalDateTime.now()));
-        }
-
-        logger.warn("url = {}", request.getRequestURI());
-        logger.warn("method = {}", request.getMethod());
-        logger.warn("queryString = {}", request.getQueryString());
-        request.getHeaderNames().asIterator().forEachRemaining(
-                header -> logger.warn("header = {}", request.getHeader(header))
-        );
-        request.getParameterNames().asIterator().forEachRemaining(
-                parameter -> logger.warn("parameter = {}", request.getParameter(parameter))
-        );
-        e.printStackTrace();
-
-        logger.warn("### Exception End ###");
-    }
-
-    @Override
-    public boolean supports(
-            MethodParameter methodParameter,
-            Type targetType,
-            Class<? extends HttpMessageConverter<?>> converterType) {
-        return true;
-    }
-
-    @Override
-    public HttpInputMessage beforeBodyRead(
-            HttpInputMessage inputMessage,
-            MethodParameter parameter,
-            Type targetType,
-            Class<? extends HttpMessageConverter<?>> converterType) throws IOException {
-        return inputMessage;
-    }
-
-    @Override
-    public Object afterBodyRead(
-            Object body,
-            HttpInputMessage inputMessage,
-            MethodParameter parameter,
-            Type targetType,
-            Class<? extends HttpMessageConverter<?>> converterType) {
-
-        afterBodyReadExecuted.set(true);
-
-        logger.warn("### Exception Start ###");
-        logger.warn("Exception Date = {}", DateTimeFormatter.ofPattern("yyyy-MM-dd hh:mm:ss").format(LocalDateTime.now()));
-
-        // @RequestBody 필드 정보 출력
-        logger.warn("RequestBody = {}", body.toString());
-
-        return body;
-    }
-
-    @Override
-    public Object handleEmptyBody(
-            Object body,
-            HttpInputMessage inputMessage,
-            MethodParameter parameter,
-            Type targetType,
-            Class<? extends HttpMessageConverter<?>> converterType) {
-        return null;
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(customResponse);
     }
 }

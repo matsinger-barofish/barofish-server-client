@@ -1,5 +1,6 @@
 package com.matsinger.barofishserver.domain.order.domain;
 
+import com.matsinger.barofishserver.domain.order.dto.OrderDto;
 import com.matsinger.barofishserver.domain.order.orderprductinfo.domain.OrderProductInfo;
 import jakarta.persistence.*;
 import lombok.*;
@@ -124,6 +125,14 @@ public class Orders {
         this.orderedAt = orderedAt;
     }
 
+    public void setVbankRefundInfo(String bankCode, String bankHolder,
+                                   String bankName, String bankAccount) {
+        this.bankCode = bankCode;
+        this.bankHolder = bankHolder;
+        this.bankName = bankName;
+        this.bankAccount = bankAccount;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -139,5 +148,9 @@ public class Orders {
     @Override
     public int hashCode() {
         return Objects.hash(id, userId, state, totalPrice, orderedAt);
+    }
+
+    public OrderDto toDto() {
+        return null;
     }
 }

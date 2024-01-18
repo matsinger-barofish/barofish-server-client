@@ -14,6 +14,7 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
+import static com.matsinger.barofishserver.domain.deliver.domain.QDeliveryCompany.deliveryCompany;
 import static com.matsinger.barofishserver.domain.order.domain.QOrders.orders;
 import static com.matsinger.barofishserver.domain.order.orderprductinfo.domain.QOrderProductInfo.orderProductInfo;
 import static com.matsinger.barofishserver.domain.product.domain.QProduct.product;
@@ -36,8 +37,8 @@ public class StoreQueryRepository {
                 store.loginId.as("loginId"),
                 store.state.as("state"),
                 storeInfo.location.as("location"),
-                storeInfo.keyword.as("keyowrd"),
-                storeInfo.settlementRate.as("settlementRete"),
+                deliveryCompany.name.as("deliveryCompany"),
+                storeInfo.settlementRate.as("settlementRate"),
                 storeInfo.bankName.as("bankName"),
                 storeInfo.bankHolder.as("bankHolder"),
                 storeInfo.bankAccount.as("bankAccount"),
@@ -56,6 +57,7 @@ public class StoreQueryRepository {
                 ))
                 .from(store)
                 .leftJoin(storeInfo).on(store.id.eq(storeInfo.storeId))
+                .leftJoin(deliveryCompany).on(storeInfo.deliverCompany.eq(deliveryCompany.code))
                 .where(
                         containsStoreIds(storeIds)
                 )
@@ -64,10 +66,10 @@ public class StoreQueryRepository {
     }
 
     private BooleanExpression containsStoreIds(List<Integer> storeIds) {
-        if (storeIds == null || storeIds.isEmpty()) {
-            return null;
+        if (storeIds != null && !storeIds.isEmpty()) {
+            return store.id.in(storeIds);
         }
-        return store.id.in(storeIds);
+        return store.id.isNotNull();
     }
 
     public List<StoreRecommendInquiryDto> selectRecommendStoreWithJoinAt(PageRequest pageRequest,
@@ -91,9 +93,8 @@ public class StoreQueryRepository {
                 ))
                 .from(storeInfo)
                 .leftJoin(store).on(store.id.eq(storeInfo.storeId))
-//                .leftJoin(storeScrap).on(store.id.eq(storeScrap.storeId).and(storeScrap.userId.eq(userId)))
                 .leftJoin(storeScrap).on(store.id.eq(storeScrap.storeId)
-                        .and(userId != null ? storeScrap.userId.eq(userId) : storeScrap.userId.isNull()))
+                        .and(storeScrap.userId.eq(userId)))
                 .where(store.state.eq(StoreState.ACTIVE)
                         .and(storeInfo.name.contains(keyword))
                 )
@@ -125,7 +126,7 @@ public class StoreQueryRepository {
                 .from(storeInfo)
                 .leftJoin(store).on(store.id.eq(storeInfo.storeId))
                 .leftJoin(storeScrap).on(store.id.eq(storeScrap.storeId)
-                        .and(userId != null ? storeScrap.userId.eq(userId) : storeScrap.userId.isNull()))
+                        .and(storeScrap.userId.eq(userId)))
                 .where(store.state.eq(StoreState.ACTIVE)
                         .and(storeInfo.name.contains(keyword))
                 )
@@ -159,7 +160,7 @@ public class StoreQueryRepository {
                 .leftJoin(store).on(storeInfo.storeId.eq(store.id))
                 .leftJoin(review).on(storeInfo.storeId.eq(review.storeId).and(review.isDeleted.eq(false)))
                 .leftJoin(storeScrap).on(store.id.eq(storeScrap.storeId)
-                        .and(userId != null ? storeScrap.userId.eq(userId) : storeScrap.userId.isNull()))
+                                    .and(storeScrap.userId.eq(userId)))
                 .where(store.state.eq(StoreState.ACTIVE)
                         .and(storeInfo.name.contains(keyword))
                 )
@@ -195,7 +196,7 @@ public class StoreQueryRepository {
                 .leftJoin(orderProductInfo).on(orderProductInfo.productId.eq(product.id))
                 .leftJoin(orders).on(orders.id.eq(orderProductInfo.orderId))
                 .leftJoin(storeScrap).on(store.id.eq(storeScrap.storeId)
-                        .and(userId != null ? storeScrap.userId.eq(userId) : storeScrap.userId.isNull()))
+                        .and(storeScrap.userId.eq(userId)))
                 .where(store.state.eq(StoreState.ACTIVE)
 //                        .and(storeInfo.name.contains(keyword))
                         .and(keyword != null ? storeInfo.name.contains(keyword) : null)
