@@ -28,7 +28,7 @@ public class DifficultDeliverAddressQueryService {
                               OrderDeliverPlace orderDeliverPlace) {
         List<String> difficultDeliveryBcodes = getDifficultDeliveryBcodes(productId);
 
-        if (orderDeliverPlace.getBcode().length() > 5) {
+        if (orderDeliverPlace.getBcode().length() < 5) {
             return true;
         }
         String orderDeliveryPlaceAreaCode = orderDeliverPlace.getBcode().substring(0, 5);
