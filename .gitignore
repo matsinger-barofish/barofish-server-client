@@ -47,6 +47,4 @@ http/
 src/main/resources/sql/
 build/generated/
 /src/main/resources/log_xml/
-*.log
 logs/
-src/main/resources/logback-spring.xml

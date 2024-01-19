@@ -9,7 +9,7 @@ public enum ErrorCode {
 
     TOKEN_REQUIRED("101", "로그아웃 되었습니다." + "\n" + "다시 로그인해 주세요."),
     TOKEN_EXPIRED("102", "로그아웃 되었습니다." + "\n" + "다시 로그인해 주세요."),
-    TOKEN_INVALID("103", "로그인 토큰 값이 잘못되었습니다."),
+    TOKEN_INVALID("103", "로그아웃 되었습니다." + "\n" + "다시 로그인해 주세요."),
     NOT_ALLOWED("104", "접근 권한이 없습니다.");
 
     private final String code;

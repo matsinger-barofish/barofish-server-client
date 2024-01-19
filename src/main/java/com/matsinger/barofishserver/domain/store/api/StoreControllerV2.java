@@ -73,7 +73,8 @@ public class StoreControllerV2 {
         TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ALLOW, TokenAuthType.USER), auth);
 
         PageRequest pageRequest = PageRequest.of(page-1, take);
-        List<SimpleStore> pagedStoreDtos = storeQueryService.selectRecommendStoreList(pageRequest, type, keyword, tokenInfo.getId());
+        Integer userId = tokenInfo != null ? tokenInfo.getId() : null;
+        List<SimpleStore> pagedStoreDtos = storeQueryService.selectRecommendStoreList(pageRequest, type, keyword, userId);
 
         response.setIsSuccess(true);
         response.setData(Optional.of(pagedStoreDtos));
