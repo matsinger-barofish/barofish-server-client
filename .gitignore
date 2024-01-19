@@ -46,5 +46,4 @@ out/
 http/
 src/main/resources/sql/
 build/generated/
-/src/main/resources/log_xml/
 logs/
