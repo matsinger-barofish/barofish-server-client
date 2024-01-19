@@ -28,17 +28,10 @@ public class DifficultDeliverAddressQueryService {
                               OrderDeliverPlace orderDeliverPlace) {
         List<String> difficultDeliveryBcodes = getDifficultDeliveryBcodes(productId);
 
-        if (orderDeliverPlace.getBcode().length() < 5) {
-            return true;
-        }
-
-        for (String difficultDeliveryBcode : difficultDeliveryBcodes) {
-            if (difficultDeliveryBcode.substring(0, 5)
-                    .equals(orderDeliverPlace.getBcode().substring(0, 5))) {
-//                throw new BusinessException("배송지에 배송 불가능한 상품이 포함돼 있습니다.");
-                return false;
-            }
-        }
-        return true;
+        return difficultDeliveryBcodes.stream()
+                .noneMatch(
+                        v -> v.length() >= 5 &&
+                                v.substring(0, 5).equals(orderDeliverPlace.getBcode().substring(0, 5))
+                );
     }
 }
