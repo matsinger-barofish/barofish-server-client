@@ -21,6 +21,7 @@ public class DifficultDeliverAddressQueryService {
     
     public List<String> getDifficultDeliveryBcodes(Integer productId) {
         List<DifficultDeliverAddress> difficultDeliverAddresses = selectDifficultDeliverAddressWithProductId(productId);
+
         return difficultDeliverAddresses.stream().map(v -> v.getBcode()).toList();
     }
 
