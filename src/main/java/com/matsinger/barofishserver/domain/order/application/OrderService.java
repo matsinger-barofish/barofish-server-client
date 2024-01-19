@@ -548,19 +548,16 @@ public class OrderService {
 
     public boolean canDeliver(OrderDeliverPlace orderDeliverPlace, OrderProductInfo orderProductInfo) {
         List<String>
-                difficultDeliverBcodes =
+                difficultDeliverBcode =
                 difficultDeliverAddressQueryService
                         .selectDifficultDeliverAddressWithProductId(
                                 orderProductInfo.getProductId()
                         ).stream().map(DifficultDeliverAddress::getBcode).toList();
-
-        boolean canDeliver = true;
-        for (String difficultDeliverBcode : difficultDeliverBcodes) {
-            if (difficultDeliverBcode.length() >= 5) {
-                canDeliver = difficultDeliverBcode.substring(0, 5).equals(orderDeliverPlace.getBcode().substring(0, 5));
-            }
-        }
-        return canDeliver;
+        return difficultDeliverBcode.stream()
+                .noneMatch(
+                        v -> v.length() >= 5 &&
+                                v.substring(0, 5).equals(orderDeliverPlace.getBcode().substring(0, 5))
+                );
     }
 
     public void processOrderZeroAmount(Orders order) {

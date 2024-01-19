@@ -20,3 +20,4 @@ public class BarofishServerApplication {
 		return builder.build();
 	}
 }
+
