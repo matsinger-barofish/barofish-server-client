@@ -13,6 +13,7 @@ public class BarofishServerApplication {
 
 	public static void main(String[] args) {
 		SpringApplication.run(BarofishServerApplication.class, args);
+
 	}
 
 	@Bean
