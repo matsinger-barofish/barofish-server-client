@@ -31,11 +31,10 @@ public class DifficultDeliverAddressQueryService {
         if (orderDeliverPlace.getBcode().length() < 5) {
             return true;
         }
-        String orderDeliveryPlaceAreaCode = orderDeliverPlace.getBcode().substring(0, 5);
 
         for (String difficultDeliveryBcode : difficultDeliveryBcodes) {
             if (difficultDeliveryBcode.substring(0, 5)
-                    .equals(orderDeliveryPlaceAreaCode)) {
+                    .equals(orderDeliverPlace.getBcode().substring(0, 5))) {
 //                throw new BusinessException("배송지에 배송 불가능한 상품이 포함돼 있습니다.");
                 return false;
             }
