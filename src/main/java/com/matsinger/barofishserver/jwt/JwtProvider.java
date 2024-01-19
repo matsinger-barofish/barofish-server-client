@@ -104,9 +104,14 @@ public class JwtProvider {
 
     // JWT accessToken 생성
     private String doGenerateAccessToken(String id, String issuer, Map<String, Object> claims) {
-        return Jwts.builder().setClaims(claims).setIssuer(issuer).setId(id).setIssuedAt(new Date(System.currentTimeMillis())).setExpiration(
-                new Date(System.currentTimeMillis() +
-                        JWT_TOKEN_VALIDITY * 7)).signWith(SignatureAlgorithm.HS512, secret.getBytes()).compact();
+        return Jwts.builder()
+                .setClaims(claims)
+                .setIssuer(issuer)
+                .setId(id)
+                .setIssuedAt(new Date(System.currentTimeMillis()))
+                .setExpiration(new Date(System.currentTimeMillis() + JWT_TOKEN_VALIDITY * 7))
+                .signWith(SignatureAlgorithm.HS512, secret.getBytes())
+                .compact();
     }
 
     // id를 입력받아 accessToken 생성
