@@ -19,5 +19,4 @@ public class BarofishServerApplication {
 	public RestTemplate restTemplate(RestTemplateBuilder builder) {
 		return builder.build();
 	}
-
 }
