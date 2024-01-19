@@ -48,6 +48,7 @@ public class OrderControllerV2 {
             res.setCode("200");
             return ResponseEntity.ok(res);
         }
+
         if (!orderResponse.isCanDeliver()) {
             res.setCode("400");
             res.setErrorMsg("배송지에 배송 불가능한 상품이 포함돼 있습니다.");
