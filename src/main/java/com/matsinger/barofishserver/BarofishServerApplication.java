@@ -13,9 +13,4 @@ public class BarofishServerApplication {
 	public static void main(String[] args) {
 		SpringApplication.run(BarofishServerApplication.class, args);
 	}
-
-	@Bean
-	public RestTemplate restTemplate(RestTemplateBuilder builder) {
-		return builder.build();
-	}
 }
