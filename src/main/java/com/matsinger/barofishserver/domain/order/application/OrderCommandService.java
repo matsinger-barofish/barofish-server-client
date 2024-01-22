@@ -455,12 +455,25 @@ public class OrderCommandService {
 
         notificationCommandService.sendFcmToUser(
                 order.getUserId(),
-                NotificationMessageType.ORDER_CANCEL,
+                convertType(authType),
                 NotificationMessage.builder()
                         .productName(firstProductTitle)
                         .isCanceledByRegion(false)
                         .build()
         );
+    }
+
+    private NotificationMessageType convertType(TokenAuthType authType) {
+        if (authType.equals(TokenAuthType.USER)) {
+            return NotificationMessageType.ORDER_CANCEL;
+        }
+        if (authType.equals(TokenAuthType.PARTNER)) {
+            return NotificationMessageType.CANCELED_BY_PARTNER;
+        }
+        if (authType.equals(TokenAuthType.ADMIN)) {
+            return NotificationMessageType.CANCELED_BY_ADMIN;
+        }
+        throw new BusinessException("토큰 타입이 유효하지 않습니다." + "\n" + "다시 로그인해 주세요.");
     }
 
     private void cancel(Orders order,
