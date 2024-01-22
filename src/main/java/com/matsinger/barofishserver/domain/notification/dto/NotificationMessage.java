@@ -51,8 +51,8 @@ public class NotificationMessage {
                     this.couponName);
             case ADMIN -> this.customContent;
             case INQUIRY_ANSWER -> String.format("%s 업체에 문의하신 내용에 답변이 작성되었습니다.", storeName);
-            case CANCELED_BY_ADMIN -> String.format("<strong>%s</strong> 주문이 관리자에 의해 취소되었습니다.\", this.productName");
-            case CANCELED_BY_PARTNER -> String.format("<strong>%s</strong> 주문이 판매자에 의해 취소되었습니다.\", this.productName");
+            case CANCELED_BY_ADMIN -> String.format("<strong>%s</strong> 주문이 관리자에 의해 취소되었습니다.", this.productName);
+            case CANCELED_BY_PARTNER -> String.format("<strong>%s</strong> 주문이 판매자에 의해 취소되었습니다.", this.productName);
         };
     }
 
