@@ -556,7 +556,7 @@ public class OrderService {
         return difficultDeliverBcode.stream()
                 .noneMatch(
                         v -> v.length() >= 5 &&
-                        v.substring(0, 5).equals(orderDeliverPlace.getBcode().substring(0, 5))
+                                v.substring(0, 5).equals(orderDeliverPlace.getBcode().substring(0, 5))
                 );
     }
 

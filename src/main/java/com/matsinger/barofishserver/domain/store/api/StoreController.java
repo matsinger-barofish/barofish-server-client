@@ -5,6 +5,8 @@ import com.matsinger.barofishserver.domain.admin.log.application.AdminLogQuerySe
 import com.matsinger.barofishserver.domain.admin.log.domain.AdminLog;
 import com.matsinger.barofishserver.domain.admin.log.domain.AdminLogType;
 import com.matsinger.barofishserver.domain.product.LikePostType;
+import com.matsinger.barofishserver.domain.product.application.ProductCommandService;
+import com.matsinger.barofishserver.domain.product.application.ProductQueryService;
 import com.matsinger.barofishserver.domain.product.application.ProductService;
 import com.matsinger.barofishserver.domain.product.domain.Product;
 import com.matsinger.barofishserver.domain.siteInfo.application.SiteInfoCommandService;
@@ -51,6 +53,8 @@ public class StoreController {
     private final S3Uploader s3;
     private final AdminLogCommandService adminLogCommandService;
     private final AdminLogQueryService adminLogQueryService;
+    private final ProductQueryService productQueryService;
+    private final ProductCommandService productCommandService;
 
     @GetMapping("")
     public ResponseEntity<CustomResponse<List<StoreDto>>> selectStoreList(@RequestHeader(value = "Authorization", required = false) Optional<String> auth,
@@ -440,6 +444,8 @@ public class StoreController {
                     AdminLog.builder().id(adminLogQueryService.getAdminLogId()).adminId(adminId).type(AdminLogType.PARTNER).targetId(
                             storeId.toString()).content(content).createdAt(utils.now()).build();
             adminLogCommandService.saveAdminLog(adminLog);
+
+            productCommandService.convertStoreProductsStateWhenPartnerUpdate(store.getId(), data.getState());
         }
         storeService.updateStores(stores);
         res.setData(Optional.of(true));

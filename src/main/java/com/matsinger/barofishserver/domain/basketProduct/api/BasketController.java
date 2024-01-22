@@ -64,7 +64,7 @@ public class BasketController {
             return ResponseEntity.ok(res);
         }
 
-        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER, TokenAuthType.ALLOW), auth);
+        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth);
 
         if (tokenInfo.getType() == TokenAuthType.USER) {
             count = basketQueryService.countBasketList(tokenInfo.getId());

@@ -41,12 +41,9 @@ out/
 
 ## custom Settings ##
 *.properties
-*.yml
+application.yml
 *.sql
 http/
 src/main/resources/sql/
 build/generated/
-/src/main/resources/log_xml/
 logs/
-src/main/resources/logback-spring.xml
-src/main/java/com/matsinger/barofishserver/monitoring/

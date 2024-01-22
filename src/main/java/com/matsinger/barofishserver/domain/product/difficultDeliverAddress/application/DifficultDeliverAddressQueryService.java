@@ -21,21 +21,18 @@ public class DifficultDeliverAddressQueryService {
     
     public List<String> getDifficultDeliveryBcodes(Integer productId) {
         List<DifficultDeliverAddress> difficultDeliverAddresses = selectDifficultDeliverAddressWithProductId(productId);
+
         return difficultDeliverAddresses.stream().map(v -> v.getBcode()).toList();
     }
 
     public boolean canDeliver(Integer productId,
                               OrderDeliverPlace orderDeliverPlace) {
         List<String> difficultDeliveryBcodes = getDifficultDeliveryBcodes(productId);
-        String orderDeliveryPlaceAreaCode = orderDeliverPlace.getBcode().substring(0, 5);
 
-        for (String difficultDeliveryBcode : difficultDeliveryBcodes) {
-            if (difficultDeliveryBcode.substring(0, 5)
-                    .equals(orderDeliveryPlaceAreaCode)) {
-//                throw new BusinessException("배송지에 배송 불가능한 상품이 포함돼 있습니다.");
-                return false;
-            }
-        }
-        return true;
+        return difficultDeliveryBcodes.stream()
+                .noneMatch(
+                        v -> v.length() >= 5 &&
+                                v.substring(0, 5).equals(orderDeliverPlace.getBcode().substring(0, 5))
+                );
     }
 }
