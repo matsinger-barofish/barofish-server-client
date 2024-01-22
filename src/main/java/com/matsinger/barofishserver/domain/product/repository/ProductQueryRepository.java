@@ -1,6 +1,7 @@
 package com.matsinger.barofishserver.domain.product.repository;
 
 import com.matsinger.barofishserver.domain.order.orderprductinfo.domain.OrderProductState;
+import com.matsinger.barofishserver.domain.product.domain.Product;
 import com.matsinger.barofishserver.domain.product.domain.ProductSortBy;
 import com.matsinger.barofishserver.domain.product.domain.ProductState;
 import com.matsinger.barofishserver.domain.product.dto.ProductListDto;
@@ -34,6 +35,7 @@ import static com.matsinger.barofishserver.domain.product.domain.QProduct.produc
 import static com.matsinger.barofishserver.domain.product.optionitem.domain.QOptionItem.optionItem;
 import static com.matsinger.barofishserver.domain.review.domain.QReview.review;
 import static com.matsinger.barofishserver.domain.searchFilter.domain.QProductSearchFilterMap.productSearchFilterMap;
+import static com.matsinger.barofishserver.domain.store.domain.QStore.store;
 import static com.matsinger.barofishserver.domain.store.domain.QStoreInfo.storeInfo;
 import static com.matsinger.barofishserver.domain.userinfo.domain.QUserInfo.userInfo;
 
@@ -473,5 +475,23 @@ public class ProductQueryRepository {
                         product.promotionEndAt.gt(Timestamp.valueOf(LocalDateTime.now()))
                 );
         return builder;
+    }
+
+    public List<Product> findAllActiveProductsByStoreId(int storeId) {
+        return queryFactory.select(product)
+                .from(product)
+                .leftJoin(store)
+                .where(store.id.eq(storeId)
+                        .and(product.state.eq(ProductState.ACTIVE)))
+                .fetch();
+    }
+
+    public List<Product> findAllTemporaryInactiveProductsByStoreId(int storeId) {
+        return queryFactory.select(product)
+                .from(product)
+                .leftJoin(store)
+                .where(store.id.eq(storeId)
+                        .and(product.state.eq(ProductState.INACTIVE_PARTNER)))
+                .fetch();
     }
 }

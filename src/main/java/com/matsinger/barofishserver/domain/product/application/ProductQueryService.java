@@ -290,4 +290,12 @@ public class ProductQueryService {
             throw new BusinessException("상품이 존재하지 않습니다.");
         }
     }
+
+    public List<Product> findAllActiveProductsByStoreId(int storeId) {
+        return productQueryRepository.findAllActiveProductsByStoreId(storeId);
+    }
+
+    public List<Product> findAllTemporaryInactiveProductsByStoreId(int storeId) {
+        return productQueryRepository.findAllTemporaryInactiveProductsByStoreId(storeId);
+    }
 }
