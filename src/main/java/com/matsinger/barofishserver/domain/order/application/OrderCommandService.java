@@ -422,9 +422,10 @@ public class OrderCommandService {
         int seq = 1;
         String firstProductTitle = null;
         for (OrderProductInfo cancelRequestedProduct : storeOrderProducts) {
-            if (order.isCouponUsed()) {
+            if (order.isCouponUsed() || order.getState().equals(OrderState.WAIT_DEPOSIT)) {
                 CancelManager cancelManager = new CancelManager(
                         order, allOrderProducts, List.of());
+                cancelManager.validateStateAndSetCanceled();
                 cancel(order, cancelManager, request, authType);
                 break;
             }
@@ -447,6 +448,7 @@ public class OrderCommandService {
 
                 CancelManager cancelManager = new CancelManager(
                         order, tobeCanceled, notTobeCanceled);
+                cancelManager.validateStateAndSetCanceled();
 
                 cancel(order, cancelManager, request, authType);
             }
@@ -536,7 +538,6 @@ public class OrderCommandService {
             order.setOriginTotalPrice(cancelManager.getProductAndDeliveryFee());
         }
         setCancelReason(request, cancelManager.getTobeCanceled());
-        cancelManager.validateStateAndSetCanceled();
 
         orderProductInfoRepository.saveAll(cancelManager.getAllOrderProducts());
         orderRepository.save(order);
