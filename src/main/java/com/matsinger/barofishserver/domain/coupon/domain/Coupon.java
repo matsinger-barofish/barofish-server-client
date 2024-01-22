@@ -71,7 +71,7 @@ public class Coupon {
     }
 
     public void isAvailable(int price) {
-        if (price < minPrice) {
+        if (minPrice < price) {
             throw new BusinessException("쿠폰 최소 금액에 맞지 않습니다.");
         }
 
