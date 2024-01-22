@@ -277,9 +277,18 @@ public class ProductController {
         );
 
         Product product = productService.findById(id);
+
+        TokenAuthType type = null;
+        Integer idFromToken = null;
+        if (tokenInfo == null) {
+            idFromToken = null;
+        }
+        if (tokenInfo != null && tokenInfo.getType().equals(TokenAuthType.USER)) {
+            idFromToken = tokenInfo.getId();
+        }
         SimpleProductDto productDto = productService.convert2SimpleDto(
                 product,
-                tokenInfo.getType().equals(TokenAuthType.USER) ? tokenInfo.getId() : null);
+                idFromToken);
 
         boolean isSaved = false;
         if (tokenInfo.getType().equals(TokenAuthType.USER)) {
