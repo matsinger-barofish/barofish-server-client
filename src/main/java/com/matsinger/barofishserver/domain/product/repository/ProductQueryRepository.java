@@ -480,7 +480,7 @@ public class ProductQueryRepository {
     public List<Product> findAllActiveProductsByStoreId(int storeId) {
         return queryFactory.select(product)
                 .from(product)
-                .leftJoin(store)
+                .leftJoin(store).on(store.id.eq(product.storeId))
                 .where(store.id.eq(storeId)
                         .and(product.state.eq(ProductState.ACTIVE)))
                 .fetch();
@@ -489,7 +489,7 @@ public class ProductQueryRepository {
     public List<Product> findAllTemporaryInactiveProductsByStoreId(int storeId) {
         return queryFactory.select(product)
                 .from(product)
-                .leftJoin(store)
+                .leftJoin(store).on(store.id.eq(product.storeId))
                 .where(store.id.eq(storeId)
                         .and(product.state.eq(ProductState.INACTIVE_PARTNER)))
                 .fetch();
