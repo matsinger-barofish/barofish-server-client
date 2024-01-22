@@ -29,19 +29,19 @@ public class JwtService {
         }
 
         if (!authTypesToAllow.contains(TokenAuthType.ALLOW) && authorizationString.isEmpty()) {
-            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED);
+            throw new JwtBusinessException(ErrorCode.TOKEN_REQUIRED.getMessage(), ErrorCode.TOKEN_REQUIRED);
         }
 
         String rawToken = authorizationString.get();
 
         if (!rawToken.startsWith("Bearer")) {
-            throw new JwtBusinessException(ErrorCode.TOKEN_INVALID);
+            throw new JwtBusinessException(ErrorCode.TOKEN_INVALID.getMessage(), ErrorCode.TOKEN_INVALID);
         }
 
         String token = rawToken.substring(7);
 
         if (!authTypesToAllow.contains(TokenAuthType.ALLOW) && isExpired(token)) {
-            throw new JwtBusinessException(ErrorCode.TOKEN_EXPIRED);
+            throw new JwtBusinessException(ErrorCode.TOKEN_EXPIRED.getMessage(), ErrorCode.TOKEN_EXPIRED);
         }
         if (authTypesToAllow.contains(TokenAuthType.ALLOW) && isExpired(token)) {
             return null;
@@ -56,11 +56,11 @@ public class JwtService {
 //        }
 
         if (tokenInfo.getId() == null && tokenInfo.getType() != TokenAuthType.ALLOW) {
-            throw new JwtBusinessException(ErrorCode.TOKEN_INVALID);
+            throw new JwtBusinessException(ErrorCode.TOKEN_INVALID.getMessage(), ErrorCode.TOKEN_INVALID);
         }
 
         if (!authTypesToAllow.contains(tokenInfo.getType()) && !authTypesToAllow.contains(TokenAuthType.ALLOW)) {
-            throw new JwtBusinessException(ErrorCode.NOT_ALLOWED);
+            throw new JwtBusinessException(ErrorCode.NOT_ALLOWED.getMessage(), ErrorCode.NOT_ALLOWED);
         }
 
         return tokenInfo;

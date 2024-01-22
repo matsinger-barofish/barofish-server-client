@@ -30,6 +30,7 @@ public class JwtControllerAdvice {
         CustomResponse customResponse = new CustomResponse();
         customResponse.setIsSuccess(false);
         customResponse.setCode(e.getCode());
+        customResponse.setErrorMsg(e.getMessage());
         return ResponseEntity.ok(customResponse);
     }
 }

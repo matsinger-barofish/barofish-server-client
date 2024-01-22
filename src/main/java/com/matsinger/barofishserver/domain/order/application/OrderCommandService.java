@@ -89,6 +89,9 @@ public class OrderCommandService {
         String orderId = orderQueryService.getOrderId();
         DeliverPlace deliverPlace = deliverPlaceQueryService.findById(request.getDeliverPlaceId());
         OrderDeliverPlace orderDeliverPlace = deliverPlace.toOrderDeliverPlace(orderId);
+        if (orderDeliverPlace.getBcode().length() < 5) {
+            throw new BusinessException("배송지에서 법정동코드가 누락되었습니다." + "\n" + "동일한 주소로 다시 배송지를 설정해주세요.");
+        }
 
         Map<StoreInfo, List<OrderProductInfo>> storeMap = createStoreMap(request, userInfo, orderId);
 
