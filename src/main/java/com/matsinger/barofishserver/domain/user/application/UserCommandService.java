@@ -67,6 +67,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import java.util.*;
 
 @Service
@@ -431,7 +432,11 @@ public class UserCommandService {
         if (isUserInfoExists && !isLoginTypeExists) {
             UserAuth
                     createdUserAuth =
-                    UserAuth.builder().loginType(request.getLoginType()).loginId(request.getLoginId()).build();
+                    UserAuth.builder()
+                            .loginType(request.getLoginType())
+                            .loginId(request.getLoginId())
+                            .createdAt(Timestamp.valueOf(LocalDateTime.now()))
+                            .build();
             User findUser = optionalUserInfo.get().getUser();
             createdUserAuth.setUserId(findUser.getId());
             createdUserAuth.setUser(findUser);

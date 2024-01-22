@@ -24,8 +24,7 @@ public class QUserAuth extends EntityPathBase<UserAuth> {
 
     public final com.matsinger.barofishserver.global.config.QBaseTimeEntity _super = new com.matsinger.barofishserver.global.config.QBaseTimeEntity(this);
 
-    //inherited
-    public final DateTimePath<java.sql.Timestamp> createdAt = _super.createdAt;
+    public final DateTimePath<java.sql.Timestamp> createdAt = createDateTime("createdAt", java.sql.Timestamp.class);
 
     public final StringPath loginId = createString("loginId");
 
