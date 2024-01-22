@@ -51,6 +51,8 @@ public class NotificationMessage {
                     this.couponName);
             case ADMIN -> this.customContent;
             case INQUIRY_ANSWER -> String.format("%s 업체에 문의하신 내용에 답변이 작성되었습니다.", storeName);
+            case CANCELED_BY_ADMIN -> String.format("<strong>%s</strong> 주문이 관리자에 의해 취소되었습니다.\", this.productName");
+            case CANCELED_BY_PARTNER -> String.format("<strong>%s</strong> 주문이 판매자에 의해 취소되었습니다.\", this.productName");
         };
     }
 
@@ -77,7 +79,6 @@ public class NotificationMessage {
             case INQUIRY_ANSWER:
             default:
                 return NotificationType.ADMIN;
-
         }
     }
 
@@ -112,11 +113,12 @@ public class NotificationMessage {
             case INQUIRY_ANSWER:
                 return "문의 답변";
             case ADMIN:
+            case CANCELED_BY_ADMIN:
+                return "주문 취소 (관리자)";
+            case CANCELED_BY_PARTNER:
+                return "주문 취소 (판매자)";
             default:
                 return "공지";
-
         }
     }
-
-
 }
