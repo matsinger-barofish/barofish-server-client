@@ -60,6 +60,6 @@ public class GlobalControllerAdvice implements HandlerInterceptor {
         customResponse.setIsSuccess(false);
         customResponse.setCode(e.getCode());
         customResponse.setErrorMsg(e.getMessage());
-        return ResponseEntity.ok(customResponse);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(customResponse);
     }
 }
