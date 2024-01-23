@@ -59,7 +59,7 @@ public class CancelManager {
         }
         taxablePriceTobeCanceled = cancelProductPrice - nonTaxablePriceTobeCanceled + cancelDeliveryFee;
 
-        validateStateAndSetCanceled();
+        validateOrderProductState();
     }
 
     public int getProductAndDeliveryFee() {
@@ -81,20 +81,12 @@ public class CancelManager {
         return false;
     }
 
-    public void validateStateAndSetCanceled() {
+    public void validateOrderProductState() {
         boolean cancellableState = false;
         for (OrderProductInfo cancelProduct : tobeCanceled) {
             OrderProductState state = cancelProduct.getState();
             if (state.equals(OrderProductState.CANCELED)) {
                 throw new BusinessException("취소 완료된 상태입니다.");
-            }
-            if (state.equals(OrderProductState.WAIT_DEPOSIT)) {
-                cancelProduct.setState(OrderProductState.CANCELED);
-                cancellableState = true;
-            }
-            if (state.equals(OrderProductState.PAYMENT_DONE)) {
-                cancelProduct.setState(OrderProductState.CANCELED);
-                cancellableState = true;
             }
             if (state.equals(OrderProductState.DELIVERY_DONE) ||
                     state.equals(OrderProductState.EXCHANGE_REQUEST) ||
