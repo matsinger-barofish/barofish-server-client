@@ -510,6 +510,7 @@ public class OrderCommandService {
         if (!cancelManager.allCanceled()) {
             cancelPrice = cancelManager.getPartialCancelPrice();
         }
+        log.info("cancelPrice send to portOne = {}", cancelPrice);
         CancelData cancelData = new CancelData(
                 order.getImpUid(),
                 true,
