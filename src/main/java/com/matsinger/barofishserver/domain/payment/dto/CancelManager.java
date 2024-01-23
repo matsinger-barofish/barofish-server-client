@@ -78,12 +78,14 @@ public class CancelManager {
             for (OrderProductInfo orderProductInfo : tobeCanceled) {
                 log.info("allCanceled scope - orderProductState = {}", orderProductInfo.getState());
 
-                if (!orderProductInfo.getState().equals(OrderProductState.CANCELED) &&
-                    !orderProductInfo.getState().equals(OrderProductState.CANCELED_BY_ADMIN) &&
-                    !orderProductInfo.getState().equals(OrderProductState.CANCELED_BY_PARTNER)) {
+
+                if (!OrderProductState.isCanceled(orderProductInfo.getState())) {
                     return false;
                 }
             }
+        }
+        if (!notTobeCanceled.isEmpty()) {
+            return false;
         }
         return true;
     }

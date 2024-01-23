@@ -17,4 +17,13 @@ public enum OrderProductState {
     DELIVERY_DIFFICULT,
     CANCELED_BY_PARTNER,
     CANCELED_BY_ADMIN;
+
+    public static boolean isCanceled(OrderProductState state) {
+        if (!state.equals(OrderProductState.CANCELED) &&
+            !state.equals(OrderProductState.CANCELED_BY_ADMIN) &&
+            !state.equals(OrderProductState.CANCELED_BY_PARTNER)) {
+            return false;
+        }
+        return true;
+    }
 }
