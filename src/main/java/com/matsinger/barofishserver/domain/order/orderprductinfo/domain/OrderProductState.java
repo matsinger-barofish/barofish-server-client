@@ -19,11 +19,16 @@ public enum OrderProductState {
     CANCELED_BY_ADMIN;
 
     public static boolean isCanceled(OrderProductState state) {
-        if (!state.equals(OrderProductState.CANCELED) &&
-            !state.equals(OrderProductState.CANCELED_BY_ADMIN) &&
-            !state.equals(OrderProductState.CANCELED_BY_PARTNER)) {
-            return false;
+        boolean isCanceled = false;
+        if (!state.equals(OrderProductState.CANCELED)) {
+            isCanceled = true;
         }
-        return true;
+        if (!state.equals(OrderProductState.CANCELED_BY_ADMIN)) {
+            isCanceled = true;
+        }
+        if (!state.equals(OrderProductState.CANCELED_BY_PARTNER)) {
+            isCanceled = true;
+        }
+        return isCanceled;
     }
 }
