@@ -434,6 +434,7 @@ public class ProductService {
         productDto.setFilterValues(productFilterService.selectProductFilterValueListWithProductId(product.getId()));
         productDto.setReviewCount(reviews.size());
         productDto.setNeedTaxation(product.getNeedTaxation());
+        productDto.setMinStorePrice(store.getMinStorePrice());
         return productDto;
 
     }
