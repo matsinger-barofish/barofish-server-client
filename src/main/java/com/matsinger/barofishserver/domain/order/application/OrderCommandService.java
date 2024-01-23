@@ -132,7 +132,7 @@ public class OrderCommandService {
         }
 
         int totalOrderPriceMinusDeliveryFee = totalOrderProductPrice - totalOrderDeliveryFee;
-        log.info("totalOrderPriceMinusDeliveryFee = {}", totalOrderPriceMinusDeliveryFee);
+        log.info("totalOrderProductPrice = {}", totalOrderProductPrice);
         int totalOrderPriceContainsDeliveryFee = totalOrderProductPrice + totalOrderDeliveryFee;
 
         validateCouponAndPoint(request, totalOrderProductPrice, userInfo);
