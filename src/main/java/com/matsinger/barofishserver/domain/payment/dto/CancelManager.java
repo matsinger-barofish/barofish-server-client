@@ -82,7 +82,6 @@ public class CancelManager {
     }
 
     public void validateOrderProductState() {
-        boolean cancellableState = false;
         for (OrderProductInfo cancelProduct : tobeCanceled) {
             OrderProductState state = cancelProduct.getState();
             if (state.equals(OrderProductState.CANCELED)) {
@@ -102,9 +101,6 @@ public class CancelManager {
             }
             if (state.equals(OrderProductState.DELIVERY_READY)) {
                 throw new BusinessException("상품이 출고되어 취소가 불가능합니다.");
-            }
-            if (!cancellableState) {
-                throw new RuntimeException("주문 상태를 확인해주세요.");
             }
         }
     }
