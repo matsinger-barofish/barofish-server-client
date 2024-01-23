@@ -85,6 +85,9 @@ public class CancelManager {
         boolean cancellableState = false;
         for (OrderProductInfo cancelProduct : tobeCanceled) {
             OrderProductState state = cancelProduct.getState();
+            if (state.equals(OrderProductState.CANCELED)) {
+                throw new BusinessException("취소 완료된 상태입니다.");
+            }
             if (state.equals(OrderProductState.WAIT_DEPOSIT)) {
                 cancelProduct.setState(OrderProductState.CANCELED);
                 cancellableState = true;
@@ -104,9 +107,6 @@ public class CancelManager {
             }
             if (state.equals(OrderProductState.CANCEL_REQUEST)) {
                 throw new BusinessException("이미 취소 요청된 상태입니다.");
-            }
-            if (state.equals(OrderProductState.CANCELED)) {
-                throw new BusinessException("취소 완료된 상태입니다.");
             }
             if (state.equals(OrderProductState.DELIVERY_READY)) {
                 throw new BusinessException("상품이 출고되어 취소가 불가능합니다.");
