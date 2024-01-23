@@ -452,8 +452,8 @@ public class OrderCommandService {
                         .filter(v -> v.getState() != OrderProductState.CANCELED)
                         .filter(v -> v.getStoreId() != storeInfo.getStoreId())
                         .toList();
-                log.info("tobeCanceled = {}", tobeCanceled.stream().map(v -> v.getProduct().getTitle()));
-                log.info("notTobeCanceled = {}", notTobeCanceled.stream().map(v -> v.getProduct().getTitle()));
+                log.info("tobeCanceled = {}", tobeCanceled.stream().map(v -> v.getProduct().getTitle()).toList().toString());
+                log.info("notTobeCanceled = {}", notTobeCanceled.stream().map(v -> v.getProduct().getTitle()).toList().toString());
 
                 CancelManager cancelManager = new CancelManager(
                         order, tobeCanceled, notTobeCanceled);
