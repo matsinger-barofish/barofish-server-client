@@ -45,8 +45,6 @@ public class CancelManager {
         if (notTobeCanceled.isEmpty()) {
             allCanceled = tobeCanceled.stream()
                     .noneMatch(v -> v.getState().equals(OrderProductState.CANCELED));
-
-            validateStateAndSetCanceled();
         }
 
         // 쿠폰, 포인트는 포트원에 보내는 주문 가격에 포함돼 있지 않기 때문에 비과세 가격에서 쿠폰, 포인트 가격을 빼줌
@@ -60,6 +58,8 @@ public class CancelManager {
                     .mapToInt(v -> v.getTaxFreeAmount()).sum();
         }
         taxablePriceTobeCanceled = cancelProductPrice - nonTaxablePriceTobeCanceled + cancelDeliveryFee;
+
+        validateStateAndSetCanceled();
     }
 
     public int getProductAndDeliveryFee() {
