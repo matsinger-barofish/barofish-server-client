@@ -432,7 +432,6 @@ public class OrderCommandService {
                 log.info("couponUsedScope");
                 CancelManager cancelManager = new CancelManager(
                         order, allOrderProducts, List.of());
-                cancelManager.validateStateAndSetCanceled();
                 cancel(order, cancelManager, request, authType);
                 break;
             }
@@ -456,7 +455,6 @@ public class OrderCommandService {
 
                 CancelManager cancelManager = new CancelManager(
                         order, tobeCanceled, notTobeCanceled);
-                cancelManager.validateStateAndSetCanceled();
 
                 cancel(order, cancelManager, request, authType);
             }
