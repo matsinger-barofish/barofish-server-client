@@ -30,13 +30,16 @@ public class DifficultDeliverAddressQueryService {
         List<String> difficultDeliveryBcodes = getDifficultDeliveryBcodes(productId);
 
         String orderDeliverPlaceBcode = orderDeliverPlace.getBcode().substring(0, 5);
-        boolean canDeliver = true;
+
         for (String difficultDeliveryBcode : difficultDeliveryBcodes) {
             String subtractedBcode = difficultDeliveryBcode.substring(0, 5);
             log.info("subtractedBcode = {}", subtractedBcode);
-            canDeliver = !subtractedBcode.equals(orderDeliverPlaceBcode);
+            boolean canDeliver = !subtractedBcode.equals(orderDeliverPlaceBcode);
+            if (!canDeliver) {
+                return false;
+            }
         }
-        return canDeliver;
+        return true;
 
 //        return difficultDeliveryBcodes.stream()
 //                .noneMatch(
