@@ -77,15 +77,13 @@ public class CancelManager {
         if (notTobeCanceled.isEmpty()) {
             for (OrderProductInfo orderProductInfo : tobeCanceled) {
                 log.info("allCanceled scope - orderProductState = {}", orderProductInfo.getState());
-                if (!orderProductInfo.getState().equals(OrderProductState.CANCELED) ||
-                    !orderProductInfo.getState().equals(OrderProductState.CANCELED_BY_ADMIN) ||
+
+                if (!orderProductInfo.getState().equals(OrderProductState.CANCELED) &&
+                    !orderProductInfo.getState().equals(OrderProductState.CANCELED_BY_ADMIN) &&
                     !orderProductInfo.getState().equals(OrderProductState.CANCELED_BY_PARTNER)) {
                     return false;
                 }
             }
-
-//            return tobeCanceled.stream()
-//                    .allMatch(v -> v.getState().equals(OrderProductState.CANCELED));
         }
         return true;
     }
