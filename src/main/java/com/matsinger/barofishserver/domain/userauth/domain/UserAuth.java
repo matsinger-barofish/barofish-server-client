@@ -7,6 +7,8 @@ import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.data.domain.Persistable;
 
+import java.sql.Timestamp;
+
 @Builder
 @Getter
 @Setter
@@ -42,6 +44,9 @@ public class UserAuth extends BaseTimeEntity implements Persistable<UserAuthId> 
 
     @Column(name = "password", length = 60)
     private String password;
+
+    @Column(name = "created_at", nullable = false)
+    private Timestamp createdAt;
 
     @Override
     public boolean isNew() {
