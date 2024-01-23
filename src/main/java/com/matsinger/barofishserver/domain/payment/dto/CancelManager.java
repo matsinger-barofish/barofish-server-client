@@ -58,6 +58,8 @@ public class CancelManager {
                     .mapToInt(v -> v.getTaxFreeAmount()).sum();
         }
         taxablePriceTobeCanceled = cancelProductPrice - nonTaxablePriceTobeCanceled + cancelDeliveryFee;
+
+        validateStateAndSetCanceled();
     }
 
     public int getProductAndDeliveryFee() {
