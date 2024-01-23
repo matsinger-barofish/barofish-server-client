@@ -445,11 +445,11 @@ public class OrderCommandService {
             if (!order.isCouponUsed()) {
                 log.info("couponNotUsedScope");
                 List<OrderProductInfo> tobeCanceled = allOrderProducts.stream()
-                        .filter(v -> OrderProductState.isCanceled(v.getState()))
+                        .filter(v -> !OrderProductState.isCanceled(v.getState()))
                         .filter(v -> v.getStoreId() == storeInfo.getStoreId())
                         .toList();
                 List<OrderProductInfo> notTobeCanceled = allOrderProducts.stream()
-                        .filter(v -> OrderProductState.isCanceled(v.getState()))
+                        .filter(v -> !OrderProductState.isCanceled(v.getState()))
                         .filter(v -> v.getStoreId() != storeInfo.getStoreId())
                         .toList();
                 log.info("tobeCanceled = {}", tobeCanceled.stream().map(v -> v.getProduct().getTitle()).toList().toString());
