@@ -5,10 +5,12 @@ import com.matsinger.barofishserver.domain.order.orderprductinfo.domain.OrderPro
 import com.matsinger.barofishserver.domain.order.orderprductinfo.domain.OrderProductState;
 import com.matsinger.barofishserver.global.exception.BusinessException;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
 import java.util.List;
 
+@Slf4j
 @Getter
 public class CancelManager {
 
@@ -75,10 +77,17 @@ public class CancelManager {
 
     public boolean allCanceled() {
         if (notTobeCanceled.isEmpty()) {
-            return tobeCanceled.stream()
-                    .allMatch(v -> v.getState().equals(OrderProductState.CANCELED));
+            for (OrderProductInfo orderProductInfo : tobeCanceled) {
+                log.info("allCanceled scope - orderProductState = {}", orderProductInfo.getState());
+                if (!orderProductInfo.getState().equals(OrderProductState.CANCELED)) {
+                    return false;
+                }
+            }
+
+//            return tobeCanceled.stream()
+//                    .allMatch(v -> v.getState().equals(OrderProductState.CANCELED));
         }
-        return false;
+        return true;
     }
 
     public void validateOrderProductState() {
