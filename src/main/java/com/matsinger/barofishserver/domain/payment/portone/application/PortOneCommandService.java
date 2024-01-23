@@ -113,6 +113,7 @@ public class PortOneCommandService {
         }
 
         if (containsCannotDeliverPlace) {
+            log.info("포트원 콜백 containsCannotDeliverPlace = {}", containsCannotDeliverPlace);
             order.setState(OrderState.DELIVERY_DIFFICULT);
             order.setImpUid(request.getImp_uid());
             payments.setStatus(PaymentState.FAILED);
@@ -153,6 +154,8 @@ public class PortOneCommandService {
             
             if (cancelResult.getCode() != 0) {
                 System.out.println(cancelResult.getMessage());
+                log.error("포트원 환불 실패 메시지 = {}", cancelResult.getMessage());
+                log.error("포트원 환불 실패 코드 = {}", cancelResult.getCode());
                 throw new BusinessException("환불에 실패하였습니다.");
             }
         } catch (Exception e) {
