@@ -95,8 +95,8 @@ public class OrderCommandService {
 
         Map<StoreInfo, List<OrderProductInfo>> storeMap = createStoreMap(request, userInfo, orderId);
 
-        log.info("orderId = {}", orderId);
-        log.info("totalOrderPrice = {}", request.getTotalPrice());
+        log.error("orderId = {}", orderId);
+        log.error("totalOrderPrice = {}", request.getTotalPrice());
 
         int totalOrderDeliveryFee = 0;
         int totalOrderProductPrice = 0;
@@ -339,7 +339,7 @@ public class OrderCommandService {
     private Integer validateFinalPrice(OrderReq request, int totalOrderPriceContainsDeliveryFee) {
         int finalOrderPrice = totalOrderPriceContainsDeliveryFee - request.getCouponDiscountPrice() - request.getPoint();
         if (finalOrderPrice != request.getTotalPrice()) {
-            log.info("finalOrderPrice = {}", finalOrderPrice);
+            log.error("finalOrderPrice = {}", finalOrderPrice);
             throw new BusinessException("총 금액을 확인해주세요.");
         }
         return finalOrderPrice;
@@ -392,6 +392,7 @@ public class OrderCommandService {
         List<OrderProductInfo> allOrderProducts = orderProductInfoRepository.findAllByOrderId(order.getId());
         validateRequest(userId, request, order);
 
+        log.error("isCouponUsed = {}", order.isCouponUsed());
         if (order.isCouponUsed()) {
             CancelManager cancelManager = new CancelManager(
                     order, allOrderProducts, List.of());
@@ -453,6 +454,8 @@ public class OrderCommandService {
 //        log.info("impUid = {}", order.getImpUid());
 //        log.info("totalCancelPrice = {}", cancelPrice);
 //        log.info("taxFreePrice = {}", cancelManager.getNonTaxablePriceTobeCanceled());
+        log.error("isAllCanceled = {}", cancelManager.allCanceled());
+        log.error("cancelPrice send to portOne = {}", cancelPrice);
         cancelData.setTax_free(BigDecimal.valueOf(cancelManager.getNonTaxablePriceTobeCanceled()));
         setVbankRefundInfo(order, cancelData);
         sendPortOneCancelData(cancelData);
@@ -496,7 +499,7 @@ public class OrderCommandService {
             IamportResponse<Payment> cancelResult = iamportClient.cancelPaymentByImpUid(cancelData);
             if (cancelResult.getCode() != 0) {
                 System.out.println(cancelResult.getMessage());
-                log.info(cancelResult.getMessage());
+                log.error(cancelResult.getMessage());
                 throw new BusinessException("환불에 실패하였습니다.");
             }
         } catch (Exception e) {
