@@ -135,8 +135,7 @@ public class OrderCommandService {
         log.info("totalOrderPriceMinusDeliveryFee = {}", totalOrderPriceMinusDeliveryFee);
         int totalOrderPriceContainsDeliveryFee = totalOrderProductPrice + totalOrderDeliveryFee;
 
-
-        validateCouponAndPoint(request, totalOrderPriceMinusDeliveryFee, userInfo);
+        validateCouponAndPoint(request, totalOrderProductPrice, userInfo);
         Integer finalOrderPrice = validateFinalPrice(request, totalOrderPriceContainsDeliveryFee);
 
         Orders order = Orders.builder()
