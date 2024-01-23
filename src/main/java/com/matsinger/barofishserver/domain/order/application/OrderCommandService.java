@@ -425,6 +425,7 @@ public class OrderCommandService {
         String firstProductTitle = null;
         for (OrderProductInfo cancelRequestedProduct : storeOrderProducts) {
             if (order.isCouponUsed() || order.getState().equals(OrderState.WAIT_DEPOSIT)) {
+                log.info("couponUsedScope");
                 CancelManager cancelManager = new CancelManager(
                         order, allOrderProducts, List.of());
                 cancelManager.validateStateAndSetCanceled();
@@ -439,6 +440,7 @@ public class OrderCommandService {
             StoreInfo storeInfo = storeInfoQueryService.findByStoreId(product.getStoreId());
 
             if (!order.isCouponUsed()) {
+                log.info("couponNotUsedScope");
                 List<OrderProductInfo> tobeCanceled = allOrderProducts.stream()
                         .filter(v -> v.getState() != OrderProductState.CANCELED)
                         .filter(v -> v.getStoreId() == storeInfo.getStoreId())
