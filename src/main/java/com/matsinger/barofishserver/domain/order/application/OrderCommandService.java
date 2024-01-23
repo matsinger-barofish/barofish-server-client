@@ -105,10 +105,13 @@ public class OrderCommandService {
         int totalTaxFreePrice = 0;
         List<Integer> cannotDeliverProductIds = new ArrayList<>();
         boolean notIncludesCannotDeliverPlace = true;
+        log.info("orderDeliverPlaceBcode = {}", orderDeliverPlace.getBcode());
         for (StoreInfo storeInfo : storeMap.keySet()) {
 
             List<OrderProductInfo> storeOrderProductInfos = storeMap.get(storeInfo);
             boolean canDeliver = validateDifficultDeliveryRegion(orderDeliverPlace, storeOrderProductInfos);
+            log.info("canDeliver = {}", canDeliver);
+            log.info("notIncludesCannotDeliverPlace = {}", notIncludesCannotDeliverPlace);
             if (!canDeliver) {
                 cannotDeliverProductIds.addAll(
                         storeOrderProductInfos.stream()
@@ -128,7 +131,6 @@ public class OrderCommandService {
                     .max().getAsInt();
             totalTaxFreePrice += storeOrderProductInfos.stream()
                     .mapToInt(v -> v.getTaxFreeAmount()).sum();
-            log.info("storeOrderProductPrice = {}", totalOrderDeliveryFee);
         }
 
         int totalOrderPriceMinusDeliveryFee = totalOrderProductPrice - totalOrderDeliveryFee;

@@ -30,7 +30,6 @@ public class DifficultDeliverAddressQueryService {
         List<String> difficultDeliveryBcodes = getDifficultDeliveryBcodes(productId);
 
         String orderDeliverPlaceBcode = orderDeliverPlace.getBcode().substring(0, 5);
-        log.info("orderDeliverPlaceBcode = {}", orderDeliverPlaceBcode);
         boolean canDeliver = true;
         for (String difficultDeliveryBcode : difficultDeliveryBcodes) {
             String subtractedBcode = difficultDeliveryBcode.substring(0, 5);
