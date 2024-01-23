@@ -29,10 +29,20 @@ public class DifficultDeliverAddressQueryService {
                               OrderDeliverPlace orderDeliverPlace) {
         List<String> difficultDeliveryBcodes = getDifficultDeliveryBcodes(productId);
 
-        return difficultDeliveryBcodes.stream()
-                .noneMatch(
-                        v -> v.length() >= 5 &&
-                                v.substring(0, 5).equals(orderDeliverPlace.getBcode().substring(0, 5))
-                );
+        String orderDeliverPlaceBcode = orderDeliverPlace.getBcode().substring(0, 5);
+        log.info("orderDeliverPlaceBcode = {}", orderDeliverPlaceBcode);
+        boolean canDeliver = true;
+        for (String difficultDeliveryBcode : difficultDeliveryBcodes) {
+            String subtractedBcode = difficultDeliveryBcode.substring(0, 5);
+            log.info("subtractedBcode = {}", subtractedBcode);
+            canDeliver = !subtractedBcode.equals(orderDeliverPlaceBcode);
+        }
+        return canDeliver;
+
+//        return difficultDeliveryBcodes.stream()
+//                .noneMatch(
+//                        v -> v.length() >= 5 &&
+//                                v.substring(0, 5).equals(orderDeliverPlaceBcode)
+//                );
     }
 }
