@@ -120,6 +120,7 @@ public class PortOneCommandService {
             sendNotification(order, cannotDeliveryProducts.get(0), true);
 
             CancelData cancelData = createAllCancelData(orderProductInfos, order);
+
             requestRefund(cancelData);
         }
 
@@ -151,7 +152,7 @@ public class PortOneCommandService {
         try {
             IamportClient iamportClient = portOneCallbackService.getIamportClient();
             IamportResponse<Payment> cancelResult = iamportClient.cancelPaymentByImpUid(cancelData);
-            
+
             if (cancelResult.getCode() != 0) {
                 System.out.println(cancelResult.getMessage());
                 log.error("포트원 환불 실패 메시지 = {}", cancelResult.getMessage());
@@ -165,14 +166,13 @@ public class PortOneCommandService {
 
     @NotNull
     private static CancelData createAllCancelData(List<OrderProductInfo> orderProductInfos, Orders order) {
-        int deliveryFeeSum = orderProductInfos.stream().mapToInt(v -> v.getDeliveryFee()).sum();
-        int orderProductsAndDeliveryFeeSum = order.getOriginTotalPrice() + deliveryFeeSum;
         int taxFreeAmount = orderProductInfos.stream().mapToInt(v -> v.getTaxFreeAmount()).sum();
+        log.info("포트원 콜백 취소 요청 주문가격 = {}", order.getTotalPrice());
 
         CancelData cancelData = new CancelData(
                 order.getImpUid(),
                 true,
-                BigDecimal.valueOf(orderProductsAndDeliveryFeeSum));
+                BigDecimal.valueOf(order.getTotalPrice()));
         cancelData.setTax_free(BigDecimal.valueOf(taxFreeAmount));
 
         if (order.getPaymentWay().equals(OrderPaymentWay.VIRTUAL_ACCOUNT)) {
