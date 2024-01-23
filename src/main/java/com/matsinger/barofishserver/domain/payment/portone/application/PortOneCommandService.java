@@ -120,8 +120,10 @@ public class PortOneCommandService {
             sendNotification(order, cannotDeliveryProducts.get(0), true);
 
             CancelData cancelData = createAllCancelData(orderProductInfos, order);
-
             requestRefund(cancelData);
+            orderProductInfos.stream()
+                    .filter(v -> !v.getState().equals(OrderProductState.DELIVERY_DIFFICULT))
+                    .forEach(v -> v.setState(OrderProductState.CANCELED));
         }
 
         if (!containsCannotDeliverPlace) {
