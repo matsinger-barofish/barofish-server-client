@@ -394,6 +394,7 @@ public class OrderCommandService {
 
         log.error("isCouponUsed = {}", order.isCouponUsed());
         if (order.isCouponUsed()) {
+            log.error("isCouponUsed scope");
             CancelManager cancelManager = new CancelManager(
                     order, allOrderProducts, List.of());
             cancel(order, cancelManager, request);
@@ -403,6 +404,7 @@ public class OrderCommandService {
         StoreInfo storeInfo = storeInfoQueryService.findByStoreId(product.getStoreId());
 
         if (!order.isCouponUsed()) {
+            log.error("isCouponNotUsed scope");
             List<OrderProductInfo> tobeCanceled = allOrderProducts.stream()
                     .filter(v -> v.getState() != OrderProductState.CANCELED)
                     .filter(v -> v.getStoreId() == storeInfo.getStoreId())
@@ -478,7 +480,6 @@ public class OrderCommandService {
             order.setOriginTotalPrice(cancelManager.getProductAndDeliveryFee());
         }
         setCancelReason(request, cancelManager.getTobeCanceled());
-        cancelManager.validateStateAndSetCanceled();
 
         orderProductInfoRepository.saveAll(cancelManager.getAllOrderProducts());
         orderRepository.save(order);
@@ -499,7 +500,8 @@ public class OrderCommandService {
             IamportResponse<Payment> cancelResult = iamportClient.cancelPaymentByImpUid(cancelData);
             if (cancelResult.getCode() != 0) {
                 System.out.println(cancelResult.getMessage());
-                log.error(cancelResult.getMessage());
+                log.error("포트원 환불 실패 메시지 = {}", cancelResult.getMessage());
+                log.error("포트원 환불 실패 코드 = {}", cancelResult.getCode());
                 throw new BusinessException("환불에 실패하였습니다.");
             }
         } catch (Exception e) {
