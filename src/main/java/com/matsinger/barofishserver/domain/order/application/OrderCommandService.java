@@ -508,6 +508,8 @@ public class OrderCommandService {
             orderRepository.save(order);
             return;
         }
+
+        cancelManager.setCancelProductState(state);
         if (cancelManager.allCanceled()) {
             cancelPrice = cancelManager.getAllCancelPrice();
         }

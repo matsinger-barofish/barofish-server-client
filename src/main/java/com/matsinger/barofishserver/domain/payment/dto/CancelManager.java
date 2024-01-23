@@ -60,8 +60,6 @@ public class CancelManager {
                     .mapToInt(v -> v.getTaxFreeAmount()).sum();
         }
         taxablePriceTobeCanceled = cancelProductPrice - nonTaxablePriceTobeCanceled + cancelDeliveryFee;
-
-        validateOrderProductState();
     }
 
     public int getProductAndDeliveryFee() {
@@ -90,7 +88,32 @@ public class CancelManager {
         return true;
     }
 
-    public void validateOrderProductState() {
+    public List<OrderProductInfo> getAllOrderProducts() {
+        List<OrderProductInfo> allOrderProducts = new ArrayList<>();
+        allOrderProducts.addAll(tobeCanceled);
+        allOrderProducts.addAll(notTobeCanceled);
+        return allOrderProducts;
+    }
+
+    public int getAllCancelPrice() {
+        return nonTaxablePriceTobeCanceled +
+                taxablePriceTobeCanceled -
+                order.getCouponDiscount() -
+                order.getUsedPoint();
+    }
+
+    public int getPartialCancelPrice() {
+        return nonTaxablePriceTobeCanceled +
+                taxablePriceTobeCanceled;
+    }
+
+    public void setCancelProductState(OrderProductState state) {
+        validateCancelProductState();
+        tobeCanceled.stream()
+                .forEach(v -> v.setState(state));
+    }
+
+    public void validateCancelProductState() {
         for (OrderProductInfo cancelProduct : tobeCanceled) {
             OrderProductState state = cancelProduct.getState();
             if (state.equals(OrderProductState.CANCELED)) {
@@ -112,24 +135,5 @@ public class CancelManager {
                 throw new BusinessException("상품이 출고되어 취소가 불가능합니다.");
             }
         }
-    }
-
-    public List<OrderProductInfo> getAllOrderProducts() {
-        List<OrderProductInfo> allOrderProducts = new ArrayList<>();
-        allOrderProducts.addAll(tobeCanceled);
-        allOrderProducts.addAll(notTobeCanceled);
-        return allOrderProducts;
-    }
-
-    public int getAllCancelPrice() {
-        return nonTaxablePriceTobeCanceled +
-                taxablePriceTobeCanceled -
-                order.getCouponDiscount() -
-                order.getUsedPoint();
-    }
-
-    public int getPartialCancelPrice() {
-        return nonTaxablePriceTobeCanceled +
-                taxablePriceTobeCanceled;
     }
 }
