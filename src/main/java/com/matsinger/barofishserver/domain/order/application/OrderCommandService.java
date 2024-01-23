@@ -171,6 +171,8 @@ public class OrderCommandService {
 
         save(storeMap, order, orderDeliverPlace);
 
+        log.info("notIncludesCannotDeliverPlace = {}", notIncludesCannotDeliverPlace);
+
         return OrderResponse.builder()
                 .orderId(orderId)
                 .canDeliver(notIncludesCannotDeliverPlace)
