@@ -128,11 +128,9 @@ public class OrderCommandService {
                     .mapToInt(v -> v.getTaxFreeAmount()).sum();
         }
 
-        int totalOrderPriceMinusDeliveryFee = totalOrderProductPrice - totalOrderDeliveryFee;
         int totalOrderPriceContainsDeliveryFee = totalOrderProductPrice + totalOrderDeliveryFee;
 
-
-        validateCouponAndPoint(request, totalOrderPriceMinusDeliveryFee, userInfo);
+        validateCouponAndPoint(request, totalOrderProductPrice, userInfo);
         Integer finalOrderPrice = validateFinalPrice(request, totalOrderPriceContainsDeliveryFee);
 
         Orders order = Orders.builder()
