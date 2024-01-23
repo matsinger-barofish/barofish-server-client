@@ -420,6 +420,7 @@ public class OrderCommandService {
 
         List<OrderProductInfo> allOrderProducts = orderProductInfoRepository.findAllByOrderId(order.getId());
 
+        log.info("isCouponUsed = {}", order.isCouponUsed());
         int seq = 1;
         String firstProductTitle = null;
         for (OrderProductInfo cancelRequestedProduct : storeOrderProducts) {
