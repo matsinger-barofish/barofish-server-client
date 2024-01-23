@@ -68,8 +68,8 @@ public class CancelManager {
 
     public int getOrderPriceAfterCancellation() {
         return notTobeCanceledProductPrice +
-                notTobeCanceledDeliveryFee +
-                order.getCouponDiscount() +
+                notTobeCanceledDeliveryFee -
+                order.getCouponDiscount() -
                 order.getUsedPoint();
     }
 
