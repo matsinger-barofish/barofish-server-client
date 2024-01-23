@@ -128,9 +128,11 @@ public class OrderCommandService {
                     .max().getAsInt();
             totalTaxFreePrice += storeOrderProductInfos.stream()
                     .mapToInt(v -> v.getTaxFreeAmount()).sum();
+            log.info("storeOrderProductPrice = {}", totalOrderDeliveryFee);
         }
 
         int totalOrderPriceMinusDeliveryFee = totalOrderProductPrice - totalOrderDeliveryFee;
+        log.info("totalOrderPriceMinusDeliveryFee = {}", totalOrderPriceMinusDeliveryFee);
         int totalOrderPriceContainsDeliveryFee = totalOrderProductPrice + totalOrderDeliveryFee;
 
 
