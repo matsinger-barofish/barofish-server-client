@@ -74,7 +74,7 @@ public class CancelManager {
     public boolean allCanceled() {
         if (notTobeCanceled.isEmpty()) {
             return tobeCanceled.stream()
-                    .noneMatch(v -> v.getState().equals(OrderProductState.CANCELED));
+                    .allMatch(v -> v.getState().equals(OrderProductState.CANCELED));
         }
         return false;
     }
