@@ -75,6 +75,9 @@ dependencies {
     implementation 'io.opentelemetry.instrumentation:opentelemetry-instrumentation-api-semconv:1.31.0-alpha' //
     // 모니터닝을 위한 디펜던시 끝
 
+    // api 요청을 위한 디펜던시
+    implementation 'org.springframework.boot:spring-boot-starter-webflux'
+
 
     // ⭐ Spring boot 3.x이상에서 QueryDsl 패키지를 정의하는 방법
     // 참고: https://velog.io/@juhyeon1114/Spring-QueryDsl-gradle-%EC%84%A4%EC%A0%95-Spring-boot-3.0-%EC%9D%B4%EC%83%81
