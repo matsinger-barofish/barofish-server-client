@@ -188,6 +188,7 @@ public class OrderCommandService {
         productsRequest.stream()
                 .map(v -> optionItemQueryService.findById(v.getOptionId()))
                 .forEach(v -> v.validateQuantity(v.getAmount()));
+
     }
 
     private void calculateDeliveryFee(StoreInfo storeInfo, List<OrderProductInfo> sameStoreProducts) {
