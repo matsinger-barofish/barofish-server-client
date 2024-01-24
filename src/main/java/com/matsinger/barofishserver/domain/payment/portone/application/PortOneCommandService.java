@@ -223,7 +223,8 @@ public class PortOneCommandService {
                         String.format("가상계좌번호: %s\n",
                                 payments.getVbankNum().replaceAll("[^\\d]", "") + "\n") +
                         String.format("가상계좌 예금주명: %s\n", payments.getVbankHolder()) +
-                        "24시간 이내로 이체해주세요.";
+                        "24시간 이내로 이체해주세요." + "\n" +
+                        "가상계좌는 환불 신청시 3영업일 이내 입금됩니다.";
         sms.sendSms(payments.getBuyerTel(), smsContent, "가상 계좌 결제 요청");
         log.info("=== smsDataReceived ===");
         log.info("vbankName = {}", payments.getVbankName());
