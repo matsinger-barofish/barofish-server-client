@@ -75,7 +75,6 @@ public class PortOneCommandService {
     private final OrderProductInfoQueryService orderProductInfoQueryService;
     private final BasketQueryRepository basketQueryRepository;
     private final PortOneCallbackService callbackService;
-    private final PortOneCommandService portOneCommandService;
     private final OrderProductInfoRepository orderProductInfoRepository;
     private final UserInfoRepository userInfoRepository;
 
@@ -188,7 +187,7 @@ public class PortOneCommandService {
                 .mapToInt(v -> v.getTaxFreeAmount())
                 .sum();
         cancelData.setTax_free(BigDecimal.valueOf(taxFreePrice));
-        portOneCommandService.sendPortOneCancelData(cancelData);
+        sendPortOneCancelData(cancelData);
 
         orderRepository.save(order);
         orderProductInfoRepository.saveAll(orderProductInfos);
