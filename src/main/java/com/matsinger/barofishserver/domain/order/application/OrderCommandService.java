@@ -41,7 +41,10 @@ import com.matsinger.barofishserver.global.exception.BusinessException;
 import com.matsinger.barofishserver.jwt.TokenAuthType;
 import com.matsinger.barofishserver.jwt.TokenInfo;
 import com.matsinger.barofishserver.utils.Common;
+import com.siot.IamportRestClient.IamportClient;
 import com.siot.IamportRestClient.request.CancelData;
+import com.siot.IamportRestClient.response.IamportResponse;
+import com.siot.IamportRestClient.response.Payment;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.Nullable;
@@ -537,7 +540,7 @@ public class OrderCommandService {
 //        log.info("taxFreePrice = {}", cancelManager.getNonTaxablePriceTobeCanceled());
         cancelData.setTax_free(BigDecimal.valueOf(cancelManager.getNonTaxablePriceTobeCanceled()));
         setVbankRefundInfo(order, cancelData);
-        portOneCommandService.sendPortOneCancelData(cancelData);
+        sendPortOneCancelData(cancelData);
 
         if (cancelManager.allCanceled()) {
             Payments payment = paymentRepository.findFirstByImpUid(order.getImpUid());
@@ -575,6 +578,20 @@ public class OrderCommandService {
         for (OrderProductInfo cancelProduct : tobeCanceled) {
             cancelProduct.setCancelReason(request.getCancelReason());
             cancelProduct.setCancelReasonContent(request.getContent());
+        }
+    }
+
+    public void sendPortOneCancelData(CancelData cancelData) {
+        IamportClient iamportClient = callbackService.getIamportClient();
+        try {
+            IamportResponse<Payment> cancelResult = iamportClient.cancelPaymentByImpUid(cancelData);
+            if (cancelResult.getCode() != 0) {
+                log.error("포트원 환불 실패 메시지 = {}", cancelResult.getMessage());
+                log.error("포트원 환불 실패 코드 = {}", cancelResult.getCode());
+                throw new BusinessException("환불에 실패하였습니다.");
+            }
+        } catch (Exception e) {
+            throw new BusinessException(e.getMessage());
         }
     }
 
