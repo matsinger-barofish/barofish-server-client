@@ -347,7 +347,7 @@ public class OrderController {
             if (optionItem.getMaxAvailableAmount() != null &&
                     optionItem.getMaxAvailableAmount() < productReq.getAmount())
                 throw new BusinessException("최대 주문 수량을 초과하였습니다.");
-            optionItem.validateQuantity(productReq.getAmount());
+            optionItem.validateQuantity(productReq.getAmount(), product.getTitle());
             int price = orderService.getProductPrice(productReq.getOptionId(), productReq.getAmount());
             productPrice += price;
             taxFreeAmount += productReq.getTaxFreeAmount() != null ? productReq.getTaxFreeAmount() : 0;

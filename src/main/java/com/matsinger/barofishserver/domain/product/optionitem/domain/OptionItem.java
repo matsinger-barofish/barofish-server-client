@@ -63,16 +63,14 @@ public class OptionItem {
     private Integer maxAvailableAmount;
 
 
-    public void validateQuantity(int quantity) {
+    public void validateQuantity(int quantity, String productName) {
         if (this.amount != null) {
             int reducedValue = this.amount - quantity;
-            log.info("주문시 상품 재고 = ", this.amount);
-            log.info("주문시 상품 수량 = ", quantity);
             if (reducedValue < 0) {
-                String errorMessage = String.format("'%s' 상품의 재고가 부족합니다." + "\n" +
+                String errorMessage = String.format("['%s'] '%s' 상품의 재고가 부족합니다." + "\n" +
                                                     "상품 재고 = '%s'" + "\n" +
                                                     "주문 재고 = '%s'",
-                        this.name, this.amount, quantity);
+                        productName, this.name, this.amount, quantity);
                 throw new BusinessException(errorMessage);
             }
         }

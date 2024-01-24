@@ -187,7 +187,8 @@ public class OrderCommandService {
     private void validateQuantity(List<OrderProductReq> productsRequest) {
         for (OrderProductReq orderProductReq : productsRequest) {
             OptionItem optionItem = optionItemQueryService.findById(orderProductReq.getOptionId());
-            optionItem.validateQuantity(orderProductReq.getAmount());
+            Product product = productQueryService.findById(orderProductReq.getProductId());
+            optionItem.validateQuantity(orderProductReq.getAmount(), product.getTitle());
         }
     }
 
