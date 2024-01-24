@@ -106,9 +106,11 @@ public class OrderCommandService {
         List<Integer> cannotDeliverProductIds = new ArrayList<>();
         boolean notIncludesCannotDeliverPlace = true;
         log.info("orderDeliverPlaceBcode = {}", orderDeliverPlace.getBcode());
+        List<OrderProductInfo> allOrderProducts = new ArrayList<>();
         for (StoreInfo storeInfo : storeMap.keySet()) {
-
             List<OrderProductInfo> storeOrderProductInfos = storeMap.get(storeInfo);
+            allOrderProducts.addAll(storeOrderProductInfos);
+
             boolean canDeliver = validateDifficultDeliveryRegion(orderDeliverPlace, storeOrderProductInfos);
             log.info("canDeliver = {}", canDeliver);
             log.info("notIncludesCannotDeliverPlace = {}", notIncludesCannotDeliverPlace);
@@ -133,11 +135,11 @@ public class OrderCommandService {
                     .mapToInt(v -> v.getTaxFreeAmount()).sum();
         }
 
-        int totalOrderPriceMinusDeliveryFee = totalOrderProductPrice - totalOrderDeliveryFee;
         log.info("totalOrderProductPrice = {}", totalOrderProductPrice);
         int totalOrderPriceContainsDeliveryFee = totalOrderProductPrice + totalOrderDeliveryFee;
 
         validateCouponAndPoint(request, totalOrderProductPrice, userInfo);
+        validateQuantity(request.getProducts());
         Integer finalOrderPrice = validateFinalPrice(request, totalOrderPriceContainsDeliveryFee);
 
         Orders order = Orders.builder()
@@ -180,6 +182,12 @@ public class OrderCommandService {
                 .canDeliver(notIncludesCannotDeliverPlace)
                 .cannotDeliverProductIds(cannotDeliverProductIds)
                 .build();
+    }
+
+    private void validateQuantity(List<OrderProductReq> productsRequest) {
+        productsRequest.stream()
+                .map(v -> optionItemQueryService.findById(v.getOptionId()))
+                .forEach(v -> v.validateQuantity(v.getAmount()));
     }
 
     private void calculateDeliveryFee(StoreInfo storeInfo, List<OrderProductInfo> sameStoreProducts) {
