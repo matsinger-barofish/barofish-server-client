@@ -72,6 +72,7 @@ public class PortOneCommandService {
     private final PaymentRepository paymentRepository;
     private final OrderProductInfoQueryService orderProductInfoQueryService;
     private final BasketQueryRepository basketQueryRepository;
+    private final PortOneCallbackService callbackService;
 
     @Transactional
     public void processWhenStatusReady(PortOneBodyData request) {
@@ -237,5 +238,19 @@ public class PortOneCommandService {
         order.setState(OrderState.CANCELED);
         orderRepository.save(order);
         paymentCommandService.save(payment);
+    }
+
+    public void sendPortOneCancelData(CancelData cancelData) {
+        IamportClient iamportClient = callbackService.getIamportClient();
+        try {
+            IamportResponse<Payment> cancelResult = iamportClient.cancelPaymentByImpUid(cancelData);
+            if (cancelResult.getCode() != 0) {
+                log.error("포트원 환불 실패 메시지 = {}", cancelResult.getMessage());
+                log.error("포트원 환불 실패 코드 = {}", cancelResult.getCode());
+                throw new BusinessException("환불에 실패하였습니다.");
+            }
+        } catch (Exception e) {
+            throw new BusinessException(e.getMessage());
+        }
     }
 }
