@@ -162,6 +162,7 @@ public class PortOneCommandService {
     private void processOrderAndPaymentCancel(PortOneBodyData request) {
         Orders order = orderQueryService.findById(request.getMerchant_uid());
         order.setState(OrderState.CANCELED);
+        order.setImpUid(request.getImp_uid());
         Payments payment = paymentService.getPaymentInfoFromPortOne(order.getId(), request.getImp_uid());
         payment.setStatus(PaymentState.FAILED);
 
@@ -174,7 +175,7 @@ public class PortOneCommandService {
         couponCommandService.unUseCoupon(order.getCouponId(), userInfo.getUserId());
 
         CancelData cancelData = new CancelData(
-                order.getImpUid(),
+                request.getImp_uid(),
                 true,
                 BigDecimal.valueOf(order.getTotalPrice())
         );
