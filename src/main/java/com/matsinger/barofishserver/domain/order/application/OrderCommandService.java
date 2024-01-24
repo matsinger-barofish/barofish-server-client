@@ -185,10 +185,10 @@ public class OrderCommandService {
     }
 
     private void validateQuantity(List<OrderProductReq> productsRequest) {
-        productsRequest.stream()
-                .map(v -> optionItemQueryService.findById(v.getOptionId()))
-                .forEach(v -> v.validateQuantity(v.getAmount()));
-
+        for (OrderProductReq orderProductReq : productsRequest) {
+            OptionItem optionItem = optionItemQueryService.findById(orderProductReq.getOptionId());
+            optionItem.validateQuantity(orderProductReq.getAmount());
+        }
     }
 
     private void calculateDeliveryFee(StoreInfo storeInfo, List<OrderProductInfo> sameStoreProducts) {
