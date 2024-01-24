@@ -16,6 +16,7 @@ import com.matsinger.barofishserver.domain.order.orderprductinfo.application.Ord
 import com.matsinger.barofishserver.domain.order.orderprductinfo.domain.OrderCancelReason;
 import com.matsinger.barofishserver.domain.order.orderprductinfo.domain.OrderProductInfo;
 import com.matsinger.barofishserver.domain.order.orderprductinfo.domain.OrderProductState;
+import com.matsinger.barofishserver.domain.order.orderprductinfo.repository.OrderProductInfoRepository;
 import com.matsinger.barofishserver.domain.order.repository.OrderRepository;
 import com.matsinger.barofishserver.domain.payment.application.PaymentCommandService;
 import com.matsinger.barofishserver.domain.payment.application.PaymentService;
@@ -31,6 +32,7 @@ import com.matsinger.barofishserver.domain.product.optionitem.domain.OptionItem;
 import com.matsinger.barofishserver.domain.user.application.UserCommandService;
 import com.matsinger.barofishserver.domain.userinfo.application.UserInfoQueryService;
 import com.matsinger.barofishserver.domain.userinfo.domain.UserInfo;
+import com.matsinger.barofishserver.domain.userinfo.repository.UserInfoRepository;
 import com.matsinger.barofishserver.global.exception.BusinessException;
 import com.matsinger.barofishserver.utils.sms.SmsService;
 import com.siot.IamportRestClient.IamportClient;
@@ -73,6 +75,9 @@ public class PortOneCommandService {
     private final OrderProductInfoQueryService orderProductInfoQueryService;
     private final BasketQueryRepository basketQueryRepository;
     private final PortOneCallbackService callbackService;
+    private final PortOneCommandService portOneCommandService;
+    private final OrderProductInfoRepository orderProductInfoRepository;
+    private final UserInfoRepository userInfoRepository;
 
     @Transactional
     public void processWhenStatusReady(PortOneBodyData request) {
@@ -96,59 +101,99 @@ public class PortOneCommandService {
 
     @Transactional
     public void checkCanDeliverAndProcessOrder(PortOneBodyData request) {
-        Orders order = orderQueryService.findById(request.getMerchant_uid());
-        Payments payments = paymentService.getPaymentInfoFromPortOne(order.getId(), request.getImp_uid());
-        List<OrderProductInfo> orderProductInfos = orderProductInfoQueryService.findAllByOrderId(order.getId());
+        try {
+            Orders order = orderQueryService.findById(request.getMerchant_uid());
+            Payments payments = paymentService.getPaymentInfoFromPortOne(order.getId(), request.getImp_uid());
+            List<OrderProductInfo> orderProductInfos = orderProductInfoQueryService.findAllByOrderId(order.getId());
 
-        boolean containsCannotDeliverPlace = false;
-        List<OrderProductInfo> cannotDeliveryProducts = new ArrayList<>();
-        for (OrderProductInfo orderProductInfo : orderProductInfos) {
-            boolean canDeliver = orderService.canDeliver(order.getDeliverPlace(), orderProductInfo);
-            if (!canDeliver) {
-                orderProductInfo.setCancelReasonContent("배송 불가 지역");
-                orderProductInfo.setState(OrderProductState.DELIVERY_DIFFICULT);
-                orderProductInfo.setCancelReason(OrderCancelReason.ORDER_FAULT);
-                cannotDeliveryProducts.add(orderProductInfo);
-                containsCannotDeliverPlace = true;
-            }
-        }
-
-        if (containsCannotDeliverPlace) {
-            log.info("포트원 콜백 containsCannotDeliverPlace = {}", containsCannotDeliverPlace);
-            order.setState(OrderState.DELIVERY_DIFFICULT);
-            order.setImpUid(request.getImp_uid());
-            payments.setStatus(PaymentState.FAILED);
-            sendNotification(order, cannotDeliveryProducts.get(0), true);
-
-            CancelData cancelData = createAllCancelData(orderProductInfos, order);
-            requestRefund(cancelData);
-            orderProductInfos.stream()
-                    .filter(v -> !v.getState().equals(OrderProductState.DELIVERY_DIFFICULT))
-                    .forEach(v -> v.setState(OrderProductState.CANCELED));
-        }
-
-        if (!containsCannotDeliverPlace) {
+            boolean containsCannotDeliverPlace = false;
+            List<OrderProductInfo> cannotDeliveryProducts = new ArrayList<>();
             for (OrderProductInfo orderProductInfo : orderProductInfos) {
-                orderProductInfo.setState(OrderProductState.PAYMENT_DONE);
-                reduceQuantity(orderProductInfo);
+                boolean canDeliver = orderService.canDeliver(order.getDeliverPlace(), orderProductInfo);
+                if (!canDeliver) {
+                    orderProductInfo.setCancelReasonContent("배송 불가 지역");
+                    orderProductInfo.setState(OrderProductState.DELIVERY_DIFFICULT);
+                    orderProductInfo.setCancelReason(OrderCancelReason.ORDER_FAULT);
+                    cannotDeliveryProducts.add(orderProductInfo);
+                    containsCannotDeliverPlace = true;
+                }
             }
-            order.setState(OrderState.PAYMENT_DONE);
-            order.setImpUid(request.getImp_uid());
 
-            UserInfo userInfo = userInfoQueryService.findByUserId(order.getUserId());
-            sendNotification(order, orderProductInfos.get(0), false);
-            userInfo.usePoint(order.getUsePoint());
-            couponCommandService.useCouponV1(order.getCouponId(), order.getUserId());
+            if (containsCannotDeliverPlace) {
+                log.info("포트원 콜백 containsCannotDeliverPlace = {}", containsCannotDeliverPlace);
+                order.setState(OrderState.DELIVERY_DIFFICULT);
+                order.setImpUid(request.getImp_uid());
+                payments.setStatus(PaymentState.FAILED);
+                sendNotification(order, cannotDeliveryProducts.get(0), true);
 
-            basketQueryRepository.deleteAllBasketByUserIdAndOptionIds(
-                    userInfo.getUserId(),
-                    orderProductInfos.stream().map(v -> v.getOptionItemId()).toList());
+                CancelData cancelData = createAllCancelData(orderProductInfos, order);
+                requestRefund(cancelData);
+                orderProductInfos.stream()
+                        .filter(v -> !v.getState().equals(OrderProductState.DELIVERY_DIFFICULT))
+                        .forEach(v -> v.setState(OrderProductState.CANCELED));
+            }
 
-            userCommandService.updateUserInfo(userInfo);
+            if (!containsCannotDeliverPlace) {
+                for (OrderProductInfo orderProductInfo : orderProductInfos) {
+                    orderProductInfo.setState(OrderProductState.PAYMENT_DONE);
+                    reduceQuantity(orderProductInfo);
+                }
+                order.setState(OrderState.PAYMENT_DONE);
+                order.setImpUid(request.getImp_uid());
+
+                UserInfo userInfo = userInfoQueryService.findByUserId(order.getUserId());
+                sendNotification(order, orderProductInfos.get(0), false);
+                userInfo.usePoint(order.getUsePoint());
+                couponCommandService.useCouponV1(order.getCouponId(), order.getUserId());
+
+                basketQueryRepository.deleteAllBasketByUserIdAndOptionIds(
+                        userInfo.getUserId(),
+                        orderProductInfos.stream().map(v -> v.getOptionItemId()).toList());
+
+                userCommandService.updateUserInfo(userInfo);
+            }
+            orderProductInfoCommandService.saveAll(orderProductInfos);
+            orderRepository.save(order);
+            paymentCommandService.save(payments);
+        } catch (Exception e) {
+            processOrderAndPaymentCancel(request);
         }
-        orderProductInfoCommandService.saveAll(orderProductInfos);
+    }
+
+    private void processOrderAndPaymentCancel(PortOneBodyData request) {
+        Orders order = orderQueryService.findById(request.getMerchant_uid());
+        order.setState(OrderState.CANCELED);
+        Payments payment = paymentService.getPaymentInfoFromPortOne(order.getId(), request.getImp_uid());
+        payment.setStatus(PaymentState.FAILED);
+
+        List<OrderProductInfo> orderProductInfos = order.getProductInfos();
+        orderProductInfos.stream()
+                .forEach(v -> v.setState(OrderProductState.CANCELED));
+
+        UserInfo userInfo = userInfoQueryService.findByUserId(order.getUserId());
+        userInfo.addPoint(order.getUsedPoint());
+        couponCommandService.unUseCoupon(order.getCouponId(), userInfo.getUserId());
+
+        CancelData cancelData = new CancelData(
+                order.getImpUid(),
+                true,
+                BigDecimal.valueOf(order.getTotalPrice())
+        );
+        if (order.getPaymentWay().equals(OrderPaymentWay.VIRTUAL_ACCOUNT)) {
+            cancelData.setRefund_holder(order.getBankHolder());
+            cancelData.setRefund_bank(order.getBankCode());
+            cancelData.setRefund_account(order.getBankAccount());
+        }
+        int taxFreePrice = orderProductInfos.stream()
+                .mapToInt(v -> v.getTaxFreeAmount())
+                .sum();
+        cancelData.setTax_free(BigDecimal.valueOf(taxFreePrice));
+        portOneCommandService.sendPortOneCancelData(cancelData);
+
         orderRepository.save(order);
-        paymentCommandService.save(payments);
+        orderProductInfoRepository.saveAll(orderProductInfos);
+        paymentRepository.save(payment);
+        userInfoRepository.save(userInfo);
     }
 
     private void requestRefund(CancelData cancelData) {
