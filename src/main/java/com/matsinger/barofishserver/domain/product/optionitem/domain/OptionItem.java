@@ -79,9 +79,9 @@ public class OptionItem {
     public void reduceQuantity(int quantity) {
         int reducedValue = this.amount - quantity;
         if (reducedValue < 0) {
-            String errorMessage = String.format("'%s' 상품의 재고가 부족합니다." + "\n" +
+            String errorMessage = String.format("['%s'] '%s' 상품의 재고가 부족합니다." + "\n" +
                                                 "상품 재고 = '%s'" + "\n" +
-                                                "주문 재고 = '%s'",
+                                                "주문 수량 = '%s'",
                                                 this.name, this.amount, quantity);
             throw new BusinessException(errorMessage);
         }
