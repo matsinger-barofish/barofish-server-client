@@ -73,7 +73,7 @@ public class PortOneQueryService {
         URI uri = UriComponentsBuilder
                 .fromUriString(portOneUrl)
                 .path("vbanks/holder")
-                .queryParam("bank_code", bankCode)
+                .queryParam("bank_code", bankCode.getCode())
                 .queryParam("bank_num", bankNum)
                 .encode()
                 .build()
