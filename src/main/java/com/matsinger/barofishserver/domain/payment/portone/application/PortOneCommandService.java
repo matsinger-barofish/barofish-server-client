@@ -29,6 +29,7 @@ import com.matsinger.barofishserver.domain.product.domain.Product;
 import com.matsinger.barofishserver.domain.product.optionitem.application.OptionItemCommandService;
 import com.matsinger.barofishserver.domain.product.optionitem.application.OptionItemQueryService;
 import com.matsinger.barofishserver.domain.product.optionitem.domain.OptionItem;
+import com.matsinger.barofishserver.domain.product.optionitem.repository.OptionItemRepository;
 import com.matsinger.barofishserver.domain.user.application.UserCommandService;
 import com.matsinger.barofishserver.domain.userinfo.application.UserInfoQueryService;
 import com.matsinger.barofishserver.domain.userinfo.domain.UserInfo;
@@ -77,6 +78,7 @@ public class PortOneCommandService {
     private final PortOneCallbackService callbackService;
     private final OrderProductInfoRepository orderProductInfoRepository;
     private final UserInfoRepository userInfoRepository;
+    private final OptionItemRepository optionItemRepository;
 
     @Transactional
     public void processWhenStatusReady(PortOneBodyData request) {
@@ -279,7 +281,22 @@ public class PortOneCommandService {
     public void processWhenStatusCanceled(PortOneBodyData request) {
         Orders order = orderQueryService.findById(request.getMerchant_uid());
         Payments payment = paymentRepository.findFirstByImpUid(request.getImp_uid());
+        List<OrderProductInfo> orderProductInfos = orderProductInfoRepository.findAllByOrderId(order.getId());
+        List<Integer> optionItemIds = orderProductInfos.stream()
+                .map(v -> v.getOptionItemId())
+                .toList();
+        List<OptionItem> optionItems = optionItemRepository.findAllById(optionItemIds);
 
+        for (OrderProductInfo orderProductInfo : orderProductInfos) {
+            for (OptionItem optionItem : optionItems) {
+                if (optionItem.getOptionId() == orderProductInfo.getOptionItemId()) {
+                    optionItem.addQuantity(orderProductInfo.getAmount());
+                    break;
+                }
+            }
+        }
+
+        optionItemRepository.saveAll(optionItems);
         payment.setStatus(PaymentState.CANCELED);
         order.setState(OrderState.CANCELED);
         orderRepository.save(order);

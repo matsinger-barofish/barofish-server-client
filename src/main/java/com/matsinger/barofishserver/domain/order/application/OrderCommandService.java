@@ -27,6 +27,7 @@ import com.matsinger.barofishserver.domain.product.difficultDeliverAddress.appli
 import com.matsinger.barofishserver.domain.product.domain.Product;
 import com.matsinger.barofishserver.domain.product.optionitem.application.OptionItemQueryService;
 import com.matsinger.barofishserver.domain.product.optionitem.domain.OptionItem;
+import com.matsinger.barofishserver.domain.product.optionitem.repository.OptionItemRepository;
 import com.matsinger.barofishserver.domain.store.application.StoreInfoQueryService;
 import com.matsinger.barofishserver.domain.store.domain.StoreInfo;
 import com.matsinger.barofishserver.domain.user.deliverplace.DeliverPlace;
@@ -46,6 +47,7 @@ import com.siot.IamportRestClient.response.IamportResponse;
 import com.siot.IamportRestClient.response.Payment;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -81,6 +83,7 @@ public class OrderCommandService {
     private final PortOneCallbackService callbackService;
     private final UserInfoRepository userInfoRepository;
     private final PaymentRepository paymentRepository;
+    private final OptionItemRepository optionItemRepository;
 
     @Transactional
     public OrderResponse proceedOrder(OrderReq request, Integer userId) {
@@ -561,8 +564,29 @@ public class OrderCommandService {
         }
         setCancelReason(request, cancelManager.getTobeCanceled());
 
+        List<OptionItem> optionItems = addQuantity(cancelManager);
+        optionItemRepository.saveAll(optionItems);
         orderProductInfoRepository.saveAll(cancelManager.getAllOrderProducts());
         orderRepository.save(order);
+    }
+
+    @NotNull
+    private List<OptionItem> addQuantity(CancelManager cancelManager) {
+        List<OrderProductInfo> tobeCanceled = cancelManager.getTobeCanceled();
+        List<Integer> optionItemIds = tobeCanceled.stream()
+                .map(v -> v.getOptionItemId())
+                .toList();
+        List<OptionItem> optionItems = optionItemRepository.findAllById(optionItemIds);
+
+        for (OrderProductInfo orderProductInfo : tobeCanceled) {
+            for (OptionItem optionItem : optionItems) {
+                if (optionItem.getOptionId() == orderProductInfo.getOptionItemId()) {
+                    optionItem.addQuantity(orderProductInfo.getAmount());
+                    break;
+                }
+            }
+        }
+        return optionItems;
     }
 
     private static void setVbankRefundInfo(Orders order, CancelData cancelData) {

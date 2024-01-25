@@ -134,4 +134,11 @@ public class OptionItem {
     public int hashCode() {
         return Objects.hash(id, getOptionId(), name);
     }
+
+    public void addQuantity(int quantity) {
+        if (quantity < 0) {
+            throw new BusinessException("주문 상품 개수는 0보다 커야합니다.");
+        }
+        this.amount += quantity;
+    }
 }
