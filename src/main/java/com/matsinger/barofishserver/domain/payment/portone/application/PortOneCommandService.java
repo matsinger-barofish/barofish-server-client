@@ -289,7 +289,7 @@ public class PortOneCommandService {
 
         for (OrderProductInfo orderProductInfo : orderProductInfos) {
             for (OptionItem optionItem : optionItems) {
-                if (optionItem.getOptionId() == orderProductInfo.getOptionItemId()) {
+                if (optionItem.getId() == orderProductInfo.getOptionItemId()) {
                     optionItem.addQuantity(orderProductInfo.getAmount());
                     log.info("optionItemId = {}",optionItem.getId());
                     log.info("quantity = {}",orderProductInfo.getAmount());
