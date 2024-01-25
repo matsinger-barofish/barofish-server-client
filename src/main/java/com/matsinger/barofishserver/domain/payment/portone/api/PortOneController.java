@@ -24,6 +24,7 @@ public class PortOneController {
     private final JwtService jwt;
     private final PortOneQueryService portOneQueryService;
 
+    // https://developers.portone.io/api/rest-v1/vbank 참고
     @PostMapping("/check-account")
     public ResponseEntity<CustomResponse<Boolean>> checkAccount(@RequestHeader(value = "Authorization") Optional<String> auth,
                                                                 @RequestBody AccountCheckRequest request) {
