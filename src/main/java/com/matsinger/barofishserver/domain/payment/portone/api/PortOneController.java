@@ -36,9 +36,11 @@ public class PortOneController {
             if (responseEntity == null) {
                 isAuthorized = false;
             }
-            String bankHolder = responseEntity.getBody().getResponse().getBank_holder();
-            if (bankHolder.equals(request.getHolderName())) {
-                isAuthorized = true;
+            if (responseEntity != null) {
+                String bankHolder = responseEntity.getBody().getResponse().getBank_holder();
+                if (bankHolder.equals(request.getHolderName())) {
+                    isAuthorized = true;
+                }
             }
         } catch (HttpClientErrorException e) {
             isAuthorized = false;
