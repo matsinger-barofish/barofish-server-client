@@ -98,6 +98,9 @@ public class CouponCommandService {
         if (count == 1) couponId = 1;
         else if (count == 2) couponId = 2;
         else if (count == 3) couponId = 3;
+        if (count > 3) {
+            return;
+        }
 
         Optional<CouponUserMap> couponUserMapOptional = couponUserMapRepository.findById(new CouponUserMapId(userId, couponId));
 
