@@ -581,6 +581,8 @@ public class OrderCommandService {
         for (OrderProductInfo orderProductInfo : tobeCanceled) {
             for (OptionItem optionItem : optionItems) {
                 if (optionItem.getOptionId() == orderProductInfo.getOptionItemId()) {
+                    log.info("optionItemId = {}",optionItem.getId());
+                    log.info("quantity = {}",orderProductInfo.getAmount());
                     optionItem.addQuantity(orderProductInfo.getAmount());
                     break;
                 }
