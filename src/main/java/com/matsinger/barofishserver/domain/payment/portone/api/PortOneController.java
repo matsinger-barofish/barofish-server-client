@@ -1,6 +1,7 @@
 package com.matsinger.barofishserver.domain.payment.portone.api;
 
 import com.matsinger.barofishserver.domain.payment.portone.application.PortOneQueryService;
+import com.matsinger.barofishserver.domain.payment.portone.dto.AccountCheckRequest;
 import com.matsinger.barofishserver.domain.payment.portone.dto.PortOneVbankHolderResponse;
 import com.matsinger.barofishserver.jwt.JwtService;
 import com.matsinger.barofishserver.jwt.TokenAuthType;
@@ -31,7 +32,7 @@ public class PortOneController {
 
         boolean isAuthorized = false;
         try {
-            ResponseEntity<PortOneVbankHolderResponse> responseEntity = portOneQueryService.checkVbankAccountVerification(request.getBankCode(), request.getBankNum());
+            ResponseEntity<PortOneVbankHolderResponse> responseEntity = portOneQueryService.checkVbankAccountVerification(request.getBankCodeId(), request.getBankNum());
             if (responseEntity == null) {
                 isAuthorized = false;
             }

@@ -1,8 +1,11 @@
 package com.matsinger.barofishserver.domain.payment.portone.application;
 
+import com.matsinger.barofishserver.domain.order.domain.BankCode;
+import com.matsinger.barofishserver.domain.order.repository.BankCodeRepository;
 import com.matsinger.barofishserver.domain.payment.portone.dto.PortOneAccessKeyRequest;
 import com.matsinger.barofishserver.domain.payment.portone.dto.PortOneAccessKeyResponse;
 import com.matsinger.barofishserver.domain.payment.portone.dto.PortOneVbankHolderResponse;
+import com.matsinger.barofishserver.global.exception.BusinessException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
@@ -16,6 +19,9 @@ import java.net.URI;
 @Service
 @RequiredArgsConstructor
 public class PortOneQueryService {
+
+    private final BankCodeRepository bankCodeRepository;
+
     @Value("${iamport.credentials.apiKey}")
     private String accessKey;
 
@@ -61,7 +67,9 @@ public class PortOneQueryService {
 
         this.accessToken = responseEntity.getBody().getResponse().getAccess_token();
     }
-    public ResponseEntity<PortOneVbankHolderResponse> checkVbankAccountVerification(String bankCode, String bankNum) {
+    public ResponseEntity<PortOneVbankHolderResponse> checkVbankAccountVerification(Integer bankCodeId, String bankNum) {
+        BankCode bankCode = bankCodeRepository.findById(bankCodeId)
+                .orElseThrow(() -> new BusinessException("은행 코드를 찾을 수 없습니다."));
         URI uri = UriComponentsBuilder
                 .fromUriString(portOneUrl)
                 .path("vbanks/holder")
