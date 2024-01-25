@@ -80,6 +80,7 @@ public class PortOneQueryService {
                 .build()
                 .toUri();
 
+        generateAccessToken();
         return sendPortOneAccountInfo(uri, holderName);
     }
 
