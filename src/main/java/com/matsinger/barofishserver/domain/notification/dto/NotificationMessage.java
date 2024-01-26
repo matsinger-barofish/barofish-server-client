@@ -26,7 +26,7 @@ public class NotificationMessage {
     }
 
     public String convertMessage(NotificationMessageType type) {
-        if (optionItemName != null || !optionItemName.isEmpty()) {
+        if (optionItemName != null) {
             productName = productName + " " + optionItemName;
         }
 

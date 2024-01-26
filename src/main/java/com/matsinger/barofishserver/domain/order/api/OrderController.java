@@ -26,6 +26,7 @@ import com.matsinger.barofishserver.domain.product.application.ProductService;
 import com.matsinger.barofishserver.domain.product.domain.Product;
 import com.matsinger.barofishserver.domain.product.domain.ProductState;
 import com.matsinger.barofishserver.domain.product.dto.ProductListDto;
+import com.matsinger.barofishserver.domain.product.optionitem.application.OptionItemQueryService;
 import com.matsinger.barofishserver.domain.product.optionitem.domain.OptionItem;
 import com.matsinger.barofishserver.domain.siteInfo.application.SiteInfoQueryService;
 import com.matsinger.barofishserver.domain.siteInfo.domain.SiteInformation;
@@ -79,6 +80,7 @@ public class OrderController {
     private final GradeQueryService gradeQueryService;
     private final JwtService jwt;
     private final Common utils;
+    private final OptionItemQueryService optionItemQueryService;
 
     @GetMapping("/point-rule")
     public ResponseEntity<CustomResponse<PointRuleRes>> selectPointRule(@RequestHeader(value = "Authorization") Optional<String> auth) {
@@ -776,9 +778,16 @@ public class OrderController {
         orderService.updateOrderProductInfo(new ArrayList<>(List.of(info)));
         Orders order = orderService.selectOrder(info.getOrderId());
         Product product = productService.selectProduct(info.getProductId());
+
+        OptionItem optionItem = optionItemQueryService.findById(info.getOptionItemId());
         notificationCommandService.sendFcmToUser(order.getUserId(),
                 NotificationMessageType.DELIVER_START,
-                NotificationMessage.builder().productName(product.getTitle()).build());
+                NotificationMessage.builder()
+                        .orderedAt(order.getOrderedAt())
+                        .productName(product.getTitle())
+                        .optionItemName(optionItem.getName())
+                        .build());
+
         if (adminId != null) {
             String content = product.getTitle() + " 주문이 발송 처리 되었습니다.";
             AdminLog
@@ -831,9 +840,16 @@ public class OrderController {
         orderService.updateOrderProductInfo(new ArrayList<>(List.of(info)));
         Orders order = orderService.selectOrder(info.getOrderId());
         Product product = productService.findById(info.getProductId());
+
+        OptionItem optionItem = optionItemQueryService.findById(info.getOptionItemId());
         notificationCommandService.sendFcmToUser(order.getUserId(),
                 NotificationMessageType.EXCHANGE_REJECT,
-                NotificationMessage.builder().productName(product.getTitle()).build());
+                NotificationMessage.builder()
+                        .orderedAt(order.getOrderedAt())
+                        .productName(product.getTitle())
+                        .optionItemName(optionItem.getName())
+                        .build());
+
         if (adminId != null) {
             String content = product.getTitle() + " 주문 교환 신청이 반려 처리되었습니다.";
             AdminLog
@@ -863,9 +879,16 @@ public class OrderController {
         orderService.updateOrderProductInfo(new ArrayList<>(List.of(info)));
         Orders order = orderService.selectOrder(info.getOrderId());
         Product product = productService.findById(info.getProductId());
+
+        OptionItem optionItem = optionItemQueryService.findById(info.getOptionItemId());
         notificationCommandService.sendFcmToUser(order.getUserId(),
                 NotificationMessageType.EXCHANGE_ACCEPT,
-                NotificationMessage.builder().productName(product.getTitle()).build());
+                NotificationMessage.builder()
+                        .orderedAt(order.getOrderedAt())
+                        .productName(product.getTitle())
+                        .optionItemName(optionItem.getName())
+                        .build());
+
         if (adminId != null) {
             String content = product.getTitle() + " 주문 교환 신청이 처리되었습니다.";
             AdminLog
@@ -943,9 +966,16 @@ public class OrderController {
         OrderProductInfo info = orderService.selectOrderProductInfo(orderProductInfoId);
         Orders order = orderService.selectOrder(info.getOrderId());
         Product product = productService.findById(info.getProductId());
+
+        OptionItem optionItem = optionItemQueryService.findById(info.getOptionItemId());
         notificationCommandService.sendFcmToUser(order.getUserId(),
                 NotificationMessageType.REFUND_REJECT,
-                NotificationMessage.builder().productName(product.getTitle()).build());
+                NotificationMessage.builder()
+                        .orderedAt(order.getOrderedAt())
+                        .productName(product.getTitle())
+                        .optionItemName(optionItem.getName())
+                        .build());
+
         info.setState(OrderProductState.DELIVERY_DONE);
         orderService.updateOrderProductInfo(new ArrayList<>(List.of(info)));
         if (adminId != null) {
@@ -973,9 +1003,16 @@ public class OrderController {
         OrderProductInfo info = orderService.selectOrderProductInfo(orderProductInfoId);
         Orders order = orderService.selectOrder(info.getOrderId());
         Product product = productService.findById(info.getProductId());
+
+        OptionItem optionItem = optionItemQueryService.findById(info.getOptionItemId());
         notificationCommandService.sendFcmToUser(order.getUserId(),
                 NotificationMessageType.REFUND_ACCEPT,
-                NotificationMessage.builder().orderedAt(order.getOrderedAt()).productName(product.getTitle()).build());
+                NotificationMessage.builder()
+                        .orderedAt(order.getOrderedAt())
+                        .productName(product.getTitle())
+                        .optionItemName(optionItem.getName())
+                        .build());
+
         info.setState(OrderProductState.REFUND_ACCEPT);
         orderService.updateOrderProductInfo(new ArrayList<>(List.of(info)));
         res.setData(Optional.of(true));
@@ -1008,9 +1045,16 @@ public class OrderController {
         orderService.cancelOrderedProduct(info.getId());
         orderService.updateOrderProductInfo(new ArrayList<>(List.of(info)));
         res.setData(Optional.of(true));
+
+        OptionItem optionItem = optionItemQueryService.findById(info.getOptionItemId());
         notificationCommandService.sendFcmToUser(order.getUserId(),
                 NotificationMessageType.REFUND_DONE,
-                NotificationMessage.builder().productName(product.getTitle()).build());
+                NotificationMessage.builder()
+                        .orderedAt(order.getOrderedAt())
+                        .productName(product.getTitle())
+                        .optionItemName(optionItem.getName())
+                        .build());
+
         if (adminId != null) {
             String content = product.getTitle() + " 주문 반품 신청이 완료 처리되었습니다.";
             AdminLog
