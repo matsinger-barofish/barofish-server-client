@@ -929,7 +929,7 @@ public class OrderController {
         return ResponseEntity.ok(res);
     }
 
-    // 반품 요청
+    // 환불 요청
     @PostMapping("/refund/{orderProductInfoId}/request")
     public ResponseEntity<CustomResponse<Boolean>> requestRefundOrderProduct(@RequestHeader(value = "Authorization") Optional<String> auth,
                                                                              @PathVariable("orderProductInfoId") Integer orderProductInfoId,
@@ -952,7 +952,7 @@ public class OrderController {
         return ResponseEntity.ok(res);
     }
 
-    // 반품 요청 거절
+    // 환불 요청 거절
     @PostMapping("/refund/{orderProductInfoId}/reject")
     public ResponseEntity<CustomResponse<Boolean>> rejectRefundOrderProduct(@RequestHeader(value = "Authorization") Optional<String> auth,
                                                                             @PathVariable("orderProductInfoId") Integer orderProductInfoId) {
@@ -979,7 +979,7 @@ public class OrderController {
         info.setState(OrderProductState.DELIVERY_DONE);
         orderService.updateOrderProductInfo(new ArrayList<>(List.of(info)));
         if (adminId != null) {
-            String content = product.getTitle() + " 주문 반품 신청이 반려되었습니다.";
+            String content = product.getTitle() + " 주문 환불 신청이 반려되었습니다.";
             AdminLog
                     adminLog =
                     AdminLog.builder().id(adminLogQueryService.getAdminLogId()).adminId(adminId).type(AdminLogType.ORDER).targetId(
@@ -990,7 +990,7 @@ public class OrderController {
         return ResponseEntity.ok(res);
     }
 
-    // 반품 요청 확인
+    // 환불 요청 확인
     @PostMapping("/refund/{orderProductInfoId}/confirm")
     public ResponseEntity<CustomResponse<Boolean>> confirmRefundOrderProduct(@RequestHeader(value = "Authorization") Optional<String> auth,
                                                                              @PathVariable("orderProductInfoId") Integer orderProductInfoId) {
@@ -1017,7 +1017,7 @@ public class OrderController {
         orderService.updateOrderProductInfo(new ArrayList<>(List.of(info)));
         res.setData(Optional.of(true));
         if (adminId != null) {
-            String content = product.getTitle() + " 주문 반품 신청이 처리되었습니다.";
+            String content = product.getTitle() + " 주문 환불 신청이 처리되었습니다.";
             AdminLog
                     adminLog =
                     AdminLog.builder().id(adminLogQueryService.getAdminLogId()).adminId(adminId).type(AdminLogType.ORDER).targetId(
@@ -1027,7 +1027,7 @@ public class OrderController {
         return ResponseEntity.ok(res);
     }
 
-    // 반품 완료
+    // 환불 완료
     @PostMapping("/refund/{orderProductInfoId}/done")
     public ResponseEntity<CustomResponse<Boolean>> doneRefundOrderProduct(@RequestHeader(value = "Authorization") Optional<String> auth,
                                                                           @PathVariable("orderProductInfoId") Integer orderProductInfoId) throws Exception {
@@ -1056,7 +1056,7 @@ public class OrderController {
                         .build());
 
         if (adminId != null) {
-            String content = product.getTitle() + " 주문 반품 신청이 완료 처리되었습니다.";
+            String content = product.getTitle() + " 주문 환불 신청이 완료 처리되었습니다.";
             AdminLog
                     adminLog =
                     AdminLog.builder().id(adminLogQueryService.getAdminLogId()).adminId(adminId).type(AdminLogType.ORDER).targetId(
