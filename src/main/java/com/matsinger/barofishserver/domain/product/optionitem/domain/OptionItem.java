@@ -64,12 +64,15 @@ public class OptionItem {
 
 
     public void validateQuantity(int quantity, String productName) {
+        if (quantity < 1) {
+            throw new BusinessException("수량은 0보다 커야 합니다.");
+        }
         if (this.amount != null) {
             int reducedValue = this.amount - quantity;
             if (reducedValue < 0) {
                 String errorMessage = String.format("[%s] %s 상품의 재고가 부족합니다." + "\n" +
                                                     "상품 재고 = %s" + "\n" +
-                                                    "주문 수량 = %s",
+                                                    "요청 수량 = %s",
                         productName, this.name, this.amount, quantity);
                 throw new BusinessException(errorMessage);
             }
@@ -81,7 +84,7 @@ public class OptionItem {
         if (reducedValue < 0) {
             String errorMessage = String.format("[%s] %s 상품의 재고가 부족합니다." + "\n" +
                                                 "상품 재고 = %s" + "\n" +
-                                                "주문 수량 = %s",
+                                                "요청 수량 = %s",
                                                 this.name, this.amount, quantity);
             throw new BusinessException(errorMessage);
         }

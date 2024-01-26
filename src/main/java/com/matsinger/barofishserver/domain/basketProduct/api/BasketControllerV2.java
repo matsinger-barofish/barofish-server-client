@@ -56,7 +56,9 @@ public class BasketControllerV2 {
         CustomResponse<Boolean> res = new CustomResponse<>();
         TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth);
 
-        if (amount == null) throw new BusinessException("갯수를 입력해주세요.");
+        if (amount == null) {
+            throw new BusinessException("갯수를 입력해주세요.");
+        }
         basketCommandService.addAmount(tokenInfo.getId(), id, amount);
 
         res.setIsSuccess(true);
