@@ -1,7 +1,9 @@
 package com.matsinger.barofishserver.domain.review.api;
 
 import com.matsinger.barofishserver.domain.order.application.OrderService;
+import com.matsinger.barofishserver.domain.order.domain.Orders;
 import com.matsinger.barofishserver.domain.order.orderprductinfo.domain.OrderProductInfo;
+import com.matsinger.barofishserver.domain.order.orderprductinfo.repository.OrderProductInfoRepository;
 import com.matsinger.barofishserver.domain.product.application.ProductService;
 import com.matsinger.barofishserver.domain.product.domain.Product;
 import com.matsinger.barofishserver.domain.product.option.application.OptionQueryService;
@@ -14,6 +16,7 @@ import com.matsinger.barofishserver.domain.review.domain.*;
 import com.matsinger.barofishserver.domain.review.dto.ReviewAddReq;
 import com.matsinger.barofishserver.domain.review.dto.ReviewDto;
 import com.matsinger.barofishserver.domain.review.dto.UpdateReviewReq;
+import com.matsinger.barofishserver.domain.review.repository.ReviewRepository;
 import com.matsinger.barofishserver.domain.store.application.StoreService;
 import com.matsinger.barofishserver.domain.store.domain.Store;
 import com.matsinger.barofishserver.domain.user.application.UserCommandService;
@@ -55,6 +58,8 @@ public class ReviewController {
     private final S3Uploader s3;
     private final OptionQueryService optionQueryService;
     private final OptionItemQueryService optionItemQueryService;
+    private final OrderProductInfoRepository orderProductInfoRepository;
+    private final ReviewRepository reviewRepository;
 
 
     @GetMapping("/management")
@@ -235,12 +240,24 @@ public class ReviewController {
         OrderProductInfo orderProductInfo = orderService.selectOrderProductInfo(data.getOrderProductInfoId());
         if (data.getProductId() == null) throw new BusinessException("상품 아이디를 입력해주세요.");
 
-        // 필수 옵션만 리뷰를 작성할 수 있도록 함
+        // 필수 옵션만 리뷰를 작성할 수 있고 주문 상품당 하나만 작성 가능
         OptionItem optionItem = optionItemQueryService.findById(orderProductInfo.getOptionItemId());
         Option option = optionQueryService.findById(optionItem.getOptionId());
         if (!option.isNeeded()) {
             throw new BusinessException("필수 옵션만 리뷰를 작성할 수 있습니다.");
         }
+
+        Orders order = orderProductInfo.getOrder();
+        List<OrderProductInfo> orderProductInfos = orderProductInfoRepository.findAllByOrderId(order.getId());
+        List<OrderProductInfo> sameProducts = orderProductInfos.stream()
+                .filter(v -> v.getProductId() == orderProductInfo.getProductId())
+                .toList();
+        boolean reviewAlreadyExists = sameProducts.stream()
+                .noneMatch(v -> reviewRepository.existsByUserIdOrderProductInfoId(userId, v.getId()));
+        if (reviewAlreadyExists) {
+            throw new BusinessException("리뷰는 한 상품당 한번만 작성할 수 있습니다.");
+        }
+        // 필수 옵션만 리뷰를 작성할 수 있고 주문 상품당 하나만 작성 가능
 
         Product product = productService.findById(data.getProductId());
         Store store = storeService.selectStore(product.getStoreId());
