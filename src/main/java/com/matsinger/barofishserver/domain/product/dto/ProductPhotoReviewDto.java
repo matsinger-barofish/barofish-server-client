@@ -9,7 +9,7 @@ import java.util.List;
 
 @Getter
 @Builder @AllArgsConstructor @NoArgsConstructor
-public class ProductPhotiReviewDto {
+public class ProductPhotoReviewDto {
 
     private Integer reviewId;
     private Integer imageCount;

@@ -1,5 +1,6 @@
 package com.matsinger.barofishserver.domain.review.api;
 
+import com.matsinger.barofishserver.domain.product.dto.ProductPhotoReviewDto;
 import com.matsinger.barofishserver.domain.review.application.ReviewCommandService;
 import com.matsinger.barofishserver.domain.review.application.ReviewQueryService;
 import com.matsinger.barofishserver.domain.review.domain.Review;
@@ -141,6 +142,18 @@ public class ReviewControllerV2 {
         StoreReviewDto pagedStoreReviewDto = reviewQueryService.getPagedProductSumStoreReviewInfo(storeId, userId, orderType, pageRequest);
         res.setData(Optional.of(pagedStoreReviewDto));
         return ResponseEntity.ok(res);
+    }
+
+    @GetMapping("/{id}/pictures")
+    public ResponseEntity<CustomResponse<List<ProductPhotoReviewDto>>> getProductReviewPhotos(@PathVariable(value = "id") Integer id,
+                                                                                              @RequestParam(value = "type") String type) {
+        CustomResponse<List<ProductPhotoReviewDto>> response = new CustomResponse<>();
+
+        List<ProductPhotoReviewDto> productPhotoReviewDtos = reviewQueryService.getPictures(id, type);
+        response.setIsSuccess(true);
+        response.setData(Optional.of(productPhotoReviewDtos));
+
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/my")
