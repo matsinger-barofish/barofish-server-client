@@ -238,22 +238,20 @@ public class PortOneCommandService {
     private void sendNotification(Orders order, OrderProductInfo orderProductInfo, boolean isDeliveryDifficult) {
         Product product = productQueryService.findById(orderProductInfo.getProductId());
         OptionItem optionItem = optionItemQueryService.findById(orderProductInfo.getOptionItemId());
+        NotificationMessageType messageType = null;
         if (isDeliveryDifficult) {
-            notificationCommandService.sendFcmToUser(order.getUserId(),
-                    NotificationMessageType.ORDER_CANCEL,
-                    NotificationMessage.builder()
-                            .productName(product.getTitle())
-                            .optionItemName(optionItem.getName())
-                            .isCanceledByRegion(true)
-                            .build());
-            return;
+            messageType = NotificationMessageType.ORDER_CANCEL;
+        }
+        if (!isDeliveryDifficult) {
+            messageType = NotificationMessageType.PAYMENT_DONE;
         }
 
         notificationCommandService.sendFcmToUser(order.getUserId(),
-                NotificationMessageType.PAYMENT_DONE,
+                messageType,
                 NotificationMessage.builder()
                         .productName(product.getTitle())
-                        .isCanceledByRegion(false)
+                        .optionItemName(optionItem.getName())
+                        .isCanceledByRegion(isDeliveryDifficult)
                         .build()
         );
     }
