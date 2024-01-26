@@ -26,7 +26,10 @@ public class NotificationMessage {
     }
 
     public String convertMessage(NotificationMessageType type) {
-        productName = productName + " " + optionItemName;
+        if (optionItemName != null || !optionItemName.isEmpty()) {
+            productName = productName + " " + optionItemName;
+        }
+
         return switch (type) {
             case PAYMENT_DONE -> String.format("<strong>%s</strong> 상품의 결제가 완료되었습니다.", this.productName);
             case DELIVER_READY -> String.format("주문하신 <strong>%s</strong> 상품의 배송 준비가 완료되었습니다.", this.productName);

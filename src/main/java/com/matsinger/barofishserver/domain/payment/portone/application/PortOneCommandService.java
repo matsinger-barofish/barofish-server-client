@@ -125,6 +125,7 @@ public class PortOneCommandService {
                 order.setState(OrderState.DELIVERY_DIFFICULT);
                 order.setImpUid(request.getImp_uid());
                 payments.setStatus(PaymentState.FAILED);
+
                 sendNotification(order, cannotDeliveryProducts.get(0), true);
 
                 CancelData cancelData = createAllCancelData(orderProductInfos, order);
@@ -142,10 +143,11 @@ public class PortOneCommandService {
                 order.setState(OrderState.PAYMENT_DONE);
                 order.setImpUid(request.getImp_uid());
 
-                UserInfo userInfo = userInfoQueryService.findByUserId(order.getUserId());
                 sendNotification(order, orderProductInfos.get(0), false);
-                userInfo.usePoint(order.getUsePoint());
+
                 couponCommandService.useCouponV1(order.getCouponId(), order.getUserId());
+                UserInfo userInfo = userInfoQueryService.findByUserId(order.getUserId());
+                userInfo.usePoint(order.getUsePoint());
 
                 basketQueryRepository.deleteAllBasketByUserIdAndOptionIds(
                         userInfo.getUserId(),
