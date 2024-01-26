@@ -235,12 +235,13 @@ public class PortOneCommandService {
 
     private void sendNotification(Orders order, OrderProductInfo orderProductInfo, boolean isDeliveryDifficult) {
         Product product = productQueryService.findById(orderProductInfo.getProductId());
-
+        OptionItem optionItem = optionItemQueryService.findById(orderProductInfo.getOptionItemId());
         if (isDeliveryDifficult) {
             notificationCommandService.sendFcmToUser(order.getUserId(),
                     NotificationMessageType.ORDER_CANCEL,
                     NotificationMessage.builder()
                             .productName(product.getTitle())
+                            .optionItemName(optionItem.getName())
                             .isCanceledByRegion(true)
                             .build());
             return;
