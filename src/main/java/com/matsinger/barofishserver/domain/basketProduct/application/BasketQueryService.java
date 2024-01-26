@@ -165,6 +165,7 @@ public class BasketQueryService {
                 .name(optionItem.getName())
                 .discountPrice(optionItem.getDiscountPrice())
                 .amount(productInfo.getAmount())
+                .inventoryQuantity(optionItem.getAmount())
                 .purchasePrice(optionItem.getPurchasePrice())
                 .originPrice(optionItem.getOriginPrice())
                 .deliveryFee(product.getDeliverFee())

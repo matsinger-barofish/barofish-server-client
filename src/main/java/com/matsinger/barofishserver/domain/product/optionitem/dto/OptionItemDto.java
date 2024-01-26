@@ -6,16 +6,17 @@ import lombok.*;
 @Setter
 @Builder @AllArgsConstructor @NoArgsConstructor
 public class OptionItemDto {
-    Integer id;
-    Integer optionId;
-    String name;
-    Integer discountPrice;
-    Integer amount;
-    Integer purchasePrice;
-    Integer originPrice;
-    Integer deliveryFee;
-    Integer deliverBoxPerAmount;
-    Integer maxAvailableAmount;
-    Float pointRate;
-    Integer minOrderPrice;
+    private Integer id;
+    private Integer optionId;
+    private String name;
+    private Integer discountPrice;
+    private Integer amount;
+    private Integer inventoryQuantity;
+    private Integer purchasePrice;
+    private Integer originPrice;
+    private Integer deliveryFee;
+    private Integer deliverBoxPerAmount;
+    private Integer maxAvailableAmount;
+    private Float pointRate;
+    private Integer minOrderPrice;
 }
