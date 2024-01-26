@@ -32,6 +32,7 @@ import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.JoinType;
 import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -43,6 +44,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.sql.Timestamp;
 import java.util.*;
 
+@Slf4j
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/review")
@@ -253,7 +255,7 @@ public class ReviewController {
                 .filter(v -> v.getProductId() == orderProductInfo.getProductId())
                 .toList();
         boolean reviewAlreadyExists = sameProducts.stream()
-                .anyMatch(v -> reviewRepository.existsByUserIdAndOrderProductInfoId(userId, v.getId()));
+                .anyMatch(v -> reviewRepository.existsByUserIdAndOrderProductInfoId(userId, v.getId()) == true);
         if (reviewAlreadyExists) {
             throw new BusinessException("리뷰는 한 상품당 한번만 작성할 수 있습니다.");
         }
