@@ -29,7 +29,9 @@ public class PortOneController {
         CustomResponse<Boolean> res = new CustomResponse<>();
         jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth);
 
-        String errorMessage = portOneQueryService.checkVbankAccountVerification(request.getBankCodeId(), request.getBankNum(), request.getHolderName());
+        String holderName = request.getHolderName().trim();
+        String bankNum = request.getBankNum().trim();
+        String errorMessage = portOneQueryService.checkVbankAccountVerification(request.getBankCodeId(), bankNum, holderName);
         boolean isSuccess = false;
         if (errorMessage == null) {
             isSuccess = true;
