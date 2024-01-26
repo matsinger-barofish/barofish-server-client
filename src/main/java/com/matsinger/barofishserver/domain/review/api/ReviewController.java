@@ -253,7 +253,7 @@ public class ReviewController {
                 .filter(v -> v.getProductId() == orderProductInfo.getProductId())
                 .toList();
         boolean reviewAlreadyExists = sameProducts.stream()
-                .noneMatch(v -> reviewRepository.existsByUserIdOrderProductInfoId(userId, v.getId()));
+                .noneMatch(v -> reviewRepository.existsByUserIdAndOrderProductInfoId(userId, v.getId()));
         if (reviewAlreadyExists) {
             throw new BusinessException("리뷰는 한 상품당 한번만 작성할 수 있습니다.");
         }

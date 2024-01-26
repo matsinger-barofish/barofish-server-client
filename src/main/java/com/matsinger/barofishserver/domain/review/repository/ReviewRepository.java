@@ -76,5 +76,5 @@ public interface ReviewRepository extends JpaRepository<Review, Integer>, JpaSpe
 
     Integer countAllByProductIdAndIsDeleted(Integer productId, boolean isDeleted);
 
-    boolean existsByUserIdOrderProductInfoId(Integer userId, int orderProductInfoId);
+    boolean existsByUserIdAndOrderProductInfoId(Integer userId, int orderProductInfoId);
 }
