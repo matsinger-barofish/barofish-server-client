@@ -1,6 +1,5 @@
 package com.matsinger.barofishserver.domain.product.api;
 
-import com.matsinger.barofishserver.domain.ClientIPManager;
 import com.matsinger.barofishserver.domain.address.application.AddressQueryService;
 import com.matsinger.barofishserver.domain.address.domain.Address;
 import com.matsinger.barofishserver.domain.admin.application.AdminQueryService;
@@ -271,9 +270,6 @@ public class ProductController {
     @GetMapping("/{id}")
     public ResponseEntity<CustomResponse<SimpleProductDto>> selectProduct(@RequestHeader(value = "Authorization") Optional<String> auth,
                                                                           @PathVariable("id") Integer id) {
-        ClientIPManager clientIPManager = new ClientIPManager();
-        log.info("clientIp = {}", clientIPManager.getClientIP());
-
         CustomResponse<SimpleProductDto> res = new CustomResponse<>();
 
         TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(
