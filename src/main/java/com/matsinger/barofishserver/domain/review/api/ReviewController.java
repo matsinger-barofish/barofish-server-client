@@ -106,12 +106,11 @@ public class ReviewController {
 
     @GetMapping(value = {"/store/{id}", "/store"})
     public ResponseEntity<CustomResponse<Page<ReviewDto>>> selectReviewListWithStoreId(@RequestHeader(value = "Authorization") Optional<String> auth,
-                                                                                       @PathVariable(value = "id", required = false) Integer storeId,
+                                                                                       @PathVariable(value = "id", required = false) String storeId,
                                                                                        @RequestParam(value = "orderType", required = false, defaultValue = "RECENT") ReviewOrderByType orderType,
                                                                                        @RequestParam(value = "page", required = false, defaultValue = "1") Integer page,
                                                                                        @RequestParam(value = "take", required = false, defaultValue = "10") Integer take) {
         CustomResponse<Page<ReviewDto>> res = new CustomResponse<>();
-
         Integer userId = null;
         TokenInfo tokenInfo = null;
         if (auth.isEmpty()) {
@@ -124,9 +123,11 @@ public class ReviewController {
 
         PageRequest pageRequest = PageRequest.of(page, take);
         Page<Review> reviewData = null;
+
+        Integer integerStoreId = Integer.valueOf(storeId);
         if (orderType.equals(ReviewOrderByType.RECENT))
-            reviewData = reviewQueryService.selectReviewListByStoreOrderedRecent(storeId, pageRequest);
-        else reviewData = reviewQueryService.selectReviewListOrderedBestWithStoreId(storeId, pageRequest);
+            reviewData = reviewQueryService.selectReviewListByStoreOrderedRecent(integerStoreId, pageRequest);
+        else reviewData = reviewQueryService.selectReviewListOrderedBestWithStoreId(integerStoreId, pageRequest);
 
         Integer finalUserId = userId;
         Page<ReviewDto> reviews = reviewData.map(review -> {
