@@ -4,6 +4,10 @@ import com.matsinger.barofishserver.domain.order.application.OrderService;
 import com.matsinger.barofishserver.domain.order.orderprductinfo.domain.OrderProductInfo;
 import com.matsinger.barofishserver.domain.product.application.ProductService;
 import com.matsinger.barofishserver.domain.product.domain.Product;
+import com.matsinger.barofishserver.domain.product.option.application.OptionQueryService;
+import com.matsinger.barofishserver.domain.product.option.domain.Option;
+import com.matsinger.barofishserver.domain.product.optionitem.application.OptionItemQueryService;
+import com.matsinger.barofishserver.domain.product.optionitem.domain.OptionItem;
 import com.matsinger.barofishserver.domain.review.application.ReviewCommandService;
 import com.matsinger.barofishserver.domain.review.application.ReviewQueryService;
 import com.matsinger.barofishserver.domain.review.domain.*;
@@ -49,6 +53,8 @@ public class ReviewController {
     private final JwtService jwt;
     private final Common utils;
     private final S3Uploader s3;
+    private final OptionQueryService optionQueryService;
+    private final OptionItemQueryService optionItemQueryService;
 
 
     @GetMapping("/management")
@@ -227,6 +233,14 @@ public class ReviewController {
             throw new BusinessException("주문 상품 아이디를 입력해주세요.");
         OrderProductInfo orderProductInfo = orderService.selectOrderProductInfo(data.getOrderProductInfoId());
         if (data.getProductId() == null) throw new BusinessException("상품 아이디를 입력해주세요.");
+
+        // 필수 옵션만 리뷰를 작성할 수 있도록 함
+        OptionItem optionItem = optionItemQueryService.findById(orderProductInfo.getOptionItemId());
+        Option option = optionQueryService.findById(optionItem.getOptionId());
+        if (!option.isNeeded()) {
+            throw new BusinessException("필수 옵션만 리뷰를 작성할 수 있습니다.");
+        }
+
         Product product = productService.findById(data.getProductId());
         Store store = storeService.selectStore(product.getStoreId());
         String content = data.getContent();
