@@ -464,6 +464,7 @@ public class OrderCommandService {
             if (seq == 1) {
                 firstProductTitle = product.getTitle();
             }
+            log.info("cancelProductTitle = {}", firstProductTitle);
             StoreInfo storeInfo = storeInfoQueryService.findByStoreId(product.getStoreId());
 
             if (!order.isCouponUsed()) {
