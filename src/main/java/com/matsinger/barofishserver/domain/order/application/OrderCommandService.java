@@ -108,15 +108,12 @@ public class OrderCommandService {
         int totalTaxFreePrice = 0;
         List<Integer> cannotDeliverProductIds = new ArrayList<>();
         boolean notIncludesCannotDeliverPlace = true;
-        log.info("orderDeliverPlaceBcode = {}", orderDeliverPlace.getBcode());
         List<OrderProductInfo> allOrderProducts = new ArrayList<>();
         for (StoreInfo storeInfo : storeMap.keySet()) {
             List<OrderProductInfo> storeOrderProductInfos = storeMap.get(storeInfo);
             allOrderProducts.addAll(storeOrderProductInfos);
 
             boolean canDeliver = validateDifficultDeliveryRegion(orderDeliverPlace, storeOrderProductInfos);
-            log.info("canDeliver = {}", canDeliver);
-            log.info("notIncludesCannotDeliverPlace = {}", notIncludesCannotDeliverPlace);
             if (!canDeliver) {
                 cannotDeliverProductIds.addAll(
                         storeOrderProductInfos.stream()
@@ -346,9 +343,11 @@ public class OrderCommandService {
                 .distinct().toArray();
         boolean canDeliver = true;
         for (int productId : uniqueProductIds) {
+            log.info("=== canDeliver start ===");
             canDeliver = difficultDeliverAddressQueryService
                     .canDeliver(productId, orderDeliverPlace);
-
+            log.info("canDeliver = {}", canDeliver);
+            log.info("=== canDeliver end ===");
             if (!canDeliver) {
                 orderProductInfos.stream()
                         .filter(v -> v.getProductId() == productId)
