@@ -337,7 +337,7 @@ public class OrderCommandService {
                 .mapToInt(v -> v.getProductId())
                 .distinct().toArray();
         log.info("productIds = {}", uniqueProductIds.toString());
-        boolean containsCannotDeliverPlace = false;
+        boolean deliveryAvailable = true;
         for (int productId : uniqueProductIds) {
             boolean canDeliver = difficultDeliverAddressQueryService
                     .canDeliver(productId, orderDeliverPlace);
@@ -345,10 +345,10 @@ public class OrderCommandService {
                 orderProductInfos.stream()
                         .filter(v -> v.getProductId() == productId)
                         .forEach(v -> v.setState(OrderProductState.DELIVERY_DIFFICULT));
-                containsCannotDeliverPlace = true;
+                deliveryAvailable = false;
             }
         }
-        return containsCannotDeliverPlace;
+        return deliveryAvailable;
     }
 
     private Integer validateFinalPrice(OrderReq request, int totalOrderPriceContainsDeliveryFee) {
