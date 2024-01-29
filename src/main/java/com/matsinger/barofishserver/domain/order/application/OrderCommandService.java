@@ -336,7 +336,6 @@ public class OrderCommandService {
         int[] uniqueProductIds = orderProductInfos.stream()
                 .mapToInt(v -> v.getProductId())
                 .distinct().toArray();
-        log.info("productIds = {}", uniqueProductIds.toString());
         boolean deliveryAvailable = true;
         for (int productId : uniqueProductIds) {
             boolean canDeliver = difficultDeliverAddressQueryService
@@ -404,6 +403,7 @@ public class OrderCommandService {
     public void cancelOrder(TokenInfo tokenInfo, List<Integer> orderProductInfoIds, RequestCancelReq request) {
 
         List<OrderProductInfo> cancelRequested = orderProductInfoRepository.findAllById(orderProductInfoIds);
+
         List<Integer> uniqueStoreIds = cancelRequested.stream()
                 .map(v -> v.getStoreId())
                 .distinct()
@@ -462,7 +462,7 @@ public class OrderCommandService {
                         .toList();
                 List<OrderProductInfo> notTobeCanceled = allOrderProducts.stream()
                         .filter(v -> !OrderProductState.isCanceled(v.getState()))
-                        .filter(v -> v.getStoreId() != cancelRequestedProduct.getStoreId())
+//                        .filter(v -> v.getStoreId() != cancelRequestedProduct.getStoreId())
                         .toList();
                 log.info("tobeCanceled = {}", tobeCanceled.stream().map(v -> v.getProduct().getTitle()).toList().toString());
                 log.info("notTobeCanceled = {}", notTobeCanceled.stream().map(v -> v.getProduct().getTitle()).toList().toString());
