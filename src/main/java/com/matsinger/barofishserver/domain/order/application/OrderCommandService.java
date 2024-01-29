@@ -441,8 +441,19 @@ public class OrderCommandService {
         int seq = 1;
         String firstProductTitle = null;
         for (OrderProductInfo cancelRequestedProduct : storeOrderProducts) {
-            if (order.isCouponUsed() || order.getState().equals(OrderState.WAIT_DEPOSIT)) {
-                log.info("couponUsedScope");
+            if (order.isCouponUsed() && !order.getState().equals(OrderState.WAIT_DEPOSIT)) {
+                CancelManager cancelManager = new CancelManager(
+                        order, allOrderProducts, List.of());
+
+                boolean isCancelable = allOrderProducts.stream()
+                        .noneMatch(v -> !v.getState().equals(OrderProductState.PAYMENT_DONE));
+                if (!isCancelable) {
+                    throw new BusinessException("출고, 배송중, 배송이 완료된 상품이 있어 취소가 불가능합니다.");
+                }
+                cancel(order, cancelManager, request, authType);
+                break;
+            }
+            if (order.getState().equals(OrderState.WAIT_DEPOSIT)) {
                 CancelManager cancelManager = new CancelManager(
                         order, allOrderProducts, List.of());
                 cancel(order, cancelManager, request, authType);
