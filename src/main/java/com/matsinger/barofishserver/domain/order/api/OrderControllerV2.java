@@ -39,7 +39,6 @@ public class OrderControllerV2 {
 
         TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth);
 
-        log.info("=================================");
         OrderResponse orderResponse = orderCommandService.proceedOrder(request, tokenInfo.getId());
 
         res.setIsSuccess(true);
@@ -48,8 +47,6 @@ public class OrderControllerV2 {
                         .id(orderResponse.getOrderId())
                         .build())
         );
-        log.info("canDeliver = {}", orderResponse.isCanDeliver());
-        log.info("=================================");
         if (orderResponse.isCanDeliver()) {
             res.setCode("200");
             return ResponseEntity.ok(res);

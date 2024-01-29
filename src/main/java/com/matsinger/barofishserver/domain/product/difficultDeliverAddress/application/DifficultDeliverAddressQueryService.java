@@ -31,13 +31,9 @@ public class DifficultDeliverAddressQueryService {
 
         String orderDeliverPlaceBcode = orderDeliverPlace.getBcode().substring(0, 5);
 
-
-        log.info("productId = {}", productId);
-        log.info("order orderDeliverPlaceBcode = {}", orderDeliverPlaceBcode);
         for (String difficultDeliveryBcode : difficultDeliveryBcodes) {
             if (difficultDeliveryBcode.length() >= 5) {
                 String subtractedBcode = difficultDeliveryBcode.substring(0, 5);
-                log.info("order difficultDeliveryBcode = {}", subtractedBcode);
                 boolean cannotDeliver = subtractedBcode.equals(orderDeliverPlaceBcode);
                 if (cannotDeliver) {
                     return false;

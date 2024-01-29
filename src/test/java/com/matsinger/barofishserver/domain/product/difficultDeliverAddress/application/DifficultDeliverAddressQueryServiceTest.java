@@ -32,10 +32,16 @@ class DifficultDeliverAddressQueryServiceTest {
     void difficultTest() {
         // given
         List<Integer> productIds = List.of(5, 6);
+        List<String> difficultDeliveryBcodes = List.of(
+                "1126000000",
+                "4113500000",
+                "1111000000",
+                "1111000000"
+        );
         for (Integer productId : productIds) {
 
-            List<String> difficultDeliveryBcodes = difficultDeliverAddressRepository.findAllByProductId(productId)
-                    .stream().map(v -> v.getBcode()).toList();
+//            List<String> difficultDeliveryBcodes = difficultDeliverAddressRepository.findAllByProductId(productId)
+//                    .stream().map(v -> v.getBcode()).toList();
 
             String orderDeliverPlaceBcode = "11110";
 
@@ -43,6 +49,7 @@ class DifficultDeliverAddressQueryServiceTest {
             for (String difficultDeliveryBcode : difficultDeliveryBcodes) {
                 cannotDeliver = difficultDeliveryBcode.length() >= 5 &&
                         difficultDeliveryBcode.substring(0, 5).equals(orderDeliverPlaceBcode);
+                System.out.println("cannotDeliver = " + cannotDeliver);
             }
         }
         // when

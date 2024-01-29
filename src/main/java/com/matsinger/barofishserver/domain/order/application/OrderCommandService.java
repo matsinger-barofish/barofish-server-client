@@ -100,9 +100,6 @@ public class OrderCommandService {
 
         Map<StoreInfo, List<OrderProductInfo>> storeMap = createStoreMap(request, userInfo, orderId);
 
-        log.info("orderId = {}", orderId);
-        log.info("totalOrderPrice = {}", request.getTotalPrice());
-
         int totalOrderDeliveryFee = 0;
         int totalOrderProductPrice = 0;
         int totalTaxFreePrice = 0;
@@ -135,7 +132,6 @@ public class OrderCommandService {
                     .mapToInt(v -> v.getTaxFreeAmount()).sum();
         }
 
-        log.info("totalOrderProductPrice = {}", totalOrderProductPrice);
         int totalOrderPriceContainsDeliveryFee = totalOrderProductPrice + totalOrderDeliveryFee;
 
         validateCouponAndPoint(request, totalOrderProductPrice, userInfo);
@@ -174,8 +170,6 @@ public class OrderCommandService {
         }
 
         save(storeMap, order, orderDeliverPlace);
-
-        log.info("notIncludesCannotDeliverPlace = {}", notIncludesCannotDeliverPlace);
 
         return OrderResponse.builder()
                 .orderId(orderId)
@@ -341,20 +335,18 @@ public class OrderCommandService {
         int[] uniqueProductIds = orderProductInfos.stream()
                 .mapToInt(v -> v.getProductId())
                 .distinct().toArray();
-        boolean canDeliver = true;
+        boolean containsCannotDeliverPlace = false;
         for (int productId : uniqueProductIds) {
-            log.info("=== canDeliver start ===");
-            canDeliver = difficultDeliverAddressQueryService
+            boolean canDeliver = difficultDeliverAddressQueryService
                     .canDeliver(productId, orderDeliverPlace);
-            log.info("canDeliver = {}", canDeliver);
-            log.info("=== canDeliver end ===");
             if (!canDeliver) {
                 orderProductInfos.stream()
                         .filter(v -> v.getProductId() == productId)
                         .forEach(v -> v.setState(OrderProductState.DELIVERY_DIFFICULT));
+                containsCannotDeliverPlace = true;
             }
         }
-        return canDeliver;
+        return containsCannotDeliverPlace;
     }
 
     private Integer validateFinalPrice(OrderReq request, int totalOrderPriceContainsDeliveryFee) {
