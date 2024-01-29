@@ -231,13 +231,18 @@ public class BasketCommandService {
             // 장바구니에 같은 상품이 있으면
             if (!basketProductInfos.isEmpty()) {
                 // 같은 옵션 아이템에 수량 추가
-                if (basketProductInfos.containsOptionItem(optionReq.getOptionId())) {
-                    optionItem.validateQuantity(optionReq.getAmount(), product.getTitle());
+                BasketProductInfo sameOptionItem = basketProductInfos.getSameOptionItem(optionReq.getOptionId());
+                if (sameOptionItem != null) {
+                    optionItem.validateQuantity(
+                            optionReq.getAmount() + sameOptionItem.getAmount(),
+                            product.getTitle());
                     basketProductInfos.addQuantity(optionReq.getOptionId(), optionReq.getAmount());
                 }
                 // 같은 옵션 아이템이 없으면 새로운 옵션아이템으로 추가
-                if (!basketProductInfos.containsOptionItem(optionReq.getOptionId())) {
-                    optionItem.validateQuantity(optionReq.getAmount(), product.getTitle());
+                if (sameOptionItem == null) {
+                    optionItem.validateQuantity(
+                            optionReq.getAmount() + sameOptionItem.getAmount(),
+                            product.getTitle());
                     addBasketProduct(userId, optionReq, option, optionItem, product);
                 }
                 necessaryOptionExists = true;
