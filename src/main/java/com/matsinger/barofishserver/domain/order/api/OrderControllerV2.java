@@ -12,6 +12,7 @@ import com.matsinger.barofishserver.jwt.TokenInfo;
 import com.matsinger.barofishserver.utils.Common;
 import com.matsinger.barofishserver.utils.CustomResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -19,6 +20,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
+@Slf4j
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v2/order")
@@ -37,6 +39,7 @@ public class OrderControllerV2 {
 
         TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth);
 
+        log.info("=================================");
         OrderResponse orderResponse = orderCommandService.proceedOrder(request, tokenInfo.getId());
 
         res.setIsSuccess(true);
@@ -45,6 +48,8 @@ public class OrderControllerV2 {
                         .id(orderResponse.getOrderId())
                         .build())
         );
+        log.info("canDeliver = {}", orderResponse.isCanDeliver());
+        log.info("=================================");
         if (orderResponse.isCanDeliver()) {
             res.setCode("200");
             return ResponseEntity.ok(res);
