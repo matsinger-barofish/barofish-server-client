@@ -356,6 +356,8 @@ public class ProductService {
         StoreInfo storeInfo = storeService.selectStoreInfo(product.getStoreId());
         Integer reviewCount = reviewQueryService.countReviewWithoutDeleted(product.getId(), false);
         OptionItem optionItem = selectOptionItem(product.getRepresentOptionItemId());
+
+        List<String> difficultDeliveryBcodes = difficultDeliverAddressQueryService.getDifficultDeliveryBcodes(product.getId());
         return ProductListDto.builder()
                 .id(product.getId())
                 .state(product.getState())
@@ -364,6 +366,7 @@ public class ProductService {
                 .isNeedTaxation(product.getNeedTaxation())
                 .discountPrice(optionItem.getDiscountPrice())
                 .title(product.getTitle())
+                .bcodes(difficultDeliveryBcodes)
                 .reviewCount(reviewCount)
                 .storeId(storeInfo.getStoreId())
                 .storeName(storeInfo.getName())
