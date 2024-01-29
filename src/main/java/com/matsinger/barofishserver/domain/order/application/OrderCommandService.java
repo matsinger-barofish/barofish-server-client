@@ -434,7 +434,7 @@ public class OrderCommandService {
         int seq = 1;
         String firstProductTitle = null;
         for (OrderProductInfo cancelRequestedProduct : storeOrderProducts) {
-            log.info("cancelRequestedProduct = {}", cancelRequestedProduct);
+            log.info("cancelRequestedProductId = {}", cancelRequestedProduct.getId());
 
             if (order.isCouponUsed() && !order.getState().equals(OrderState.WAIT_DEPOSIT)) {
                 CancelManager cancelManager = new CancelManager(
