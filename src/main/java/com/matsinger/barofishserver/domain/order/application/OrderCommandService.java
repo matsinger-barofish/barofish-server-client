@@ -441,6 +441,7 @@ public class OrderCommandService {
         int seq = 1;
         String firstProductTitle = null;
         for (OrderProductInfo cancelRequestedProduct : storeOrderProducts) {
+
             if (order.isCouponUsed() && !order.getState().equals(OrderState.WAIT_DEPOSIT)) {
                 CancelManager cancelManager = new CancelManager(
                         order, allOrderProducts, List.of());
@@ -460,22 +461,15 @@ public class OrderCommandService {
                 break;
             }
 
-            Product product = productQueryService.findById(cancelRequestedProduct.getProductId());
-            if (seq == 1) {
-                firstProductTitle = product.getTitle();
-            }
-            log.info("cancelProductTitle = {}", firstProductTitle);
-            StoreInfo storeInfo = storeInfoQueryService.findByStoreId(product.getStoreId());
-
             if (!order.isCouponUsed()) {
                 log.info("couponNotUsedScope");
                 List<OrderProductInfo> tobeCanceled = allOrderProducts.stream()
                         .filter(v -> !OrderProductState.isCanceled(v.getState()))
-                        .filter(v -> v.getStoreId() == storeInfo.getStoreId())
+                        .filter(v -> v.getStoreId() == cancelRequestedProduct.getStoreId())
                         .toList();
                 List<OrderProductInfo> notTobeCanceled = allOrderProducts.stream()
                         .filter(v -> !OrderProductState.isCanceled(v.getState()))
-                        .filter(v -> v.getStoreId() != storeInfo.getStoreId())
+                        .filter(v -> v.getStoreId() != cancelRequestedProduct.getStoreId())
                         .toList();
                 log.info("tobeCanceled = {}", tobeCanceled.stream().map(v -> v.getProduct().getTitle()).toList().toString());
                 log.info("notTobeCanceled = {}", notTobeCanceled.stream().map(v -> v.getProduct().getTitle()).toList().toString());
@@ -484,6 +478,12 @@ public class OrderCommandService {
                         order, tobeCanceled, notTobeCanceled);
 
                 cancel(order, cancelManager, request, authType);
+            }
+
+            Product product = productQueryService.findById(cancelRequestedProduct.getProductId());
+            OptionItem optionItem = optionItemQueryService.findById(cancelRequestedProduct.getOptionItemId());
+            if (seq == 1) {
+                firstProductTitle = product.getTitle() + " " + optionItem.getName();
             }
             seq++;
         }
