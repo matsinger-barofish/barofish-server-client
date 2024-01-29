@@ -1042,7 +1042,9 @@ public class OrderController {
         Orders order = orderService.selectOrder(info.getOrderId());
         Product product = productService.findById(info.getProductId());
         info.setState(OrderProductState.REFUND_DONE);
+
         orderService.cancelOrderedProduct(info.getId());
+
         orderService.updateOrderProductInfo(new ArrayList<>(List.of(info)));
         res.setData(Optional.of(true));
 
