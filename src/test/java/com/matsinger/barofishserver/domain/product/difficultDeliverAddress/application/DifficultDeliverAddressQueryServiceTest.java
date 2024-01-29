@@ -1,6 +1,5 @@
 package com.matsinger.barofishserver.domain.product.difficultDeliverAddress.application;
 
-import com.matsinger.barofishserver.domain.product.difficultDeliverAddress.domain.DifficultDeliverAddress;
 import com.matsinger.barofishserver.domain.product.difficultDeliverAddress.repository.DifficultDeliverAddressRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -15,10 +14,6 @@ import java.util.List;
 class DifficultDeliverAddressQueryServiceTest {
 
     @Autowired private DifficultDeliverAddressRepository difficultDeliverAddressRepository;
-
-    public DifficultDeliverAddressQueryServiceTest(DifficultDeliverAddressRepository difficultDeliverAddressRepository) {
-        this.difficultDeliverAddressRepository = difficultDeliverAddressRepository;
-    }
 
     @DisplayName("")
     @Test
@@ -36,12 +31,19 @@ class DifficultDeliverAddressQueryServiceTest {
     @Test
     void difficultTest() {
         // given
-        List<Integer> productIds = List.of(11, 12);
+        List<Integer> productIds = List.of(5, 6);
         for (Integer productId : productIds) {
-            difficultDeliverAddressRepository.findAllByProductId(productId);
-            List<DifficultDeliverAddress> difficultDeliverAddresses = difficultDeliverAddressRepository.findAllByProductId(productId);
 
-            List<String> bcodes = difficultDeliverAddresses.stream().map(v -> v.getBcode()).toList();
+            List<String> difficultDeliveryBcodes = difficultDeliverAddressRepository.findAllByProductId(productId)
+                    .stream().map(v -> v.getBcode()).toList();
+
+            String orderDeliverPlaceBcode = "11110";
+
+            boolean cannotDeliver = false;
+            for (String difficultDeliveryBcode : difficultDeliveryBcodes) {
+                cannotDeliver = difficultDeliveryBcode.length() >= 5 &&
+                        difficultDeliveryBcode.substring(0, 5).equals(orderDeliverPlaceBcode);
+            }
         }
         // when
 
