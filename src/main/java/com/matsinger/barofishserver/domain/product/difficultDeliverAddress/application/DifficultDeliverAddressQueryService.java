@@ -31,11 +31,11 @@ public class DifficultDeliverAddressQueryService {
 
         String orderDeliverPlaceBcode = orderDeliverPlace.getBcode().substring(0, 5);
 
-        log.info("orderDeliverPlaceBcode = {}", orderDeliverPlaceBcode);
+        log.info("order orderDeliverPlaceBcode = {}", orderDeliverPlaceBcode);
         for (String difficultDeliveryBcode : difficultDeliveryBcodes) {
             if (difficultDeliveryBcode.length() >= 5) {
                 String subtractedBcode = difficultDeliveryBcode.substring(0, 5);
-                log.info("difficultDeliveryBcode = {}", subtractedBcode);
+                log.info("order difficultDeliveryBcode = {}", subtractedBcode);
                 boolean cannotDeliver = subtractedBcode.equals(orderDeliverPlaceBcode);
                 if (cannotDeliver) {
                     return false;
