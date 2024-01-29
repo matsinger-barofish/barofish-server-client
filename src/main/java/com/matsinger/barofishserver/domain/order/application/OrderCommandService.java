@@ -5,7 +5,6 @@ import com.matsinger.barofishserver.domain.coupon.application.CouponCommandServi
 import com.matsinger.barofishserver.domain.coupon.application.CouponQueryService;
 import com.matsinger.barofishserver.domain.coupon.domain.Coupon;
 import com.matsinger.barofishserver.domain.notification.application.NotificationCommandService;
-import com.matsinger.barofishserver.domain.notification.dto.NotificationMessage;
 import com.matsinger.barofishserver.domain.notification.dto.NotificationMessageType;
 import com.matsinger.barofishserver.domain.order.domain.*;
 import com.matsinger.barofishserver.domain.order.dto.*;
@@ -16,7 +15,6 @@ import com.matsinger.barofishserver.domain.order.orderprductinfo.repository.Orde
 import com.matsinger.barofishserver.domain.order.repository.OrderDeliverPlaceRepository;
 import com.matsinger.barofishserver.domain.order.repository.OrderRepository;
 import com.matsinger.barofishserver.domain.payment.application.PaymentService;
-import com.matsinger.barofishserver.domain.payment.domain.PaymentState;
 import com.matsinger.barofishserver.domain.payment.domain.Payments;
 import com.matsinger.barofishserver.domain.payment.dto.CancelManager;
 import com.matsinger.barofishserver.domain.payment.dto.KeyInPaymentReq;
@@ -433,8 +431,8 @@ public class OrderCommandService {
         log.info("isCouponUsed = {}", order.isCouponUsed());
         int seq = 1;
         String firstProductTitle = null;
-        for (OrderProductInfo cancelRequestedProduct : storeOrderProducts) {
-            log.info("cancelRequestedProductId = {}", cancelRequestedProduct.getId());
+        for (Integer storeId : uniqueStoreIds) {
+            log.info("storeId = {}", storeId);
 
             if (order.isCouponUsed() && !order.getState().equals(OrderState.WAIT_DEPOSIT)) {
                 CancelManager cancelManager = new CancelManager(
@@ -458,11 +456,11 @@ public class OrderCommandService {
             if (!order.isCouponUsed()) {
                 List<OrderProductInfo> tobeCanceled = allOrderProducts.stream()
                         .filter(v -> !OrderProductState.isCanceled(v.getState()))
-                        .filter(v -> v.getStoreId() == cancelRequestedProduct.getStoreId())
+                        .filter(v -> v.getStoreId() == storeId)
                         .toList();
                 List<OrderProductInfo> notTobeCanceled = allOrderProducts.stream()
                         .filter(v -> !OrderProductState.isCanceled(v.getState()))
-//                        .filter(v -> v.getStoreId() != cancelRequestedProduct.getStoreId())
+                        .filter(v -> v.getStoreId() != storeId)
                         .toList();
                 log.info("tobeCanceled = {}", tobeCanceled.stream().map(v -> v.getProduct().getTitle()).toList().toString());
                 log.info("notTobeCanceled = {}", notTobeCanceled.stream().map(v -> v.getProduct().getTitle()).toList().toString());
@@ -473,22 +471,22 @@ public class OrderCommandService {
                 cancel(order, cancelManager, request, authType);
             }
 
-            Product product = productQueryService.findById(cancelRequestedProduct.getProductId());
-            OptionItem optionItem = optionItemQueryService.findById(cancelRequestedProduct.getOptionItemId());
+            Product product = productQueryService.findById(orderProductInfo.getProductId());
+            OptionItem optionItem = optionItemQueryService.findById(orderProductInfo.getOptionItemId());
             if (seq == 1) {
                 firstProductTitle = product.getTitle() + " " + optionItem.getName();
             }
             seq++;
         }
 
-        notificationCommandService.sendFcmToUser(
-                order.getUserId(),
-                convertType(authType),
-                NotificationMessage.builder()
-                        .productName(firstProductTitle)
-                        .isCanceledByRegion(false)
-                        .build()
-        );
+//        notificationCommandService.sendFcmToUser(
+//                order.getUserId(),
+//                convertType(authType),
+//                NotificationMessage.builder()
+//                        .productName(firstProductTitle)
+//                        .isCanceledByRegion(false)
+//                        .build()
+//        );
     }
 
     private NotificationMessageType convertType(TokenAuthType authType) {
@@ -548,18 +546,18 @@ public class OrderCommandService {
 //        log.info("taxFreePrice = {}", cancelManager.getNonTaxablePriceTobeCanceled());
         cancelData.setTax_free(BigDecimal.valueOf(cancelManager.getNonTaxablePriceTobeCanceled()));
         setVbankRefundInfo(order, cancelData);
-        sendPortOneCancelData(cancelData);
+//        sendPortOneCancelData(cancelData);
 
         if (cancelManager.allCanceled()) {
             Payments payment = paymentRepository.findFirstByImpUid(order.getImpUid());
-            payment.setStatus(PaymentState.CANCELED);
+//            payment.setStatus(PaymentState.CANCELED);
             order.setState(OrderState.CANCELED);
 
             couponCommandService.unUseCoupon(order.getCouponId(), order.getUserId());
             UserInfo userInfo = userInfoQueryService.findByUserId(order.getUserId());
             userInfo.addPoint(order.getUsedPoint());
 
-            paymentRepository.save(payment);
+//            paymentRepository.save(payment);
             userInfoRepository.save(userInfo);
         }
         if (!cancelManager.allCanceled()) {
