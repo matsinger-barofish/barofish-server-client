@@ -241,7 +241,7 @@ public class BasketCommandService {
                 // 같은 옵션 아이템이 없으면 새로운 옵션아이템으로 추가
                 if (sameOptionItem == null) {
                     optionItem.validateQuantity(
-                            optionReq.getAmount() + sameOptionItem.getAmount(),
+                            optionReq.getAmount(),
                             product.getTitle());
                     addBasketProduct(userId, optionReq, option, optionItem, product);
                 }
