@@ -149,9 +149,9 @@ public class PortOneCommandService {
                 UserInfo userInfo = userInfoQueryService.findByUserId(order.getUserId());
                 userInfo.usePoint(order.getUsePoint());
 
-                basketQueryRepository.deleteAllBasketByUserIdAndOptionIds(
-                        userInfo.getUserId(),
-                        orderProductInfos.stream().map(v -> v.getOptionItemId()).toList());
+//                basketQueryRepository.deleteAllBasketByUserIdAndOptionIds(
+//                        userInfo.getUserId(),
+//                        orderProductInfos.stream().map(v -> v.getOptionItemId()).toList());
 
                 userCommandService.updateUserInfo(userInfo);
             }
