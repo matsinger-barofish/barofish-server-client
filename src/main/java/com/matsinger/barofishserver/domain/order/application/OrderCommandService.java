@@ -548,6 +548,8 @@ public class OrderCommandService {
 //        log.info("taxFreePrice = {}", cancelManager.getNonTaxablePriceTobeCanceled());
         cancelData.setTax_free(BigDecimal.valueOf(cancelManager.getNonTaxablePriceTobeCanceled()));
         setVbankRefundInfo(order, cancelData);
+        log.warn("cancelPrice = {}", cancelPrice);
+        log.warn("taxFreeAmount = {}", cancelManager.getNonTaxablePriceTobeCanceled());
         sendPortOneCancelData(cancelData);
 
         if (cancelManager.allCanceled()) {
