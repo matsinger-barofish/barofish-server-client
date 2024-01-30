@@ -5,6 +5,7 @@ import com.matsinger.barofishserver.domain.order.dto.OrderDto;
 import com.matsinger.barofishserver.domain.order.dto.OrderReq;
 import com.matsinger.barofishserver.domain.order.dto.OrderResponse;
 import com.matsinger.barofishserver.domain.order.dto.RequestCancelReq;
+import com.matsinger.barofishserver.domain.order.orderprductinfo.domain.OrderCancelReason;
 import com.matsinger.barofishserver.jwt.JwtService;
 import com.matsinger.barofishserver.jwt.TokenAuthType;
 import com.matsinger.barofishserver.jwt.TokenInfo;
@@ -59,18 +60,18 @@ public class OrderControllerV2 {
                     .body(res);
         }
         return ResponseEntity.ok(res);
-
     }
 
     // 결제 취소
     @PostMapping("/cancel/{orderProductInfoId}")
     public ResponseEntity<CustomResponse<Boolean>> cancelOrderByUserV2(@RequestHeader(value = "Authorization") Optional<String> auth,
-                                                                     @PathVariable("orderProductInfoId") Integer orderProductInfoId,
-                                                                     @RequestPart(value = "data") RequestCancelReq data) {
+                                                                       @PathVariable("orderProductInfoId") Integer orderProductInfoId,
+                                                                       @RequestPart(value = "data") RequestCancelReq data) {
         CustomResponse<Boolean> res = new CustomResponse<>();
 
         TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth);
-        orderCommandService.cancelOrderByUser(tokenInfo.getId(), orderProductInfoId, data);
+
+        orderCommandService.cancelOrder(tokenInfo, List.of(orderProductInfoId), data);
 
         res.setData(Optional.of(true));
         return ResponseEntity.ok(res);
@@ -78,10 +79,27 @@ public class OrderControllerV2 {
 
     @PostMapping("/cancel/partner")
     public ResponseEntity<CustomResponse<Boolean>> cancelOrdersByPartnerV2(@RequestHeader(value = "Authorization") Optional<String> auth,
-                                                                         @RequestPart(value = "orderProductInfoIds") List<Integer> orderProductInfoIds) {
+                                                                           @RequestPart(value = "orderProductInfoIds") List<Integer> orderProductInfoIds) {
         CustomResponse<Boolean> res = new CustomResponse<>();
 
         TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.PARTNER, TokenAuthType.ADMIN), auth);
+
+        TokenAuthType authType = tokenInfo.getType();
+        RequestCancelReq cancelInfo = null;
+        if (authType.equals(TokenAuthType.PARTNER)) {
+            cancelInfo = RequestCancelReq.builder()
+                    .cancelReason(OrderCancelReason.CANCELED_BY_PARTNER)
+                    .content("판매자에 의해 취소 처리 되었습니다.")
+                    .build();
+        }
+        if (authType.equals(TokenAuthType.ADMIN)) {
+            cancelInfo = RequestCancelReq.builder()
+                    .cancelReason(OrderCancelReason.CANCELED_BY_ADMIN)
+                    .content("관리자에 의해 취소 처리 되었습니다.")
+                    .build();
+        }
+
+        orderCommandService.cancelOrder(tokenInfo, orderProductInfoIds, cancelInfo);
 
         res.setData(Optional.of(true));
         return ResponseEntity.ok(res);
