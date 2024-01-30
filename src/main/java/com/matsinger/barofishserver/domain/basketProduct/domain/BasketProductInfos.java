@@ -13,13 +13,13 @@ public class BasketProductInfos {
         this.basketProductInfos = basketProductInfos;
     }
 
-    public boolean containsOptionItem(Integer optionItemId) {
+    public BasketProductInfo getSameOptionItem(Integer optionItemId) {
         for (BasketProductInfo basketProductInfo : basketProductInfos) {
             if (basketProductInfo.containsSameOptionItem(optionItemId)) {
-                return true;
+                return basketProductInfo;
             }
         }
-        return false;
+        return null;
     }
 
     public void addQuantity(Integer optionItemId, Integer amount) {

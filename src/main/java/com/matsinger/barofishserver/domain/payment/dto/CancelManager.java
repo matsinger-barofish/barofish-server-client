@@ -5,10 +5,12 @@ import com.matsinger.barofishserver.domain.order.orderprductinfo.domain.OrderPro
 import com.matsinger.barofishserver.domain.order.orderprductinfo.domain.OrderProductState;
 import com.matsinger.barofishserver.global.exception.BusinessException;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
 import java.util.List;
 
+@Slf4j
 @Getter
 public class CancelManager {
 
@@ -58,8 +60,6 @@ public class CancelManager {
                     .mapToInt(v -> v.getTaxFreeAmount()).sum();
         }
         taxablePriceTobeCanceled = cancelProductPrice - nonTaxablePriceTobeCanceled + cancelDeliveryFee;
-
-        validateStateAndSetCanceled();
     }
 
     public int getProductAndDeliveryFee() {
@@ -68,54 +68,26 @@ public class CancelManager {
 
     public int getOrderPriceAfterCancellation() {
         return notTobeCanceledProductPrice +
-                notTobeCanceledDeliveryFee +
-                order.getCouponDiscount() +
+                notTobeCanceledDeliveryFee -
+                order.getCouponDiscount() -
                 order.getUsedPoint();
     }
 
     public boolean allCanceled() {
         if (notTobeCanceled.isEmpty()) {
-            return tobeCanceled.stream()
-                    .allMatch(v -> v.getState().equals(OrderProductState.CANCELED));
-        }
-        return false;
-    }
+            for (OrderProductInfo orderProductInfo : tobeCanceled) {
+                log.info("allCanceled scope - orderProductState = {}", orderProductInfo.getState());
 
-    public void validateStateAndSetCanceled() {
-        boolean cancellableState = false;
-        for (OrderProductInfo cancelProduct : tobeCanceled) {
-            OrderProductState state = cancelProduct.getState();
-            if (state.equals(OrderProductState.WAIT_DEPOSIT)) {
-                cancelProduct.setState(OrderProductState.CANCELED);
-                cancellableState = true;
+
+                if (!OrderProductState.isCanceled(orderProductInfo.getState())) {
+                    return false;
+                }
             }
-            if (state.equals(OrderProductState.PAYMENT_DONE)) {
-                cancelProduct.setState(OrderProductState.CANCELED);
-                cancellableState = true;
-            }
-            if (state.equals(OrderProductState.DELIVERY_DONE) ||
-                    state.equals(OrderProductState.EXCHANGE_REQUEST) ||
-                    state.equals(OrderProductState.EXCHANGE_ACCEPT) ||
-                    state.equals(OrderProductState.FINAL_CONFIRM) ||
-                    state.equals(OrderProductState.REFUND_REQUEST) ||
-                    state.equals(OrderProductState.REFUND_ACCEPT) ||
-                    state.equals(OrderProductState.REFUND_DONE)) {
-                throw new BusinessException("취소 불가능한 상태입니다.");
-            }
-            if (state.equals(OrderProductState.CANCEL_REQUEST)) {
-                throw new BusinessException("이미 취소 요청된 상태입니다.");
-            }
-            if (state.equals(OrderProductState.CANCELED)) {
-                throw new BusinessException("취소 완료된 상태입니다.");
-            }
-            if (state.equals(OrderProductState.DELIVERY_READY)) {
-                throw new BusinessException("상품이 출고되어 취소가 불가능합니다.");
-            }
-            if (!cancellableState) {
-                throw new RuntimeException("주문 상태를 확인해주세요.");
-            }
-            cancelProduct.setState(OrderProductState.CANCELED);
         }
+        if (!notTobeCanceled.isEmpty()) {
+            return false;
+        }
+        return true;
     }
 
     public List<OrderProductInfo> getAllOrderProducts() {
@@ -135,5 +107,35 @@ public class CancelManager {
     public int getPartialCancelPrice() {
         return nonTaxablePriceTobeCanceled +
                 taxablePriceTobeCanceled;
+    }
+
+    public void setCancelProductState(OrderProductState state) {
+        validateCancelProductState();
+        tobeCanceled.stream()
+                .forEach(v -> v.setState(state));
+    }
+
+    public void validateCancelProductState() {
+        for (OrderProductInfo cancelProduct : tobeCanceled) {
+            OrderProductState state = cancelProduct.getState();
+            if (state.equals(OrderProductState.CANCELED)) {
+                throw new BusinessException("취소 완료된 상태입니다.");
+            }
+            if (state.equals(OrderProductState.DELIVERY_DONE) ||
+                    state.equals(OrderProductState.EXCHANGE_REQUEST) ||
+                    state.equals(OrderProductState.EXCHANGE_ACCEPT) ||
+                    state.equals(OrderProductState.FINAL_CONFIRM) ||
+                    state.equals(OrderProductState.REFUND_REQUEST) ||
+                    state.equals(OrderProductState.REFUND_ACCEPT) ||
+                    state.equals(OrderProductState.REFUND_DONE)) {
+                throw new BusinessException("취소 불가능한 상태입니다.");
+            }
+            if (state.equals(OrderProductState.CANCEL_REQUEST)) {
+                throw new BusinessException("이미 취소 요청된 상태입니다.");
+            }
+            if (state.equals(OrderProductState.DELIVERY_READY)) {
+                throw new BusinessException("상품이 출고되어 취소가 불가능합니다.");
+            }
+        }
     }
 }

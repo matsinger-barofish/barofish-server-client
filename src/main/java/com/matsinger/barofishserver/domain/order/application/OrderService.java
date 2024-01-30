@@ -26,6 +26,9 @@ import com.matsinger.barofishserver.domain.product.difficultDeliverAddress.appli
 import com.matsinger.barofishserver.domain.product.difficultDeliverAddress.domain.DifficultDeliverAddress;
 import com.matsinger.barofishserver.domain.product.domain.Product;
 import com.matsinger.barofishserver.domain.product.domain.ProductDeliverFeeType;
+import com.matsinger.barofishserver.domain.product.option.application.OptionQueryService;
+import com.matsinger.barofishserver.domain.product.option.domain.Option;
+import com.matsinger.barofishserver.domain.product.optionitem.application.OptionItemQueryService;
 import com.matsinger.barofishserver.domain.product.optionitem.domain.OptionItem;
 import com.matsinger.barofishserver.domain.product.optionitem.dto.OptionItemDto;
 import com.matsinger.barofishserver.domain.review.application.ReviewQueryService;
@@ -81,6 +84,8 @@ public class OrderService {
     private final BasketCommandService basketCommandService;
     private final BasketQueryService basketQueryService;
     private final Common utils;
+    private final OptionItemQueryService optionItemQueryService;
+    private final OptionQueryService optionQueryService;
 
     public OrderDto convert2Dto(Orders order, Integer storeId, Specification<OrderProductInfo> productSpec) {
         OrderDeliverPlace deliverPlace = selectDeliverPlace(order.getId());
@@ -98,6 +103,7 @@ public class OrderService {
                         : selectOrderProductInfoList(productSpec);
 
         List<OrderProductDto> orderProductDtos = infos.stream().map(opi -> {
+
             // OrderProductOption option =
             // optionRepository.findFirstByOrderProductId(opi.getId());
             Product product = productService.selectProduct(opi.getProductId());
@@ -114,6 +120,8 @@ public class OrderService {
             OptionItemDto optionItemDto = optionItem.convert2Dto(product);
             optionItemDto.setPointRate(product.getPointRate());
 
+            Option option = optionQueryService.findById(optionItemDto.getOptionId());
+
             Boolean isWritten = reviewQueryService.checkReviewWritten(order.getUserId(), product.getId(), opi.getId());
 
             return OrderProductDto.builder()
@@ -122,6 +130,7 @@ public class OrderService {
                     .optionItem(optionItemDto)
                     .product(productService.convert2ListDto(productService.selectProduct(opi.getProductId())))
                     .optionName(optionItem.getName())
+                    .isNeeded(option.getIsNeeded())
                     .amount(opi.getAmount())
                     .state(opi.getState())
                     .price(opi.getPrice())
@@ -140,7 +149,8 @@ public class OrderService {
                     .finalConfirmedAt(opi.getFinalConfirmedAt())
                     .needTaxation(product.getNeedTaxation())
                     .originPrice(opi.getOriginPrice())
-                    .build();}).filter(Objects::nonNull).toList();
+                    .build();})
+                .filter(Objects::nonNull).toList();
         String couponName = null;
         if (order.getCouponId() != null) {
             Coupon coupon = couponQueryService.selectCoupon(order.getCouponId());

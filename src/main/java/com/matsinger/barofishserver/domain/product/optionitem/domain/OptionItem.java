@@ -6,6 +6,7 @@ import com.matsinger.barofishserver.domain.product.domain.OptionItemState;
 import com.matsinger.barofishserver.global.exception.BusinessException;
 import jakarta.persistence.*;
 import lombok.*;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.Objects;
 
@@ -14,6 +15,7 @@ import java.util.Objects;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@Slf4j
 @Entity
 @Table(name = "option_item", schema = "barofish_dev", catalog = "")
 public class OptionItem {
@@ -61,11 +63,17 @@ public class OptionItem {
     private Integer maxAvailableAmount;
 
 
-    public void validateQuantity(int quantity) {
+    public void validateQuantity(int quantity, String productName) {
+        if (quantity < 1) {
+            throw new BusinessException("수량은 0보다 커야 합니다.");
+        }
         if (this.amount != null) {
             int reducedValue = this.amount - quantity;
             if (reducedValue < 0) {
-                String errorMessage = String.format("'%s' 상품의 재고가 부족합니다.", this.name);
+                String errorMessage = String.format("[%s] %s 상품의 재고가 부족합니다." + "\n" +
+                                                    "상품 재고 = %s" + "\n" +
+                                                    "요청 수량 = %s",
+                        productName, this.name, this.amount, quantity);
                 throw new BusinessException(errorMessage);
             }
         }
@@ -74,7 +82,10 @@ public class OptionItem {
     public void reduceQuantity(int quantity) {
         int reducedValue = this.amount - quantity;
         if (reducedValue < 0) {
-            String errorMessage = String.format("'%s' 상품의 재고가 부족합니다.", this.name);
+            String errorMessage = String.format("[%s] %s 상품의 재고가 부족합니다." + "\n" +
+                                                "상품 재고 = %s" + "\n" +
+                                                "요청 수량 = %s",
+                                                this.name, this.amount, quantity);
             throw new BusinessException(errorMessage);
         }
         this.amount = reducedValue;
@@ -125,5 +136,12 @@ public class OptionItem {
     @Override
     public int hashCode() {
         return Objects.hash(id, getOptionId(), name);
+    }
+
+    public void addQuantity(int quantity) {
+        if (quantity < 0) {
+            throw new BusinessException("주문 상품 개수는 0보다 커야합니다.");
+        }
+        this.amount += quantity;
     }
 }

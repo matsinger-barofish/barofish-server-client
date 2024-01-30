@@ -44,6 +44,7 @@ import com.matsinger.barofishserver.utils.CustomResponse;
 import com.matsinger.barofishserver.utils.S3.S3Uploader;
 import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -56,6 +57,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.sql.Timestamp;
 import java.util.*;
 
+@Slf4j
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/product")
@@ -268,7 +270,6 @@ public class ProductController {
     @GetMapping("/{id}")
     public ResponseEntity<CustomResponse<SimpleProductDto>> selectProduct(@RequestHeader(value = "Authorization") Optional<String> auth,
                                                                           @PathVariable("id") Integer id) {
-
         CustomResponse<SimpleProductDto> res = new CustomResponse<>();
 
         TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(

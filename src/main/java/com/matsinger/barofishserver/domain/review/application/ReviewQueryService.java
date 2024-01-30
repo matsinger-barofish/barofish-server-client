@@ -1,13 +1,12 @@
 package com.matsinger.barofishserver.domain.review.application;
 
+import com.matsinger.barofishserver.domain.product.dto.ProductPhotoReviewDto;
 import com.matsinger.barofishserver.domain.review.domain.*;
+import com.matsinger.barofishserver.domain.review.dto.ProductReviewPictureInquiryDto;
 import com.matsinger.barofishserver.domain.review.dto.ReviewStatistic;
 import com.matsinger.barofishserver.domain.review.dto.ReviewTotalStatistic;
 import com.matsinger.barofishserver.domain.review.dto.v2.*;
-import com.matsinger.barofishserver.domain.review.repository.ReviewEvaluationRepository;
-import com.matsinger.barofishserver.domain.review.repository.ReviewLikeRepository;
-import com.matsinger.barofishserver.domain.review.repository.ReviewRepository;
-import com.matsinger.barofishserver.domain.review.repository.ReviewRepositoryImpl;
+import com.matsinger.barofishserver.domain.review.repository.*;
 import com.matsinger.barofishserver.global.exception.BusinessException;
 import jakarta.persistence.Tuple;
 import lombok.RequiredArgsConstructor;
@@ -18,6 +17,7 @@ import org.springframework.stereotype.Service;
 
 import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 @RequiredArgsConstructor
@@ -29,6 +29,7 @@ public class ReviewQueryService {
     private final ReviewLikeRepository reviewLikeRepository;
     private final ReviewRepositoryImpl reviewRepositoryImpl;
     private final ReviewEvaluationRepository reviewEvaluationRepository;
+    private final ReviewQueryRepository reviewQueryRepository;
 
     public List<ReviewEvaluationType> selectReviewEvaluations(Integer reviewId) {
         return evaluationRepository.findAllByReviewId(reviewId).stream().map(ReviewEvaluation::getEvaluation).toList();
@@ -249,5 +250,50 @@ public class ReviewQueryService {
         Long reviewCount = reviewRepositoryImpl.getAllReviewCountExceptDeleted();
 
         return new PageImpl<>(reviewDtos, pageRequest, reviewCount);
+    }
+
+    public List<ProductPhotoReviewDto> getPictures(Integer id, String type) {
+        List<ProductReviewPictureInquiryDto> productReviewInquiryDtos = reviewQueryRepository.getReviewsWhichPictureExists(id, type);
+
+        List<ProductPhotoReviewDto> response = new ArrayList<>();
+        convertStringImageUrlsToList(productReviewInquiryDtos, response);
+        return response;
+    }
+
+    private void convertStringImageUrlsToList(List<ProductReviewPictureInquiryDto> reviews,
+                                              List<ProductPhotoReviewDto> response) {
+        for (ProductReviewPictureInquiryDto review : reviews) {
+            String reviewPictureUrls = review.getReviewPictureUrls();
+
+            String removedBrackets = removeBrackets(reviewPictureUrls);
+            List<String> reviewImages =
+                    removedBrackets != "[]" || removedBrackets != null
+                            ? Arrays.stream(removedBrackets.split(", ")).toList()
+                            : new ArrayList<>();
+
+            response.add(ProductPhotoReviewDto.builder()
+                    .reviewId(review.getReviewId())
+                    .imageUrls(reviewImages)
+                    .imageCount(reviewImages.isEmpty() ? null : reviewImages.size())
+                    .build()
+            );
+        }
+    }
+
+    private String removeBrackets(String reviewPictureUrls) {
+        if (reviewPictureUrls == "[]") {
+            return reviewPictureUrls;
+        }
+        if (reviewPictureUrls != null) {
+            StringBuilder sb = new StringBuilder();
+            for (char c : reviewPictureUrls.toCharArray()) {
+                if (c == '[' || c == ']') {
+                    continue;
+                }
+                sb.append(c);
+            }
+            return sb.toString();
+        }
+        return null;
     }
 }

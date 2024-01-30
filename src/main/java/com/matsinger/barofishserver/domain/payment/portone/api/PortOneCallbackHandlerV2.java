@@ -33,6 +33,7 @@ public class PortOneCallbackHandlerV2 {
         if (request.getStatus().equals("paid")) {
             portOneCommandService.checkCanDeliverAndProcessOrder(request);
         }
+
         if (request.getStatus().equals("canceled")) {
             portOneCommandService.processWhenStatusCanceled(request);
         }

@@ -14,6 +14,7 @@ public class BasketProductDtoV2 {
     BasketStoreDto store;
     BasketProductInfoDto product;
     Integer amount;
+    Integer inventoryQuantity;
     ProductDeliverFeeType deliverFeeType;
     Integer minOrderPrice;
     Integer deliveryFee;

@@ -27,6 +27,7 @@ public class OrderProductDto {
     private ProductListDto product;
     private OrderProductState state;
     private String optionName;
+    private boolean isNeeded;
     private OptionItemDto optionItem;
     private Integer originPrice;
     private Integer price;

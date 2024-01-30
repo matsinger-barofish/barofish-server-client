@@ -127,24 +127,25 @@ public class BasketQueryService {
     }
 
     public List<BasketProductDtoV2> selectBasketListV2(Integer userId) {
-        List<BasketProductInfo> productInfos = basketProductInfoRepository.findAllByUserId(userId);
+        List<BasketProductInfo> basketProductInfos = basketProductInfoRepository.findAllByUserId(userId);
         List<BasketProductDtoV2> response = new ArrayList<>();
-        for (BasketProductInfo productInfo : productInfos) {
-            Product product = productQueryService.findById(productInfo.getProductId());
-            Store store = storeQueryService.findById(productInfo.getStoreId());
+        for (BasketProductInfo basketProductInfo : basketProductInfos) {
+            Product product = productQueryService.findById(basketProductInfo.getProductId());
+            Store store = storeQueryService.findById(basketProductInfo.getStoreId());
             StoreInfo storeInfo = store.getStoreInfo();
-            Option option = optionQueryService.findById(productInfo.getOptionId());
-            OptionItem optionItem = optionItemQueryService.findById(productInfo.getOptionItemId());
+            Option option = optionQueryService.findById(basketProductInfo.getOptionId());
+            OptionItem optionItem = optionItemQueryService.findById(basketProductInfo.getOptionItemId());
 
-            BasketProductInfoDto basketProductInfoDto = getBasketProductInfoDto(productInfo, product, optionItem, storeInfo);
-            OptionItemDto optionItemDto = getOptionItemDto(productInfo, optionItem, product);
+            BasketProductInfoDto basketProductInfoDto = getBasketProductInfoDto(basketProductInfo, product, optionItem, storeInfo);
+            OptionItemDto optionItemDto = getOptionItemDto(basketProductInfo, optionItem, product);
 
             response.add(
                     BasketProductDtoV2.builder()
-                    .id(productInfo.getId())
+                    .id(basketProductInfo.getId())
                     .store(storeInfo.toBasketStoreDto())
                     .product(basketProductInfoDto)
-                    .amount(productInfo.getAmount())
+                    .amount(basketProductInfo.getAmount())
+                    .inventoryQuantity(optionItem.getAmount())
                     .deliverFeeType(product.getDeliverFeeType())
                     .minOrderPrice(product.getMinOrderPrice())
                     .deliveryFee(product.getDeliverFee())
@@ -164,6 +165,7 @@ public class BasketQueryService {
                 .name(optionItem.getName())
                 .discountPrice(optionItem.getDiscountPrice())
                 .amount(productInfo.getAmount())
+                .inventoryQuantity(optionItem.getAmount())
                 .purchasePrice(optionItem.getPurchasePrice())
                 .originPrice(optionItem.getOriginPrice())
                 .deliveryFee(product.getDeliverFee())
