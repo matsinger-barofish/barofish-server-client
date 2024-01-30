@@ -536,6 +536,9 @@ public class OrderCommandService {
         if (!cancelManager.allCanceled()) {
             cancelPrice = cancelManager.getPartialCancelPrice();
         }
+        if (order.getPaymentWay().equals(OrderPaymentWay.KAKAO_PAY)) {
+            cancelPrice = cancelManager.getKakaopayTaxFreePrice();
+        }
         log.info("isAllCanceled = {}", cancelManager.allCanceled());
         log.info("cancelPrice send to portOne = {}", cancelPrice);
         CancelData cancelData = new CancelData(
@@ -549,7 +552,8 @@ public class OrderCommandService {
         cancelData.setTax_free(BigDecimal.valueOf(cancelManager.getNonTaxablePriceTobeCanceled()));
         setVbankRefundInfo(order, cancelData);
         log.warn("cancelPrice = {}", cancelPrice);
-        log.warn("taxFreeAmount = {}", cancelManager.getNonTaxablePriceTobeCanceled());
+        log.warn("non kakaoPay taxFreePrice = {}", cancelManager.getNonTaxablePriceTobeCanceled());
+
         sendPortOneCancelData(cancelData);
 
         if (cancelManager.allCanceled()) {

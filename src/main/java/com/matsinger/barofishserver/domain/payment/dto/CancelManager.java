@@ -138,4 +138,15 @@ public class CancelManager {
             }
         }
     }
+
+    public Integer getKakaopayTaxFreePrice() {
+        // 부가세액 = 과세금액 * 0.1 소수 첫째자리 올림
+        Integer surTax = (int) Math.ceil(taxablePriceTobeCanceled * 0.1);
+        // 주문금엑 - 면세금액 = 과세금액 + 부가세액
+
+        // 면세금액 = 주문금액 - 과세금액 - 부가세액
+        Integer taxFreePrice = taxablePriceTobeCanceled + nonTaxablePriceTobeCanceled - taxablePriceTobeCanceled - surTax;
+        log.warn("kakaoPay taxFreePrice = {}", taxFreePrice);
+        return taxFreePrice;
+    }
 }
