@@ -51,7 +51,10 @@ public class SearchKeywordController {
                 searchKeywordQueryService.selectSearchProductTitle(keyword);
         List<SearchProductDto> dtos = new ArrayList<>();
         for (SearchKeywordRepository.SearchProduct data : result) {
-            dtos.add(SearchProductDto.builder().id(data.getId()).title(data.getTitle()).build());
+            dtos.add(SearchProductDto.builder()
+                    .id(data.getId())
+                    .title(data.getTitle())
+                    .build());
         }
         res.setData(Optional.of(dtos));
         return ResponseEntity.ok(res);

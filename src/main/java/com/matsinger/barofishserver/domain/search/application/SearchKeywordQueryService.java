@@ -4,6 +4,8 @@ import com.matsinger.barofishserver.domain.product.domain.Product;
 import com.matsinger.barofishserver.domain.product.dto.ProductListDto;
 import com.matsinger.barofishserver.domain.product.repository.ProductRepository;
 import com.matsinger.barofishserver.domain.search.domain.SearchKeyword;
+import com.matsinger.barofishserver.domain.search.dto.SearchProductDto;
+import com.matsinger.barofishserver.domain.search.repository.SearchKeywordQueryRepository;
 import com.matsinger.barofishserver.domain.search.repository.SearchKeywordRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -19,6 +21,7 @@ import java.util.List;
 public class SearchKeywordQueryService {
     private final SearchKeywordRepository searchKeywordRepository;
     private final ProductRepository productRepository;
+    private SearchKeywordQueryRepository searchKeywordQueryRepository;
 
     public void searchKeyword(String keyword) {
         SearchKeyword check = searchKeywordRepository.findByKeywordEquals(keyword);
@@ -49,5 +52,10 @@ public class SearchKeywordQueryService {
             productListDtos.add(product.convert2ListDto());
         }
         return productListDtos;
+    }
+
+    public List<SearchProductDto> selectSearchProductTitles(String keyword) {
+        List<SearchProductDto> searchProductDtos = searchKeywordQueryRepository.selectSearchKeyword(keyword);
+        return null;
     }
 }
