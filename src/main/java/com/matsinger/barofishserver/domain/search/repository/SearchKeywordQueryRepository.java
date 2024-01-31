@@ -30,6 +30,7 @@ public class SearchKeywordQueryRepository {
         return queryFactory
                 .select(Projections.fields(
                         SearchProductDto.class,
+                        product.id.as("id"),
                         Expressions.asString("[").concat(
                                 storeInfo.name).concat("] ")
                                 .concat(product.title)
