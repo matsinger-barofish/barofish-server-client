@@ -519,7 +519,6 @@ public class OrderCommandService {
             state = OrderProductState.CANCELED;
         }
 
-        Integer cancelPrice = null;
         if (order.getState().equals(OrderState.WAIT_DEPOSIT)) {
             List<OrderProductInfo> orderProductInfos = orderProductInfoQueryService.findAllByOrderId(order.getId());
             OrderProductState finalState = state;
@@ -530,27 +529,37 @@ public class OrderCommandService {
         }
 
         cancelManager.setCancelProductState(state);
-        if (cancelManager.allCanceled()) {
-            cancelPrice = cancelManager.getAllCancelPrice();
-        }
-        if (!cancelManager.allCanceled()) {
-            cancelPrice = cancelManager.getPartialCancelPrice();
-        }
-        log.info("isAllCanceled = {}", cancelManager.allCanceled());
-        log.info("cancelPrice send to portOne = {}", cancelPrice);
-        CancelData cancelData = new CancelData(
-                order.getImpUid(),
-                true,
-                BigDecimal.valueOf(cancelPrice)
-        );
+
+        CancelData cancelData = null;
 //        log.info("impUid = {}", order.getImpUid());
 //        log.info("totalCancelPrice = {}", cancelPrice);
 //        log.info("taxFreePrice = {}", cancelManager.getNonTaxablePriceTobeCanceled());
-        cancelData.setTax_free(BigDecimal.valueOf(cancelManager.getNonTaxablePriceTobeCanceled()));
         setVbankRefundInfo(order, cancelData);
-        log.warn("cancelPrice = {}", cancelPrice);
-        log.warn("taxFreeAmount = {}", cancelManager.getNonTaxablePriceTobeCanceled());
-        sendPortOneCancelData(cancelData);
+
+        log.warn("isAllCanceled = {}", cancelManager.allCanceled());
+        if (cancelManager.allCanceled()) {
+            // 미입력시 전액 환불
+            cancelData = new CancelData(
+                    order.getImpUid(),
+                    true,
+                    null
+            );
+            cancelData.setTax_free(null);
+            log.warn("isAllCanceled = {}", cancelManager.allCanceled());
+        }
+        if (!cancelManager.allCanceled()) {
+            cancelData = new CancelData(
+                    order.getImpUid(),
+                    true,
+                    BigDecimal.valueOf(cancelManager.getAllCancelPrice())
+            );
+            cancelData.setTax_free(BigDecimal.valueOf(cancelManager.getNonTaxablePriceTobeCanceled()));
+            log.warn("isAllCanceled = {}", cancelManager.allCanceled());
+            log.warn("cancelPrice send to portOne = {}", cancelManager.getAllCancelPrice());
+            log.warn("taxFreePrice send to portOne = {}", cancelManager.getNonTaxablePriceTobeCanceled());
+        }
+
+//        sendPortOneCancelData(cancelData);
 
         if (cancelManager.allCanceled()) {
             Payments payment = paymentRepository.findFirstByImpUid(order.getImpUid());
