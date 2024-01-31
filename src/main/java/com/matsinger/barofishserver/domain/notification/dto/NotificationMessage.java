@@ -13,6 +13,7 @@ import java.sql.Timestamp;
 public class NotificationMessage {
     //    private NotificationMessageType type;
     private String productName;
+    private String optionItemName;
     private Timestamp orderedAt;
     private String userName;
     private String couponName;
@@ -25,6 +26,10 @@ public class NotificationMessage {
     }
 
     public String convertMessage(NotificationMessageType type) {
+        if (optionItemName != null) {
+            productName = productName + " " + optionItemName;
+        }
+
         return switch (type) {
             case PAYMENT_DONE -> String.format("<strong>%s</strong> 상품의 결제가 완료되었습니다.", this.productName);
             case DELIVER_READY -> String.format("주문하신 <strong>%s</strong> 상품의 배송 준비가 완료되었습니다.", this.productName);
@@ -32,9 +37,7 @@ public class NotificationMessage {
                     String.format("주문하신 <strong>%s</strong> 상품의 배송이 시작되었습니다. 빠르고 신선하게 배송해 드릴게요 :)", this.productName);
             case DELIVER_DONE ->
                     String.format("주문하신 <strong>%s</strong> 상품의 배송을 완료하였습니다. 이용해주셔서 감사합니다.", this.productName);
-            case ORDER_CANCEL -> this.isCanceledByRegion != null && this.isCanceledByRegion ? String.format(
-                    "주문하신 <string>%s</strong> 상품이 주문 불가 지역이라" + " 자동으로 " + "주문이 취소되었습니다.",
-                    this.productName) : String.format("주문하신 <strong>%s</strong> 상품이 취소되었습니다.", this.productName);
+            case ORDER_CANCEL -> String.format("주문하신 <strong>%s</strong> 상품이 취소되었습니다.", this.productName);
             case CANCEL_REJECT -> String.format("신청하신 <strong>%s</strong> 상품 취소건이 반려되었습니다.", this.productName);
             case EXCHANGE_REJECT -> String.format("신청하신 <strong>%s</strong> 상품 교환건이 반려되었습니다.", this.productName);
             case EXCHANGE_ACCEPT -> String.format("신청하신 <strong>%s</strong> 상품 교환건이 접수되었습니다.", this.productName);
@@ -51,8 +54,8 @@ public class NotificationMessage {
                     this.couponName);
             case ADMIN -> this.customContent;
             case INQUIRY_ANSWER -> String.format("%s 업체에 문의하신 내용에 답변이 작성되었습니다.", storeName);
-            case CANCELED_BY_ADMIN -> String.format("<strong>%s</strong> 주문이 관리자에 의해 취소되었습니다.\", this.productName");
-            case CANCELED_BY_PARTNER -> String.format("<strong>%s</strong> 주문이 판매자에 의해 취소되었습니다.\", this.productName");
+            case CANCELED_BY_ADMIN -> String.format("<strong>%s</strong> 주문이 관리자에 의해 취소되었습니다.", this.productName);
+            case CANCELED_BY_PARTNER -> String.format("<strong>%s</strong> 주문이 판매자에 의해 취소되었습니다.", this.productName);
         };
     }
 

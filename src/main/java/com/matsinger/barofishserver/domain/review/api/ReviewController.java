@@ -1,15 +1,22 @@
 package com.matsinger.barofishserver.domain.review.api;
 
 import com.matsinger.barofishserver.domain.order.application.OrderService;
+import com.matsinger.barofishserver.domain.order.domain.Orders;
 import com.matsinger.barofishserver.domain.order.orderprductinfo.domain.OrderProductInfo;
+import com.matsinger.barofishserver.domain.order.orderprductinfo.repository.OrderProductInfoRepository;
 import com.matsinger.barofishserver.domain.product.application.ProductService;
 import com.matsinger.barofishserver.domain.product.domain.Product;
+import com.matsinger.barofishserver.domain.product.option.application.OptionQueryService;
+import com.matsinger.barofishserver.domain.product.option.domain.Option;
+import com.matsinger.barofishserver.domain.product.optionitem.application.OptionItemQueryService;
+import com.matsinger.barofishserver.domain.product.optionitem.domain.OptionItem;
 import com.matsinger.barofishserver.domain.review.application.ReviewCommandService;
 import com.matsinger.barofishserver.domain.review.application.ReviewQueryService;
 import com.matsinger.barofishserver.domain.review.domain.*;
 import com.matsinger.barofishserver.domain.review.dto.ReviewAddReq;
 import com.matsinger.barofishserver.domain.review.dto.ReviewDto;
 import com.matsinger.barofishserver.domain.review.dto.UpdateReviewReq;
+import com.matsinger.barofishserver.domain.review.repository.ReviewRepository;
 import com.matsinger.barofishserver.domain.store.application.StoreService;
 import com.matsinger.barofishserver.domain.store.domain.Store;
 import com.matsinger.barofishserver.domain.user.application.UserCommandService;
@@ -25,6 +32,7 @@ import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.JoinType;
 import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -36,6 +44,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.sql.Timestamp;
 import java.util.*;
 
+@Slf4j
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/review")
@@ -49,6 +58,10 @@ public class ReviewController {
     private final JwtService jwt;
     private final Common utils;
     private final S3Uploader s3;
+    private final OptionQueryService optionQueryService;
+    private final OptionItemQueryService optionItemQueryService;
+    private final OrderProductInfoRepository orderProductInfoRepository;
+    private final ReviewRepository reviewRepository;
 
 
     @GetMapping("/management")
@@ -100,12 +113,11 @@ public class ReviewController {
 
     @GetMapping(value = {"/store/{id}", "/store"})
     public ResponseEntity<CustomResponse<Page<ReviewDto>>> selectReviewListWithStoreId(@RequestHeader(value = "Authorization") Optional<String> auth,
-                                                                                       @PathVariable(value = "id", required = false) Integer storeId,
+                                                                                       @PathVariable(value = "id", required = false) String storeId,
                                                                                        @RequestParam(value = "orderType", required = false, defaultValue = "RECENT") ReviewOrderByType orderType,
                                                                                        @RequestParam(value = "page", required = false, defaultValue = "1") Integer page,
                                                                                        @RequestParam(value = "take", required = false, defaultValue = "10") Integer take) {
         CustomResponse<Page<ReviewDto>> res = new CustomResponse<>();
-
         Integer userId = null;
         TokenInfo tokenInfo = null;
         if (auth.isEmpty()) {
@@ -118,9 +130,11 @@ public class ReviewController {
 
         PageRequest pageRequest = PageRequest.of(page, take);
         Page<Review> reviewData = null;
+
+        Integer integerStoreId = Integer.valueOf(storeId);
         if (orderType.equals(ReviewOrderByType.RECENT))
-            reviewData = reviewQueryService.selectReviewListByStoreOrderedRecent(storeId, pageRequest);
-        else reviewData = reviewQueryService.selectReviewListOrderedBestWithStoreId(storeId, pageRequest);
+            reviewData = reviewQueryService.selectReviewListByStoreOrderedRecent(integerStoreId, pageRequest);
+        else reviewData = reviewQueryService.selectReviewListOrderedBestWithStoreId(integerStoreId, pageRequest);
 
         Integer finalUserId = userId;
         Page<ReviewDto> reviews = reviewData.map(review -> {
@@ -227,6 +241,26 @@ public class ReviewController {
             throw new BusinessException("주문 상품 아이디를 입력해주세요.");
         OrderProductInfo orderProductInfo = orderService.selectOrderProductInfo(data.getOrderProductInfoId());
         if (data.getProductId() == null) throw new BusinessException("상품 아이디를 입력해주세요.");
+
+        // 필수 옵션만 리뷰를 작성할 수 있고 주문 상품당 하나만 작성 가능
+        OptionItem optionItem = optionItemQueryService.findById(orderProductInfo.getOptionItemId());
+        Option option = optionQueryService.findById(optionItem.getOptionId());
+        if (!option.isNeeded()) {
+            throw new BusinessException("필수 옵션만 리뷰를 작성할 수 있습니다.");
+        }
+
+        Orders order = orderProductInfo.getOrder();
+        List<OrderProductInfo> orderProductInfos = orderProductInfoRepository.findAllByOrderId(order.getId());
+        List<OrderProductInfo> sameProducts = orderProductInfos.stream()
+                .filter(v -> v.getProductId() == orderProductInfo.getProductId())
+                .toList();
+        boolean reviewAlreadyExists = sameProducts.stream()
+                .anyMatch(v -> reviewRepository.existsByUserIdAndOrderProductInfoId(userId, v.getId()) == true);
+        if (reviewAlreadyExists) {
+            throw new BusinessException("리뷰는 한 상품당 한번만 작성할 수 있습니다.");
+        }
+        // 필수 옵션만 리뷰를 작성할 수 있고 주문 상품당 하나만 작성 가능
+
         Product product = productService.findById(data.getProductId());
         Store store = storeService.selectStore(product.getStoreId());
         String content = data.getContent();

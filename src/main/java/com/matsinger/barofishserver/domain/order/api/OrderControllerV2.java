@@ -12,6 +12,7 @@ import com.matsinger.barofishserver.jwt.TokenInfo;
 import com.matsinger.barofishserver.utils.Common;
 import com.matsinger.barofishserver.utils.CustomResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -19,6 +20,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
+@Slf4j
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v2/order")
@@ -63,8 +65,8 @@ public class OrderControllerV2 {
     // 결제 취소
     @PostMapping("/cancel/{orderProductInfoId}")
     public ResponseEntity<CustomResponse<Boolean>> cancelOrderByUserV2(@RequestHeader(value = "Authorization") Optional<String> auth,
-                                                                     @PathVariable("orderProductInfoId") Integer orderProductInfoId,
-                                                                     @RequestPart(value = "data") RequestCancelReq data) {
+                                                                       @PathVariable("orderProductInfoId") Integer orderProductInfoId,
+                                                                       @RequestPart(value = "data") RequestCancelReq data) {
         CustomResponse<Boolean> res = new CustomResponse<>();
 
         TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth);
@@ -77,7 +79,7 @@ public class OrderControllerV2 {
 
     @PostMapping("/cancel/partner")
     public ResponseEntity<CustomResponse<Boolean>> cancelOrdersByPartnerV2(@RequestHeader(value = "Authorization") Optional<String> auth,
-                                                                         @RequestPart(value = "orderProductInfoIds") List<Integer> orderProductInfoIds) {
+                                                                           @RequestPart(value = "orderProductInfoIds") List<Integer> orderProductInfoIds) {
         CustomResponse<Boolean> res = new CustomResponse<>();
 
         TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.PARTNER, TokenAuthType.ADMIN), auth);
@@ -103,3 +105,4 @@ public class OrderControllerV2 {
         return ResponseEntity.ok(res);
     }
 }
+

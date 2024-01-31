@@ -4,7 +4,7 @@ import com.matsinger.barofishserver.domain.product.domain.Product;
 import com.matsinger.barofishserver.domain.product.domain.ProductSortBy;
 import com.matsinger.barofishserver.domain.product.dto.ExpectedArrivalDateResponse;
 import com.matsinger.barofishserver.domain.product.dto.ProductListDto;
-import com.matsinger.barofishserver.domain.product.dto.ProductPhotiReviewDto;
+import com.matsinger.barofishserver.domain.product.dto.ProductPhotoReviewDto;
 import com.matsinger.barofishserver.domain.product.repository.ProductQueryRepository;
 import com.matsinger.barofishserver.domain.product.repository.ProductRepository;
 import com.matsinger.barofishserver.domain.product.weeksdate.domain.WeeksDate;
@@ -239,15 +239,19 @@ public class ProductQueryService {
         throw new BusinessException("탑바를 찾을 수 없습니다.");
     }
 
-    public List<ProductPhotiReviewDto> getProductPictures(Integer productId) {
-        validateProductExists(productId);
-
-        List<ProductReviewPictureInquiryDto> reviews = reviewQueryRepository.getReviewsWhichPictureExists(productId);
+    public List<ProductPhotoReviewDto> getProductPictures(Integer productId) {
+        List<ProductReviewPictureInquiryDto> reviews = reviewQueryRepository.getReviewsWhichPictureExists(productId, "product");
         if (reviews.contains(null)) {
             return null;
         }
 
-        List<ProductPhotiReviewDto> response = new ArrayList<>();
+        List<ProductPhotoReviewDto> response = new ArrayList<>();
+        convertStringImageUrlsToList(reviews, response);
+        return response;
+    }
+
+    private void convertStringImageUrlsToList(List<ProductReviewPictureInquiryDto> reviews,
+                                              List<ProductPhotoReviewDto> response) {
         for (ProductReviewPictureInquiryDto review : reviews) {
             String reviewPictureUrls = review.getReviewPictureUrls();
 
@@ -257,14 +261,13 @@ public class ProductQueryService {
                             ? Arrays.stream(removedBrackets.split(", ")).toList()
                             : new ArrayList<>();
 
-            response.add(ProductPhotiReviewDto.builder()
+            response.add(ProductPhotoReviewDto.builder()
                     .reviewId(review.getReviewId())
                     .imageUrls(reviewImages)
                     .imageCount(reviewImages.isEmpty() ? null : reviewImages.size())
                     .build()
             );
         }
-        return response;
     }
 
     private String removeBrackets(String reviewPictureUrls) {

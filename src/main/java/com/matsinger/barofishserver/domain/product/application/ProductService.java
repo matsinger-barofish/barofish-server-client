@@ -96,6 +96,7 @@ public class ProductService {
         return productRepository.testQuery(ids);
     }
 
+
     @Transactional
     public void deleteOption(Integer optionId) {
         Option option = selectOption(optionId);
@@ -356,6 +357,8 @@ public class ProductService {
         StoreInfo storeInfo = storeService.selectStoreInfo(product.getStoreId());
         Integer reviewCount = reviewQueryService.countReviewWithoutDeleted(product.getId(), false);
         OptionItem optionItem = selectOptionItem(product.getRepresentOptionItemId());
+
+        List<String> difficultDeliveryBcodes = difficultDeliverAddressQueryService.getDifficultDeliveryBcodes(product.getId());
         return ProductListDto.builder()
                 .id(product.getId())
                 .state(product.getState())
@@ -364,6 +367,7 @@ public class ProductService {
                 .isNeedTaxation(product.getNeedTaxation())
                 .discountPrice(optionItem.getDiscountPrice())
                 .title(product.getTitle())
+                .bcodes(difficultDeliveryBcodes)
                 .reviewCount(reviewCount)
                 .storeId(storeInfo.getStoreId())
                 .storeName(storeInfo.getName())
@@ -434,6 +438,7 @@ public class ProductService {
         productDto.setFilterValues(productFilterService.selectProductFilterValueListWithProductId(product.getId()));
         productDto.setReviewCount(reviews.size());
         productDto.setNeedTaxation(product.getNeedTaxation());
+        productDto.setMinStorePrice(store.getMinStorePrice());
         return productDto;
 
     }

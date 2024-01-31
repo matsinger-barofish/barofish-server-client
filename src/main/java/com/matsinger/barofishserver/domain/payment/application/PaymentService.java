@@ -119,7 +119,7 @@ public class PaymentService {
         }
         IamportResponse<Payment> cancelResult = iamportClient.cancelPaymentByImpUid(cancelData);
         if (cancelResult.getCode() != 0) {
-            System.out.println(cancelResult.getMessage());
+            log.info("portOne cancel fail message = {}", cancelResult.getMessage());
             throw new BusinessException("환불에 실패하였습니다.");
         }
     }

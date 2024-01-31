@@ -34,6 +34,7 @@ public class ProductListDto {
     String storeImage;
     Integer parentCategoryId;
     List<ProductFilterValueDto> filterValues;
+    List<String> bcodes;
 
     Boolean tastingNoteExists;
 

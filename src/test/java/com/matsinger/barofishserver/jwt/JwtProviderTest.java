@@ -6,13 +6,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 
-import static org.junit.jupiter.api.Assertions.*;
-
 @SpringBootTest
 @ActiveProfiles("local")
 class JwtProviderTest {
 
     @Autowired private JwtProvider jwtProvider;
+    @Autowired private JwtService jwtService;
 
     @Test
     void generateAccessToken() {
@@ -34,5 +33,16 @@ class JwtProviderTest {
 
         // NOT NORMAL - error from andriod
         jwtProvider.getIdFromToken("eyJhbGciOiJIUzUxMiJ9.eyJpc3MiOiJVU0VSIiwianRpIjoiNDA3IiwiaWF0IjoxNjk5ODY2MzE1LCJleHAiOjE3MDA0NzExMTV9.FB0GkZ0V8wnC-iGwFEi73upHBac3zGtw81nTMhv44lF0kWN84_4fv7vntabiKfLK4M_0r591l3kiOUUSe4xF6w");
+    }
+
+    @DisplayName("")
+    @Test
+    void tokenExpirationTest() {
+        // given
+        String token = "eyJhbGciOiJIUzUxMiJ9.eyJpc3MiOiJVU0VSIiwianRpIjoiMTAwMDAiLCJpYXQiOjE3MDY1NzQ1ODgsImV4cCI6MTcwNzE3OTM4OH0.aNVRCUB-idm5SW2vICp76Iy8vC44r56kAvHyMakGIo7urynS_hoTJ815as93sRSU2RaVVeYaIetQuY7S1k7CVg";
+        Boolean tokenExpired = jwtProvider.isTokenExpired(token);
+        // when
+
+        // then
     }
 }

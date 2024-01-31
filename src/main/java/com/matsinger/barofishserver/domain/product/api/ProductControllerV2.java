@@ -13,7 +13,7 @@ import com.matsinger.barofishserver.domain.product.difficultDeliverAddress.appli
 import com.matsinger.barofishserver.domain.product.domain.ProductSortBy;
 import com.matsinger.barofishserver.domain.product.dto.ExpectedArrivalDateResponse;
 import com.matsinger.barofishserver.domain.product.dto.ProductListDto;
-import com.matsinger.barofishserver.domain.product.dto.ProductPhotiReviewDto;
+import com.matsinger.barofishserver.domain.product.dto.ProductPhotoReviewDto;
 import com.matsinger.barofishserver.domain.product.productfilter.application.ProductFilterService;
 import com.matsinger.barofishserver.domain.search.application.SearchKeywordQueryService;
 import com.matsinger.barofishserver.domain.searchFilter.application.SearchFilterQueryService;
@@ -131,10 +131,10 @@ public class ProductControllerV2 {
     }
 
     @GetMapping("/{id}/review-pictures")
-    public ResponseEntity<CustomResponse<List<ProductPhotiReviewDto>>> getProductReviewPhotos(@PathVariable(value = "id") Integer productId) {
-        CustomResponse<List<ProductPhotiReviewDto>> response = new CustomResponse<>();
+    public ResponseEntity<CustomResponse<List<ProductPhotoReviewDto>>> getProductReviewPhotos(@PathVariable(value = "id") Integer productId) {
+        CustomResponse<List<ProductPhotoReviewDto>> response = new CustomResponse<>();
 
-        List<ProductPhotiReviewDto> productPhotoReviewDtos = productQueryService.getProductPictures(productId);
+        List<ProductPhotoReviewDto> productPhotoReviewDtos = productQueryService.getProductPictures(productId);
         response.setIsSuccess(true);
         response.setData(Optional.of(productPhotoReviewDtos));
 

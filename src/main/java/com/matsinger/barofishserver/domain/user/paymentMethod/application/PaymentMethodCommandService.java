@@ -15,12 +15,14 @@ import com.siot.IamportRestClient.request.BillingCustomerData;
 import com.siot.IamportRestClient.response.BillingCustomer;
 import com.siot.IamportRestClient.response.IamportResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.util.regex.Pattern;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class PaymentMethodCommandService {
@@ -117,12 +119,14 @@ public class PaymentMethodCommandService {
         }
 
         if (billingCustomerRes.getCode() != 0) {
-            System.out.println(billingCustomerRes.getCode() + ": " + billingCustomerRes.getMessage());
+            log.error(billingCustomerRes.getCode() + ": " + billingCustomerRes.getMessage());
             return null;
         }
         BillingCustomer billingCustomer = billingCustomerRes.getResponse();
-        if (billingCustomer.getCardName() == null)
+        if (billingCustomer.getCardName() == null) {
+            log.error(billingCustomerRes.getCode() + ": " + billingCustomerRes.getMessage());
             return null;
+        }
 
         return CheckValidCardRes.builder().cardName(billingCustomer.getCardName())
                 .customerUid(billingCustomer.getCustomerUid()).build();

@@ -231,11 +231,18 @@ public class BasketCommandService {
             // 장바구니에 같은 상품이 있으면
             if (!basketProductInfos.isEmpty()) {
                 // 같은 옵션 아이템에 수량 추가
-                if (basketProductInfos.containsOptionItem(optionReq.getOptionId())) {
+                BasketProductInfo sameOptionItem = basketProductInfos.getSameOptionItem(optionReq.getOptionId());
+                if (sameOptionItem != null) {
+                    optionItem.validateQuantity(
+                            optionReq.getAmount() + sameOptionItem.getAmount(),
+                            product.getTitle());
                     basketProductInfos.addQuantity(optionReq.getOptionId(), optionReq.getAmount());
                 }
                 // 같은 옵션 아이템이 없으면 새로운 옵션아이템으로 추가
-                if (!basketProductInfos.containsOptionItem(optionReq.getOptionId())) {
+                if (sameOptionItem == null) {
+                    optionItem.validateQuantity(
+                            optionReq.getAmount(),
+                            product.getTitle());
                     addBasketProduct(userId, optionReq, option, optionItem, product);
                 }
                 necessaryOptionExists = true;
@@ -243,6 +250,7 @@ public class BasketCommandService {
 
             // 장바구니에 같은 상품이 없으면 새로운 상품으로 추가하면서 필수옵션인지 체크
             if (basketProductInfos.isEmpty()) {
+                optionItem.validateQuantity(optionReq.getAmount(), product.getTitle());
                 addBasketProduct(userId, optionReq, option, optionItem, product);
                 if (!necessaryOptionExists) {
                     necessaryOptionExists = option.getIsNeeded();
@@ -274,11 +282,14 @@ public class BasketCommandService {
         );
     }
 
-    public void addAmount(Integer userId, Integer orderProductInfoId, Integer amount) {
-        BasketProductInfo basketProductInfo = basketQueryService.selectBasket(orderProductInfoId);
+    public void addAmount(Integer userId, Integer basketProductInfoId, Integer amount) {
+        BasketProductInfo basketProductInfo = basketQueryService.selectBasket(basketProductInfoId);
         if (userId != basketProductInfo.getUserId()) {
             throw new BusinessException("타인의 장바구니 정보입니다.");
         }
+        Product product = productQueryService.findById(basketProductInfo.getProductId());
+        OptionItem optionItem = optionItemQueryService.findById(basketProductInfo.getOptionItemId());
+        optionItem.validateQuantity(amount, product.getTitle());
         basketProductInfo.setAmount(amount);
         basketProductInfoRepository.save(basketProductInfo);
     }

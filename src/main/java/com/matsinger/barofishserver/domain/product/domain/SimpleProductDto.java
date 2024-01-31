@@ -35,6 +35,7 @@ public class SimpleProductDto {
     Integer deliveryFee;
     ProductDeliverFeeType deliverFeeType;
     Integer minOrderPrice;
+    Integer minStorePrice;
     String[] descriptionImages;
     Integer representOptionItemId;
     Boolean needTaxation;

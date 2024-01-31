@@ -75,4 +75,6 @@ public interface ReviewRepository extends JpaRepository<Review, Integer>, JpaSpe
     void deleteAllByUserIdIn(List<Integer> userIds);
 
     Integer countAllByProductIdAndIsDeleted(Integer productId, boolean isDeleted);
+
+    boolean existsByUserIdAndOrderProductInfoId(Integer userId, int orderProductInfoId);
 }

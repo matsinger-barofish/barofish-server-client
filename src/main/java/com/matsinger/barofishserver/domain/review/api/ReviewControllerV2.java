@@ -1,5 +1,6 @@
 package com.matsinger.barofishserver.domain.review.api;
 
+import com.matsinger.barofishserver.domain.product.dto.ProductPhotoReviewDto;
 import com.matsinger.barofishserver.domain.review.application.ReviewCommandService;
 import com.matsinger.barofishserver.domain.review.application.ReviewQueryService;
 import com.matsinger.barofishserver.domain.review.domain.Review;
@@ -74,10 +75,10 @@ public class ReviewControllerV2 {
     }
 
     @PostMapping("/{id}")
-    public ResponseEntity<CustomResponse<Boolean>> deleteReview(@RequestHeader(value = "Authorization") Optional<String> auth, @PathVariable("id") Integer reviewId) {
+    public ResponseEntity<CustomResponse<Boolean>> deleteReview(@RequestHeader(value = "Authorization") Optional<String> auth,
+                                                                @PathVariable("id") Integer reviewId) {
         CustomResponse<Boolean> res = new CustomResponse<>();
 
-        
         TokenInfo tokenInfo = null;
         if (auth.isPresent()) {
             tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER, TokenAuthType.ADMIN, TokenAuthType.PARTNER), auth);
@@ -95,7 +96,11 @@ public class ReviewControllerV2 {
     }
 
     @GetMapping("/product/{id}")
-    public ResponseEntity<CustomResponse<ProductReviewDto>> getReviews(@PathVariable("id") Integer productId, @RequestHeader(value = "Authorization") Optional<String> auth, @RequestParam(value = "orderType", required = false, defaultValue = "RECENT") ReviewOrderByType orderType, @RequestParam(value = "page", required = false, defaultValue = "0") Integer page, @RequestParam(value = "take", required = false, defaultValue = "10") Integer take) {
+    public ResponseEntity<CustomResponse<ProductReviewDto>> getReviews(@PathVariable("id") Integer productId,
+                                                                       @RequestHeader(value = "Authorization") Optional<String> auth,
+                                                                       @RequestParam(value = "orderType", required = false, defaultValue = "RECENT") ReviewOrderByType orderType,
+                                                                       @RequestParam(value = "page", required = false, defaultValue = "0") Integer page,
+                                                                       @RequestParam(value = "take", required = false, defaultValue = "10") Integer take) {
 
         Integer userId = null;
         if (auth.isEmpty()) {
@@ -139,8 +144,23 @@ public class ReviewControllerV2 {
         return ResponseEntity.ok(res);
     }
 
+    @GetMapping("/{id}/pictures")
+    public ResponseEntity<CustomResponse<List<ProductPhotoReviewDto>>> getProductReviewPhotos(@PathVariable(value = "id") Integer id,
+                                                                                              @RequestParam(value = "type") String type) {
+        CustomResponse<List<ProductPhotoReviewDto>> response = new CustomResponse<>();
+
+        List<ProductPhotoReviewDto> productPhotoReviewDtos = reviewQueryService.getPictures(id, type);
+        response.setIsSuccess(true);
+        response.setData(Optional.of(productPhotoReviewDtos));
+
+        return ResponseEntity.ok(response);
+    }
+
     @GetMapping("/my")
-    public ResponseEntity<CustomResponse<UserReviewDto>> selectMyReviewListV2(@RequestHeader(value = "Authorization") Optional<String> auth, @RequestParam(value = "orderType", required = false, defaultValue = "RECENT") ReviewOrderByType orderType, @RequestParam(value = "page", required = false, defaultValue = "0") Integer page, @RequestParam(value = "take", required = false, defaultValue = "10") Integer take) {
+    public ResponseEntity<CustomResponse<UserReviewDto>> selectMyReviewListV2(@RequestHeader(value = "Authorization") Optional<String> auth,
+                                                                              @RequestParam(value = "orderType", required = false, defaultValue = "RECENT") ReviewOrderByType orderType,
+                                                                              @RequestParam(value = "page", required = false, defaultValue = "0") Integer page,
+                                                                              @RequestParam(value = "take", required = false, defaultValue = "10") Integer take) {
         CustomResponse<UserReviewDto> res = new CustomResponse<>();
 
         Integer userId = null;
