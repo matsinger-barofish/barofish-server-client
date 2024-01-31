@@ -21,7 +21,7 @@ import java.util.List;
 public class SearchKeywordQueryService {
     private final SearchKeywordRepository searchKeywordRepository;
     private final ProductRepository productRepository;
-    private SearchKeywordQueryRepository searchKeywordQueryRepository;
+    private final SearchKeywordQueryRepository searchKeywordQueryRepository;
 
     public void searchKeyword(String keyword) {
         SearchKeyword check = searchKeywordRepository.findByKeywordEquals(keyword);
@@ -55,7 +55,6 @@ public class SearchKeywordQueryService {
     }
 
     public List<SearchProductDto> selectSearchProductTitles(String keyword) {
-        List<SearchProductDto> searchProductDtos = searchKeywordQueryRepository.selectSearchKeyword(keyword);
-        return null;
+        return searchKeywordQueryRepository.selectSearchKeyword(keyword);
     }
 }
