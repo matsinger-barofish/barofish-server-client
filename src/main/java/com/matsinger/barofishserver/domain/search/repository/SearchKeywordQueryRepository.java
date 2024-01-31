@@ -1,6 +1,8 @@
 package com.matsinger.barofishserver.domain.search.repository;
 
+import com.matsinger.barofishserver.domain.product.domain.ProductState;
 import com.matsinger.barofishserver.domain.search.dto.SearchProductDto;
+import com.matsinger.barofishserver.domain.store.domain.StoreState;
 import com.querydsl.core.types.Projections;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.Expressions;
@@ -12,6 +14,7 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 import static com.matsinger.barofishserver.domain.product.domain.QProduct.product;
+import static com.matsinger.barofishserver.domain.store.domain.QStore.store;
 import static com.matsinger.barofishserver.domain.store.domain.QStoreInfo.storeInfo;
 
 @Repository
@@ -34,9 +37,11 @@ public class SearchKeywordQueryRepository {
                 ))
                 .from(product)
                 .leftJoin(storeInfo).on(product.storeId.eq(storeInfo.storeId))
-                .where(storeInfo.name.like(convertedKeyword).or(
-                        containsAll(product.title, keywords)
-                ))
+                .leftJoin(store).on(store.id.eq(storeInfo.storeId))
+                .where(storeInfo.name.like(convertedKeyword)
+                        .or(containsAll(product.title, keywords))
+                        .and(product.state.eq(ProductState.ACTIVE))
+                        .and(store.state.eq(StoreState.ACTIVE)))
                 .fetch();
     }
 
