@@ -530,17 +530,7 @@ public class OrderCommandService {
         }
 
         cancelManager.setCancelProductState(state);
-        if (cancelManager.allCanceled()) {
-            cancelPrice = cancelManager.getAllCancelPrice();
-        }
-        if (!cancelManager.allCanceled()) {
-            cancelPrice = cancelManager.getPartialCancelPrice();
-        }
-        if (order.getPaymentWay().equals(OrderPaymentWay.KAKAO_PAY)) {
-            cancelPrice = cancelManager.getKakaopayTaxFreePrice();
-        }
-        log.info("isAllCanceled = {}", cancelManager.allCanceled());
-        log.info("cancelPrice send to portOne = {}", cancelPrice);
+
         CancelData cancelData = new CancelData(
                 order.getImpUid(),
                 true,
@@ -549,12 +539,25 @@ public class OrderCommandService {
 //        log.info("impUid = {}", order.getImpUid());
 //        log.info("totalCancelPrice = {}", cancelPrice);
 //        log.info("taxFreePrice = {}", cancelManager.getNonTaxablePriceTobeCanceled());
-        cancelData.setTax_free(BigDecimal.valueOf(cancelManager.getNonTaxablePriceTobeCanceled()));
         setVbankRefundInfo(order, cancelData);
+
+        if (cancelManager.allCanceled()) {
+            // 미입력시 전액 환불
+            cancelPrice = null;
+            cancelData.setTax_free(null);
+        }
+        if (!cancelManager.allCanceled()) {
+            cancelPrice = cancelManager.getAllCancelPrice();
+            cancelData.setTax_free(BigDecimal.valueOf(cancelManager.getNonTaxablePriceTobeCanceled()));
+        }
+
+        log.warn("isAllCanceled = {}", cancelManager.allCanceled());
+        log.warn("cancelPrice send to portOne = {}", cancelPrice);
+
         log.warn("cancelPrice = {}", cancelPrice);
         log.warn("non kakaoPay taxFreePrice = {}", cancelManager.getNonTaxablePriceTobeCanceled());
 
-        sendPortOneCancelData(cancelData);
+//        sendPortOneCancelData(cancelData);
 
         if (cancelManager.allCanceled()) {
             Payments payment = paymentRepository.findFirstByImpUid(order.getImpUid());
