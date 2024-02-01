@@ -8,6 +8,7 @@ import com.matsinger.barofishserver.domain.coupon.application.CouponCommandServi
 import com.matsinger.barofishserver.domain.coupon.application.CouponQueryService;
 import com.matsinger.barofishserver.domain.coupon.domain.*;
 import com.matsinger.barofishserver.domain.coupon.dto.CouponAddReq;
+import com.matsinger.barofishserver.domain.coupon.dto.CouponDeleteRequest;
 import com.matsinger.barofishserver.domain.coupon.dto.CouponDto;
 import com.matsinger.barofishserver.domain.coupon.dto.UpdateSystemCoupon;
 import com.matsinger.barofishserver.domain.user.application.UserCommandService;
@@ -217,6 +218,19 @@ public class CouponController {
             throw new BusinessException("시스템 발행 쿠폰은 삭제 불가능합니다.");
         coupon.setState(CouponState.DELETED);
         couponCommandService.updateCoupon(coupon);
+        res.setData(Optional.of(true));
+        return ResponseEntity.ok(res);
+    }
+
+    @PostMapping("")
+    public ResponseEntity<CustomResponse<Boolean>> deleteUserCoupon(@RequestHeader(value = "Authorization") Optional<String> auth,
+                                                                @RequestBody CouponDeleteRequest request) {
+        CustomResponse<Boolean> res = new CustomResponse<>();
+
+        jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ADMIN), auth);
+
+        couponCommandService.deleteUserCoupon(request);
+
         res.setData(Optional.of(true));
         return ResponseEntity.ok(res);
     }
