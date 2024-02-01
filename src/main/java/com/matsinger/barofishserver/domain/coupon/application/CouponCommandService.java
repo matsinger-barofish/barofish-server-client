@@ -3,6 +3,7 @@ package com.matsinger.barofishserver.domain.coupon.application;
 import com.matsinger.barofishserver.domain.coupon.domain.Coupon;
 import com.matsinger.barofishserver.domain.coupon.domain.CouponUserMap;
 import com.matsinger.barofishserver.domain.coupon.domain.CouponUserMapId;
+import com.matsinger.barofishserver.domain.coupon.dto.CouponDeleteRequest;
 import com.matsinger.barofishserver.domain.coupon.repository.CouponRepository;
 import com.matsinger.barofishserver.domain.coupon.repository.CouponUserMapRepository;
 import com.matsinger.barofishserver.domain.notification.application.NotificationCommandService;
@@ -162,5 +163,14 @@ public class CouponCommandService {
 
         couponUserMapCommandService.useCoupon(userId, couponId);
         return coupon;
+    }
+
+    @Transactional
+    public void deleteUserCoupon(CouponDeleteRequest request) {
+        List<CouponUserMap> userCoupons = couponUserMapRepository
+                .findByUserIdAndCouponIdIn(request.getUserId(), request.getCouponIds());
+        userCoupons.forEach(v -> v.setIsUsed(true));
+
+        couponUserMapRepository.saveAll(userCoupons);
     }
 }

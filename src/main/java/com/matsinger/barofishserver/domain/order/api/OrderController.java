@@ -20,12 +20,16 @@ import com.matsinger.barofishserver.domain.order.domain.*;
 import com.matsinger.barofishserver.domain.order.dto.*;
 import com.matsinger.barofishserver.domain.order.orderprductinfo.domain.OrderProductInfo;
 import com.matsinger.barofishserver.domain.order.orderprductinfo.domain.OrderProductState;
+import com.matsinger.barofishserver.domain.order.orderprductinfo.repository.OrderProductInfoRepository;
 import com.matsinger.barofishserver.domain.payment.application.PaymentService;
 import com.matsinger.barofishserver.domain.payment.dto.KeyInPaymentReq;
 import com.matsinger.barofishserver.domain.product.application.ProductService;
 import com.matsinger.barofishserver.domain.product.domain.Product;
 import com.matsinger.barofishserver.domain.product.domain.ProductState;
 import com.matsinger.barofishserver.domain.product.dto.ProductListDto;
+import com.matsinger.barofishserver.domain.product.option.application.OptionQueryService;
+import com.matsinger.barofishserver.domain.product.option.domain.Option;
+import com.matsinger.barofishserver.domain.product.option.repository.OptionRepository;
 import com.matsinger.barofishserver.domain.product.optionitem.application.OptionItemQueryService;
 import com.matsinger.barofishserver.domain.product.optionitem.domain.OptionItem;
 import com.matsinger.barofishserver.domain.siteInfo.application.SiteInfoQueryService;
@@ -36,9 +40,11 @@ import com.matsinger.barofishserver.domain.user.application.UserCommandService;
 import com.matsinger.barofishserver.domain.user.deliverplace.DeliverPlace;
 import com.matsinger.barofishserver.domain.user.paymentMethod.application.PaymentMethodService;
 import com.matsinger.barofishserver.domain.user.paymentMethod.domain.PaymentMethod;
+import com.matsinger.barofishserver.domain.userinfo.application.UserInfoQueryService;
 import com.matsinger.barofishserver.domain.userinfo.domain.UserInfo;
-import com.matsinger.barofishserver.global.exception.ErrorCode;
+import com.matsinger.barofishserver.domain.userinfo.repository.UserInfoRepository;
 import com.matsinger.barofishserver.global.exception.BusinessException;
+import com.matsinger.barofishserver.global.exception.ErrorCode;
 import com.matsinger.barofishserver.jwt.JwtService;
 import com.matsinger.barofishserver.jwt.TokenAuthType;
 import com.matsinger.barofishserver.jwt.TokenInfo;
@@ -48,7 +54,7 @@ import com.matsinger.barofishserver.utils.CustomResponse;
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.JoinType;
 import jakarta.persistence.criteria.Predicate;
-import lombok.*;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -81,6 +87,11 @@ public class OrderController {
     private final JwtService jwt;
     private final Common utils;
     private final OptionItemQueryService optionItemQueryService;
+    private final OrderProductInfoRepository orderProductInfoRepository;
+    private final OptionRepository optionRepository;
+    private final OptionQueryService optionQueryService;
+    private final UserInfoRepository userInfoRepository;
+    private final UserInfoQueryService userInfoQueryService;
 
     @GetMapping("/point-rule")
     public ResponseEntity<CustomResponse<PointRuleRes>> selectPointRule(@RequestHeader(value = "Authorization") Optional<String> auth) {
@@ -906,25 +917,56 @@ public class OrderController {
                                                                        @PathVariable("orderProductInfoId") Integer orderProductInfoId) throws Exception {
         CustomResponse<Boolean> res = new CustomResponse<>();
 
-                TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth);
-
+        TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth);
 
         Integer userId = tokenInfo.getId();
         OrderProductInfo info = orderService.selectOrderProductInfo(orderProductInfoId);
+        OptionItem requestOptionItem = optionItemQueryService.findById(info.getOptionItemId());
+        Option requestOption = optionQueryService.findById(requestOptionItem.getOptionId());
+        if (requestOption.isNeeded() == false) {
+            throw new BusinessException("필수옵션인 경우에만 구매 확정이 가능합니다.");
+        }
+        if (!info.getState().equals(OrderProductState.DELIVERY_DONE)) {
+            throw new BusinessException("배송 완료 후 처리 가능합니다.");
+        }
+
         Orders order = orderService.selectOrder(info.getOrderId());
         if (userId != order.getUserId()) throw new BusinessException("타인의 주문 내역입니다.");
-        if (!info.getState().equals(OrderProductState.DELIVERY_DONE))
-            throw new BusinessException("배송 완료 후 처리 가능합니다.");
-        UserInfo userInfo = userService.selectUserInfo(userId);
-        Product product = productService.selectProduct(info.getProductId());
+
+        UserInfo userInfo = userInfoQueryService.findByUserId(userId);
         Grade grade = userInfo.getGrade();
-        float pointRate = product.getPointRate() != null ? product.getPointRate() : 0;
-        Integer point = (int) (Math.floor(info.getPrice() * ((pointRate + grade.getPointRate()))));
+
+        List<OrderProductInfo> orderProductInfos = orderProductInfoRepository.findAllByOrderId(order.getId());
+        Product product = productService.selectProduct(info.getProductId());
+        List<OrderProductInfo> notNeededOption = orderProductInfos.stream().filter(v -> {
+            OptionItem optionItem = optionItemQueryService.findById(v.getOptionItemId());
+            Option option = optionQueryService.findById((optionItem.getOptionId()));
+            if (!option.isNeeded() &&
+                    v.getState() != OrderProductState.FINAL_CONFIRM &&
+                    v.getProductId() == product.getId()) {
+                return true;
+            }
+            return false;
+        }).toList();
+
+        ArrayList<OrderProductInfo> productTobePurchaseConfirmation = new ArrayList<>();
+        productTobePurchaseConfirmation.addAll(notNeededOption);
+        productTobePurchaseConfirmation.add(info);
+        int point = productTobePurchaseConfirmation.stream()
+                .mapToInt(v ->
+                        (int) Math.floor(v.getPrice() * (product.getPointRate() + grade.getPointRate()))
+                ).sum();
+        productTobePurchaseConfirmation.forEach(v -> v.setState(OrderProductState.FINAL_CONFIRM));
+
+
+//        float pointRate = product.getPointRate() != null ? product.getPointRate() : 0;
+//        Integer point = (int) (Math.floor(info.getPrice() * ((pointRate + grade.getPointRate()))));
         userInfo.setPoint(userInfo.getPoint() + point);
         info.setState(OrderProductState.FINAL_CONFIRM);
         info.setFinalConfirmedAt(utils.now());
-        if (point != 0) userService.updateUserInfo(userInfo);
-        orderService.updateOrderProductInfo(new ArrayList<>(List.of(info)));
+
+        orderProductInfoRepository.saveAll(productTobePurchaseConfirmation);
+        if (point != 0) userInfoRepository.save(userInfo);
         couponCommandService.publishSystemCoupon(userInfo.getUserId());
         return ResponseEntity.ok(res);
     }
