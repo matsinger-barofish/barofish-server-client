@@ -20,7 +20,7 @@ class SearchKeywordQueryServiceTest {
     @Test
     void test() {
         // given
-        String keyword = "장어 반건조";
+        String keyword = "바로수산 장어";
         List<SearchProductDto> searchProductDtos = searchKeywordQueryRepository.selectSearchKeyword(keyword);
         // when
 

@@ -9,6 +9,7 @@ import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.core.types.dsl.StringPath;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -17,6 +18,7 @@ import static com.matsinger.barofishserver.domain.product.domain.QProduct.produc
 import static com.matsinger.barofishserver.domain.store.domain.QStore.store;
 import static com.matsinger.barofishserver.domain.store.domain.QStoreInfo.storeInfo;
 
+@Slf4j
 @Repository
 @RequiredArgsConstructor
 public class SearchKeywordQueryRepository {
@@ -27,6 +29,9 @@ public class SearchKeywordQueryRepository {
     public List<SearchProductDto> selectSearchKeyword(String keyword) {
         String convertedKeyword = keyword.replace("\\s+", " "); // 여러개의 공백을 공백 하나로
         String[] keywords = convertedKeyword.split(" ");
+        log.info("convertedKeyword = {}", convertedKeyword);
+        log.info("keywords = {}", keywords.toString());
+
         return queryFactory
                 .select(Projections.fields(
                         SearchProductDto.class,
@@ -39,11 +44,23 @@ public class SearchKeywordQueryRepository {
                 .from(product)
                 .leftJoin(storeInfo).on(product.storeId.eq(storeInfo.storeId))
                 .leftJoin(store).on(store.id.eq(storeInfo.storeId))
-                .where(storeInfo.name.like(convertedKeyword)
+                .where(matches(storeInfo.name, keywords)
                         .or(containsAll(product.title, keywords))
                         .and(product.state.eq(ProductState.ACTIVE))
                         .and(store.state.eq(StoreState.ACTIVE)))
                 .fetch();
+    }
+
+    private BooleanExpression matches(StringPath storeName, String[] keywords) {
+        BooleanExpression keywordMatchesStoreName = null;
+        for (String keyword : keywords) {
+            if (keywordMatchesStoreName == null) {
+                keywordMatchesStoreName = storeName.contains(keyword);
+            } else {
+                keywordMatchesStoreName.or(storeName.contains(keyword));
+            }
+        }
+        return keywordMatchesStoreName;
     }
 
     private BooleanExpression containsAll(StringPath title, String[] keywords) {
