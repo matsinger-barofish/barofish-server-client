@@ -72,6 +72,7 @@ public class ReviewControllerV2 {
         res.setData(Optional.of(pagedReviewDtos));
 
         return ResponseEntity.ok(res);
+
     }
 
     @PostMapping("/{id}")
