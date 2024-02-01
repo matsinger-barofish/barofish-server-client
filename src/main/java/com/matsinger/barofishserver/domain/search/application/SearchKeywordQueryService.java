@@ -12,8 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 @RequiredArgsConstructor
 @Slf4j
@@ -55,6 +54,36 @@ public class SearchKeywordQueryService {
     }
 
     public List<SearchProductDto> selectSearchProductTitles(String keyword) {
-        return searchKeywordQueryRepository.selectSearchKeyword(keyword);
+        String convertedKeyword = keyword.replace("\\s+", " "); // 여러개의 공백을 공백 하나로
+        String[] keywords = convertedKeyword.split(" ");
+        List<SearchProductDto> searchProductDtos = searchKeywordQueryRepository.selectSearchKeyword(keywords);
+
+        // keyword 와 searchProductDto.title에서 매칭되는 단어 수가 가장 많은 것 순으로 정렬
+        String nonSpaceKeyword = convertedKeyword.replace(" ", "");
+        Map<Integer, List<SearchProductDto>> matchWordCountMap = new HashMap<>();
+
+        for (SearchProductDto searchProductDto : searchProductDtos) {
+            int matchingCnt = 0;
+            for (char productChar : searchProductDto.getTitle().toCharArray()) {
+
+                for (char word : nonSpaceKeyword.toCharArray()) {
+                    if (productChar == word) {
+                        matchingCnt++;
+                    }
+                }
+            }
+            List<SearchProductDto> existingList = matchWordCountMap.getOrDefault(matchingCnt, new ArrayList<>());
+            existingList.add(searchProductDto);
+            matchWordCountMap.put(matchingCnt, existingList);
+        }
+
+        List<Integer> keySet = new ArrayList<>(matchWordCountMap.keySet());
+        Collections.sort(keySet, Collections.reverseOrder());
+        List<SearchProductDto> sortedByMatchingCnt = new ArrayList<>();
+        for (Integer key : keySet) {
+            sortedByMatchingCnt.addAll(matchWordCountMap.get(key));
+        }
+
+        return sortedByMatchingCnt;
     }
 }

@@ -15,13 +15,14 @@ import java.util.List;
 class SearchKeywordQueryServiceTest {
 
     @Autowired private SearchKeywordQueryRepository searchKeywordQueryRepository;
+    @Autowired private SearchKeywordQueryService searchKeywordQueryService;
 
     @DisplayName("")
     @Test
     void test() {
         // given
-        String keyword = "바로수산 장어";
-        List<SearchProductDto> searchProductDtos = searchKeywordQueryRepository.selectSearchKeyword(keyword);
+        String keyword = "바로수산 반건조 장어";
+        List<SearchProductDto> searchProductDtos = searchKeywordQueryService.selectSearchProductTitles(keyword);
         // when
 
         // then

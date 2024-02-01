@@ -26,11 +26,7 @@ public class SearchKeywordQueryRepository {
     private final JPAQueryFactory queryFactory;
 
 
-    public List<SearchProductDto> selectSearchKeyword(String keyword) {
-        String convertedKeyword = keyword.replace("\\s+", " "); // 여러개의 공백을 공백 하나로
-        String[] keywords = convertedKeyword.split(" ");
-        log.info("convertedKeyword = {}", convertedKeyword);
-        log.info("keywords = {}", keywords.toString());
+    public List<SearchProductDto> selectSearchKeyword(String[] keywords) {
 
         return queryFactory
                 .select(Projections.fields(
@@ -45,7 +41,7 @@ public class SearchKeywordQueryRepository {
                 .leftJoin(storeInfo).on(product.storeId.eq(storeInfo.storeId))
                 .leftJoin(store).on(store.id.eq(storeInfo.storeId))
                 .where(matches(storeInfo.name, keywords)
-                        .or(containsAll(product.title, keywords))
+                        .or(contains(product.title, keywords))
                         .and(product.state.eq(ProductState.ACTIVE))
                         .and(store.state.eq(StoreState.ACTIVE)))
                 .fetch();
@@ -63,8 +59,9 @@ public class SearchKeywordQueryRepository {
         return keywordMatchesStoreName;
     }
 
-    private BooleanExpression containsAll(StringPath title, String[] keywords) {
+    private BooleanExpression contains(StringPath title, String[] keywords) {
         BooleanExpression allMatches = null;
+        int matchingWordCnt = 0;
         for (String keyword : keywords) {
             if (allMatches == null) {
                 allMatches = title.contains(keyword);
