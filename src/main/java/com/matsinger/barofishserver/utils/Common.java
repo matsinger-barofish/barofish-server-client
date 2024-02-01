@@ -1,5 +1,6 @@
 package com.matsinger.barofishserver.utils;
 
+import com.matsinger.barofishserver.global.exception.BusinessException;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -69,12 +70,12 @@ public class Common {
         return str;
     }
 
-    public String validateString(String str, Long maxLen, String name) throws Exception {
-        if (str == null) throw new Exception(String.format("%s 입력해주세요.", getPostWord(name, "을", "를")));
+    public String validateString(String str, Long maxLen, String name) {
+        if (str == null) throw new BusinessException(String.format("%s 입력해주세요.", getPostWord(name, "을", "를")));
         str = str.trim();
-        if (str.length() == 0) throw new Exception(String.format("%s 입력해주세요.", getPostWord(name, "을", "를")));
+        if (str.length() == 0) throw new BusinessException(String.format("%s 입력해주세요.", getPostWord(name, "을", "를")));
         if (str.length() > maxLen)
-            throw new Exception(String.format("%s 최대 %d자 입니다.", getPostWord(name, "은", "는"), maxLen));
+            throw new BusinessException(String.format("%s 최대 %d자 입니다.", getPostWord(name, "은", "는"), maxLen));
         return str;
     }
 

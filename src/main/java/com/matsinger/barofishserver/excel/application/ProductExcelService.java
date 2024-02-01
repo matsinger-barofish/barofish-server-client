@@ -1,16 +1,17 @@
 package com.matsinger.barofishserver.excel.application;
 
-import com.matsinger.barofishserver.category.application.CategoryQueryService;
-import com.matsinger.barofishserver.category.domain.Category;
-import com.matsinger.barofishserver.product.application.ProductService;
-import com.matsinger.barofishserver.product.domain.OptionItemState;
-import com.matsinger.barofishserver.product.domain.OptionState;
-import com.matsinger.barofishserver.product.domain.Product;
-import com.matsinger.barofishserver.product.domain.ProductState;
-import com.matsinger.barofishserver.product.option.domain.Option;
-import com.matsinger.barofishserver.product.optionitem.domain.OptionItem;
-import com.matsinger.barofishserver.store.application.StoreService;
-import com.matsinger.barofishserver.store.domain.Store;
+import com.matsinger.barofishserver.domain.category.application.CategoryQueryService;
+import com.matsinger.barofishserver.domain.category.domain.Category;
+import com.matsinger.barofishserver.domain.product.application.ProductService;
+import com.matsinger.barofishserver.domain.product.domain.OptionItemState;
+import com.matsinger.barofishserver.domain.product.domain.OptionState;
+import com.matsinger.barofishserver.domain.product.domain.Product;
+import com.matsinger.barofishserver.domain.product.domain.ProductState;
+import com.matsinger.barofishserver.domain.product.option.domain.Option;
+import com.matsinger.barofishserver.domain.product.optionitem.domain.OptionItem;
+import com.matsinger.barofishserver.domain.store.application.StoreService;
+import com.matsinger.barofishserver.domain.store.domain.Store;
+import com.matsinger.barofishserver.global.exception.BusinessException;
 import com.matsinger.barofishserver.utils.Common;
 import lombok.*;
 import org.apache.poi.ss.usermodel.Cell;
@@ -46,43 +47,43 @@ public class ProductExcelService {
         Integer representOptionNo;
     }
 
-    public ProductExcelData convertRow2ProductData(Row row) throws Exception {
+    public ProductExcelData convertRow2ProductData(Row row) {
         // 0 입점사 ID
         String partnerId = row.getCell(0).getStringCellValue();
         Optional<Store> store = storeService.selectOptionalStoreByLoginId(partnerId);
-        if (store == null || store.isEmpty()) throw new Exception(String.format("%s 는 없는 입점사 ID 입니다.", partnerId));
+        if (store == null || store.isEmpty()) throw new BusinessException(String.format("%s 는 없는 입점사 ID 입니다.", partnerId));
         // 3 상품명
         String productName = row.getCell(3).getStringCellValue();
-        if (productName == null) throw new Exception("상품명이 비었습니다. 확인해주세요.");
+        if (productName == null) throw new BusinessException("상품명이 비었습니다. 확인해주세요.");
         Optional<Product>
                 product =
                 productService.findOptionalProductWithTitleAndStoreId(productName, store.get().getId());
         // 1 1차 카테고리
         String parentCategoryName = row.getCell(1) != null ? row.getCell(1).getStringCellValue() : null;
-        if (parentCategoryName == null) throw new Exception("1차 카테고리가 비었습니다. 확인해주세요.");
+        if (parentCategoryName == null) throw new BusinessException("1차 카테고리가 비었습니다. 확인해주세요.");
         Optional<Category> parentCategory = categoryQueryService.findOptionalCategoryWithName(parentCategoryName);
         if (parentCategory == null || parentCategory.isEmpty())
-            throw new Exception(String.format("%s는 존재하지 않는 1차 카테고리입니다.", parentCategoryName));
+            throw new BusinessException(String.format("%s는 존재하지 않는 1차 카테고리입니다.", parentCategoryName));
         // 2 2차 카테고리
         String categoryName = row.getCell(2) != null ? row.getCell(2).getStringCellValue() : null;
-        if (categoryName == null) throw new Exception("2차 카테고리가 비었습니다. 확인해주세요.");
+        if (categoryName == null) throw new BusinessException("2차 카테고리가 비었습니다. 확인해주세요.");
         Optional<Category>
                 category =
                 categoryQueryService.findOptionalCategoryWithName(categoryName, parentCategory.get().getId());
         if (category == null || category.isEmpty())
-            throw new Exception(String.format("%s는 존재하지 않는 2차 카테고리입니다.", categoryName));
+            throw new BusinessException(String.format("%s는 존재하지 않는 2차 카테고리입니다.", categoryName));
         // 4 도착 예정일
         int expectedDeliverDay = row.getCell(4) != null ? (int) (row.getCell(4).getNumericCellValue()) : 0;
         // 5 발송안내
         String deliveryInfo = row.getCell(5) != null ? row.getCell(5).getStringCellValue() : "";
         // 6 배송비    `
         Cell deliveryFeeCell = row.getCell(6);
-        if (deliveryFeeCell == null) throw new Exception(String.format("'%s' 의 배송비를 확인해주세요. ", productName));
+        if (deliveryFeeCell == null) throw new BusinessException(String.format("'%s' 의 배송비를 확인해주세요. ", productName));
         int deliveryFee = (int) deliveryFeeCell.getNumericCellValue();
         // 7 택배 책정  수량
         Cell deliverBoxPerAmountCell = row.getCell(7);
         if (deliverBoxPerAmountCell == null)
-            throw new Exception(String.format("'%s' 의 택배 책정 수량을 확인해주세요. ", productName));
+            throw new BusinessException(String.format("'%s' 의 택배 책정 수량을 확인해주세요. ", productName));
         Integer deliverBoxPerAmount = (int) deliverBoxPerAmountCell.getNumericCellValue();
         // 8 노출 상태 (노출 | 미노출)
         String stateStr = row.getCell(8) != null ? row.getCell(8).getStringCellValue() : "미노출";
@@ -93,11 +94,11 @@ public class ProductExcelService {
         // 10 옵션 여부
         // 13 옵션명
         Cell optionNameCell = row.getCell(13);
-        if (optionNameCell == null) throw new Exception(String.format("'%s' 의 옵션명을 확인해주세요. ", productName));
+        if (optionNameCell == null) throw new BusinessException(String.format("'%s' 의 옵션명을 확인해주세요. ", productName));
         List<String> optionNameList = Arrays.stream(row.getCell(13).getStringCellValue().split("\n")).toList();
         // 11 매입가
         Cell purchasePriceCell = row.getCell(11);
-        if (purchasePriceCell == null) throw new Exception(String.format("'%s' 의 매입가를 확인해주세요. ", productName));
+        if (purchasePriceCell == null) throw new BusinessException(String.format("'%s' 의 매입가를 확인해주세요. ", productName));
 
         List<Integer>
                 purchasePriceList = purchasePriceCell.getCellType().equals(CellType.NUMERIC) ?
@@ -107,7 +108,7 @@ public class ProductExcelService {
         Integer representOptionNo = row.getCell(12) != null ? (int) row.getCell(12).getNumericCellValue() : 0;
         // 14 옵션 정가
         Cell originPriceCell = row.getCell(14);
-        if (originPriceCell == null) throw new Exception(String.format("'%s' 의 옵션 정가를 확인해주세요. ", productName));
+        if (originPriceCell == null) throw new BusinessException(String.format("'%s' 의 옵션 정가를 확인해주세요. ", productName));
         List<Integer>
                 originPriceList =
                 originPriceCell.getCellType().equals(CellType.NUMERIC) ?
@@ -115,7 +116,7 @@ public class ProductExcelService {
                 Arrays.stream(originPriceCell.getStringCellValue().split("\n")).map(Integer::parseInt).toList();
         // 15 옵션 할인가
         Cell discountPriceCell = row.getCell(15);
-        if (discountPriceCell == null) throw new Exception(String.format("'%s' 의 옵션 할인가 확인해주세요. ", productName));
+        if (discountPriceCell == null) throw new BusinessException(String.format("'%s' 의 옵션 할인가 확인해주세요. ", productName));
         List<Integer>
                 discountPriceList =
                 discountPriceCell.getCellType().equals(CellType.NUMERIC) ?
@@ -123,7 +124,7 @@ public class ProductExcelService {
                 Arrays.stream(discountPriceCell.getStringCellValue().split("\n")).map(Integer::parseInt).toList();
         // 16 최대 주문 수량
         Cell maxAvailableAmountCell = row.getCell(16);
-        if (maxAvailableAmountCell == null) throw new Exception(String.format("'%s' 의 최대 주문 수량을 확인해주세요.", productName));
+        if (maxAvailableAmountCell == null) throw new BusinessException(String.format("'%s' 의 최대 주문 수량을 확인해주세요.", productName));
         List<Integer>
                 maxAvailableAmountList =
                 maxAvailableAmountCell.getCellType().equals(CellType.NUMERIC) ?
@@ -131,7 +132,7 @@ public class ProductExcelService {
                 Arrays.stream(maxAvailableAmountCell.getStringCellValue().split("\n")).map(Integer::parseInt).toList();
         // 17 재고
         Cell amountCell = row.getCell(17);
-        if (amountCell == null) throw new Exception(String.format("'%s' 의 재고를 확인해주세요.", productName));
+        if (amountCell == null) throw new BusinessException(String.format("'%s' 의 재고를 확인해주세요.", productName));
         List<Integer>
                 amountList =
                 amountCell.getCellType().equals(CellType.NUMERIC) ?
@@ -147,7 +148,7 @@ public class ProductExcelService {
                 discountPriceList.size(),
                 originPriceList.size(),
                 maxAvailableAmountList.size(),
-                amountList.size())).size() != 1) throw new Exception("옵션 정보의 개수를 일치시켜 주세요.");
+                amountList.size())).size() != 1) throw new BusinessException("옵션 정보의 개수를 일치시켜 주세요.");
         if (product.isPresent()) {
             product.get().setCategory(category.get());
             product.get().setExpectedDeliverDay(expectedDeliverDay);
@@ -226,7 +227,7 @@ public class ProductExcelService {
     }
 
 
-    public void processProductExcel(MultipartFile file) throws Exception {
+    public void processProductExcel(MultipartFile file) {
         XSSFSheet sheet = excelService.readExcel(file);
         Iterator<Row> rowIterator = sheet.iterator();
         Row firstRow = rowIterator.next();

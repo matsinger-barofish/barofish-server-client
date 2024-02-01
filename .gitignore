@@ -41,8 +41,9 @@ out/
 
 ## custom Settings ##
 *.properties
-*.yml
+application.yml
 *.sql
 http/
 src/main/resources/sql/
 build/generated/
+logs/

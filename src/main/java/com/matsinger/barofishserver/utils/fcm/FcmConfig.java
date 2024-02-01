@@ -24,12 +24,6 @@ public class FcmConfig {
     @Bean
     @PostConstruct
     FirebaseMessaging firebaseMessaging() throws IOException {
-        Resource
-                resources =
-                ResourcePatternUtils.getResourcePatternResolver(new DefaultResourceLoader()).getResource("classpath" +
-                        ":firebase/" +
-                        keyFilePath);
-        InputStream refreshToken = resources.getInputStream();
 
         FirebaseApp firebaseApp = null;
 
@@ -42,9 +36,15 @@ public class FcmConfig {
                 }
             }
         } else {
-            FirebaseOptions
-                    options =
-                    FirebaseOptions.builder().setCredentials(GoogleCredentials.fromStream(refreshToken)).build();
+            Resource resources =
+                    ResourcePatternUtils.getResourcePatternResolver(new DefaultResourceLoader())
+                            .getResource("classpath" + ":firebase/" + keyFilePath);
+            InputStream refreshToken = resources.getInputStream();
+
+            FirebaseOptions options =
+                    FirebaseOptions.builder()
+                            .setCredentials(GoogleCredentials.fromStream(refreshToken))
+                            .build();
             firebaseApp = FirebaseApp.initializeApp(options);
         }
         System.out.println("Fcm Setting Completed");
