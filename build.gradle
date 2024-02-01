@@ -1,6 +1,6 @@
 plugins {
     id 'java'
-    id 'org.springframework.boot' version '3.0.6'
+    id 'org.springframework.boot' version '3.1.5'
     id 'io.spring.dependency-management' version '1.1.0'
 }
 
@@ -15,21 +15,29 @@ configurations {
 }
 
 repositories {
+//    mavenLocal()
     mavenCentral()
-    maven { url 'https://jitpack.io' }
+    maven {
+        url uri('https://jitpack.io')
+        }
+    maven {
+        url = uri('https://repo.maven.apache.org/maven2/')
+    }
 }
 
 dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
     implementation 'org.springframework.boot:spring-boot-starter-web'
-    testImplementation 'org.testng:testng:7.1.0'
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+    developmentOnly 'org.springframework.boot:spring-boot-devtools'
+    implementation "org.springframework.security:spring-security-crypto:6.0.2"
+    implementation group: 'com.squareup.okhttp3', name: 'okhttp', version: '4.10.0'
+
     testImplementation 'org.testng:testng:7.1.0'
     compileOnly 'org.projectlombok:lombok'
-    developmentOnly 'org.springframework.boot:spring-boot-devtools'
     runtimeOnly 'org.mariadb.jdbc:mariadb-java-client'
     annotationProcessor 'org.projectlombok:lombok'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
-    implementation 'org.springframework.boot:spring-boot-starter-validation'
     implementation 'org.springframework.cloud:spring-cloud-starter-aws:2.2.6.RELEASE'
     implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.0.4'
 
@@ -37,20 +45,39 @@ dependencies {
 
     /**jwt */
     implementation group: 'io.jsonwebtoken', name: 'jjwt-api', version: '0.11.5'
+    implementation 'org.projectlombok:lombok:1.18.28'
     runtimeOnly group: 'io.jsonwebtoken', name: 'jjwt-impl', version: '0.11.5'
     runtimeOnly group: 'io.jsonwebtoken', name: 'jjwt-jackson', version: '0.11.5'
-
-    implementation "org.springframework.security:spring-security-crypto:6.0.2"
 
     /* iamport */
     implementation "com.github.iamport:iamport-rest-client-java:0.2.23"
 
     implementation 'com.google.firebase:firebase-admin:9.1.1'
-    implementation group: 'com.squareup.okhttp3', name: 'okhttp', version: '4.10.0'
 
     implementation 'org.json:json:20230227'
     implementation 'org.apache.poi:poi:5.2.2'
     implementation 'org.apache.poi:poi-ooxml:5.2.2'
+
+    // 모니터닝을 위한 디펜던시 시작
+    implementation 'org.springframework.boot:spring-boot-starter-actuator' // 엑츄에이터
+    implementation 'io.micrometer:micrometer-registry-otlp' // runtime scope?
+    implementation 'io.micrometer:micrometer-tracing-bridge-otel:1.1.6'
+    implementation 'io.opentelemetry:opentelemetry-api:1.31.0' //
+    implementation 'io.opentelemetry:opentelemetry-sdk:1.31.0' //
+    implementation 'io.opentelemetry:opentelemetry-sdk-common:1.31.0' //
+    implementation 'io.opentelemetry:opentelemetry-sdk-metrics:1.31.0' //
+    implementation 'io.opentelemetry:opentelemetry-sdk-trace:1.31.0'
+    implementation 'io.opentelemetry:opentelemetry-sdk-extension-autoconfigure-spi:1.31.0'
+    implementation 'io.opentelemetry:opentelemetry-exporter-otlp:1.31.0' //
+    implementation 'io.opentelemetry:opentelemetry-exporter-common:1.31.0' //
+    implementation 'io.opentelemetry:opentelemetry-exporter-otlp-common:1.31.0' //
+    implementation 'io.opentelemetry.instrumentation:opentelemetry-logback-appender-1.0:1.31.0-alpha' //
+    implementation 'io.opentelemetry.instrumentation:opentelemetry-instrumentation-api-semconv:1.31.0-alpha' //
+    // 모니터닝을 위한 디펜던시 끝
+
+    // api 요청을 위한 디펜던시
+    implementation 'org.springframework.boot:spring-boot-starter-webflux'
+
 
     // ⭐ Spring boot 3.x이상에서 QueryDsl 패키지를 정의하는 방법
     // 참고: https://velog.io/@juhyeon1114/Spring-QueryDsl-gradle-%EC%84%A4%EC%A0%95-Spring-boot-3.0-%EC%9D%B4%EC%83%81
@@ -78,4 +105,13 @@ tasks.withType(JavaCompile) {
 
 clean.doLast {
     file(querydslDir).deleteDir()
+}
+
+
+tasks.withType(JavaCompile) {
+    options.encoding = 'UTF-8'
+}
+
+tasks.withType(Javadoc) {
+    options.encoding = 'UTF-8'
 }

@@ -1,0 +1,21 @@
+package com.matsinger.barofishserver.domain.product.dto;
+
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+@Getter
+@Setter
+@NoArgsConstructor
+public class OptionItemAddReq {
+
+    private Boolean isRepresent;
+    private String name;
+    private Integer discountPrice;
+    private Integer amount;
+    private Integer purchasePrice;
+    private Integer originPrice;
+    private Integer deliveryFee;
+    private Integer deliverBoxPerAmount;
+    private Integer maxAvailableAmount;
+}
