@@ -16,8 +16,8 @@ import java.util.Set;
 @Service
 public class JwtService {
 
-    private final JwtProvider jwtProvider;
 
+    private final JwtProvider jwtProvider;
     private final UserCommandService userService;
     private final AdminQueryService adminService;
     private final StoreService storeService;
