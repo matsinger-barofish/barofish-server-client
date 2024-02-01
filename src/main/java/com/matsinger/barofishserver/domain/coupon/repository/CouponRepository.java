@@ -42,7 +42,7 @@ public interface CouponRepository extends JpaRepository<Coupon, Integer>, JpaSpe
     List<Coupon> findAllByPublicType(CouponPublicType type);
 
     @Query(value = "SELECT c.* FROM coupon c " +
-            "WHERE id IN (SELECT coupon_id FROM coupon_user_map cum where cum.user_id = :userId)",
+            "WHERE id IN (SELECT coupon_id FROM coupon_user_map cum where cum.user_id = :userId and is_deleted = false)",
             nativeQuery = true)
     List<Coupon> selectUserCouponList(@Param("userId") Integer userId);
 }
