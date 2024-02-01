@@ -101,7 +101,6 @@ public class ReviewControllerV2 {
                                                                        @RequestParam(value = "orderType", required = false, defaultValue = "RECENT") ReviewOrderByType orderType,
                                                                        @RequestParam(value = "page", required = false, defaultValue = "0") Integer page,
                                                                        @RequestParam(value = "take", required = false, defaultValue = "10") Integer take) {
-
         Integer userId = null;
         if (auth.isEmpty()) {
             userId = null;
