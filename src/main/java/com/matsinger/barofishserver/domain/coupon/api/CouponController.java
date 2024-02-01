@@ -222,8 +222,8 @@ public class CouponController {
         return ResponseEntity.ok(res);
     }
 
-    @PostMapping("/{id}")
-    public ResponseEntity<CustomResponse<Boolean>> deleteCoupon(@RequestHeader(value = "Authorization") Optional<String> auth,
+    @PostMapping("")
+    public ResponseEntity<CustomResponse<Boolean>> deleteUserCoupon(@RequestHeader(value = "Authorization") Optional<String> auth,
                                                                 @RequestBody CouponDeleteRequest request) {
         CustomResponse<Boolean> res = new CustomResponse<>();
 
