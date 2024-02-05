@@ -20,8 +20,6 @@ public class AdminLogQueryService {
     }
 
     public String getAdminLogId() {
-        return adminLogRepository.getAdminLogId()
-                .get("id")
-                .toString();
+        return adminLogRepository.getAdminLogId().get("id").toString();
     }
 }

@@ -4,8 +4,6 @@ import com.matsinger.barofishserver.global.exception.BusinessException;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.sql.Timestamp;
-
 @Entity
 @AllArgsConstructor
 @NoArgsConstructor
@@ -26,12 +24,6 @@ public class CouponUserMap {
     @Basic
     @Column(name = "is_used", nullable = false, columnDefinition = "TINYINT")
     private Boolean isUsed;
-
-    @Column(name = "start_at")
-    private Timestamp startAt;
-
-    @Column(name = "end_at")
-    private Timestamp endAt;
 
     public void setIsUsed(Boolean isUsed) {
         this.isUsed = isUsed;
