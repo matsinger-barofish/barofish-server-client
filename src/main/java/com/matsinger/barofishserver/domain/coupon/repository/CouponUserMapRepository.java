@@ -13,4 +13,6 @@ public interface CouponUserMapRepository extends JpaRepository<CouponUserMap, Co
     void deleteAllByUserIdIn(List<Integer> userIds);
 
     Optional<CouponUserMap> findByUserIdAndCouponId(int userId, int couponId);
+
+    List<CouponUserMap> findByUserIdAndCouponIdIn(Integer userId, List<Integer> couponIds);
 }
