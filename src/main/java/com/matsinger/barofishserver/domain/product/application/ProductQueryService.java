@@ -27,9 +27,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 
 @Service
 @Transactional(readOnly = true)
@@ -49,25 +47,26 @@ public class ProductQueryService {
                 .orElseThrow(() -> new BusinessException("상품 정보를 찾을 수 없습니다."));
     }
 
-    public Page<ProductListDto> getPagedProducts(
+    public Page<ProductListDto> getPagedProductsWithKeyword(
             PageRequest pageRequest,
             ProductSortBy sortBy,
             List<Integer> categoryIds,
             List<Integer> filterFieldIds,
             Integer curationId,
             String keyword,
-            List<Integer> productIds,
             Integer storeId,
             Integer userId) {
 
-        PageImpl<ProductListDto> productDtos = productQueryRepository.getProducts(
+        String convertedKeyword = keyword.replace("\\s+", " "); // 여러개의 공백을 공백 하나로
+        String[] keywords = convertedKeyword.split(" ");
+
+        PageImpl<ProductListDto> productDtos = productQueryRepository.getProductsWithKeyword(
                 pageRequest,
                 sortBy,
                 categoryIds,
                 filterFieldIds,
                 curationId,
-                keyword,
-                productIds,
+                keywords,
                 storeId);
 
         List<Integer> userBasketProductIds = new ArrayList<>();
@@ -77,6 +76,8 @@ public class ProductQueryService {
                     .stream().map(v -> v.getProductId()).toList();
         }
 
+        String nonSpaceKeyword = convertedKeyword.replace(" ", "");
+        Map<Integer, List<ProductListDto>> matchWordCountMap = new HashMap<>();
         for (ProductListDto productDto : productDtos) {
             if (userBasketProductIds.contains(productDto.getProductId())) {
                 productDto.setIsLike(true);
@@ -84,6 +85,29 @@ public class ProductQueryService {
             productDto.convertImageUrlsToFirstUrl();
             productDto.setReviewCount(reviewQueryService.countReviewWithoutDeleted(productDto.getId(), false));
         }
+
+        for (ProductListDto productDto : productDtos) {
+            int matchingCnt = 0;
+            for (char productChar : productDto.getTitle().toCharArray()) {
+
+                for (char word : nonSpaceKeyword.toCharArray()) {
+                    if (productChar == word) {
+                        matchingCnt++;
+                    }
+                }
+            }
+            List<ProductListDto> existingList = matchWordCountMap.getOrDefault(matchingCnt, new ArrayList<>());
+            existingList.add(productDto);
+            matchWordCountMap.put(matchingCnt, existingList);
+        }
+
+        List<Integer> keySet = new ArrayList<>(matchWordCountMap.keySet());
+        Collections.sort(keySet, Collections.reverseOrder());
+        List<ProductListDto> sortedByMatchingCnt = new ArrayList<>();
+        for (Integer key : keySet) {
+            sortedByMatchingCnt.addAll(matchWordCountMap.get(key));
+        }
+
         return productDtos;
     }
 
