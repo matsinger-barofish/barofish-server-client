@@ -277,8 +277,9 @@ public class ProductQueryRepository {
                                                 List<Integer> filterFieldIds,
                                                 Integer curationId,
                                                 String keyword,
+                                                List<Integer> productIds,
                                                 Integer storeId) {
-        Integer count = countProducts(categoryIds, filterFieldIds, curationId, keyword, storeId);
+        Integer count = countProducts(categoryIds, filterFieldIds, curationId, keyword, productIds, storeId);
 
         OrderSpecifier[] orderSpecifiers = createProductSortSpecifier(sortBy);
         List<ProductListDto> inquiryData = queryFactory
@@ -323,6 +324,7 @@ public class ProductQueryRepository {
                                  List<Integer> filterFieldIds,
                                  Integer curationId,
                                  String keyword,
+                                 List<Integer> productIds,
                                  Integer storeId) {
         int count = (int) queryFactory
                 .select(product.id)
@@ -333,7 +335,8 @@ public class ProductQueryRepository {
                         eqStore(storeId),
                         isProductTitleLikeKeyword(keyword),
                         isIncludedCategory(categoryIds),
-                        isIncludedSearchFilter(filterFieldIds)
+                        isIncludedSearchFilter(filterFieldIds),
+                        product.id.in(productIds)
                 )
                 .groupBy(product.id)
                 .stream().count();
