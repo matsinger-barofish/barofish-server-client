@@ -13,6 +13,7 @@ import com.querydsl.core.types.Order;
 import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.core.types.Projections;
 import com.querydsl.core.types.dsl.BooleanExpression;
+import com.querydsl.core.types.dsl.StringPath;
 import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
@@ -271,17 +272,17 @@ public class ProductQueryRepository {
         return orderSpecifiers.toArray(new OrderSpecifier[orderSpecifiers.size()]);
     }
 
-    public PageImpl<ProductListDto> getProducts(PageRequest pageRequest,
-                                                ProductSortBy sortBy,
-                                                List<Integer> categoryIds,
-                                                List<Integer> filterFieldIds,
-                                                Integer curationId,
-                                                String keyword,
-                                                List<Integer> productIds,
-                                                Integer storeId) {
-        Integer count = countProducts(categoryIds, filterFieldIds, curationId, keyword, productIds, storeId);
+    public PageImpl<ProductListDto> getProductsWithKeyword(PageRequest pageRequest,
+                                                           ProductSortBy sortBy,
+                                                           List<Integer> categoryIds,
+                                                           List<Integer> filterFieldIds,
+                                                           Integer curationId,
+                                                           String[] keywords,
+                                                           Integer storeId) {
 
-        OrderSpecifier[] orderSpecifiers = createProductSortSpecifier(sortBy);
+
+
+//        OrderSpecifier[] orderSpecifiers = createProductSortSpecifier(sortBy);
         List<ProductListDto> inquiryData = queryFactory
                 .select(Projections.fields(
                         ProductListDto.class,
@@ -304,20 +305,45 @@ public class ProductQueryRepository {
                 .leftJoin(optionItem).on(product.representOptionItemId.eq(optionItem.id))
                 .leftJoin(category).on(category.id.eq(product.category.id))
                 .where(product.state.eq(ProductState.ACTIVE),
+                        matches(storeInfo.name, keywords)
+                        .or(contains(product.title, keywords)),
                         eqCuration(curationId),
                         isPromotionInProgress(),
                         eqStore(storeId),
-                        isProductTitleLikeKeyword(keyword),
                         isIncludedCategory(categoryIds),
                         isIncludedSearchFilter(filterFieldIds)
                 )
                 .groupBy(product.id)
-                .orderBy(orderSpecifiers)
+//                .orderBy(orderSpecifiers)
                 .offset(pageRequest.getOffset())
                 .limit(pageRequest.getPageSize())
                 .fetch();
 
-        return new PageImpl<>(inquiryData, pageRequest, count);
+        return new PageImpl<>(inquiryData, pageRequest, inquiryData.size());
+    }
+
+    private BooleanExpression matches(StringPath storeName, String[] keywords) {
+        BooleanExpression keywordMatchesStoreName = null;
+        for (String keyword : keywords) {
+            if (keywordMatchesStoreName == null) {
+                keywordMatchesStoreName = storeName.contains(keyword);
+            } else {
+                keywordMatchesStoreName.or(storeName.contains(keyword));
+            }
+        }
+        return keywordMatchesStoreName;
+    }
+
+    private BooleanExpression contains(StringPath title, String[] keywords) {
+        BooleanExpression allMatches = null;
+        for (String keyword : keywords) {
+            if (allMatches == null) {
+                allMatches = title.contains(keyword);
+            } else {
+                allMatches.and(title.contains(keyword));
+            }
+        }
+        return allMatches;
     }
 
     public Integer countProducts(List<Integer> categoryIds,
