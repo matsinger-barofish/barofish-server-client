@@ -56,6 +56,38 @@ public class Coupon {
     @Column(name = "min_price", nullable = false)
     private Integer minPrice = 0;
 
+    @Column(name = "max_price")
+    private Integer maxPrice;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "exposure_state", nullable = false)
+    private ExposureState exposureState;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "issuance_state", nullable = false)
+    private IssuanceState issuanceState;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "issuance_type", nullable = false)
+    private IssuanceType issuanceType;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "applied_product", nullable = false)
+    private AppliedProduct appliedProduct;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "tobe_issued", nullable = false)
+    private TobeIssued tobeIssued;
+
+    @Column(name = "usage_start", nullable = false)
+    private Timestamp usageStart;
+
+    @Column(name = "usage_end", nullable = false)
+    private Timestamp usageEnd;
+
+    @Column(name = "description")
+    private String description;
+
     public CouponDto convert2Dto(List<UserInfoDto> users) {
         return CouponDto.builder().id(this.getId()).title(this.getTitle()).state(this.getState()).publicType(this.getPublicType()).type(
                 this.getType()).amount(this.getAmount()).startAt(this.getStartAt()).endAt(this.getEndAt()).minPrice(this.getMinPrice()).users(
