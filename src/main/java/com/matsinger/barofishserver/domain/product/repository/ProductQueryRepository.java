@@ -336,11 +336,18 @@ public class ProductQueryRepository {
                         isProductTitleLikeKeyword(keyword),
                         isIncludedCategory(categoryIds),
                         isIncludedSearchFilter(filterFieldIds),
-                        product.id.in(productIds)
+                        isInProductIds(productIds)
                 )
                 .groupBy(product.id)
                 .stream().count();
         return count;
+    }
+
+    private BooleanExpression isInProductIds(List<Integer> productIds) {
+        if (productIds == null) {
+            return null;
+        }
+        return product.id.in(productIds);
     }
 
     private OrderSpecifier[] createProductSortSpecifier(ProductSortBy sortBy) {
