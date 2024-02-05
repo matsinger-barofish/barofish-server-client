@@ -115,7 +115,8 @@ public class ProductQueryService {
             sortedByMatchingCnt.addAll(matchWordCountMap.get(key));
         }
 
-        return new PageImpl<>(sortedByMatchingCnt, pageRequest, count);
+        List<ProductListDto> pagedResult = sortedByMatchingCnt.subList((int) pageRequest.getOffset(), pageRequest.getPageSize());
+        return new PageImpl<>(pagedResult, pageRequest, count);
     }
 
     public int countProducts(
