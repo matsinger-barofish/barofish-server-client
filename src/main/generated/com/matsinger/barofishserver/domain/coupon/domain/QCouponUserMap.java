@@ -21,11 +21,7 @@ public class QCouponUserMap extends EntityPathBase<CouponUserMap> {
 
     public final NumberPath<Integer> couponId = createNumber("couponId", Integer.class);
 
-    public final DateTimePath<java.sql.Timestamp> endAt = createDateTime("endAt", java.sql.Timestamp.class);
-
     public final BooleanPath isUsed = createBoolean("isUsed");
-
-    public final DateTimePath<java.sql.Timestamp> startAt = createDateTime("startAt", java.sql.Timestamp.class);
 
     public final NumberPath<Integer> userId = createNumber("userId", Integer.class);
 

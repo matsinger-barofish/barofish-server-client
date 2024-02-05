@@ -1,14 +1,8 @@
 package com.matsinger.barofishserver.domain.coupon.application;
 
-import com.matsinger.barofishserver.domain.admin.log.application.AdminLogCommandService;
-import com.matsinger.barofishserver.domain.admin.log.application.AdminLogQueryService;
-import com.matsinger.barofishserver.domain.admin.log.domain.AdminLog;
-import com.matsinger.barofishserver.domain.admin.log.domain.AdminLogType;
 import com.matsinger.barofishserver.domain.coupon.domain.Coupon;
 import com.matsinger.barofishserver.domain.coupon.domain.CouponUserMap;
 import com.matsinger.barofishserver.domain.coupon.domain.CouponUserMapId;
-import com.matsinger.barofishserver.domain.coupon.domain.TobeIssued;
-import com.matsinger.barofishserver.domain.coupon.dto.CouponAddReq;
 import com.matsinger.barofishserver.domain.coupon.dto.CouponDeleteRequest;
 import com.matsinger.barofishserver.domain.coupon.repository.CouponRepository;
 import com.matsinger.barofishserver.domain.coupon.repository.CouponUserMapRepository;
@@ -26,13 +20,9 @@ import com.matsinger.barofishserver.utils.Common;
 import jakarta.persistence.Tuple;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.sql.Timestamp;
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -49,8 +39,6 @@ public class CouponCommandService {
     private final UserInfoRepository userInfoRepository;
     private final CouponQueryService couponQueryService;
     private final CouponUserMapCommandService couponUserMapCommandService;
-    private final AdminLogQueryService adminLogQueryService;
-    private final AdminLogCommandService adminLogCommandService;
 
     public void downloadCoupon(Integer userId, Integer couponId) {
         couponUserMapRepository.save(CouponUserMap.builder().couponId(couponId).userId(userId).isUsed(false).build());
@@ -184,69 +172,5 @@ public class CouponCommandService {
         userCoupons.forEach(v -> v.setIsUsed(true));
 
         couponUserMapRepository.saveAll(userCoupons);
-    }
-
-    @Transactional
-    public void registerCoupon(CouponAddReq request, Integer adminId) {
-        Coupon coupon = request.toEntity();
-        Coupon savedCoupon = couponRepository.save(coupon);
-
-        Timestamp startAt = null;
-        Timestamp endAt = null;
-        if (request.getPeriodOfUseAfterDownload() != null) {
-            LocalDateTime now = LocalDateTime.now();
-            startAt = Timestamp.valueOf(now);
-            endAt = Timestamp.valueOf(now.plusDays(request.getPeriodOfUseAfterDownload()));
-        }
-        if (request.getPeriodOfUseAfterDownload() == null) {
-            startAt = coupon.getUsageStart();
-            endAt = coupon.getUsageEnd();
-        }
-
-        List<User> targetUsers = getTargetUsers(request);
-        List<CouponUserMap> userCoupons = createUserCoupons(targetUsers, savedCoupon, startAt, endAt);
-        couponUserMapRepository.saveAll(userCoupons);
-
-        sendCouponCreateNotification(coupon,
-                targetUsers.stream().map(v -> v.getId()).toList());
-
-        adminLogCommandService.saveAdminLog(
-                AdminLog.builder()
-                .id(adminLogQueryService.getAdminLogId())
-                .adminId(adminId)
-                .type(AdminLogType.COUPON)
-                .targetId(String.valueOf(coupon.getId()))
-                .content("쿠폰을 등록하였습니다.")
-                .createdAt(utils.now())
-                .build());
-    }
-
-    @Nullable
-    private List<User> getTargetUsers(CouponAddReq request) {
-        List<User> targetUsers = null;
-        if (request.getTobeIssued() == TobeIssued.ALL_USER) {
-            targetUsers = userRepository.findAllByState(UserState.ACTIVE);
-        }
-        if (request.getTobeIssued() == TobeIssued.INDIVIDUAL_USER) {
-            targetUsers = userRepository.findAllByIdIn(request.getUserIds());
-        }
-        return targetUsers;
-    }
-
-    @NotNull
-    private List<CouponUserMap> createUserCoupons(List<User> targetUsers,
-                                                         Coupon savedCoupon,
-                                                         Timestamp finalStartAt,
-                                                         Timestamp finalEndAt) {
-        return targetUsers.stream()
-                .map(v ->
-                        CouponUserMap.builder()
-                                .userId(v.getId())
-                                .isUsed(false)
-                                .couponId(savedCoupon.getId())
-                                .startAt(finalStartAt)
-                                .endAt(finalEndAt)
-                                .build())
-                .toList();
     }
 }
