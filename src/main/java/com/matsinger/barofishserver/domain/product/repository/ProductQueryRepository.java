@@ -272,7 +272,7 @@ public class ProductQueryRepository {
         return orderSpecifiers.toArray(new OrderSpecifier[orderSpecifiers.size()]);
     }
 
-    public PageImpl<ProductListDto> getProductsWithKeyword(PageRequest pageRequest,
+    public List<ProductListDto> getProductsWithKeyword(PageRequest pageRequest,
                                                            ProductSortBy sortBy,
                                                            List<Integer> categoryIds,
                                                            List<Integer> filterFieldIds,
@@ -280,10 +280,14 @@ public class ProductQueryRepository {
                                                            String[] keywords,
                                                            Integer storeId) {
 
-
+//        Integer count = countProductsAtSearchEngine(categoryIds,
+//                filterFieldIds,
+//                curationId,
+//                keywords,
+//                storeId);
 
 //        OrderSpecifier[] orderSpecifiers = createProductSortSpecifier(sortBy);
-        List<ProductListDto> inquiryData = queryFactory
+        return queryFactory
                 .select(Projections.fields(
                         ProductListDto.class,
                         product.id.as("id"),
@@ -315,11 +319,9 @@ public class ProductQueryRepository {
                 )
                 .groupBy(product.id)
 //                .orderBy(orderSpecifiers)
-                .offset(pageRequest.getOffset())
-                .limit(pageRequest.getPageSize())
+//                .offset(pageRequest.getOffset())
+//                .limit(pageRequest.getPageSize())
                 .fetch();
-
-        return new PageImpl<>(inquiryData, pageRequest, inquiryData.size());
     }
 
     private BooleanExpression matches(StringPath storeName, String[] keywords) {
@@ -346,11 +348,33 @@ public class ProductQueryRepository {
         return allMatches;
     }
 
+    public Integer countProductsAtSearchEngine(List<Integer> categoryIds,
+                                               List<Integer> filterFieldIds,
+                                               Integer curationId,
+                                               String[] keywords,
+                                               Integer storeId) {
+        int count = (int) queryFactory
+                .select(product.id)
+                .from(product)
+                .leftJoin(storeInfo).on(product.storeId.eq(storeInfo.storeId))
+                .where(product.state.eq(ProductState.ACTIVE),
+                        matches(storeInfo.name, keywords)
+                        .or(contains(product.title, keywords)),
+                        eqCuration(curationId),
+                        isPromotionInProgress(),
+                        eqStore(storeId),
+                        isIncludedCategory(categoryIds),
+                        isIncludedSearchFilter(filterFieldIds)
+                )
+                .groupBy(product.id)
+                .stream().count();
+        return count;
+    }
+
     public Integer countProducts(List<Integer> categoryIds,
                                  List<Integer> filterFieldIds,
                                  Integer curationId,
                                  String keyword,
-                                 List<Integer> productIds,
                                  Integer storeId) {
         int count = (int) queryFactory
                 .select(product.id)
@@ -361,8 +385,7 @@ public class ProductQueryRepository {
                         eqStore(storeId),
                         isProductTitleLikeKeyword(keyword),
                         isIncludedCategory(categoryIds),
-                        isIncludedSearchFilter(filterFieldIds),
-                        isInProductIds(productIds)
+                        isIncludedSearchFilter(filterFieldIds)
                 )
                 .groupBy(product.id)
                 .stream().count();
