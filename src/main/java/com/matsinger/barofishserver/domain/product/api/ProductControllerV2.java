@@ -69,6 +69,7 @@ public class ProductControllerV2 {
                                                                                           @RequestParam(value = "filterFieldIds", required = false) String filterFieldIds,
                                                                                           @RequestParam(value = "curationId", required = false) Integer curationId,
                                                                                           @RequestParam(value = "keyword", required = false, defaultValue = "") String keyword,
+                                                                                          @RequestParam(value = "productIds", required = false) List<Integer> productIds,
                                                                                           @RequestParam(value = "storeId", required = false) Integer storeId) {
 
         CustomResponse<Page<ProductListDto>> res = new CustomResponse<>();
@@ -86,6 +87,7 @@ public class ProductControllerV2 {
                 utils.str2IntList(filterFieldIds),
                 curationId,
                 keyword,
+                productIds,
                 storeId,
                 userId);
 
@@ -99,6 +101,7 @@ public class ProductControllerV2 {
                                                                                         @RequestParam(value = "filterFieldIds", required = false) String filterFieldIds,
                                                                                         @RequestParam(value = "curationId", required = false) Integer curationId,
                                                                                         @RequestParam(value = "keyword", required = false, defaultValue = "") String keyword,
+                                                                                        @RequestParam(value = "productIds", required = false) List<Integer> productIds,
                                                                                         @RequestParam(value = "storeId", required = false) Integer storeId) {
         CustomResponse<Integer> response = new CustomResponse<>();
         jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ALLOW), auth);
@@ -108,8 +111,8 @@ public class ProductControllerV2 {
                 utils.str2IntList(filterFieldIds),
                 curationId,
                 keyword,
-                storeId
-        );
+                productIds,
+                storeId);
         response.setIsSuccess(true);
         response.setData(Optional.of(count));
 
