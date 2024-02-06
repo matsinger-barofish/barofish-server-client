@@ -538,24 +538,14 @@ public class OrderCommandService {
 //        log.info("taxFreePrice = {}", cancelManager.getNonTaxablePriceTobeCanceled());
         setVbankRefundInfo(order, cancelData);
 
-        if (cancelManager.allCanceled()) {
-            // 미입력시 전액 환불
-            cancelData = new CancelData(
-                    order.getImpUid(),
-                    true,
-                    BigDecimal.valueOf(cancelManager.getCancelPrice())
-            );
 
-            cancelData.setTax_free(null);
-        }
-        if (!cancelManager.allCanceled()) {
-            cancelData = new CancelData(
-                    order.getImpUid(),
-                    true,
-                    BigDecimal.valueOf(cancelManager.getCancelPrice())
-            );
-            cancelData.setTax_free(BigDecimal.valueOf(cancelManager.getNonTaxablePriceTobeCanceled()));
-        }
+        cancelData = new CancelData(
+                order.getImpUid(),
+                true,
+                BigDecimal.valueOf(cancelManager.getCancelPrice())
+        );
+        cancelData.setTax_free(BigDecimal.valueOf(
+                cancelManager.getNonTaxablePriceTobeCanceled()));
 
         if (cancelManager.allCanceled()) {
             Payments payment = paymentRepository.findFirstByImpUid(order.getImpUid());
