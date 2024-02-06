@@ -49,15 +49,15 @@ public class CancelManager {
                 .sum() - nonTaxablePrice;
         if (allCanceled) {
             int discountPrice = order.getUsePoint() + order.getCouponDiscount();
-            if (nonTaxablePrice < discountPrice) {
-                int remainingDiscount = discountPrice - nonTaxablePrice;
-                taxablePriceTobeCanceled = taxablePrice - remainingDiscount;
-                nonTaxablePriceTobeCanceled = 0;
+            if (taxablePrice < discountPrice) {
+                int remainingDiscount = discountPrice - taxablePrice;
+                taxablePriceTobeCanceled = 0;
+                nonTaxablePriceTobeCanceled = nonTaxablePrice - remainingDiscount;
                 return;
             }
 
-            nonTaxablePriceTobeCanceled = nonTaxablePrice - discountPrice;
-            taxablePriceTobeCanceled = taxablePrice;
+            nonTaxablePriceTobeCanceled = nonTaxablePrice;
+            taxablePriceTobeCanceled = taxablePrice - discountPrice;
 
         }
         if (!allCanceled) {
