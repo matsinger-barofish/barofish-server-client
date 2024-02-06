@@ -2,14 +2,16 @@ package com.matsinger.barofishserver.domain.notification.dto;
 
 import com.matsinger.barofishserver.domain.notification.domain.NotificationType;
 import lombok.*;
+import lombok.extern.slf4j.Slf4j;
 
 import java.sql.Timestamp;
 
+@Slf4j
 @Builder
 @AllArgsConstructor
+@NoArgsConstructor
 @Getter
 @Setter
-@NoArgsConstructor
 public class NotificationMessage {
     //    private NotificationMessageType type;
     private String productName;
@@ -29,6 +31,8 @@ public class NotificationMessage {
         if (optionItemName != null) {
             productName = productName + " " + optionItemName;
         }
+
+        log.info("NotificationMessage.productName = {}", productName);
 
         return switch (type) {
             case PAYMENT_DONE -> String.format("<strong>%s</strong> 상품의 결제가 완료되었습니다.", this.productName);
