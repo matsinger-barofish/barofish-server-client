@@ -61,6 +61,7 @@ public class SearchKeywordQueryRepository {
 
     private BooleanExpression contains(StringPath title, String[] keywords) {
         BooleanExpression allMatches = null;
+        int matchingWordCnt = 0;
         for (String keyword : keywords) {
             if (allMatches == null) {
                 allMatches = title.contains(keyword);
