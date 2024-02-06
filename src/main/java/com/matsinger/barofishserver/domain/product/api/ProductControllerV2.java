@@ -25,7 +25,6 @@ import com.matsinger.barofishserver.utils.Common;
 import com.matsinger.barofishserver.utils.CustomResponse;
 import com.matsinger.barofishserver.utils.S3.S3Uploader;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -61,7 +60,7 @@ public class ProductControllerV2 {
     private final S3Uploader s3;
 
     @GetMapping("/list")
-    public ResponseEntity<CustomResponse<Page<ProductListDto>>> selectProductListByUserV2(@RequestHeader(value = "Authorization", required = false) Optional<String> auth,
+    public ResponseEntity<CustomResponse<List<ProductListDto>>> selectProductListByUserV2(@RequestHeader(value = "Authorization", required = false) Optional<String> auth,
                                                                                           @RequestParam(value = "page", defaultValue = "1") Integer page,
                                                                                           @RequestParam(value = "take", defaultValue = "10") Integer take,
                                                                                           @RequestParam(value = "sortby", defaultValue = "RECOMMEND", required = false) ProductSortBy sortBy,
@@ -71,7 +70,7 @@ public class ProductControllerV2 {
                                                                                           @RequestParam(value = "keyword", required = false, defaultValue = "") String keyword,
                                                                                           @RequestParam(value = "storeId", required = false) Integer storeId) {
 
-        CustomResponse<Page<ProductListDto>> res = new CustomResponse<>();
+        CustomResponse<List<ProductListDto>> res = new CustomResponse<>();
 
         
         TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ALLOW, TokenAuthType.USER), auth);
@@ -79,7 +78,7 @@ public class ProductControllerV2 {
         Integer userId = tokenInfo != null ? tokenInfo.getId() : null;
 
         PageRequest pageRequest = PageRequest.of(page - 1, take);
-        Page<ProductListDto> result = productQueryService.getPagedProductsWithKeyword(
+        List<ProductListDto> result = productQueryService.getPagedProductsWithKeyword(
                 pageRequest,
                 sortBy,
                 utils.str2IntList(categoryIds),
