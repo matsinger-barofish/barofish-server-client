@@ -56,7 +56,6 @@ public class ProductQueryService {
             List<Integer> filterFieldIds,
             Integer curationId,
             String keyword,
-            List<Integer> productIds,
             Integer storeId,
             Integer userId) {
 
@@ -67,7 +66,6 @@ public class ProductQueryService {
                 filterFieldIds,
                 curationId,
                 keyword,
-                productIds,
                 storeId);
 
         List<Integer> userBasketProductIds = new ArrayList<>();
@@ -92,7 +90,6 @@ public class ProductQueryService {
             List<Integer> filterFieldIds,
             Integer curationId,
             String keyword,
-            List<Integer> productIds,
             Integer storeId) {
 
         return productQueryRepository.countProducts(
@@ -100,8 +97,8 @@ public class ProductQueryService {
                 filterFieldIds,
                 curationId,
                 keyword,
-                productIds,
-                storeId);
+                storeId
+        );
     }
 
     public ExpectedArrivalDateResponse getExpectedArrivalDate(LocalDateTime now, Integer productId) {
