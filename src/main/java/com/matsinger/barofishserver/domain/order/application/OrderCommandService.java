@@ -559,8 +559,6 @@ public class OrderCommandService {
             log.warn("taxFreePrice send to portOne = {}", cancelManager.getNonTaxablePriceTobeCanceled());
         }
 
-//        sendPortOneCancelData(cancelData);
-
         if (cancelManager.allCanceled()) {
             Payments payment = paymentRepository.findFirstByImpUid(order.getImpUid());
             payment.setStatus(PaymentState.CANCELED);
@@ -584,6 +582,8 @@ public class OrderCommandService {
         optionItemRepository.saveAll(optionItems);
         orderProductInfoRepository.saveAll(cancelManager.getAllOrderProducts());
         orderRepository.save(order);
+
+        sendPortOneCancelData(cancelData);
     }
 
     @NotNull
