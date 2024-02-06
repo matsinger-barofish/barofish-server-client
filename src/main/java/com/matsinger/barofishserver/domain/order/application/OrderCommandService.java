@@ -481,6 +481,8 @@ public class OrderCommandService {
             seq++;
         }
 
+        log.info("OrderCommandService.productName = {}", firstProductTitle);
+
         notificationCommandService.sendFcmToUser(
                 order.getUserId(),
                 convertType(authType),
@@ -536,27 +538,23 @@ public class OrderCommandService {
 //        log.info("taxFreePrice = {}", cancelManager.getNonTaxablePriceTobeCanceled());
         setVbankRefundInfo(order, cancelData);
 
-        log.warn("isAllCanceled = {}", cancelManager.allCanceled());
         if (cancelManager.allCanceled()) {
             // 미입력시 전액 환불
             cancelData = new CancelData(
                     order.getImpUid(),
                     true,
-                    null
+                    BigDecimal.valueOf(cancelManager.getCancelPrice())
             );
+
             cancelData.setTax_free(null);
-            log.warn("isAllCanceled = {}", cancelManager.allCanceled());
         }
         if (!cancelManager.allCanceled()) {
             cancelData = new CancelData(
                     order.getImpUid(),
                     true,
-                    BigDecimal.valueOf(cancelManager.getAllCancelPrice())
+                    BigDecimal.valueOf(cancelManager.getCancelPrice())
             );
             cancelData.setTax_free(BigDecimal.valueOf(cancelManager.getNonTaxablePriceTobeCanceled()));
-            log.warn("isAllCanceled = {}", cancelManager.allCanceled());
-            log.warn("cancelPrice send to portOne = {}", cancelManager.getAllCancelPrice());
-            log.warn("taxFreePrice send to portOne = {}", cancelManager.getNonTaxablePriceTobeCanceled());
         }
 
         if (cancelManager.allCanceled()) {
@@ -597,8 +595,6 @@ public class OrderCommandService {
         for (OrderProductInfo orderProductInfo : tobeCanceled) {
             for (OptionItem optionItem : optionItems) {
                 if (optionItem.getId() == orderProductInfo.getOptionItemId()) {
-                    log.info("optionItemId = {}",optionItem.getId());
-                    log.info("quantity = {}",orderProductInfo.getAmount());
                     optionItem.addQuantity(orderProductInfo.getAmount());
                     break;
                 }
