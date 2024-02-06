@@ -553,9 +553,15 @@ public class OrderController {
         } else {
             orderService.requestCancelOrderProduct(info);
         }
-        notificationCommandService.sendFcmToUser(tokenInfo.getId(),
+        OptionItem optionItem = optionItemQueryService.findById(info.getOptionItemId());
+        notificationCommandService.sendFcmToUser(
+                tokenInfo.getId(),
                 NotificationMessageType.ORDER_CANCEL,
-                NotificationMessage.builder().productName(product.getTitle()).isCanceledByRegion(false).build());
+                NotificationMessage.builder()
+                        .productName(product.getTitle())
+                        .optionItemName(optionItem.getName())
+                        .isCanceledByRegion(false)
+                        .build());
         orderService.updateOrderProductInfo(new ArrayList<>(List.of(info)));
         res.setData(Optional.of(true));
         return ResponseEntity.ok(res);
