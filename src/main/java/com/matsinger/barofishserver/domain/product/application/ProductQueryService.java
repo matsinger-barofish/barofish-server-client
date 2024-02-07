@@ -54,21 +54,32 @@ public class ProductQueryService {
             List<Integer> filterFieldIds,
             Integer curationId,
             String keyword,
+            List<Integer> productIds,
             Integer storeId,
             Integer userId) {
 
         String convertedKeyword = keyword.replace("\\s+", " "); // 여러개의 공백을 공백 하나로
         String[] keywords = convertedKeyword.split(" ");
 
-        PageImpl<ProductListDto> productDtos = productQueryRepository.getProductsWithKeyword(
+        Page<ProductListDto> productDtos = productQueryRepository.getProductsWithKeyword(
                 pageRequest,
                 sortBy,
                 categoryIds,
                 filterFieldIds,
                 curationId,
                 keywords,
+                productIds,
                 storeId);
 
+        Integer count = productIds == null
+                ? productQueryRepository.countProductsAtSearchEngine(
+                        categoryIds,
+                        filterFieldIds,
+                        curationId,
+                        keywords,
+                        storeId)
+                : productIds.size();
+      
         List<Integer> userBasketProductIds = new ArrayList<>();
         if (userId != null) {
             User findedUser = userQueryService.findById(userId);
@@ -76,38 +87,39 @@ public class ProductQueryService {
                     .stream().map(v -> v.getProductId()).toList();
         }
 
-        String nonSpaceKeyword = convertedKeyword.replace(" ", "");
-        Map<Integer, List<ProductListDto>> matchWordCountMap = new HashMap<>();
-        for (ProductListDto productDto : productDtos) {
-            if (userBasketProductIds.contains(productDto.getProductId())) {
-                productDto.setIsLike(true);
-            }
-            productDto.convertImageUrlsToFirstUrl();
-            productDto.setReviewCount(reviewQueryService.countReviewWithoutDeleted(productDto.getId(), false));
-        }
+//        String nonSpaceKeyword = convertedKeyword.replace(" ", "");
+//        Map<Integer, List<ProductListDto>> matchWordCountMap = new HashMap<>();
+//        for (ProductListDto productDto : productDtos) {
+//            if (userBasketProductIds.contains(productDto.getProductId())) {
+//                productDto.setIsLike(true);
+//            }
+//            productDto.convertImageUrlsToFirstUrl();
+//            productDto.setReviewCount(reviewQueryService.countReviewWithoutDeleted(productDto.getId(), false));
+//        }
 
-        for (ProductListDto productDto : productDtos) {
-            int matchingCnt = 0;
-            for (char productChar : productDto.getTitle().toCharArray()) {
-
-                for (char word : nonSpaceKeyword.toCharArray()) {
-                    if (productChar == word) {
-                        matchingCnt++;
-                    }
-                }
-            }
-            List<ProductListDto> existingList = matchWordCountMap.getOrDefault(matchingCnt, new ArrayList<>());
-            existingList.add(productDto);
-            matchWordCountMap.put(matchingCnt, existingList);
-        }
-
-        List<Integer> keySet = new ArrayList<>(matchWordCountMap.keySet());
-        Collections.sort(keySet, Collections.reverseOrder());
-        List<ProductListDto> sortedByMatchingCnt = new ArrayList<>();
-        for (Integer key : keySet) {
-            sortedByMatchingCnt.addAll(matchWordCountMap.get(key));
-        }
-
+//        for (ProductListDto productDto : productDtos) {
+//            int matchingCnt = 0;
+//            for (char productChar : productDto.getTitle().toCharArray()) {
+//
+//                for (char word : nonSpaceKeyword.toCharArray()) {
+//                    if (productChar == word) {
+//                        matchingCnt++;
+//                    }
+//                }
+//            }
+//            List<ProductListDto> existingList = matchWordCountMap.getOrDefault(matchingCnt, new ArrayList<>());
+//            existingList.add(productDto);
+//            matchWordCountMap.put(matchingCnt, existingList);
+//        }
+//
+//        List<Integer> keySet = new ArrayList<>(matchWordCountMap.keySet());
+//        Collections.sort(keySet, Collections.reverseOrder());
+//        List<ProductListDto> sortedByMatchingCnt = new ArrayList<>();
+//        for (Integer key : keySet) {
+//            sortedByMatchingCnt.addAll(matchWordCountMap.get(key));
+//        }
+//        List<ProductListDto> pagedResult = sortedByMatchingCnt.subList((int) pageRequest.getOffset(), pageRequest.getPageSize());
+//        return new PageImpl<>(pagedResult, pageRequest, count);
         return productDtos;
     }
 
