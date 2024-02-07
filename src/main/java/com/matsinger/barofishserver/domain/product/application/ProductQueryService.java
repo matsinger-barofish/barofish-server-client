@@ -60,16 +60,9 @@ public class ProductQueryService {
         String convertedKeyword = keyword.replace("\\s+", " "); // 여러개의 공백을 공백 하나로
         String[] keywords = convertedKeyword.split(" ");
 
-        List<ProductListDto> productDtos = productQueryRepository.getProductsWithKeyword(
+        PageImpl<ProductListDto> productDtos = productQueryRepository.getProductsWithKeyword(
                 pageRequest,
                 sortBy,
-                categoryIds,
-                filterFieldIds,
-                curationId,
-                keywords,
-                storeId);
-
-        Integer count = productQueryRepository.countProductsAtSearchEngine(
                 categoryIds,
                 filterFieldIds,
                 curationId,
@@ -115,7 +108,7 @@ public class ProductQueryService {
             sortedByMatchingCnt.addAll(matchWordCountMap.get(key));
         }
 
-        return new PageImpl<>(sortedByMatchingCnt, pageRequest, count);
+        return productDtos;
     }
 
     public int countProducts(
@@ -123,6 +116,7 @@ public class ProductQueryService {
             List<Integer> filterFieldIds,
             Integer curationId,
             String keyword,
+            List<Integer> productIds,
             Integer storeId) {
 
         return productQueryRepository.countProducts(
@@ -130,6 +124,7 @@ public class ProductQueryService {
                 filterFieldIds,
                 curationId,
                 keyword,
+                productIds,
                 storeId);
     }
 
