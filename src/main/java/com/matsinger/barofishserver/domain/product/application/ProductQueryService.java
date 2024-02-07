@@ -47,7 +47,7 @@ public class ProductQueryService {
                 .orElseThrow(() -> new BusinessException("상품 정보를 찾을 수 없습니다."));
     }
 
-    public List<ProductListDto> getPagedProductsWithKeyword(
+    public Page<ProductListDto> getPagedProductsWithKeyword(
             PageRequest pageRequest,
             ProductSortBy sortBy,
             List<Integer> categoryIds,
@@ -115,9 +115,7 @@ public class ProductQueryService {
             sortedByMatchingCnt.addAll(matchWordCountMap.get(key));
         }
 
-//        List<ProductListDto> pagedResult = sortedByMatchingCnt.subList((int) pageRequest.getOffset(), pageRequest.getPageSize());
-//        return new PageImpl<>(pagedResult, pageRequest, count);
-        return sortedByMatchingCnt;
+        return new PageImpl<>(sortedByMatchingCnt, pageRequest, count);
     }
 
     public int countProducts(
