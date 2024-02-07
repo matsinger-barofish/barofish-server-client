@@ -76,7 +76,6 @@ public class ProductControllerV2 {
                                                                                           @RequestParam(value = "storeId", required = false) Integer storeId) {
 
         CustomResponse<Page<ProductListDto>> res = new CustomResponse<>();
-
         
         TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ALLOW, TokenAuthType.USER), auth);
 
