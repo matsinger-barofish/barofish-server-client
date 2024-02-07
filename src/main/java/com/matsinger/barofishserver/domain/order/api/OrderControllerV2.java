@@ -45,6 +45,7 @@ public class OrderControllerV2 {
         res.setData(Optional.ofNullable(
                 OrderDto.builder()
                         .id(orderResponse.getOrderId())
+                        .taxFreeAmount(orderResponse.getNonTaxablePrice())
                         .build())
         );
         if (orderResponse.isCanDeliver()) {
