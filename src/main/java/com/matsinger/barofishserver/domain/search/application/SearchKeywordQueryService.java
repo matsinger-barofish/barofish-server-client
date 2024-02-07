@@ -88,6 +88,6 @@ public class SearchKeywordQueryService {
         List<Integer> productIds = sortedByMatchingCnt.stream()
                 .map(v -> v.getId()).toList();
 
-        return new SearchDirectResponse(productIds, searchProductDtos);
+        return new SearchDirectResponse(productIds, sortedByMatchingCnt);
     }
 }
