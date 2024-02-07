@@ -13,11 +13,13 @@ import com.querydsl.core.types.Order;
 import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.core.types.Projections;
 import com.querydsl.core.types.dsl.BooleanExpression;
+import com.querydsl.core.types.dsl.CaseBuilder;
 import com.querydsl.core.types.dsl.StringPath;
 import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Repository;
@@ -272,18 +274,18 @@ public class ProductQueryRepository {
         return orderSpecifiers.toArray(new OrderSpecifier[orderSpecifiers.size()]);
     }
 
-    public PageImpl<ProductListDto> getProductsWithKeyword(PageRequest pageRequest,
-                                                           ProductSortBy sortBy,
-                                                           List<Integer> categoryIds,
-                                                           List<Integer> filterFieldIds,
-                                                           Integer curationId,
-                                                           String[] keywords,
-                                                           Integer storeId) {
+    public Page<ProductListDto> getProductsWithKeyword(PageRequest pageRequest,
+                                                       ProductSortBy sortBy,
+                                                       List<Integer> categoryIds,
+                                                       List<Integer> filterFieldIds,
+                                                       Integer curationId,
+                                                       String[] keywords,
+                                                       List<Integer> productIds, Integer storeId) {
 
+        OrderSpecifier[] orderSpecifiers = createProductSortSpecifier(sortBy, productIds);
+//        CaseBuilder caseBuilder = sortByProductIds(productIds);
 
-
-//        OrderSpecifier[] orderSpecifiers = createProductSortSpecifier(sortBy);
-        List<ProductListDto> inquiryData = queryFactory
+        List<ProductListDto> result = queryFactory
                 .select(Projections.fields(
                         ProductListDto.class,
                         product.id.as("id"),
@@ -305,8 +307,9 @@ public class ProductQueryRepository {
                 .leftJoin(optionItem).on(product.representOptionItemId.eq(optionItem.id))
                 .leftJoin(category).on(category.id.eq(product.category.id))
                 .where(product.state.eq(ProductState.ACTIVE),
-                        matches(storeInfo.name, keywords)
-                        .or(contains(product.title, keywords)),
+//                        matches(storeInfo.name, keywords)
+//                        .or(contains(product.title, keywords)),
+                        isInProductIds(productIds),
                         eqCuration(curationId),
                         isPromotionInProgress(),
                         eqStore(storeId),
@@ -314,12 +317,21 @@ public class ProductQueryRepository {
                         isIncludedSearchFilter(filterFieldIds)
                 )
                 .groupBy(product.id)
-//                .orderBy(orderSpecifiers)
+                .orderBy(orderSpecifiers)
                 .offset(pageRequest.getOffset())
                 .limit(pageRequest.getPageSize())
                 .fetch();
 
-        return new PageImpl<>(inquiryData, pageRequest, inquiryData.size());
+        Integer count = productIds == null
+                ? countProductsAtSearchEngine(
+                        categoryIds,
+                        filterFieldIds,
+                        curationId,
+                        keywords,
+                        storeId)
+                : productIds.size();
+
+        return new PageImpl<>(result, pageRequest, count);
     }
 
     private BooleanExpression matches(StringPath storeName, String[] keywords) {
@@ -344,6 +356,27 @@ public class ProductQueryRepository {
             }
         }
         return allMatches;
+    }
+
+    public Integer countProductsAtSearchEngine(List<Integer> categoryIds,
+                                               List<Integer> filterFieldIds,
+                                               Integer curationId,
+                                               String[] keywords,
+                                               Integer storeId) {
+        int count = (int) queryFactory
+                .select(product.id)
+                .from(product)
+                .leftJoin(storeInfo).on(product.storeId.eq(storeInfo.storeId))
+                .where(product.state.eq(ProductState.ACTIVE),
+                        eqCuration(curationId),
+                        isPromotionInProgress(),
+                        eqStore(storeId),
+                        isIncludedCategory(categoryIds),
+                        isIncludedSearchFilter(filterFieldIds)
+                )
+                .groupBy(product.id)
+                .stream().count();
+        return count;
     }
 
     public Integer countProducts(List<Integer> categoryIds,
@@ -376,8 +409,20 @@ public class ProductQueryRepository {
         return product.id.in(productIds);
     }
 
-    private OrderSpecifier[] createProductSortSpecifier(ProductSortBy sortBy) {
-
+    private CaseBuilder sortByProductIds(List<Integer> productIds) {
+        CaseBuilder caseBuilder = new CaseBuilder();
+        int productIdsSize = productIds.size();
+        for (Integer productId : productIds) {
+            caseBuilder
+                    .when(product.id.eq(productId)).then(productIdsSize).otherwise(0);
+            productIdsSize--;
+        }
+        return caseBuilder;
+    }
+    private OrderSpecifier[] createProductSortSpecifier(ProductSortBy sortBy, List<Integer> productIds) {
+        if (productIds != null) {
+            return null;
+        }
         List<OrderSpecifier> orderSpecifiers = new ArrayList<>();
 
         if (sortBy.equals(ProductSortBy.NEW)) {
