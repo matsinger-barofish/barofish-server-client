@@ -421,8 +421,13 @@ public class ProductQueryRepository {
     }
     private OrderSpecifier[] createProductSortSpecifier(ProductSortBy sortBy, List<Integer> productIds) {
         if (productIds != null) {
-            return null;
+            List<OrderSpecifier> specifiers = new ArrayList<>();
+            for (Integer productId : productIds) {
+                specifiers.add(product.id.eq(productId).asc());
+            }
+            return specifiers.toArray(new OrderSpecifier[specifiers.size()]);
         }
+
         List<OrderSpecifier> orderSpecifiers = new ArrayList<>();
 
         if (sortBy.equals(ProductSortBy.NEW)) {
