@@ -32,7 +32,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -72,26 +71,18 @@ public class ProductControllerV2 {
                                                                                           @RequestParam(value = "filterFieldIds", required = false) String filterFieldIds,
                                                                                           @RequestParam(value = "curationId", required = false) Integer curationId,
                                                                                           @RequestParam(value = "keyword", required = false, defaultValue = "") String keyword,
-                                                                                          @RequestParam(value = "productIds", required = false) Object productIds,
+                                                                                          @RequestParam(value = "productIds", required = false) List<String> productIds,
                                                                                           @RequestParam(value = "storeId", required = false) Integer storeId) {
 
         CustomResponse<Page<ProductListDto>> res = new CustomResponse<>();
-
         
         TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ALLOW, TokenAuthType.USER), auth);
 
         Integer userId = tokenInfo != null ? tokenInfo.getId() : null;
 
-        String productIdsString = (String) productIds;
-        log.warn("productIdsString = {}", productIdsString);
-        List<Integer> integerProductIds = null;
-        if (productIdsString.contains(",")) {
-            String[] stringIds = productIdsString.split(",");
-            integerProductIds = Arrays.stream(stringIds).map(v -> Integer.valueOf(v)).toList();
-        }
-        if (!productIdsString.contains(",")) {
-            integerProductIds = List.of(Integer.valueOf(productIdsString));
-        }
+        log.warn("productIdsString = {}", productIds);
+
+        List<Integer> integerProductIds = productIds.stream().map(v -> Integer.valueOf(v)).toList();
 
         PageRequest pageRequest = PageRequest.of(page - 1, take);
         Page<ProductListDto> result = productQueryService.getPagedProductsWithKeyword(
