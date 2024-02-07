@@ -13,5 +13,7 @@ public class OrderResponse {
 
     private String orderId;
     private boolean canDeliver;
+    private int taxablePrice;
+    private int nonTaxablePrice;
     private List<Integer> cannotDeliverProductIds;
 }

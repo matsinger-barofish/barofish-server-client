@@ -170,10 +170,30 @@ public class OrderCommandService {
                     .forEach(v -> v.setState(OrderProductState.CANCELED));
         }
 
-        save(storeMap, order, orderDeliverPlace);
+        List<OrderProductInfo> orderProductInfos =
+                storeMap.values()
+                        .stream().flatMap(Collection::stream)
+                        .collect(Collectors.toList());
+        save(orderProductInfos, order, orderDeliverPlace);
+
+        int discountPrice = order.getCouponDiscount() + order.getUsePoint();
+        int nonTaxablePrice = orderProductInfos.stream()
+                .mapToInt(v -> v.getTaxFreeAmount()).sum();
+        int taxablePrice = orderProductInfos.stream().mapToInt(
+                        v -> v.getTotalProductPrice() + v.getDeliveryFee())
+                .sum() - nonTaxablePrice;
+        if (taxablePrice < discountPrice) {
+            int remainingDiscount = discountPrice - taxablePrice;
+            taxablePrice = 0;
+            nonTaxablePrice = nonTaxablePrice - remainingDiscount;
+        }
+
+
 
         return OrderResponse.builder()
                 .orderId(orderId)
+                .taxablePrice(taxablePrice)
+                .nonTaxablePrice(nonTaxablePrice)
                 .canDeliver(notIncludesCannotDeliverPlace)
                 .cannotDeliverProductIds(cannotDeliverProductIds)
                 .build();
@@ -264,13 +284,9 @@ public class OrderCommandService {
         return maxDeliveryFee;
     }
 
-    private String save(Map<StoreInfo, List<OrderProductInfo>> storeMap, Orders order, OrderDeliverPlace orderDeliverPlace) {
+    private String save(List<OrderProductInfo> orderProductInfos, Orders order, OrderDeliverPlace orderDeliverPlace) {
         Orders savedOrder = orderRepository.save(order);
 
-        List<OrderProductInfo> orderProductInfos =
-                storeMap.values()
-                        .stream().flatMap(Collection::stream)
-                        .collect(Collectors.toList());
         orderProductInfoRepository.saveAll(orderProductInfos);
         orderDeliverPlaceRepository.save(orderDeliverPlace);
         return savedOrder.getId();
