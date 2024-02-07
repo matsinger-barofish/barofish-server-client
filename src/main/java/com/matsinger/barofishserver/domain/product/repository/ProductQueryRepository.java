@@ -383,6 +383,7 @@ public class ProductQueryRepository {
                                  List<Integer> filterFieldIds,
                                  Integer curationId,
                                  String keyword,
+                                 List<Integer> productIds,
                                  Integer storeId) {
         int count = (int) queryFactory
                 .select(product.id)
@@ -393,7 +394,8 @@ public class ProductQueryRepository {
                         eqStore(storeId),
                         isProductTitleLikeKeyword(keyword),
                         isIncludedCategory(categoryIds),
-                        isIncludedSearchFilter(filterFieldIds)
+                        isIncludedSearchFilter(filterFieldIds),
+                        isInProductIds(productIds)
                 )
                 .groupBy(product.id)
                 .stream().count();
