@@ -25,16 +25,19 @@ import com.matsinger.barofishserver.utils.Common;
 import com.matsinger.barofishserver.utils.CustomResponse;
 import com.matsinger.barofishserver.utils.S3.S3Uploader;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
+@Slf4j
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v2/product")
@@ -69,6 +72,7 @@ public class ProductControllerV2 {
                                                                                           @RequestParam(value = "filterFieldIds", required = false) String filterFieldIds,
                                                                                           @RequestParam(value = "curationId", required = false) Integer curationId,
                                                                                           @RequestParam(value = "keyword", required = false, defaultValue = "") String keyword,
+                                                                                          @RequestParam(value = "productIds", required = false) Object productIds,
                                                                                           @RequestParam(value = "storeId", required = false) Integer storeId) {
 
         CustomResponse<Page<ProductListDto>> res = new CustomResponse<>();
@@ -78,6 +82,17 @@ public class ProductControllerV2 {
 
         Integer userId = tokenInfo != null ? tokenInfo.getId() : null;
 
+        String productIdsString = (String) productIds;
+        log.warn("productIdsString = {}", productIdsString);
+        List<Integer> integerProductIds = null;
+        if (productIdsString.contains(",")) {
+            String[] stringIds = productIdsString.split(",");
+            integerProductIds = Arrays.stream(stringIds).map(v -> Integer.valueOf(v)).toList();
+        }
+        if (!productIdsString.contains(",")) {
+            integerProductIds = List.of(Integer.valueOf(productIdsString));
+        }
+
         PageRequest pageRequest = PageRequest.of(page - 1, take);
         Page<ProductListDto> result = productQueryService.getPagedProductsWithKeyword(
                 pageRequest,
@@ -86,6 +101,7 @@ public class ProductControllerV2 {
                 utils.str2IntList(filterFieldIds),
                 curationId,
                 keyword,
+                integerProductIds,
                 storeId,
                 userId);
 
