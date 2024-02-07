@@ -84,6 +84,7 @@ public class SearchKeywordQueryService {
         for (Integer key : keySet) {
             sortedByMatchingCnt.addAll(matchWordCountMap.get(key));
         }
+
         List<Integer> productIds = sortedByMatchingCnt.stream()
                 .map(v -> v.getId()).toList();
 
