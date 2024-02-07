@@ -125,6 +125,7 @@ public class ProductControllerV2 {
                 utils.str2IntList(filterFieldIds),
                 curationId,
                 keyword,
+                productIds,
                 storeId);
         response.setIsSuccess(true);
         response.setData(Optional.of(count));

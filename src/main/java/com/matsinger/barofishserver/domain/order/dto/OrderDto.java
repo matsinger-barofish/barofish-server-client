@@ -16,6 +16,7 @@ import java.util.List;
 @AllArgsConstructor
 public class OrderDto {
     String id;
+    Integer taxFreeAmount;
     UserInfoDto user;
     OrderState state;
     String ordererName;

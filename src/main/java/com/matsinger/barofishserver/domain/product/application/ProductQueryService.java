@@ -79,7 +79,7 @@ public class ProductQueryService {
                         keywords,
                         storeId)
                 : productIds.size();
-
+      
         List<Integer> userBasketProductIds = new ArrayList<>();
         if (userId != null) {
             User findedUser = userQueryService.findById(userId);
@@ -118,7 +118,6 @@ public class ProductQueryService {
 //        for (Integer key : keySet) {
 //            sortedByMatchingCnt.addAll(matchWordCountMap.get(key));
 //        }
-
 //        List<ProductListDto> pagedResult = sortedByMatchingCnt.subList((int) pageRequest.getOffset(), pageRequest.getPageSize());
 //        return new PageImpl<>(pagedResult, pageRequest, count);
         return productDtos;
@@ -129,6 +128,7 @@ public class ProductQueryService {
             List<Integer> filterFieldIds,
             Integer curationId,
             String keyword,
+            List<Integer> productIds,
             Integer storeId) {
 
         return productQueryRepository.countProducts(
@@ -136,6 +136,7 @@ public class ProductQueryService {
                 filterFieldIds,
                 curationId,
                 keyword,
+                productIds,
                 storeId);
     }
 
