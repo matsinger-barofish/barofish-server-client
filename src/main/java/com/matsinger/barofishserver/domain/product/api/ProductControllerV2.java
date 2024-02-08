@@ -81,8 +81,6 @@ public class ProductControllerV2 {
 
         Integer userId = tokenInfo != null ? tokenInfo.getId() : null;
 
-        log.warn("productIdsString = {}", productIds);
-
         List<Integer> integerProductIds = productIds != null
                 ? Arrays.stream(productIds.split(",")).map(v -> Integer.valueOf(v)).toList()
                 : null;

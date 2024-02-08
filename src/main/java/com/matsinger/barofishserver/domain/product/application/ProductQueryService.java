@@ -27,7 +27,10 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional(readOnly = true)
@@ -61,7 +64,7 @@ public class ProductQueryService {
         String convertedKeyword = keyword.replace("\\s+", " "); // 여러개의 공백을 공백 하나로
         String[] keywords = convertedKeyword.split(" ");
 
-        Page<ProductListDto> productDtos = productQueryRepository.getProductsWithKeyword(
+        Page<ProductListDto> pagedProductDtos = productQueryRepository.getProductsWithKeyword(
                 pageRequest,
                 sortBy,
                 categoryIds,
@@ -71,15 +74,6 @@ public class ProductQueryService {
                 productIds,
                 storeId);
 
-        Integer count = productIds == null
-                ? productQueryRepository.countProductsAtSearchEngine(
-                        categoryIds,
-                        filterFieldIds,
-                        curationId,
-                        keywords,
-                        storeId)
-                : productIds.size();
-      
         List<Integer> userBasketProductIds = new ArrayList<>();
         if (userId != null) {
             User findedUser = userQueryService.findById(userId);
@@ -87,40 +81,32 @@ public class ProductQueryService {
                     .stream().map(v -> v.getProductId()).toList();
         }
 
-//        String nonSpaceKeyword = convertedKeyword.replace(" ", "");
-//        Map<Integer, List<ProductListDto>> matchWordCountMap = new HashMap<>();
-//        for (ProductListDto productDto : productDtos) {
-//            if (userBasketProductIds.contains(productDto.getProductId())) {
-//                productDto.setIsLike(true);
-//            }
-//            productDto.convertImageUrlsToFirstUrl();
-//            productDto.setReviewCount(reviewQueryService.countReviewWithoutDeleted(productDto.getId(), false));
-//        }
+        for (ProductListDto productDto : pagedProductDtos) {
+            if (userBasketProductIds.contains(productDto.getProductId())) {
+                productDto.setIsLike(true);
+            }
+            productDto.convertImageUrlsToFirstUrl();
+            productDto.setReviewCount(reviewQueryService.countReviewWithoutDeleted(productDto.getId(), false));
+        }
 
-//        for (ProductListDto productDto : productDtos) {
-//            int matchingCnt = 0;
-//            for (char productChar : productDto.getTitle().toCharArray()) {
-//
-//                for (char word : nonSpaceKeyword.toCharArray()) {
-//                    if (productChar == word) {
-//                        matchingCnt++;
-//                    }
-//                }
-//            }
-//            List<ProductListDto> existingList = matchWordCountMap.getOrDefault(matchingCnt, new ArrayList<>());
-//            existingList.add(productDto);
-//            matchWordCountMap.put(matchingCnt, existingList);
-//        }
-//
-//        List<Integer> keySet = new ArrayList<>(matchWordCountMap.keySet());
-//        Collections.sort(keySet, Collections.reverseOrder());
-//        List<ProductListDto> sortedByMatchingCnt = new ArrayList<>();
-//        for (Integer key : keySet) {
-//            sortedByMatchingCnt.addAll(matchWordCountMap.get(key));
-//        }
-//        List<ProductListDto> pagedResult = sortedByMatchingCnt.subList((int) pageRequest.getOffset(), pageRequest.getPageSize());
-//        return new PageImpl<>(pagedResult, pageRequest, count);
-        return productDtos;
+        // productIds의 순서에 따라 제품을 정렬
+        List<ProductListDto> sortedProducts = productIds.stream()
+                .map(id -> pagedProductDtos.stream()
+                        .filter(p -> p.getId().equals(id)).findFirst().orElse(null))
+                .collect(Collectors.toList());
+
+        int offset = (int) pageRequest.getOffset();
+        int pageSize = pageRequest.getPageSize();
+        if (pageSize > sortedProducts.size()) {
+            pageSize = sortedProducts.size();
+        }
+        if (offset > sortedProducts.size()) {
+            offset = sortedProducts.size();
+        }
+        List<ProductListDto> subList = sortedProducts.subList(offset, pageSize);
+
+
+        return new PageImpl<>(subList, pageRequest, pagedProductDtos.getTotalElements());
     }
 
     public int countProducts(
