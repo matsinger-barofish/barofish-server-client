@@ -280,9 +280,10 @@ public class ProductQueryRepository {
                                                        List<Integer> filterFieldIds,
                                                        Integer curationId,
                                                        String[] keywords,
-                                                       List<Integer> productIds, Integer storeId) {
+                                                       List<Integer> productIds,
+                                                       Integer storeId) {
 
-        OrderSpecifier[] orderSpecifiers = createProductSortSpecifier(sortBy, productIds);
+        OrderSpecifier[] orderSpecifiers = createProductSortSpecifier(sortBy);
 //        CaseBuilder caseBuilder = sortByProductIds(productIds);
 
         List<ProductListDto> result = queryFactory
@@ -318,8 +319,8 @@ public class ProductQueryRepository {
                 )
                 .groupBy(product.id)
                 .orderBy(orderSpecifiers)
-                .offset(pageRequest.getOffset())
-                .limit(pageRequest.getPageSize())
+//                .offset(pageRequest.getOffset())
+//                .limit(pageRequest.getPageSize())
                 .fetch();
 
         Integer count = productIds == null
@@ -419,14 +420,7 @@ public class ProductQueryRepository {
         }
         return caseBuilder;
     }
-    private OrderSpecifier[] createProductSortSpecifier(ProductSortBy sortBy, List<Integer> productIds) {
-        if (productIds != null) {
-            List<OrderSpecifier> specifiers = new ArrayList<>();
-            for (Integer productId : productIds) {
-                specifiers.add(product.id.eq(productId).asc());
-            }
-            return specifiers.toArray(new OrderSpecifier[specifiers.size()]);
-        }
+    private OrderSpecifier[] createProductSortSpecifier(ProductSortBy sortBy) {
 
         List<OrderSpecifier> orderSpecifiers = new ArrayList<>();
 
