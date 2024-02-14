@@ -27,7 +27,9 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 @Service
 @Transactional(readOnly = true)
@@ -87,15 +89,16 @@ public class ProductQueryService {
                     .stream().map(v -> v.getProductId()).toList();
         }
 
+        for (ProductListDto productDto : productDtos) {
+            if (userBasketProductIds.contains(productDto.getProductId())) {
+                productDto.setIsLike(true);
+            }
+            productDto.convertImageUrlsToFirstUrl();
+            productDto.setReviewCount(reviewQueryService.countReviewWithoutDeleted(productDto.getId(), false));
+        }
+
 //        String nonSpaceKeyword = convertedKeyword.replace(" ", "");
 //        Map<Integer, List<ProductListDto>> matchWordCountMap = new HashMap<>();
-//        for (ProductListDto productDto : productDtos) {
-//            if (userBasketProductIds.contains(productDto.getProductId())) {
-//                productDto.setIsLike(true);
-//            }
-//            productDto.convertImageUrlsToFirstUrl();
-//            productDto.setReviewCount(reviewQueryService.countReviewWithoutDeleted(productDto.getId(), false));
-//        }
 
 //        for (ProductListDto productDto : productDtos) {
 //            int matchingCnt = 0;
