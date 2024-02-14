@@ -314,6 +314,7 @@ public class ProductQueryRepository {
                         eqCuration(curationId),
                         isPromotionInProgress(),
                         eqStore(storeId),
+                        isProductTitleLikeKeyword(keyword),
                         isIncludedCategory(categoryIds),
                         isIncludedSearchFilter(filterFieldIds)
                 )

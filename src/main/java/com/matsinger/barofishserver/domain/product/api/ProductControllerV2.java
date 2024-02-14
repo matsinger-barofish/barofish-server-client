@@ -86,7 +86,7 @@ public class ProductControllerV2 {
                 : null;
 
         PageRequest pageRequest = PageRequest.of(page - 1, take);
-        Page<ProductListDto> result = productQueryService.getPagedProductsWithKeyword(
+        Page<ProductListDto> result = productQueryService.getPagedProducts(
                 pageRequest,
                 sortBy,
                 utils.str2IntList(categoryIds),
@@ -107,7 +107,6 @@ public class ProductControllerV2 {
                                                                                         @RequestParam(value = "filterFieldIds", required = false) String filterFieldIds,
                                                                                         @RequestParam(value = "curationId", required = false) Integer curationId,
                                                                                         @RequestParam(value = "keyword", required = false, defaultValue = "") String keyword,
-                                                                                        @RequestParam(value = "productIds", required = false) List<Integer> productIds,
                                                                                         @RequestParam(value = "storeId", required = false) Integer storeId) {
         CustomResponse<Integer> response = new CustomResponse<>();
         jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.ALLOW), auth);
