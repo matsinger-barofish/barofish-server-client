@@ -84,7 +84,7 @@ public class ProductControllerV2 {
         log.warn("productIdsString = {}", productIds);
 
         List<Integer> integerProductIds = productIds != null
-                ? Arrays.stream(productIds.split(" ")).map(v -> Integer.valueOf(v)).toList()
+                ? Arrays.stream(productIds.split(",")).map(v -> Integer.valueOf(v)).toList()
                 : null;
 
         PageRequest pageRequest = PageRequest.of(page - 1, take);
