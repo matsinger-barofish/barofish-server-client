@@ -27,9 +27,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 
 @Service
 @Transactional(readOnly = true)
@@ -49,25 +47,39 @@ public class ProductQueryService {
                 .orElseThrow(() -> new BusinessException("상품 정보를 찾을 수 없습니다."));
     }
 
-    public Page<ProductListDto> getPagedProducts(
+    public Page<ProductListDto> getPagedProductsWithKeyword(
             PageRequest pageRequest,
             ProductSortBy sortBy,
             List<Integer> categoryIds,
             List<Integer> filterFieldIds,
             Integer curationId,
             String keyword,
+            List<Integer> productIds,
             Integer storeId,
             Integer userId) {
 
-        PageImpl<ProductListDto> productDtos = productQueryRepository.getProducts(
+        String convertedKeyword = keyword.replace("\\s+", " "); // 여러개의 공백을 공백 하나로
+        String[] keywords = convertedKeyword.split(" ");
+
+        Page<ProductListDto> productDtos = productQueryRepository.getProductsWithKeyword(
                 pageRequest,
                 sortBy,
                 categoryIds,
                 filterFieldIds,
                 curationId,
-                keyword,
+                keywords,
+                productIds,
                 storeId);
 
+        Integer count = productIds == null
+                ? productQueryRepository.countProductsAtSearchEngine(
+                        categoryIds,
+                        filterFieldIds,
+                        curationId,
+                        keywords,
+                        storeId)
+                : productIds.size();
+      
         List<Integer> userBasketProductIds = new ArrayList<>();
         if (userId != null) {
             User findedUser = userQueryService.findById(userId);
@@ -75,13 +87,39 @@ public class ProductQueryService {
                     .stream().map(v -> v.getProductId()).toList();
         }
 
-        for (ProductListDto productDto : productDtos) {
-            if (userBasketProductIds.contains(productDto.getProductId())) {
-                productDto.setIsLike(true);
-            }
-            productDto.convertImageUrlsToFirstUrl();
-            productDto.setReviewCount(reviewQueryService.countReviewWithoutDeleted(productDto.getId(), false));
-        }
+//        String nonSpaceKeyword = convertedKeyword.replace(" ", "");
+//        Map<Integer, List<ProductListDto>> matchWordCountMap = new HashMap<>();
+//        for (ProductListDto productDto : productDtos) {
+//            if (userBasketProductIds.contains(productDto.getProductId())) {
+//                productDto.setIsLike(true);
+//            }
+//            productDto.convertImageUrlsToFirstUrl();
+//            productDto.setReviewCount(reviewQueryService.countReviewWithoutDeleted(productDto.getId(), false));
+//        }
+
+//        for (ProductListDto productDto : productDtos) {
+//            int matchingCnt = 0;
+//            for (char productChar : productDto.getTitle().toCharArray()) {
+//
+//                for (char word : nonSpaceKeyword.toCharArray()) {
+//                    if (productChar == word) {
+//                        matchingCnt++;
+//                    }
+//                }
+//            }
+//            List<ProductListDto> existingList = matchWordCountMap.getOrDefault(matchingCnt, new ArrayList<>());
+//            existingList.add(productDto);
+//            matchWordCountMap.put(matchingCnt, existingList);
+//        }
+//
+//        List<Integer> keySet = new ArrayList<>(matchWordCountMap.keySet());
+//        Collections.sort(keySet, Collections.reverseOrder());
+//        List<ProductListDto> sortedByMatchingCnt = new ArrayList<>();
+//        for (Integer key : keySet) {
+//            sortedByMatchingCnt.addAll(matchWordCountMap.get(key));
+//        }
+//        List<ProductListDto> pagedResult = sortedByMatchingCnt.subList((int) pageRequest.getOffset(), pageRequest.getPageSize());
+//        return new PageImpl<>(pagedResult, pageRequest, count);
         return productDtos;
     }
 
@@ -90,6 +128,7 @@ public class ProductQueryService {
             List<Integer> filterFieldIds,
             Integer curationId,
             String keyword,
+            List<Integer> productIds,
             Integer storeId) {
 
         return productQueryRepository.countProducts(
@@ -97,8 +136,8 @@ public class ProductQueryService {
                 filterFieldIds,
                 curationId,
                 keyword,
-                storeId
-        );
+                productIds,
+                storeId);
     }
 
     public ExpectedArrivalDateResponse getExpectedArrivalDate(LocalDateTime now, Integer productId) {

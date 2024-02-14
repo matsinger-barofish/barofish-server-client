@@ -4,6 +4,7 @@ import com.matsinger.barofishserver.domain.product.domain.Product;
 import com.matsinger.barofishserver.domain.product.dto.ProductListDto;
 import com.matsinger.barofishserver.domain.product.repository.ProductRepository;
 import com.matsinger.barofishserver.domain.search.domain.SearchKeyword;
+import com.matsinger.barofishserver.domain.search.dto.SearchDirectResponse;
 import com.matsinger.barofishserver.domain.search.dto.SearchProductDto;
 import com.matsinger.barofishserver.domain.search.repository.SearchKeywordQueryRepository;
 import com.matsinger.barofishserver.domain.search.repository.SearchKeywordRepository;
@@ -53,7 +54,7 @@ public class SearchKeywordQueryService {
         return productListDtos;
     }
 
-    public List<SearchProductDto> selectSearchProductTitles(String keyword) {
+    public SearchDirectResponse selectSearchProductTitles(String keyword) {
         String convertedKeyword = keyword.replace("\\s+", " "); // 여러개의 공백을 공백 하나로
         String[] keywords = convertedKeyword.split(" ");
         List<SearchProductDto> searchProductDtos = searchKeywordQueryRepository.selectSearchKeyword(keywords);
@@ -84,6 +85,9 @@ public class SearchKeywordQueryService {
             sortedByMatchingCnt.addAll(matchWordCountMap.get(key));
         }
 
-        return sortedByMatchingCnt;
+        List<Integer> productIds = sortedByMatchingCnt.stream()
+                .map(v -> v.getId()).toList();
+
+        return new SearchDirectResponse(productIds, sortedByMatchingCnt);
     }
 }
