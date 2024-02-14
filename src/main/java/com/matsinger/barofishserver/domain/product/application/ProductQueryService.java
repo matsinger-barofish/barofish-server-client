@@ -30,6 +30,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional(readOnly = true)
@@ -56,16 +57,21 @@ public class ProductQueryService {
             List<Integer> filterFieldIds,
             Integer curationId,
             String keyword,
+            List<Integer> productIds,
             Integer storeId,
             Integer userId) {
 
-        PageImpl<ProductListDto> productDtos = productQueryRepository.getProducts(
+        String convertedKeyword = keyword.replace("\\s+", " "); // 여러개의 공백을 공백 하나로
+        String[] keywords = convertedKeyword.split(" ");
+
+        Page<ProductListDto> pagedProductDtos = productQueryRepository.getProductsWithKeyword(
                 pageRequest,
                 sortBy,
                 categoryIds,
                 filterFieldIds,
                 curationId,
-                keyword,
+                keywords,
+                productIds,
                 storeId);
 
         List<Integer> userBasketProductIds = new ArrayList<>();
@@ -75,14 +81,32 @@ public class ProductQueryService {
                     .stream().map(v -> v.getProductId()).toList();
         }
 
-        for (ProductListDto productDto : productDtos) {
+        for (ProductListDto productDto : pagedProductDtos) {
             if (userBasketProductIds.contains(productDto.getProductId())) {
                 productDto.setIsLike(true);
             }
             productDto.convertImageUrlsToFirstUrl();
             productDto.setReviewCount(reviewQueryService.countReviewWithoutDeleted(productDto.getId(), false));
         }
-        return productDtos;
+
+        // productIds의 순서에 따라 제품을 정렬
+        List<ProductListDto> sortedProducts = productIds.stream()
+                .map(id -> pagedProductDtos.stream()
+                        .filter(p -> p.getId().equals(id)).findFirst().orElse(null))
+                .collect(Collectors.toList());
+
+        int offset = (int) pageRequest.getOffset();
+        int pageSize = pageRequest.getPageSize();
+        if (pageSize > sortedProducts.size()) {
+            pageSize = sortedProducts.size();
+        }
+        if (offset > sortedProducts.size()) {
+            offset = sortedProducts.size();
+        }
+        List<ProductListDto> subList = sortedProducts.subList(offset, pageSize);
+
+
+        return new PageImpl<>(subList, pageRequest, pagedProductDtos.getTotalElements());
     }
 
     public int countProducts(
@@ -90,6 +114,7 @@ public class ProductQueryService {
             List<Integer> filterFieldIds,
             Integer curationId,
             String keyword,
+            List<Integer> productIds,
             Integer storeId) {
 
         return productQueryRepository.countProducts(
@@ -97,8 +122,8 @@ public class ProductQueryService {
                 filterFieldIds,
                 curationId,
                 keyword,
-                storeId
-        );
+                productIds,
+                storeId);
     }
 
     public ExpectedArrivalDateResponse getExpectedArrivalDate(LocalDateTime now, Integer productId) {
