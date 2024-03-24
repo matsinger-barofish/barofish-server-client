@@ -311,6 +311,10 @@ public class OrderController {
 
         TokenInfo tokenInfo = jwt.validateAndGetTokenInfo(Set.of(TokenAuthType.USER), auth);
 
+        if (true) {
+            throw new IllegalArgumentException("주문에 실패했습니다.");
+        }
+
         Integer userId = tokenInfo.getId();
         String orderId = orderService.getOrderId();
         String name = utils.validateString(data.getName(), 20L, "주문자 이름");
