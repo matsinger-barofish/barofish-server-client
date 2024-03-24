@@ -34,6 +34,11 @@ public class OrderControllerV2 {
     public ResponseEntity<CustomResponse<OrderDto>> orderProductV2(@RequestHeader(value = "Authorization") Optional<String> auth,
                                                                    @RequestBody OrderReq request) {
         CustomResponse<OrderDto> res = new CustomResponse<>();
+
+        if (true) {
+            throw new IllegalArgumentException("주문에 실패했습니다.");
+        }
+
         utils.validateString(request.getName(), 20L, "주문자 이름");
         utils.validateString(request.getTel(), 11L, "주문자 연락처");
 
